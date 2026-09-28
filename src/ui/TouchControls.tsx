@@ -4,7 +4,7 @@ import type { FpsInput } from "../game/render/FpsInput";
 import { iconFor } from "../game/render/icons";
 import { pointIn } from "./useUiScale";
 
-// Whether this is a touch device (a phone or tablet): then the joystick and the look area show.
+// Whether this is a touch device (a phone or tablet): then the look area shows and the keys do not.
 export function isTouchDevice(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 }
@@ -12,8 +12,9 @@ export function isTouchDevice(): boolean {
 // The joystick's ring, and how far the knob can be pushed, in CSS pixels.
 const STICK_RADIUS = 56;
 
-// The joystick on the left to walk, and a drag anywhere on the right to look round (phones only).
-export function TouchStick({ controls }: { controls: FpsInput }) {
+// The joystick at the bottom left to walk, on every device (the mouse plays the whole game), and on
+// a touch screen a drag anywhere on the right to look round (a mouse drags the world itself).
+export function TouchStick({ controls, look: lookArea }: { controls: FpsInput; look: boolean }) {
   const [knob, setKnob] = useState<{ x: number; y: number } | null>(null);
   const stick = useRef<HTMLDivElement>(null);
   const stickPointer = useRef<number | null>(null);
@@ -46,27 +47,29 @@ export function TouchStick({ controls }: { controls: FpsInput }) {
 
   return (
     <>
-      <div
-        className="touch-look"
-        onPointerDown={(e) => {
-          if (look.current) return;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          look.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
-        }}
-        onPointerMove={(e) => {
-          const l = look.current;
-          if (!l || l.id !== e.pointerId) return;
-          controls.addVirtualLook((e.clientX - l.x) * 2, (e.clientY - l.y) * 2);
-          l.x = e.clientX;
-          l.y = e.clientY;
-        }}
-        onPointerUp={(e) => {
-          if (look.current?.id === e.pointerId) look.current = null;
-        }}
-        onPointerCancel={() => {
-          look.current = null;
-        }}
-      />
+      {lookArea && (
+        <div
+          className="touch-look"
+          onPointerDown={(e) => {
+            if (look.current) return;
+            e.currentTarget.setPointerCapture(e.pointerId);
+            look.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+          }}
+          onPointerMove={(e) => {
+            const l = look.current;
+            if (!l || l.id !== e.pointerId) return;
+            controls.addVirtualLook((e.clientX - l.x) * 2, (e.clientY - l.y) * 2);
+            l.x = e.clientX;
+            l.y = e.clientY;
+          }}
+          onPointerUp={(e) => {
+            if (look.current?.id === e.pointerId) look.current = null;
+          }}
+          onPointerCancel={() => {
+            look.current = null;
+          }}
+        />
+      )}
       <div
         ref={stick}
         className="touch-stick"
@@ -98,6 +101,8 @@ interface PadButtonsProps {
   onTalk: () => void;
   // Keyboard players see each button's key in its corner.
   keys: boolean;
+  // The tutorial's pointer at the auto-battle button.
+  glowAuto?: boolean;
 }
 
 // One round, see-through button: its picture (496 RPG icons pack), its name, and its key.
@@ -115,7 +120,7 @@ function PadButton({ id, label, keyLabel, className = "", ...rest }: {
 
 // The round buttons at the bottom right, on every device: a big attack button (held for a flurry)
 // with guard, jump, auto-battle and (by someone) talk round it.
-export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, keys }: PadButtonsProps) {
+export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, keys, glowAuto }: PadButtonsProps) {
   useEffect(() => () => {
     controls.setVirtualFiring(false);
     controls.setVirtualBlocking(false);
@@ -135,7 +140,7 @@ export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, key
       <PadButton id="attack" label={t("pad.attack")} keyLabel={keys ? t("pad.leftClick") : null} {...hold((on) => controls.setVirtualFiring(on))} />
       <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
       <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
-      <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={auto ? "on" : ""} onClick={onAuto} />
+      <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={`${auto ? "on" : ""}${glowAuto ? " tutorial-glow" : ""}`} onClick={onAuto} />
       {talkTo && <PadButton id="talk" label={t("pad.talk")} keyLabel={keys ? "E" : null} onClick={onTalk} />}
     </div>
   );

@@ -176,14 +176,16 @@ function ZoneScreen({
   }, [finished]);
   const inVillage = entry.zone === START_ZONE;
   const [now, setNow] = useState(() => performance.now());
+  // Every device plays with the pad and the mouse (or a finger); a keyboard's keys show on the
+  // buttons that have one.
   const touch = isTouchDevice();
+  const keyHints = !touch;
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
       entry, playerClass, costume, name, owned,
       onProgress: (done, total) => setProgress(done / total),
       onTalk: (id) => {
-        document.exitPointerLock?.();
         setPanel(id === "merchant" ? "shop" : id === "smith" ? "smith" : "quest");
       },
       onTravel: (to) => {
@@ -220,7 +222,6 @@ function ZoneScreen({
   const open = useRef({ panel, menu, upgrade });
   open.current = { panel, menu, upgrade };
   const toggle = (next: Panel) => {
-    document.exitPointerLock?.();
     setPanel((p) => (p === next ? null : next));
   };
   const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean }[] = [
@@ -237,10 +238,7 @@ function ZoneScreen({
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
       id: "menu", label: t("menu.settings"), key: "P", code: "KeyP",
-      act: () => {
-        document.exitPointerLock?.();
-        setMenu((m) => !m);
-      },
+      act: () => setMenu((m) => !m),
       on: menu,
     },
   ];
@@ -272,18 +270,6 @@ function ZoneScreen({
     document.addEventListener("click", release);
     return () => document.removeEventListener("click", release);
   }, []);
-  useEffect(() => {
-    if (touch) return;
-    const onChange = () => {
-      if (!document.pointerLockElement) return;
-      // Clicked back into the world (past a side panel): what was open steps aside.
-      setMenuOpen(false);
-      setPanel(null);
-      setMenu(false);
-    };
-    document.addEventListener("pointerlockchange", onChange);
-    return () => document.removeEventListener("pointerlockchange", onChange);
-  }, [touch]);
   // Panels open and close with a sound.
   const hadPanel = useRef(false);
   useEffect(() => {
@@ -357,17 +343,17 @@ function ZoneScreen({
   const showProblem = problem && now - problem.at < PROBLEM_MS;
   return (
     <div className="app" ref={host}>
-      <div className={`ui${touch ? " touch" : ""}`}>
+      <div className="ui">
       {!ready && <div className="overlay">{t("world.loading", { n: Math.round(progress * 100) })}</div>}
       {travelling && <div className="overlay">{t("world.travelling")}</div>}
       {hud && (
         <>
-          {touch && view.current && <TouchStick controls={view.current.controls} />}
+          {view.current && <TouchStick controls={view.current.controls} look={touch} />}
           <div className="hud-left">
             <button type="button" className="hud-top band hud-channel" onClick={() => toggle("channels")} title={t("channel.title")}>
               <b>{hud.zone}</b>
               <span>{t("world.channel", { n: hud.channel })}</span>
-              {!touch && <kbd className="hud-key">C</kbd>}
+              {keyHints && <kbd className="hud-key">C</kbd>}
             </button>
             <div className="hud-vitals">
               <div className="hud-vitals-row">
@@ -385,13 +371,13 @@ function ZoneScreen({
               <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}`} onClick={item.act}>
                 {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
                 <span>{item.label}</span>
-                {!touch && <kbd className="hud-key">{item.key}</kbd>}
+                {keyHints && <kbd className="hud-key">{item.key}</kbd>}
               </button>
             ))}
             <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
               <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
               <span>{t("common.menu")}</span>
-              {!touch && <kbd className="hud-key">M</kbd>}
+              {keyHints && <kbd className="hud-key">M</kbd>}
             </button>
           </div>
           {hud.notes.length > 0 && (
@@ -432,19 +418,18 @@ function ZoneScreen({
             <PadButtons
               controls={view.current.controls} auto={hud.auto} talkTo={hud.npc?.name ?? null}
               onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()} onTalk={() => view.current?.talk()}
-              keys={!touch}
+              keys={keyHints}
             />
           )}
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()} />
           {/* The side panels sit where the tracker is; it steps aside while one is open. */}
           {panel !== "quests" && panel !== "skills" && (
             <QuestTracker
-              bag={bag} seeking={hud.seeking} inVillage={inVillage} keyLabel={touch ? null : "J"}
+              bag={bag} seeking={hud.seeking} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
               onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.walkToNpc("elder")}
             />
           )}
-          <ChatBox client={client} touch={touch} />
-          {!touch && <div className="crosshair" />}
+          <ChatBox client={client} keyHints={keyHints} />
           {hud.hurt > 0 && <div className="hud-hurt" style={{ opacity: hud.hurt }} />}
           {saving && (
             <PowerSaveScreen

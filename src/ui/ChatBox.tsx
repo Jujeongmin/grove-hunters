@@ -17,7 +17,7 @@ const PROBLEM: Record<string, Key> = {
 
 // The channel chat, at the left: the latest lines, and a box to say one. Enter opens it on a
 // keyboard (and sends), the chat button on a touch screen; Escape closes it.
-export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean }) {
+export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
@@ -70,7 +70,7 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
 
   const shown = open ? lines.slice(-OPEN_LINES) : lines.slice(-QUIET_LINES).filter((l) => now - l.heardAt < QUIET_MS);
   return (
-    <div className={`chat${open ? " open" : ""}${touch ? " touch" : ""}`}>
+    <div className={`chat${open ? " open" : ""}`}>
       {shown.length > 0 && (
         <div className="chat-log" ref={log}>
           {shown.map((l) => (
@@ -99,11 +99,11 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
               }
             }}
           />
-          {touch && <button type="button" className="chat-close" onClick={close}>{t("common.close")}</button>}
+          {!keyHints && <button type="button" className="chat-close" onClick={close}>{t("common.close")}</button>}
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (
-        touch
+        !keyHints
           ? <button type="button" className="chat-open band" onClick={() => setOpen(true)}>{t("chat.open")}</button>
           // On a keyboard the bar says how to talk: Enter opens it, like a click on it.
           : <button type="button" className="chat-bar" onClick={() => setOpen(true)}><kbd>Enter</kbd>{t("chat.enterHint")}</button>
