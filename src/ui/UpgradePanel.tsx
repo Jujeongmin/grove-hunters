@@ -8,6 +8,13 @@ export const LOCKED_ZONES = ZONE_IDS.filter((z) => ZONES[z].paid);
 const LOCKED_CLASSES = CLASSES.filter((c) => !isFreeClass(c));
 export const FREE_UNTIL = Math.min(...LOCKED_ZONES.map((z) => ZONES[z].minLevel));
 
+// A class's weapon, without the class's own name in front of it: the cleric's staff is called
+// after the cleric, which reads twice when it sits under the name.
+function weaponOf(c: (typeof LOCKED_CLASSES)[number]): string {
+  const name = WEAPONS[c].name;
+  return name.replace(CLASS_LABEL[c], "").trim() || name;
+}
+
 // Why the panel opened, which decides its first line.
 export type UpgradeReason =
   | { kind: "portal"; zone: string }
@@ -45,7 +52,7 @@ export function UpgradePanel({ reason, price, state, onBuy, onClose }: UpgradePa
         <p className="upgrade-lead">{opening(reason)}</p>
 
         <ul className="upgrade-list">
-          <li>
+          <li className="big">
             <b>새 사냥터 {LOCKED_ZONES.length}곳</b>
             <span>{LOCKED_ZONES.map((z) => `${ZONES[z].name} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
           </li>
@@ -68,7 +75,7 @@ export function UpgradePanel({ reason, price, state, onBuy, onClose }: UpgradePa
                 <span key={c} className="upgrade-class">
                   {icon && <img src={icon} alt="" draggable={false} />}
                   <em>{CLASS_LABEL[c]}</em>
-                  <i>{WEAPONS[c].name}</i>
+                  <i>{weaponOf(c)}</i>
                 </span>
               );
             })}
