@@ -131,6 +131,19 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
 };
 export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king" };
 
+// Monsters come back sooner the more hunters share the room, so a busy field does not run dry: the
+// full wait with one hunter, falling evenly to RESPAWN_FLOOR_MS with CROWD_FULL of them. A boss
+// keeps its own clock.
+const RESPAWN_FLOOR_MS = 6_000;
+const CROWD_FULL = 10;
+
+export function respawnDelay(type: MonsterType, hunters: number): number {
+  const full = MONSTERS[type].respawnMs;
+  if (Object.values(ZONE_BOSS).includes(type) || full <= RESPAWN_FLOOR_MS) return full;
+  const crowd = Math.min(1, Math.max(0, (hunters - 1) / (CROWD_FULL - 1)));
+  return Math.round(full - (full - RESPAWN_FLOOR_MS) * crowd);
+}
+
 // A monster in a room, as the room state carries it.
 export interface MonsterState {
   type: MonsterType;

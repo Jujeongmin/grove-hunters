@@ -5,7 +5,7 @@ import { readJob, type JobId } from "../../src/game/combat/jobs";
 import type { FightBonus } from "../../src/game/combat/power";
 import { stepMonsters, type Prey } from "../../src/game/world/monsterAi";
 import {
-  MONSTERS, ZONE_BOSS, ZONE_MONSTERS, damageAt, maxHpAt, readMonsterType, spawnMonsters, type MonsterState,
+  ZONE_BOSS, ZONE_MONSTERS, damageAt, maxHpAt, readMonsterType, respawnDelay, spawnMonsters, type MonsterState,
   type MonsterType,
 } from "../../src/game/world/monsters";
 import { RANGE_SLACK, RuleViolation, isPose, type Pose } from "../../src/game/world/types";
@@ -164,8 +164,10 @@ export const NOTHING: HitResult = { hit: [], killed: [], kills: [], xp: 0, gold:
 
 // `account` hits the monsters for damage (and a stun); what it takes off each is written down
 // against its name.
+// `hunters` is how many share the room: a busy room brings its monsters back sooner (respawnDelay).
 function land(
   monsters: Record<string, MonsterState>, ids: string[], damage: number, stunMs: number, now: number, account: string,
+  hunters: number,
 ): HitResult {
   const out: HitResult = { ...NOTHING, hit: [], killed: [], kills: [], items: [] };
   for (const id of ids) {
@@ -178,13 +180,19 @@ function land(
     if (stunMs > 0) m.stunnedUntil = Math.max(m.stunnedUntil, now + stunMs);
     if (m.hp <= 0) {
       m.alive = false;
-      m.respawnAt = now + MONSTERS[m.type].respawnMs;
+      m.respawnAt = now + respawnDelay(m.type, hunters);
       out.killed.push(id);
       out.kills.push({ type: m.type, hitters: m.hitters });
       delete m.hitters;
     }
   }
   return out;
+}
+
+// How many players are in the caller's room.
+async function huntersHere(): Promise<number> {
+  const users = (await $room.getRoomState([])).$users;
+  return Array.isArray(users) ? users.length : 1;
 }
 
 // You, able to fight: standing somewhere and not fallen. Also your whole room user state. Where you
@@ -210,7 +218,7 @@ export async function strike(zone: ZoneId, account: string, monsterId: unknown, 
   const weapon = WEAPONS[f.playerClass];
   if (!inStrikeReach(f.pose, m, weapon, true)) throw new RuleViolation("out_of_range");
   await $room.updateMyState({ strikeReadyAt: now + weapon.intervalMs * COOLDOWN_GRACE }, { returnState: false });
-  const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power), 0, now, account);
+  const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power), 0, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;
 }
@@ -248,7 +256,7 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
   const monsters = await readMonsters(zone);
   const targets = skillTargets(f.pose, monsters, skill, true);
   if (targets.length === 0) return { ...NOTHING };
-  const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power), skill.stunMs, now, account);
+  const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power), skill.stunMs, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;
 }
