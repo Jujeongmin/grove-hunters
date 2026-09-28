@@ -23,7 +23,7 @@ describe("bag and gold", () => {
     await inVillage(server);
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
-      gold: 0, bag: { potion_small: 3 }, gear: { weapon: null, armor: null }, plus: {}, job: null, quest: { index: 0, count: 0 },
+      gold: 0, bag: { potion_small: 5 }, gear: { weapon: null, armor: null }, plus: {}, job: null, quest: { index: 0, count: 0 }, tutorial: null,
     });
     expect(daily.counts).toEqual({});
     expect(daily.claimed).toEqual([]);
@@ -59,10 +59,10 @@ describe("bag and gold", () => {
     await $asset.mint("gold", 100);
     const bought = await server.buyItem("potion_small", 2);
     expect(bought.gold).toBe(100 - ITEMS.potion_small.price! * 2);
-    expect(bought.bag.potion_small).toBe(5);
-    const sold = await server.sellItem("potion_small", 5);
+    expect(bought.bag.potion_small).toBe(7);
+    const sold = await server.sellItem("potion_small", 7);
     expect(sold.bag.potion_small).toBeUndefined();
-    expect(sold.gold).toBe(bought.gold + sellPrice("potion_small") * 5);
+    expect(sold.gold).toBe(bought.gold + sellPrice("potion_small") * 7);
     expect(await errorOf(server.sellItem("potion_small"))).toContain("no_item");
 
     await toForest(server, "test-a", village);
@@ -114,10 +114,9 @@ describe("bag and gold", () => {
     await inVillage(server);
     await $room.updateMyState({ hp: 10 });
     const after = await server.drinkPotion("potion_small");
-    expect(after.bag.potion_small).toBe(2);
+    expect(after.bag.potion_small).toBe(4);
     expect((await $room.getMyState()).hp).toBe(10 + ITEMS.potion_small.heal);
-    await server.drinkPotion("potion_small");
-    await server.drinkPotion("potion_small");
+    for (let i = 0; i < 4; i++) await server.drinkPotion("potion_small");
     expect((await $room.getMyState()).hp).toBe(maxHpAt(1));
     expect(await errorOf(server.drinkPotion("potion_small"))).toContain("no_item");
   });

@@ -36,6 +36,9 @@ import {
 } from "./store";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
+import {
+  TUTORIAL, TUTORIAL_GOLD, TUTORIAL_POTIONS, readTutorial, type TutorialStep,
+} from "../../src/game/account/tutorial";
 
 // How often a walking character's spot is saved to the account (the room keeps the live pose).
 const SAVE_SPOT_MS = 5_000;
@@ -187,7 +190,7 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
 async function bagView(character: Character): Promise<BagView> {
   return {
     gold: await $asset.get(GOLD), bag: character.bag, gear: character.gear, plus: character.plus, job: character.job, quest: character.quest,
-    daily: dailyToday(character.daily, Date.now()),
+    daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
   };
 }
 
@@ -281,8 +284,8 @@ export class Server {
       if (characters.filter((c) => c.world === world).length >= CHARACTERS_PER_WORLD) throw new RuleViolation("character_limit");
       const character: Character = {
         id: `c-${token(10)}`, world, name, playerClass: picked, costume: look.id, xp: 0, spot: null, made: Date.now(),
-        // A start: a few potions.
-        bag: { potion_small: 3 }, gear: NO_GEAR, plus: {}, daily: readDaily(null), job: null, quest: QUEST_START,
+        // Nothing to start with: the elder hands out the first skill and potions (the tutorial).
+        bag: {}, gear: NO_GEAR, plus: {}, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
       };
       await withNicknameLock(() => claimName(account, character.id, key, name));
       await saveProfile(account, [...characters, character], character.id);
@@ -681,6 +684,56 @@ export class Server {
       return { ...c, job };
     });
     await writeRanking(account, next);
+    await refreshFighter(next);
+    return bagView(next);
+  }
+
+  // The first tutorial (see tutorial.ts). Talking to the elder teaches the first skill and hands
+  // over potions, once.
+  async tutorialTalk(): Promise<BagView> {
+    const account = $sender.account;
+    await playing(account);
+    await requireNpc("elder");
+    const next = await updateActive(account, (c) => (c.tutorial === TUTORIAL.talk
+      ? { ...c, tutorial: TUTORIAL.register, bag: addItem(c.bag, "potion_small", TUTORIAL_POTIONS) }
+      : c));
+    await refreshFighter(next);
+    return bagView(next);
+  }
+
+  // The steps after the elder are the player's own bar and auto-battle, which only the screen sees:
+  // it says when one is done. Nothing is paid for them, and a step only ever moves on by one.
+  async tutorialStep(from: unknown): Promise<BagView> {
+    const step = readTutorial(from);
+    if (step !== TUTORIAL.register && step !== TUTORIAL.auto) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    await playing(account);
+    return bagView(await updateActive(account, (c) => (c.tutorial === step ? { ...c, tutorial: (step + 1) as TutorialStep } : c)));
+  }
+
+  // The last step done: the tutorial is over and pays its gold, once.
+  async tutorialFinish(): Promise<BagView> {
+    const account = $sender.account;
+    await playing(account);
+    let paid = false;
+    const next = await updateActive(account, (c) => {
+      if (c.tutorial !== TUTORIAL.battle) return c;
+      paid = true;
+      return { ...c, tutorial: null };
+    });
+    if (paid) await $asset.mint(GOLD, TUTORIAL_GOLD);
+    return bagView(next);
+  }
+
+  // Skipping: still the elder's skill and potions if they were not had yet, but not the gold.
+  async tutorialSkip(): Promise<BagView> {
+    const account = $sender.account;
+    await playing(account);
+    const next = await updateActive(account, (c) => (c.tutorial === null ? c : {
+      ...c,
+      tutorial: null,
+      bag: c.tutorial === TUTORIAL.talk ? addItem(c.bag, "potion_small", TUTORIAL_POTIONS) : c.bag,
+    }));
     await refreshFighter(next);
     return bagView(next);
   }

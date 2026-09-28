@@ -12,10 +12,15 @@ export async function errorOf(promise: Promise<unknown>): Promise<string> {
 }
 
 
-// Makes a character on the account's server and plays it.
-export async function makeCharacter(server: any, account: string, name: string, playerClass = "warrior", costume = "0000"): Promise<any> {
+// Makes a character on the account's server and plays it. Unless a test is about the tutorial, the
+// character skips it, starting as characters did before it: first skill learned, potions in the bag.
+export async function makeCharacter(
+  server: any, account: string, name: string, playerClass = "warrior", costume = "0000", tutorial = false,
+): Promise<any> {
   server.connect({ account });
-  return server.createCharacter(name, playerClass, costume);
+  const view = await server.createCharacter(name, playerClass, costume);
+  if (!tutorial) await server.tutorialSkip();
+  return view;
 }
 
 // Sets the XP of an account's active character, as hunting will.

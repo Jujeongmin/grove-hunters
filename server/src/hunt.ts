@@ -44,6 +44,8 @@ interface Fighter {
   dead: boolean;
   // What the worn gear and the advanced class add.
   gear: FightBonus;
+  // Whether the first skill is learned yet (see tutorial.ts).
+  learned: boolean;
 }
 
 
@@ -64,6 +66,7 @@ function readFighter(state: Record<string, any>): Fighter {
     hp: typeof state.hp === "number" ? state.hp : maxHp,
     maxHp,
     dead: state.dead === true,
+    learned: state.look?.learned !== false,
   };
 }
 
@@ -221,6 +224,7 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
   const { f, state: mine } = await me(yaw);
   const skill = skillAt(f.playerClass, f.job, slot);
   if (!skill || f.level < skill.level) throw new RuleViolation("unavailable");
+  if (slot === 0 && !f.learned) throw new RuleViolation("unavailable");
   const ready: Record<string, unknown> = mine.skillReady && typeof mine.skillReady === "object" ? mine.skillReady : {};
   const readyAt = ready[slot];
   if (typeof readyAt === "number" && now < readyAt) throw new RuleViolation("too_fast");

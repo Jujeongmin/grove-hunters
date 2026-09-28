@@ -207,4 +207,7 @@ export interface ZoneLook {
   level: number;
   // The advanced class's name (전직), shown before the name.
   job: string | null;
+  // Whether the first skill is learned yet (new characters learn it from the elder); missing counts
+  // as learned.
+  learned?: boolean;
 }

@@ -116,7 +116,7 @@ describe("quests", () => {
     const claimed = await server.claimQuest();
     expect(claimed.quest).toEqual({ index: 1, count: 0 });
     expect(claimed.gold).toBeGreaterThanOrEqual(first.gold);
-    expect(claimed.bag.potion_small).toBeGreaterThanOrEqual(3 + first.items[0].n);
+    expect(claimed.bag.potion_small).toBeGreaterThanOrEqual(5 + first.items[0].n);
     expect((await server.getAccount()).xp).toBe(xpBefore + first.xp);
     expect(await errorOf(server.claimQuest())).toContain("quest_unfinished");
   });

@@ -1,4 +1,5 @@
 import type { JobId } from "../combat/jobs";
+import type { TutorialStep } from "./tutorial";
 import { RuleViolation } from "../world/types";
 import type { DailyProgress, QuestProgress } from "./quests";
 
@@ -168,6 +169,8 @@ export interface BagView {
   quest: QuestProgress;
   // Today's daily quests.
   daily: DailyProgress;
+  // The first tutorial's step; null once done (see tutorial.ts).
+  tutorial: TutorialStep | null;
 }
 
 export function sellPrice(id: ItemId): number {

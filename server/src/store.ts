@@ -2,6 +2,7 @@ import { isOnline, readFriendLists, type FriendEntry, type FriendSide } from "..
 import { levelOf, readXp } from "../../src/game/account/level";
 import { NO_GEAR } from "../../src/game/account/items";
 import { QUEST_START, readDaily } from "../../src/game/account/quests";
+import { skillLearned } from "../../src/game/account/tutorial";
 import {
   characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
 } from "../../src/game/account/characters";
@@ -94,6 +95,7 @@ export async function readProfile(account: string): Promise<Profile> {
       daily: readDaily(null),
       job: null,
       quest: QUEST_START,
+      tutorial: null,
     }];
   } else if (oldXp > 0) {
     // Moved over before its old XP was carried: the character named like the account's first name
@@ -291,7 +293,10 @@ export async function friendChannels(account: string, world: string): Promise<nu
 // What the others in a zone see of a character: name, class, costume and level.
 export function zoneLook(c: Character): ZoneLook {
   // The advanced class goes out as its id, not its name: every client says it in its own language.
-  return { name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job };
+  return {
+    name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job,
+    learned: skillLearned(c.tutorial, 0),
+  };
 }
 
 // How far a reported pose may be from the last one: walking speed with room for lag, plus a little.

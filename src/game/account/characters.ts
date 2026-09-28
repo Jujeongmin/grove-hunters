@@ -5,6 +5,7 @@ import { readZone, type ZoneId } from "../world/zones";
 import { readBag, readGear, readPlus, type Bag, type Gear, type Plus } from "./items";
 import { levelOf, readXp, type LevelView } from "./level";
 import { readDaily, readQuest, type DailyProgress, type QuestProgress } from "./quests";
+import { readTutorial, type TutorialStep } from "./tutorial";
 
 // An account holds characters on each server. One of them is active: the one the menus show and
 // the one that walks into the world. Its class and look are fixed when it is made.
@@ -33,6 +34,9 @@ export interface Character {
   // The advanced class it took (전직), if any, and where it is in the village's quests.
   job: JobId | null;
   quest: QuestProgress;
+  // Where it is in the first tutorial (see tutorial.ts); null once done, and for characters from
+  // before it.
+  tutorial: TutorialStep | null;
 }
 
 // What the menus show of a character.
@@ -70,6 +74,7 @@ export function readCharacters(raw: unknown): Character[] {
     out.push({
       id: c.id, world: c.world, name: c.name, playerClass, costume: costume.id, xp: readXp(c.xp), spot: readSpot(c.spot), made,
       bag: readBag(c.bag), gear: readGear(c.gear), plus: readPlus(c.plus), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
+      tutorial: readTutorial(c.tutorial),
     });
   }
   return out.sort((a, b) => a.made - b.made);
