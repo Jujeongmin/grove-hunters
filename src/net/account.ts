@@ -1,13 +1,10 @@
 import type { AccountView } from "../game/account/nickname";
+import { t, type Key } from "../ui/lang";
 import type { RankDetail, RankingView } from "../game/account/ranking";
 import { errorCode } from "./errors";
 import type { MatchTransport } from "./transport";
 
-const PROBLEMS: Record<string, string> = {
-  nickname_taken: "이미 쓰고 있는 이름이에요",
-  nickname_invalid: "한글·영문·숫자·_ 로 2~12자까지 쓸 수 있어요",
-  character_limit: "이 서버에는 캐릭터를 더 만들 수 없어요",
-};
+const PROBLEMS = ["nickname_taken", "nickname_invalid", "character_limit"] as const;
 
 export function loadAccount(transport: MatchTransport): Promise<AccountView> {
   return transport.call<AccountView>("getAccount");
@@ -32,7 +29,8 @@ export function selectCharacter(transport: MatchTransport, id: string): Promise<
 
 // What to show when making a character fails.
 export function nicknameProblem(error: unknown): string {
-  return PROBLEMS[errorCode(error)] ?? "저장하지 못했어요. 잠시 뒤 다시 시도해 주세요";
+  const code = errorCode(error);
+  return (PROBLEMS as readonly string[]).includes(code) ? t(`problem.${code}` as Key) : t("problem.saveFailed");
 }
 
 export function loadRanking(transport: MatchTransport): Promise<RankingView> {

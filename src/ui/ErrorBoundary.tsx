@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { t } from "./lang";
 import { GAME_TITLE } from "./brand";
 
 interface Props {
@@ -28,9 +29,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="crash">
         <h1>{GAME_TITLE}</h1>
-        <p>게임을 시작하지 못했습니다.</p>
+        <p>{t("error.startFailed")}</p>
         <pre>{error.message}</pre>
-        <button type="button" onClick={() => location.reload()}>다시 불러오기</button>
+        <button type="button" onClick={() => location.reload()}>{t("error.reload")}</button>
       </div>
     );
   }

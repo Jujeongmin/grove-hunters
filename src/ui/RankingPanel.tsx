@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
+import { slotLabel } from "./BagPanel";
 
 import type { RankDetail, RankRow, RankingView } from "../game/account/ranking";
 import type { PlayerClass } from "../game/combat/classes";
@@ -63,27 +65,27 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel stats-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>랭킹</h2>
-        {!load && <p className="note">Verse8 서버에 연결되면 볼 수 있어요.</p>}
-        {load && failed && <p className="note">랭킹을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>}
-        {load && !failed && !view && <p className="note">불러오는 중…</p>}
+        <h2>{t("rank.title")}</h2>
+        {!load && <p className="note">{t("rank.needServer")}</p>}
+        {load && failed && <p className="note">{t("rank.failed")}</p>}
+        {load && !failed && !view && <p className="note">{t("common.loading")}</p>}
 
         {view && !picked && (
           <>
             <div className="stats-mine">
               <span className="stats-level">Lv {view.level.level}</span>
-              <span className="note">전투력 {view.power.toLocaleString()}</span>
-              <span className="note">{view.rank === null ? "랭킹 없음" : `${view.rank}위`}</span>
+              <span className="note">{t("rank.power")} {view.power.toLocaleString()}</span>
+              <span className="note">{view.rank === null ? t("rank.unranked") : t("rank.place", { n: view.rank })}</span>
             </div>
             {view.board.length === 0 ? (
-              <p className="note">아직 경험치를 쌓은 모험가가 없어요.</p>
+              <p className="note">{t("rank.none")}</p>
             ) : (
               <ol className="stats-board">
                 <li className="head">
                   <span className="rank">#</span>
-                  <span>닉네임</span>
-                  <span>직업</span>
-                  <span>레벨</span>
+                  <span>{t("rank.nickname")}</span>
+                  <span>{t("rank.class")}</span>
+                  <span>{t("rank.level")}</span>
                 </li>
                 {view.board.map((row, i) => (
                   <li
@@ -93,7 +95,7 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                     onKeyDown={(e) => e.key === "Enter" && setPicked(row)}
                   >
                     <span className="rank">{i + 1}</span>
-                    <span className="who">{row.nickname ?? "(이름 없음)"}</span>
+                    <span className="who">{row.nickname ?? t("common.noName")}</span>
                     <span className="note">{classText(row.playerClass, row.job)}</span>
                     <span className="note">Lv {row.level}</span>
                   </li>
@@ -105,28 +107,28 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
 
         {picked && (
           <div className="rank-detail">
-            {!detail && !detailFailed && <p className="note">불러오는 중…</p>}
-            {detailFailed && <p className="note">정보를 불러오지 못했어요.</p>}
+            {!detail && !detailFailed && <p className="note">{t("common.loading")}</p>}
+            {detailFailed && <p className="note">{t("rank.detailFailed")}</p>}
             {detail && (
               <>
                 <h3>{detail.nickname}</h3>
                 <dl>
-                  <dt>순위</dt><dd>{detail.rank === null ? "-" : `${detail.rank}위`}</dd>
-                  <dt>서버</dt><dd>{serverName(detail.world)}</dd>
-                  <dt>직업</dt>
+                  <dt>{t("rank.rank")}</dt><dd>{detail.rank === null ? "-" : t("rank.place", { n: detail.rank })}</dd>
+                  <dt>{t("rank.server")}</dt><dd>{serverName(detail.world)}</dd>
+                  <dt>{t("rank.class")}</dt>
                   <dd>{detail.job ? `${jobName(detail.job)} (${className(detail.playerClass)})` : className(detail.playerClass)}</dd>
-                  <dt>레벨</dt><dd>Lv {detail.level}</dd>
-                  <dt>경험치</dt><dd>{detail.xp.toLocaleString()}</dd>
-                  <dt>전투력</dt><dd className="power">{detail.power.toLocaleString()}</dd>
-                  <dt>무기</dt><dd>{detail.gear.weapon ? itemName(detail.gear.weapon) : "없음"}</dd>
-                  <dt>갑옷</dt><dd>{detail.gear.armor ? itemName(detail.gear.armor) : "없음"}</dd>
+                  <dt>{t("rank.level")}</dt><dd>Lv {detail.level}</dd>
+                  <dt>{t("rank.xp")}</dt><dd>{detail.xp.toLocaleString()}</dd>
+                  <dt>{t("rank.power")}</dt><dd className="power">{detail.power.toLocaleString()}</dd>
+                  <dt>{slotLabel("weapon")}</dt><dd>{detail.gear.weapon ? itemName(detail.gear.weapon) : t("common.nothing")}</dd>
+                  <dt>{slotLabel("armor")}</dt><dd>{detail.gear.armor ? itemName(detail.gear.armor) : t("common.nothing")}</dd>
                 </dl>
               </>
             )}
-            <button type="button" className="text-button" onClick={() => setPicked(null)}>목록으로</button>
+            <button type="button" className="text-button" onClick={() => setPicked(null)}>{t("rank.toList")}</button>
           </div>
         )}
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );

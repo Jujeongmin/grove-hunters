@@ -1,18 +1,17 @@
-import type { FriendEntry, FriendsView } from "../game/account/friends";
+import { FRIEND_LIMIT, type FriendEntry, type FriendsView } from "../game/account/friends";
+import { t, type Key } from "../ui/lang";
 import { errorCode } from "./errors";
 import type { MatchTransport } from "./transport";
 
-const PROBLEMS: Record<string, string> = {
-  friend_not_found: "그런 닉네임을 찾지 못했어요",
-  friend_self: "자기 자신은 추가할 수 없어요",
-  already_friends: "이미 친구예요",
-  friend_limit: "친구는 100명까지 둘 수 있어요",
-  request_limit: "상대가 받은 요청이 너무 많아요",
-  no_request: "이미 처리된 요청이에요",
-};
+const PROBLEMS = [
+  "friend_not_found", "friend_self", "already_friends", "friend_limit", "request_limit", "no_request",
+] as const;
 
 export function friendProblem(error: unknown): string {
-  return PROBLEMS[errorCode(error)] ?? "지금은 할 수 없어요. 잠시 뒤 다시 시도해 주세요";
+  const code = errorCode(error);
+  return (PROBLEMS as readonly string[]).includes(code)
+    ? t(`problem.${code}` as Key, { n: FRIEND_LIMIT })
+    : t("problem.retryLater");
 }
 
 // Online first, then by name.

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { itemName, questGoal, questName } from "./names";
+import { itemName, npcName, questGoal, questName } from "./names";
+import { t, type Key } from "./lang";
 import { type BagView } from "../game/account/items";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
@@ -13,9 +14,9 @@ interface QuestPanelProps {
   onClose: () => void;
 }
 
-const PROBLEM: Record<string, string> = {
-  not_near: "촌장 곁에 서서 이야기하세요",
-  quest_unfinished: "아직 다 끝나지 않았어요",
+const PROBLEM: Record<string, Key> = {
+  not_near: "problem.not_near_elder",
+  quest_unfinished: "problem.quest_unfinished",
 };
 
 // Talking to the elder: the quest you are on, how far along it is, and the reward; hand it in when
@@ -27,25 +28,30 @@ export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
   const quest = bag ? QUESTS[index] : undefined;
   const done = bag ? questDone(bag.quest) : false;
   const reward = quest
-    ? [`${quest.xp.toLocaleString()} XP`, `${quest.gold.toLocaleString()} 골드`, ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`)]
+    ? [
+      t("common.xp", { n: quest.xp.toLocaleString() }), t("common.gold", { n: quest.gold.toLocaleString() }),
+      ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`),
+    ]
     : [];
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel npc-panel" onClick={(e) => e.stopPropagation()}>
-        <p className="npc-name">촌장 마르타</p>
+        <p className="npc-name">{npcName("elder")}</p>
         {!bag ? (
-          <p className="note">불러오는 중…</p>
+          <p className="note">{t("common.loading")}</p>
         ) : !quest ? (
-          <p className="npc-line">"이제 이 숲에서 자네를 당해낼 것은 없네. 고맙네, 사냥꾼."</p>
+          <p className="npc-line">{t("npc.elder.done")}</p>
         ) : (
           <>
             <p className="npc-line">
-              {done ? `"${questName(index)}, 잘 해냈군! 약속한 보상일세."` : `"${questGoal(index)}${objectParticle(questGoal(index))} 부탁하네."`}
+              {done
+                ? t("npc.elder.claim", { quest: questName(index) })
+                : t("npc.elder.ask", { goal: questGoal(index), p: objectParticle(questGoal(index)) })}
             </p>
             <div className="npc-quest">
               <b>{questName(index)}</b>
               <span>{questGoal(index)} · {bag.quest.count}/{quest.count}</span>
-              <span>보상: {reward.join(", ")}</span>
+              <span>{t("common.reward", { what: reward.join(t("list.join")) })}</span>
             </div>
             {done ? (
               <button
@@ -55,21 +61,21 @@ export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
                   setProblem(null);
                   void client.claimQuest().then((code) => {
                     setBusy(false);
-                    if (code) setProblem(PROBLEM[code] ?? "지금은 받을 수 없어요");
+                    if (code) setProblem(t(PROBLEM[code] ?? "problem.cannotClaim"));
                   });
                 }}
               >
-                보상 받기
+                {t("quests.claim")}
               </button>
             ) : (
               <button type="button" className="brush-button" onClick={() => { onSeek(quest.targets); onClose(); }}>
-                찾아가기
+                {t("quests.goFind")}
               </button>
             )}
           </>
         )}
         {problem && <p className="bag-problem">{problem}</p>}
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );

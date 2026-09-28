@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t } from "./lang";
 import { dailyGoal, dailyName, itemName, questGoal, questName } from "./names";
 import { type BagView } from "../game/account/items";
 import { DAILY_QUESTS, QUESTS, dailyToday, questDone, type Quest } from "../game/account/quests";
@@ -7,9 +8,10 @@ import type { MonsterType } from "../game/world/monsters";
 // A quest's reward as one line: XP, gold and any items.
 export function rewardText(quest: { xp?: number; gold: number; items: Quest["items"] }): string {
   return [
-    ...(quest.xp ? [`${quest.xp.toLocaleString()} XP`] : []), `${quest.gold.toLocaleString()} 골드`,
+    ...(quest.xp ? [t("common.xp", { n: quest.xp.toLocaleString() })] : []),
+    t("common.gold", { n: quest.gold.toLocaleString() }),
     ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`),
-  ].join(", ");
+  ].join(t("list.join"));
 }
 
 // The day's quests, one per hunting field: how far along, the reward, and claiming it.
@@ -19,7 +21,7 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
   const today = dailyToday(bag.daily, Date.now());
   return (
     <>
-      <h3>일일 퀘스트 · 매일 0시에 새로 시작</h3>
+      <h3>{t("quests.daily")}</h3>
       {DAILY_QUESTS.map((q) => {
         const count = today.counts[q.id] ?? 0;
         const claimed = today.claimed.includes(q.id);
@@ -30,7 +32,7 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
             <span>{dailyGoal(q)}</span>
             <div className="hud-bar xp"><i style={{ width: `${Math.round((count / q.count) * 100)}%` }} /></div>
             <span className="quest-count">{count} / {q.count}</span>
-            <span className="quest-reward">보상: {rewardText(q)}</span>
+            <span className="quest-reward">{t("common.reward", { what: rewardText(q) })}</span>
             {done && !claimed && (
               <button
                 type="button" className="brush-button small" disabled={busy}
@@ -39,14 +41,14 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
                   setProblem(null);
                   void onClaimDaily(q.id).then((code) => {
                     setBusy(false);
-                    if (code) setProblem("지금은 받을 수 없어요");
+                    if (code) setProblem(t("problem.cannotClaim"));
                   });
                 }}
               >
-                보상 받기
+                {t("quests.claim")}
               </button>
             )}
-            {claimed && <span className="hint">오늘 보상을 받았어요</span>}
+            {claimed && <span className="hint">{t("quests.claimedToday")}</span>}
           </div>
         );
       })}
@@ -72,31 +74,31 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
   const done = bag ? questDone(bag.quest) : false;
   return (
     <div className="side-panel quest-log">
-      <h2>퀘스트</h2>
+      <h2>{t("quests.title")}</h2>
       {!bag ? (
-        <p className="note">불러오는 중…</p>
+        <p className="note">{t("common.loading")}</p>
       ) : quest ? (
         <div className={`quest-entry current${done ? " done" : ""}`}>
           <b>{questName(index)}{done ? " ✔" : ""}</b>
           <span>{questGoal(index)}</span>
           <div className="hud-bar xp"><i style={{ width: `${Math.round((bag.quest.count / quest.count) * 100)}%` }} /></div>
           <span className="quest-count">{bag.quest.count} / {quest.count}</span>
-          <span className="quest-reward">보상: {rewardText(quest)}</span>
+          <span className="quest-reward">{t("common.reward", { what: rewardText(quest) })}</span>
           {done ? (
             inVillage
-              ? <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>촌장에게 보고하러 가기</button>
-              : <span className="hint">마을의 촌장에게 보고하면 보상을 받아요</span>
+              ? <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>{t("quests.goReport")}</button>
+              : <span className="hint">{t("quests.reportHint")}</span>
           ) : (
-            <button type="button" className="brush-button small" onClick={() => { onSeek(quest.targets); onClose(); }}>찾아가기</button>
+            <button type="button" className="brush-button small" onClick={() => { onSeek(quest.targets); onClose(); }}>{t("quests.goFind")}</button>
           )}
         </div>
       ) : (
-        <p className="note">모든 퀘스트를 마쳤어요.</p>
+        <p className="note">{t("quests.allDone")}</p>
       )}
       {bag && <DailyList bag={bag} onClaimDaily={onClaimDaily} />}
       {index > 0 && (
         <>
-          <h3>완료한 퀘스트</h3>
+          <h3>{t("quests.past")}</h3>
           {QUESTS.slice(0, index).map((_, i) => index - 1 - i).map((past) => (
             <div key={past} className="quest-entry past">
               <b>{questName(past)} ✔</b>
@@ -105,8 +107,8 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
           ))}
         </>
       )}
-      {quest && index + 1 < QUESTS.length && <p className="note">앞으로 {QUESTS.length - index - 1}개의 퀘스트가 더 있어요.</p>}
-      <button type="button" className="text-button" onClick={onClose}>닫기</button>
+      {quest && index + 1 < QUESTS.length && <p className="note">{t("quests.more", { n: QUESTS.length - index - 1 })}</p>}
+      <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
     </div>
   );
 }
@@ -115,10 +117,10 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
 export function QuestCompleteBanner({ index, inVillage, onClose }: { index: number; inVillage: boolean; onClose: () => void }) {
   return (
     <div className="quest-complete" role="status" onClick={onClose}>
-      <span className="quest-complete-title">퀘스트 완료!</span>
+      <span className="quest-complete-title">{t("quests.complete")}</span>
       <b>{questName(index)}</b>
-      <span>보상: {rewardText(QUESTS[index])}</span>
-      <span className="hint">{inVillage ? "촌장에게 보고하고 보상을 받으세요" : "마을의 촌장에게 보고하고 보상을 받으세요"}</span>
+      <span>{t("common.reward", { what: rewardText(QUESTS[index]) })}</span>
+      <span className="hint">{t(inVillage ? "quests.reportHere" : "quests.reportInVillage")}</span>
     </div>
   );
 }

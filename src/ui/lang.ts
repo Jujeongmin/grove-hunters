@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { onSettings, settings, updateSettings } from "./settings";
 import { ko, type Bundle, type Key } from "./strings/ko";
+export type { Key };
 import { en } from "./strings/en";
 import { ja } from "./strings/ja";
 import { zhHant } from "./strings/zhHant";

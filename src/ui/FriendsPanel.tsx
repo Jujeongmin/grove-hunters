@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { t } from "./lang";
 import type { FriendEntry, FriendsView } from "../game/account/friends";
 import { PARTY_MAX, type PartyView } from "../game/account/party";
 import { friendProblem, sortFriends, type FriendsClient } from "../net/friends";
@@ -18,7 +19,7 @@ interface FriendsPanelProps {
 }
 
 function nameOf(entry: FriendEntry): string {
-  return entry.nickname ?? "(이름 없음)";
+  return entry.nickname ?? t("common.noName");
 }
 
 // Right-hand side drawer: add a friend by nickname, answer requests, see who is online.
@@ -50,7 +51,7 @@ export function FriendsPanel({
     void run("add", async () => {
       const status = await client.request(query.trim());
       setQuery("");
-      return status === "accepted" ? "서로 요청해서 바로 친구가 되었어요" : "친구 요청을 보냈어요";
+      return t(status === "accepted" ? "friends.bothWays" : "friends.sent");
     });
   };
 
@@ -77,47 +78,47 @@ export function FriendsPanel({
   const inviteFriend = (entry: FriendEntry) =>
     void run(`party:${entry.account}`, async () => {
       await party!.invite(entry.account);
-      return `${nameOf(entry)}님에게 파티 초대를 보냈어요`;
+      return t("party.invited", { name: nameOf(entry) });
     });
 
   return (
     <aside className="friends-panel">
       <header>
-        <h2>친구</h2>
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <h2>{t("friends.title")}</h2>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </header>
-      {client && !hasCharacter && <p className="note">친구를 추가하려면 먼저 캐릭터를 만드세요.</p>}
+      {client && !hasCharacter && <p className="note">{t("friends.needCharacter")}</p>}
       <form className="friend-add" onSubmit={add}>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="닉네임으로 친구 추가"
+          placeholder={t("friends.search")}
           disabled={!client || !hasCharacter}
         />
-        <button type="submit" className="text-button" disabled={!client || !hasCharacter || busy !== null || query.trim() === ""}>추가</button>
+        <button type="submit" className="text-button" disabled={!client || !hasCharacter || busy !== null || query.trim() === ""}>{t("common.add")}</button>
       </form>
       {notice && <p className="friend-notice">{notice}</p>}
 
-      {!client && <p className="note">친구와 파티는 Verse8 서버를 연결한 뒤 열립니다.</p>}
-      {client && !view && <p className="note">친구 목록을 불러오는 중…</p>}
+      {!client && <p className="note">{t("friends.needServer")}</p>}
+      {client && !view && <p className="note">{t("friends.loading")}</p>}
 
       {partyView?.party && (
         <>
-          <h3>파티 {members.length}/{PARTY_MAX}</h3>
+          <h3>{t("party.title", { n: members.length, max: PARTY_MAX })}</h3>
           <ul className="friend-list">
             {members.map((m) => (
               <li key={m.account} className={m.online ? "online" : "offline"}>
                 <span className="presence" />
                 <span className="friend-name">
                   {m.nickname ?? m.account}
-                  {m.account === partyView.party!.leader && <span className="party-leader">파티장</span>}
+                  {m.account === partyView.party!.leader && <span className="party-leader">{t("party.leader")}</span>}
                 </span>
                 {leading && m.account !== account && (
                   <button type="button" className="text-button" disabled={busy !== null}
                     onClick={() => void run(`party:${m.account}`, async () => {
                       await party!.kick(m.account);
                       return null;
-                    })}>내보내기</button>
+                    })}>{t("party.kick")}</button>
                 )}
               </li>
             ))}
@@ -126,15 +127,15 @@ export function FriendsPanel({
             <button type="button" className="text-button" disabled={busy !== null}
               onClick={() => void run("party:leave", async () => {
                 await party!.leave();
-                return "파티에서 나왔어요";
-              })}>파티 나가기</button>
+                return t("party.left");
+              })}>{t("party.leave")}</button>
           </div>
         </>
       )}
 
       {view && view.incoming.length > 0 && (
         <>
-          <h3>받은 요청 {view.incoming.length}</h3>
+          <h3>{t("friends.incoming", { n: view.incoming.length })}</h3>
           <ul className="friend-list">
             {view.incoming.map((entry) => (
               <li key={entry.account}>
@@ -142,13 +143,13 @@ export function FriendsPanel({
                 <button type="button" className="text-button" disabled={busy !== null}
                   onClick={() => void run(entry.account, async () => {
                     await client!.accept(entry.account);
-                    return `${nameOf(entry)}님과 친구가 되었어요`;
-                  })}>수락</button>
+                    return t("friends.nowFriends", { name: nameOf(entry) });
+                  })}>{t("common.accept")}</button>
                 <button type="button" className="text-button" disabled={busy !== null}
                   onClick={() => void run(entry.account, async () => {
                     await client!.remove(entry.account);
                     return null;
-                  })}>거절</button>
+                  })}>{t("common.decline")}</button>
               </li>
             ))}
           </ul>
@@ -157,20 +158,20 @@ export function FriendsPanel({
 
       {view && (
         <>
-          <h3>친구 목록 {friends.length > 0 && `· 온라인 ${onlineCount}/${friends.length}`}</h3>
-          {friends.length === 0 && <p className="note">아직 친구가 없습니다. 닉네임으로 추가해 보세요.</p>}
+          <h3>{t("friends.list")} {friends.length > 0 && t("friends.online", { on: onlineCount, all: friends.length })}</h3>
+          {friends.length === 0 && <p className="note">{t("friends.none")}</p>}
           <ul className="friend-list">
             {friends.map((entry) => (
               <li key={entry.account} className={entry.online ? "online" : "offline"}>
-                <span className="presence" aria-label={entry.online ? "온라인" : "오프라인"} />
+                <span className="presence" aria-label={t(entry.online ? "friends.isOnline" : "friends.isOffline")} />
                 <span className="friend-name">{nameOf(entry)}</span>
                 {canInvite(entry) && (
                   <button type="button" className="text-button" disabled={busy !== null} onClick={() => inviteFriend(entry)}>
-                    초대
+                    {t("friends.invite")}
                   </button>
                 )}
                 <button type="button" className="text-button" disabled={busy !== null} onClick={() => remove(entry)}>
-                  {confirming === entry.account ? "정말 삭제" : "삭제"}
+                  {t(confirming === entry.account ? "common.removeSure" : "common.remove")}
                 </button>
               </li>
             ))}
@@ -180,17 +181,17 @@ export function FriendsPanel({
 
       {view && view.outgoing.length > 0 && (
         <>
-          <h3>보낸 요청</h3>
+          <h3>{t("friends.outgoing")}</h3>
           <ul className="friend-list">
             {view.outgoing.map((entry) => (
               <li key={entry.account}>
                 <span className="friend-name">{nameOf(entry)}</span>
-                <span className="friend-status">대기 중</span>
+                <span className="friend-status">{t("friends.waiting")}</span>
                 <button type="button" className="text-button" disabled={busy !== null}
                   onClick={() => void run(entry.account, async () => {
                     await client!.remove(entry.account);
                     return null;
-                  })}>취소</button>
+                  })}>{t("common.cancel")}</button>
               </li>
             ))}
           </ul>

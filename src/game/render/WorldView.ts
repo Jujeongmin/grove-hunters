@@ -34,6 +34,7 @@ import { MONSTER_SKINS } from "./monsterLooks";
 import { PlayerActor } from "./PlayerActor";
 import { QUALITY, hotbarFor, onSettings, settings } from "../../ui/settings";
 import { itemName, jobLabel, monsterName, npcName, npcRole, zoneName } from "../../ui/names";
+import { t } from "../../ui/lang";
 
 export const LOOK_SENSITIVITY = 0.0022;
 // A portal is a summoning circle (Magic Summoning Circle, CityBuildingKit, CC0).
@@ -326,7 +327,10 @@ export class WorldView {
   seekQuest(types: readonly MonsterType[]): void {
     if (!Object.values(this.client.state.monsters).some((m) => types.includes(m.type))) {
       const zones = ZONE_IDS.filter((z) => ZONE_MONSTERS[z].some((t) => types.includes(t)) || types.includes(ZONE_BOSS[z]!));
-      this.notes.push({ text: `이 구역에는 없어요${zones.length ? ` (${zones.map(zoneName).join(", ")})` : ""}`, at: performance.now() });
+      this.notes.push({
+        text: zones.length ? t("note.notHereBut", { zones: zones.map(zoneName).join(", ") }) : t("note.notHere"),
+        at: performance.now(),
+      });
       return;
     }
     this.questSeek = [...types];
@@ -348,7 +352,7 @@ export class WorldView {
   // turned away rather than walked into.
   walkToSpot(to: Point2): void {
     if (solidAt(this.layout, to.x, to.z)) {
-      this.notes.push({ text: "그곳으로는 갈 수 없어요", at: performance.now() });
+      this.notes.push({ text: t("note.cannotWalk"), at: performance.now() });
       return;
     }
     this.walkGoal = { to, talk: null };
@@ -743,8 +747,8 @@ export class WorldView {
       this.gain = { xp: recent + result.xp, at: now };
     }
     if (result.gold > 0 || result.items.length > 0) playCue("gold");
-    if (result.gold > 0) this.notes.push({ text: `+${result.gold} 골드`, at: now });
-    for (const id of result.items) this.notes.push({ text: `${id in ITEMS ? itemName(id) : id} 획득`, at: now });
+    if (result.gold > 0) this.notes.push({ text: t("note.gotGold", { n: result.gold }), at: now });
+    for (const id of result.items) this.notes.push({ text: t("note.gotItem", { name: id in ITEMS ? itemName(id) : id }), at: now });
   }
 
   // Drinks the potion that fits: the big one when a lot is missing, otherwise the small one.
@@ -893,7 +897,9 @@ export class WorldView {
       this.portalGlows.push(glow);
       const label = createLabel(2.6);
       label.position.set(portal.x, 3.3, portal.z);
-      const why = ZONES[portal.to].paid && !this.options.owned ? " (정식판)" : locked ? ` (Lv${ZONES[portal.to].minLevel})` : "";
+      const why = ZONES[portal.to].paid && !this.options.owned
+        ? t("portal.needsFull")
+        : locked ? t("portal.needsLevel", { n: ZONES[portal.to].minLevel }) : "";
       setLabel(label, `${zoneName(portal.to)}${why}`, locked ? "#ffb08a" : "#bff0ff");
       this.scene.add(ring, glow, label);
     }

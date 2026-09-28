@@ -1,20 +1,19 @@
-import type { Activity, PartyView } from "../game/account/party";
+import { PARTY_MAX, type Activity, type PartyView } from "../game/account/party";
+import { t, type Key } from "../ui/lang";
 import { COSTUMES, costumeById, type Costume } from "../game/render/costumes";
 import { classForSeat, readClass, type PlayerClass } from "../game/combat/classes";
 import { errorCode } from "./errors";
 import type { MatchTransport } from "./transport";
 
-const PROBLEMS: Record<string, string> = {
-  not_friends: "친구만 초대할 수 있어요",
-  party_full: "파티는 4명까지예요",
-  already_in_party: "이미 같은 파티예요",
-  no_invite: "초대가 만료되었어요",
-  not_leader: "파티장만 할 수 있어요",
-  party_busy: "파티원이 아직 게임 중이에요",
-};
+const PROBLEMS = [
+  "not_friends", "party_full", "already_in_party", "no_invite", "not_leader", "party_busy",
+] as const;
 
 export function partyProblem(error: unknown): string {
-  return PROBLEMS[errorCode(error)] ?? "지금은 할 수 없어요. 잠시 뒤 다시 시도해 주세요";
+  const code = errorCode(error);
+  return (PROBLEMS as readonly string[]).includes(code)
+    ? t(`problem.${code}` as Key, { n: PARTY_MAX })
+    : t("problem.retryLater");
 }
 
 // Your party and invites, refreshed whenever the server changes them and on every sync().

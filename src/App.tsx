@@ -15,7 +15,7 @@ import { useFriends } from "./ui/useFriends";
 import { useParty } from "./ui/useParty";
 import { usePurchase } from "./ui/usePurchase";
 import { useUiScale } from "./ui/useUiScale";
-import { useLang } from "./ui/lang";
+import { t, useLang } from "./ui/lang";
 
 const ONLINE_AVAILABLE = Boolean(import.meta.env.VITE_AGENT8_VERSE);
 const DEV_LOCAL = devLocalTransport();
@@ -45,7 +45,7 @@ export default function App() {
     if (!world) setInWorld(false);
   }, [world]);
 
-  const rotate = <div className="rotate-hint">화면을 가로로 돌리면 더 편하게 즐길 수 있어요</div>;
+  const rotate = <div className="rotate-hint">{t("rotate.hint")}</div>;
   if (galleryEnabled()) return <ModelGallery />;
   const active = view?.active ?? null;
   if (inWorld && world && view && active) {
