@@ -27,6 +27,9 @@ import { SkillPanel } from "./SkillPanel";
 import { RankingPanel } from "./RankingPanel";
 import { iconFor } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
+import { GrovePanel } from "./GrovePanel";
+import { DonatePanel } from "./DonatePanel";
+import type { GroveView } from "../game/world/grove";
 import type { NpcId } from "../game/world/npcs";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
@@ -131,7 +134,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -146,6 +149,8 @@ interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
 
 // How long the quest-complete panel stays up.
 const QUEST_BANNER_MS = 4500;
+// How often the grove is read again while you play.
+const GROVE_REFRESH_MS = 60_000;
 // How long a refused portal's message stays up.
 const PROBLEM_MS = 3000;
 
@@ -192,6 +197,24 @@ function ZoneScreen({
   const keyHints = !touch;
   // Whom you are talking to: the HUD steps aside for their words while the camera is at their face.
   const [talkingTo, setTalkingTo] = useState<NpcId | null>(null);
+  // The server's grove and village, read on coming in and every minute (the grove panel, the gifts to
+  // the village and how the world looks).
+  const [grove, setGrove] = useState<GroveView | null>(null);
+  const [groveFailed, setGroveFailed] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const load = () => void client.grove().then((next) => {
+      if (!live) return;
+      if (next) setGrove(next);
+      else setGroveFailed(true);
+    });
+    load();
+    const timer = setInterval(load, GROVE_REFRESH_MS);
+    return () => {
+      live = false;
+      clearInterval(timer);
+    };
+  }, [client]);
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
@@ -274,6 +297,7 @@ function ZoneScreen({
     { id: "ranking", label: t("menu.ranking"), key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
     { id: "quests", label: t("menu.quests"), key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
     { id: "skills", label: t("menu.skills"), key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
+    { id: "grove", label: t("menu.grove"), key: "G", code: "KeyG", act: () => toggle("grove"), on: panel === "grove" },
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith" },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
@@ -498,7 +522,7 @@ function ZoneScreen({
       )}
       {talkingTo && (
         <DialogueBox
-          id={talkingTo} bag={bag}
+          id={talkingTo} bag={bag} building={grove?.buildings.some((b) => b.state === "building") ?? false}
           onClaim={async () => {
             const code = await client.claimQuest();
             if (!code) endTalk();
@@ -510,6 +534,19 @@ function ZoneScreen({
             if (choice === "seek" && quest) view.current?.seekQuest(quest.targets);
             if (choice === "shop") setPanel("shop");
             if (choice === "forge") setPanel("smith");
+            if (choice === "donate") setPanel("donate");
+          }}
+        />
+      )}
+      {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
+      {panel === "donate" && grove && (
+        <DonatePanel
+          view={grove} bag={bag} onClose={() => setPanel(null)}
+          onDonate={async (items, gold) => {
+            const result = await client.donate(items, gold);
+            if (typeof result === "string") return result;
+            setGrove(result);
+            return null;
           }}
         />
       )}

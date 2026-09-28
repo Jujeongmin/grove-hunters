@@ -500,6 +500,27 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
 .upgrade-sheet .text-button:hover { opacity: 1; }
 /* Talking to a village NPC. */
+/* The grove this week and the village it is rebuilding, in one screen. */
+.grove-panel { width: min(520px, 94%); gap: 8px; }
+.grove-gauge { height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.grove-gauge i { display: block; height: 100%; background: linear-gradient(90deg, #7fd48a, #d9f6a2); }
+.grove-count { display: flex; justify-content: space-between; margin: 0; font-size: 13px; }
+.grove-stages { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 11px; color: var(--ink-dim); }
+.grove-stages li { flex: 1; padding: 4px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
+.grove-stages li.on { color: #1a120b; background: #9dffb0; }
+.grove-panel h3 { margin: 4px 0 0; font: 700 14px var(--font-head); }
+.grove-buildings { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.grove-buildings li { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); font-size: 11px; }
+.grove-buildings li.done { background: rgba(157, 255, 176, 0.14); }
+.grove-buildings li.closed { opacity: 0.6; }
+.grove-state { color: var(--ember); }
+.grove-top { color: #ffd36a; }
+.donate-panel { width: min(460px, 94%); gap: 8px; }
+.donate-needs { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.donate-needs li { display: grid; grid-template-columns: 24px 1fr auto auto 80px; align-items: center; gap: 8px; font-size: 12px; }
+.donate-needs li:last-child { grid-template-columns: 1fr auto auto 80px; }
+.donate-needs img { width: 24px; height: 24px; image-rendering: pixelated; }
+.donate-needs input { width: 80px; }
 /* A talk with someone in the village (as in Lineage M or Lost Ark): the camera at their face, the HUD
    gone, and their words across the bottom, the ways on at the right. */
 /* The whole screen takes the tap that moves the talk on (and keeps it from reaching the world). */

@@ -16,7 +16,8 @@ const PROBLEM: Record<string, Key> = {
 };
 
 const CHOICE_LABEL: Record<DialogueChoice, Key> = {
-  claim: "quests.claim", seek: "quests.goFind", shop: "dialogue.shop", forge: "dialogue.forge", close: "common.close",
+  claim: "quests.claim", seek: "quests.goFind", donate: "dialogue.donate", shop: "dialogue.shop", forge: "dialogue.forge",
+  close: "common.close",
 };
 
 // What the NPC says, by who they are and where you stand with the elder.
@@ -36,6 +37,8 @@ function lineFor(id: NpcId, bag: BagView | null): string {
 interface DialogueBoxProps {
   id: NpcId;
   bag: BagView | null;
+  // A village building is under way: the elder takes gifts for it.
+  building: boolean;
   // Hands the finished quest in; answers null when done, or why it was refused.
   onClaim: () => Promise<string | null>;
   // Picks a way on: go after the quest, the shop, the forge, or just leave.
@@ -46,7 +49,7 @@ interface DialogueBoxProps {
 // face: their name, their words coming out a letter at a time, and the ways on once they are said.
 // A tap anywhere moves the talk on: the rest of the words at once, then (when leaving is the only way
 // on) the end of the talk.
-export function DialogueBox({ id, bag, onClaim, onChoice }: DialogueBoxProps) {
+export function DialogueBox({ id, bag, building, onClaim, onChoice }: DialogueBoxProps) {
   const line = lineFor(id, bag);
   const [shown, setShown] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -59,7 +62,7 @@ export function DialogueBox({ id, bag, onClaim, onChoice }: DialogueBoxProps) {
   }, [shown, line]);
   const said = shown >= line.length;
   const state = bag ? { quest: bag.quest, tutorial: bag.tutorial } : null;
-  const choices = dialogueChoices(id, state);
+  const choices = dialogueChoices(id, state, building);
   const quest = bag ? QUESTS[bag.quest.index] : undefined;
 
   const moveOn = () => {

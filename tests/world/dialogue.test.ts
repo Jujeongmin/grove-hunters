@@ -27,4 +27,11 @@ describe("talking to the village's people", () => {
     expect(dialogueChoices("merchant", null)).toEqual(["shop", "close"]);
     expect(dialogueChoices("smith", null)).toEqual(["forge", "close"]);
   });
+
+  it("lets the elder take gifts while a building is under way", () => {
+    expect(dialogueChoices("elder", on(0, 0), true)).toEqual(["seek", "donate", "close"]);
+    expect(dialogueChoices("elder", on(QUESTS.length, 0), true)).toEqual(["donate", "close"]);
+    expect(dialogueChoices("elder", on(0, 0, 1), true)).toEqual(["close"]);
+    expect(dialogueChoices("merchant", null, true)).toEqual(["shop", "close"]);
+  });
 });

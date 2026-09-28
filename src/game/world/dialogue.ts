@@ -20,13 +20,14 @@ export function npcMarker(id: NpcId, state: NpcState): NpcMarker | null {
   return questDone(state.quest) ? "report" : "quest";
 }
 
-// The buttons at the end of a talk: hand the quest in, go after it, open the shop or the forge, or
-// leave. In the tutorial the elder only teaches.
-export type DialogueChoice = "claim" | "seek" | "shop" | "forge" | "close";
+// The buttons at the end of a talk: hand the quest in, go after it, give to the village's building
+// under way (`building`), open the shop or the forge, or leave. In the tutorial the elder only teaches.
+export type DialogueChoice = "claim" | "seek" | "donate" | "shop" | "forge" | "close";
 
-export function dialogueChoices(id: NpcId, state: NpcState): DialogueChoice[] {
+export function dialogueChoices(id: NpcId, state: NpcState, building = false): DialogueChoice[] {
   if (id === "merchant") return ["shop", "close"];
   if (id === "smith") return ["forge", "close"];
-  if (!state || state.tutorial !== null || !QUESTS[state.quest.index]) return ["close"];
-  return [questDone(state.quest) ? "claim" : "seek", "close"];
+  if (!state || state.tutorial !== null) return ["close"];
+  const quest: DialogueChoice[] = QUESTS[state.quest.index] ? [questDone(state.quest) ? "claim" : "seek"] : [];
+  return [...quest, ...(building ? ["donate" as const] : []), "close"];
 }

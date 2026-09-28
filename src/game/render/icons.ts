@@ -21,6 +21,8 @@ export const ICON_IDS = [
   "ui_ranking", "ui_quests", "ui_skills", "ui_bag", "ui_shop", "ui_menu", "ui_map", "ui_upgrade", "ui_lock",
   // Over the elder's head (PixelLab): ! for something to hear, ? for a quest to hand in.
   "marker_quest", "marker_report",
+  // The grove panel's menu button (PixelLab).
+  "ui_grove",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

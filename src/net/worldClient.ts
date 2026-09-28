@@ -1,4 +1,5 @@
 import { readSlot } from "../game/combat/skills";
+import type { GroveView } from "../game/world/grove";
 import type { TutorialStep } from "../game/account/tutorial";
 import { readJumpY } from "../game/rules/movement";
 import { PROTOCOL_VERSION, isPose, readSwing, type Pose } from "../game/world/types";
@@ -289,6 +290,22 @@ export class WorldClient {
     return this.bagCall("tutorialFinish", []);
   }
 
+  // The server's grove and village (null when it could not be read).
+  async grove(): Promise<GroveView | null> {
+    return await this.transport.call<GroveView>("grove").catch(() => null);
+  }
+
+  // A gift to the village's building under way: the grove after it, or why it was refused.
+  async donate(items: Partial<Record<ItemId, number>>, gold: number): Promise<GroveView | string> {
+    try {
+      const view = await this.transport.call<GroveView>("donate", [items, gold]);
+      void this.refreshBag();
+      return view;
+    } catch (error) {
+      return errorCode(error) ?? "unavailable";
+    }
+  }
+
   // Payouts that came in since the last call, oldest first.
   takePayouts(): Payout[] {
     const out = this.payouts;
@@ -412,8 +429,14 @@ export class WorldClient {
         await new Promise((resolve) => setTimeout(resolve, JOIN_RETRY_MS * attempt));
       }
     }
-    await this.transport.call("arrive");
+    const arrived = await this.transport.call<{ grove?: { gold: number; xp: number } | null }>("arrive");
     this.arrive(entry);
+    // What the grove paid on coming in (stages reached, a finished building's thanks) shows like a
+    // hunt's payout.
+    if (arrived?.grove) {
+      this.payouts.push({ xp: arrived.grove.xp, gold: arrived.grove.gold, items: [] });
+      void this.refreshBag();
+    }
   }
 
   private arrive(entry: ZoneEntry): void {

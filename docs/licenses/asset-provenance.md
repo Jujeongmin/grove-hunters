@@ -167,6 +167,7 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/icons/iron_monk_1.png`, `iron_monk_2.png` | 철벽 수도승 철산고, 금강불괴 | iron_monk_1은 2차 생성 |
 | `public/assets/ui/icons/ui_lock.png` | 정식판 직업 탭의 자물쇠 (🔒 이모지 대신) | |
 | `public/assets/ui/icons/marker_quest.png`, `marker_report.png` | 촌장 머리 위 !(들을 이야기)와 ?(보고할 퀘스트) | 2026-09-28, 32x32, 강제 팔레트 없이 생성 |
+| `public/assets/ui/icons/ui_grove.png` | 메뉴의 숲(정화·마을 복구) 버튼, 새싹 | 2026-09-28, 32x32 |
 
 나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
 물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.
