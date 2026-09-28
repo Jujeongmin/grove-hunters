@@ -15,8 +15,17 @@
 html, body { margin: 0; height: 100%; background: #000; color: var(--ink); font-family: var(--font-body); }
 /* The fonts come in one weight; a faked bold would smear them. */
 html { font-synthesis: none; }
-/* Korean wraps between words, not inside them, so lines break where a reader would break them. */
-html { word-break: keep-all; overflow-wrap: break-word; }
+/* Korean, Japanese and Chinese wrap between words, not inside them, so lines break where a reader
+   would break them. English and the rest keep the normal rules: keep-all would otherwise let a long
+   word break in the middle of itself rather than move down a line. */
+html { word-break: normal; overflow-wrap: break-word; }
+html:lang(ko), html:lang(ja), html:lang(zh-Hant), html:lang(zh-Hans) { word-break: keep-all; }
+/* A sentence that ends with one stray word on its own line reads as a mistake. The lines of the
+   game's short notes are evened out instead; a language whose sentence is longer than Korean's
+   then breaks in the middle rather than leaving a tail. */
+.note, .hint, .npc-line, .class-locked-note, .upgrade-list span, .skill-row-text, .quest-reward {
+  text-wrap: balance;
+}
 body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
 /* A game screen: dragging must not select text or lift images. Text fields stay editable. */
 body { user-select: none; -webkit-user-select: none; }
@@ -482,7 +491,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-row { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .bag-icon { width: 28px; height: 28px; image-rendering: pixelated; background: rgba(0, 0, 0, 0.35); border-radius: 4px; padding: 2px; }
 .bag-row b { font: 700 15px var(--font-head); }
-.bag-slot { width: 36px; color: var(--ink-dim); font-size: 13px; }
+/* Wide enough for "Weapon" and "Armour", which are longer than 무기 and 갑옷. */
+.bag-slot { width: 54px; color: var(--ink-dim); font-size: 13px; }
 .bag-count { color: var(--ink-dim); font-variant-numeric: tabular-nums; }
 .bag-blurb { flex: 1; font-size: 12px; color: var(--ink-dim); }
 .bag-row .text-button { font-size: 13px; padding: 4px 8px; }
@@ -839,6 +849,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .class-name { margin: 0; font: 700 22px var(--font-head); color: var(--ember); }
 .class-stats { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; font-size: 13px; }
 .class-stats div { display: flex; justify-content: space-between; gap: 6px; }
+/* The weapon and its reach read as one line; in English that needs the whole width. */
+.class-stats div:first-child { grid-column: 1 / -1; }
 .class-stats dt { color: var(--ink-dim); }
 .class-stats dd { margin: 0; font-weight: 700; }
 .class-skill { padding: 8px 10px; border-radius: 6px; background: rgba(255, 179, 90, 0.1); }
@@ -871,7 +883,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .character-card span { font-size: 12px; color: var(--ink-dim); }
 .character-card.picked { border-color: var(--ember); background: rgba(60, 38, 18, 0.85); }
 .character-card:hover { border-color: rgba(255, 179, 90, 0.7); }
-.character-card.new { align-items: center; font: 700 14px var(--font-head); color: var(--ember); border-style: dashed; }
+/* The card only holds one line, and the line is longer in English and Japanese than in Korean. */
+.character-card.new { align-items: center; justify-content: center; padding: 6px; font: 700 13px var(--font-head); white-space: nowrap; color: var(--ember); border-style: dashed; }
 .wardrobe-panel { align-self: flex-start; max-height: calc(100% - 28px); }
 .character-select .guest-note { color: #ffcf8a; max-width: 280px; line-height: 1.5; }
 
