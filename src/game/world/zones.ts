@@ -1,5 +1,6 @@
 import { TILE_SIZE, parseLevel, type LevelLayout, type Point2 } from "../rules/levelLayout";
 import { fieldMap, portalCell, type House, type Side } from "./fieldMap";
+import { BUILDINGS } from "./grove";
 
 // The open world: a village, two forest fields and the boss's clearing, joined by portals (O cells).
 // A server runs as channels (see CHANNEL_CAPACITY), each zone of a channel one Verse8 room. The
@@ -38,6 +39,10 @@ const VILLAGE_HOUSES: House[] = [
   { model: "bld_house_small", at: [4, 9], face: "E" },
 ];
 
+// The village's four building sites (see grove.ts): ruins at first, built up by the players. They block
+// the map like houses from the start, so the map never changes as they go up.
+const VILLAGE_SITES: House[] = BUILDINGS.map((b) => ({ model: b.model, at: b.at, face: b.face }));
+
 // Each zone's ways out, named once: the map below is drawn from the very same list.
 const VILLAGE_PORTALS: readonly ZonePortal[] = [{ to: "forest1", side: "E", at: 13 }];
 const FOREST1_PORTALS: readonly ZonePortal[] = [
@@ -56,7 +61,7 @@ export const ZONES: Record<ZoneId, Zone> = {
     id: "village", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
     map: fieldMap({
       cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: VILLAGE_PORTALS,
-      monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: VILLAGE_HOUSES,
+      monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: [...VILLAGE_HOUSES, ...VILLAGE_SITES],
     }),
   },
   forest1: {

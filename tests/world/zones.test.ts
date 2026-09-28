@@ -4,6 +4,8 @@ import { natureLayout } from "../../src/game/rules/nature";
 import {
   START_ZONE, ZONES, ZONE_IDS, arrivalFrom, channelRoomId, portalsOf, readChannelRoom, readZone, zoneLayout,
 } from "../../src/game/world/zones";
+import { BUILDINGS } from "../../src/game/world/grove";
+import { npcSpot } from "../../src/game/world/npcs";
 
 describe("zones", () => {
   it("parses every map, with one portal per listed destination", () => {
@@ -124,5 +126,16 @@ describe("zones", () => {
     expect(readChannelRoom(id)).toEqual({ world: "w2", zone: "forest1", channel: 3 });
     expect(readChannelRoom("de-w1-abc")).toBeNull();
     expect(readZone("moon")).toBeNull();
+  });
+
+  it("keeps the village's four building sites as solid ground, clear of the NPCs", () => {
+    const layout = zoneLayout("village");
+    for (const b of BUILDINGS) {
+      for (const [dc, dr] of [[0, 0], [1, 0], [0, 1], [1, 1]]) expect(layout.solid[b.at[1] + dr][b.at[0] + dc]).toBe(true);
+    }
+    for (const id of ["merchant", "elder", "smith"] as const) {
+      const spot = npcSpot(id);
+      expect(solidAt(layout, spot.x, spot.z)).toBe(false);
+    }
   });
 });
