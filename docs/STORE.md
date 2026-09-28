@@ -41,7 +41,8 @@ Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의
 숲 깊은 곳의 공터에는 버섯왕이 기다립니다. 땅을 내려치는 공격을 피하고, 불러내는 호위병을 막아 내세요.
 
 ■ 편한 조작
-PC는 키보드와 마우스, 모바일은 가상 조이스틱과 버튼으로 플레이합니다.
+PC는 마우스만으로, 모바일은 손가락만으로 플레이합니다. 가상 패드로 걷고, 화면을 끌어 둘러보고, 버튼으로 싸웁니다.
+처음 만든 캐릭터는 촌장에게 첫 기술과 물약을 받으며 스킬 등록과 자동 사용을 차근차근 익힙니다.
 자동 전투 버튼을 누르면 가까운 몬스터를 찾아 싸우고, 스킬과 물약을 알아서 씁니다. 퀘스트를 누르면 목표로 찾아갑니다.
 스킬 칸 설정은 계정에 저장되어 PC와 모바일 어디서든 그대로입니다.
 
@@ -73,7 +74,8 @@ Trade with the village merchant and follow the elder's thirteen quests for rewar
 Deep in the forest the Mushroom King waits in his clearing. Dodge his ground slam and hold off the guards he calls.
 
 ■ Easy controls
-Keyboard and mouse on PC; a virtual joystick and buttons on mobile.
+Play with just a mouse on PC, or just your fingers on mobile: walk with the on-screen pad, drag to look, fight with the buttons.
+A new character gets a first skill and potions from the elder and learns to set up the skill bar and auto-use step by step.
 Turn on auto-battle to find and fight nearby monsters, using skills and potions for you. Tap a quest to head for it.
 Your skill bar is saved to your account, the same on PC and mobile.
 
