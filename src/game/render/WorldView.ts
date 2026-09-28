@@ -6,6 +6,8 @@ import { levelOf } from "../account/level";
 import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
 import { npcMarker, type NpcMarker } from "../world/dialogue";
 import { iconFor } from "./icons";
+import { GroveScene, HOUSE_YAW, groveModels } from "./groveScene";
+import type { GroveView } from "../world/grove";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { WEAPONS, type PlayerClass } from "../combat/classes";
 import { facing, inStrikeReach } from "../combat/melee";
@@ -20,7 +22,9 @@ import {
 import { gridRoute, lineClear } from "../rules/pathing";
 import { groundAt, platformBlocks } from "../rules/platforms";
 import { chaseCamera } from "../rules/chaseCamera";
-import { BOSS_MOVES, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType } from "../world/monsters";
+import {
+  BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
+} from "../world/monsters";
 import type { Point2 } from "../rules/levelLayout";
 import { NPCS, NPC_MODELS, npcNear, npcFacing, npcSpot, type NpcId } from "../world/npcs";
 import { NpcActor } from "./NpcActor";
@@ -118,14 +122,14 @@ const BACKGROUND_MAX_DT = 0.25;
 const POTION_GAP_MS = 1000;
 
 // How far a house model is turned for its door to face each way (it is built facing +z, south).
-const HOUSE_YAW = { S: 0, E: Math.PI / 2, N: Math.PI, W: -Math.PI / 2 } as const;
 
 // The monster models a zone needs.
 function zoneMonsterModels(zone: ZoneId): string[] {
   const types: MonsterType[] = [...ZONE_MONSTERS[zone]];
   const boss = ZONE_BOSS[zone];
-  // A boss brings its brood.
+  // A boss brings its brood; the first field may be visited by the grove's guardian.
   if (boss) types.push(boss, BOSS_MOVES.summonType);
+  if (zone === GROVE_GUARDIAN_ZONE) types.push("grove_guardian");
   return [...new Set(types.map((t) => MONSTER_SKINS[t].model))];
 }
 
@@ -156,6 +160,8 @@ export interface WorldHud {
   // How far is left to walk on the way you were sent (a quest's monster, the elder, a portal on the
   // way to another zone, a spot on the map), in metres.
   way: number | null;
+  // Where the boss and the grove's guardian are, once the village's watchtower shows them.
+  bosses: { x: number; z: number }[];
   // The village NPC you are standing by, to talk to.
   npc: { id: NpcId; name: string; role: string } | null;
   // The monster you are fighting.
@@ -200,6 +206,9 @@ export class WorldView {
   private readonly monsters = new Map<string, MonsterActor>();
   private readonly npcs: { id: NpcId; actor: NpcActor; at: Point2 }[] = [];
   private readonly raycaster = new THREE.Raycaster();
+  // The grove's week and the village (see grove.ts), as last read, and how the world shows them.
+  private groveView: GroveView | null = null;
+  private grove: GroveScene | null = null;
   // A talk under way: whom with, how far the camera has come round to them (0 to 1), and whether it
   // is going back.
   private dialogue: { id: NpcId; blend: number; closing: boolean } | null = null;
@@ -294,7 +303,8 @@ export class WorldView {
     const npcModels = this.options.entry.zone === START_ZONE ? NPC_MODELS : [];
     const houseModels = [...new Set((ZONES[this.options.entry.zone].houses ?? []).map((h) => h.model))];
     await library.preload(
-      [...WORLD_MODELS, ...zoneMonsterModels(this.options.entry.zone), ...npcModels, ...houseModels], this.options.onProgress,
+      [...WORLD_MODELS, ...zoneMonsterModels(this.options.entry.zone), ...npcModels, ...houseModels, ...groveModels(this.options.entry.zone)],
+      this.options.onProgress,
     );
     // React StrictMode mounts twice; the first view may be gone by now.
     if (this.disposed) return;
@@ -303,6 +313,8 @@ export class WorldView {
     this.lod = buildLevelScene(this.scene, library, this.layout, this.renderer, this.doorways());
     this.addPortals();
     this.addHouses();
+    this.grove = new GroveScene(this.scene, library, this.layout, this.options.entry.zone);
+    this.grove.set(this.groveView);
     // Your own name stays off: the camera is right behind you and it would only cover the view.
     this.me = this.hero(this.options.playerClass, this.options.costume);
     if (this.options.entry.zone === START_ZONE) this.addNpcs();
@@ -476,6 +488,7 @@ export class WorldView {
     this.resizeObserver.disconnect();
     cancelAnimationFrame(this.resizeFrame);
     this.effects.dispose();
+    this.grove?.dispose();
     this.input.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
@@ -684,6 +697,13 @@ export class WorldView {
     this.questSeek = null;
     this.target = null;
     this.dialogue = { id, blend: this.dialogue?.blend ?? 0, closing: false };
+  }
+
+  // The grove as the server last said: the sites, the flowers, the haze, and (with the watchtower
+  // built) the bosses on the minimap.
+  setGrove(view: GroveView | null): void {
+    this.groveView = view;
+    this.grove?.set(view);
   }
 
   endDialogue(): void {
@@ -1154,6 +1174,11 @@ export class WorldView {
       auto: this.auto,
       seeking: (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal?.talk === "elder",
       way: this.wayLeft(),
+      bosses: this.groveView?.revealsBosses
+        ? Object.values(this.client.state.monsters)
+          .filter((m) => m.alive && (m.type === "grove_guardian" || Object.values(ZONE_BOSS).includes(m.type)))
+          .map((m) => ({ x: m.x, z: m.z }))
+        : [],
       npc: (() => {
         const id = npcNear(this.pose.x, this.pose.z);
         const npc = id ? NPCS.find((n) => n.id === id)! : null;

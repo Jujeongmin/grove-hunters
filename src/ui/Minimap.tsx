@@ -29,6 +29,7 @@ const ROOF = "#7a4f33";
 const PORTAL = "#7fd4ff";
 const NPC = "#9fd6ff";
 const ME = "#ffffff";
+const BOSS = "#ff5a4a";
 // How far a ground photo spans on the map, in metres: few enough tiles that its grain reads at both
 // the corner map's scale and the big one's.
 const METRES_PER_PHOTO = 16;
@@ -179,11 +180,13 @@ interface MinimapProps {
   labels?: boolean;
   // Tapping the map.
   onPick?: (pick: MinimapPick) => void;
+  // The boss and the grove's guardian, once the village's watchtower shows them.
+  bosses?: readonly { x: number; z: number }[];
 }
 
 // The zone from above, north up: the ground and the wood as they are underfoot, the village's roofs,
 // the portals' circles, the villagers, and an arrow for you, pointing where you look.
-export function Minimap({ zone, me, width, height, labels = false, onPick }: MinimapProps) {
+export function Minimap({ zone, me, width, height, labels = false, onPick, bosses = [] }: MinimapProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   // Bumped when a picture finishes loading, to draw the map again with it.
   const [loaded, setLoaded] = useState(0);
@@ -244,6 +247,18 @@ export function Minimap({ zone, me, width, height, labels = false, onPick }: Min
       ctx.fillText(label, x, at.y - mark / 2 - 2);
     }
 
+    // The boss and the guardian, as red dots (the watchtower's gift).
+    ctx.fillStyle = BOSS;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+    ctx.lineWidth = 1.5;
+    for (const b of bosses) {
+      const spot = minimapPoint(fit, b);
+      ctx.beginPath();
+      ctx.arc(spot.x, spot.y, labels ? 7 : 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     // You: an arrowhead pointing the way you look. Turning the canvas by -yaw sends its tip, drawn
     // straight up, along minimapHeading(yaw).
     const at = minimapPoint(fit, me);
@@ -266,7 +281,7 @@ export function Minimap({ zone, me, width, height, labels = false, onPick }: Min
     return () => {
       live = false;
     };
-  }, [zone, me.x, me.z, me.yaw, width, height, labels, loaded]);
+  }, [zone, me.x, me.z, me.yaw, width, height, labels, loaded, JSON.stringify(bosses)]);
 
   const pick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!onPick) return;
@@ -287,10 +302,10 @@ export function Minimap({ zone, me, width, height, labels = false, onPick }: Min
 const CORNER = 132;
 
 // The little map in the corner, always there while you play.
-export function MinimapCorner({ zone, me }: { zone: ZoneId; me: MinimapPose }) {
+export function MinimapCorner({ zone, me, bosses }: { zone: ZoneId; me: MinimapPose; bosses?: readonly { x: number; z: number }[] }) {
   return (
     <div className="minimap">
-      <Minimap zone={zone} me={me} width={CORNER} height={CORNER} />
+      <Minimap zone={zone} me={me} width={CORNER} height={CORNER} bosses={bosses} />
     </div>
   );
 }

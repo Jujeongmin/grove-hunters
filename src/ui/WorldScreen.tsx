@@ -215,6 +215,8 @@ function ZoneScreen({
       clearInterval(timer);
     };
   }, [client]);
+  // The world shows the grove too (the sites, the flowers, the haze), once it is drawn.
+  useEffect(() => view.current?.setGrove(grove), [grove, ready]);
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
@@ -435,7 +437,7 @@ function ZoneScreen({
               <div className="hud-bar xp"><i style={{ width: `${Math.round((hud.xpInto / hud.xpNeed) * 100)}%` }} /></div>
             </div>
           </div>
-          {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} />}
+          {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
             {menuOpen && menuItems.map((item) => (
               <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
