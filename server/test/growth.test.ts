@@ -68,7 +68,8 @@ describe("advancement", () => {
     const view = await server.advance("guardian");
     expect(view.job).toBe("guardian");
     const mine = await $room.getMyState();
-    expect(mine.look.job).toBe(JOBS.guardian.name);
+    // The room carries the path's id, not its name: every client says it in its own language.
+    expect(mine.look.job).toBe("guardian");
     expect(mine.maxHp).toBe(maxHpAt(30) + JOBS.guardian.hp);
     expect(await errorOf(server.advance("berserker"))).toContain("unavailable");
   });

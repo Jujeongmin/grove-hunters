@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PlayerClass } from "../game/combat/classes";
 import { SKILLS } from "../game/combat/skills";
+import { skillBlurb, skillName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
 import { hotbarFor, onSettings, setHotbarSlot } from "./settings";
 
@@ -59,8 +60,8 @@ export function SkillPanel({ playerClass, level, onClose }: SkillPanelProps) {
                 <img src={iconFor(skillIconId(playerClass, i)) ?? undefined} alt="" draggable={false} />
               </div>
               <div className="skill-row-text">
-                <b>{skill.name}</b>
-                <span>{skill.blurb}</span>
+                <b>{skillName(playerClass, i)}</b>
+                <span>{skillBlurb(playerClass, i)}</span>
                 <span className="skill-row-note">
                   {!learned ? `Lv${skill.level}에 배움` : slot >= 0 ? `${slot + 1}번 칸` : "끌어서 칸에 넣기"}
                   {" · "}재사용 {skill.cooldownMs / 1000}초

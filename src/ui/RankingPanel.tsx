@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ITEMS } from "../game/account/items";
 import type { RankDetail, RankRow, RankingView } from "../game/account/ranking";
-import { CLASS_LABEL, type PlayerClass } from "../game/combat/classes";
-import { JOBS, type JobId } from "../game/combat/jobs";
+import type { PlayerClass } from "../game/combat/classes";
+import { className, jobName } from "./names";
+import type { JobId } from "../game/combat/jobs";
 
 interface RankingPanelProps {
   onClose: () => void;
@@ -15,8 +16,8 @@ interface RankingPanelProps {
 
 // A character's class as the board shows it: its advanced class once it has one.
 function classText(playerClass: PlayerClass | undefined, job: JobId | null | undefined): string {
-  if (job) return JOBS[job].name;
-  return playerClass ? CLASS_LABEL[playerClass] : "-";
+  if (job) return jobName(job);
+  return playerClass ? className(playerClass) : "-";
 }
 
 // Your level and 전투력, and the top of the board by experience: name, level and class on each line.
@@ -113,7 +114,7 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                   <dt>순위</dt><dd>{detail.rank === null ? "-" : `${detail.rank}위`}</dd>
                   <dt>서버</dt><dd>{detail.world}</dd>
                   <dt>직업</dt>
-                  <dd>{detail.job ? `${JOBS[detail.job].name} (${CLASS_LABEL[detail.playerClass]})` : CLASS_LABEL[detail.playerClass]}</dd>
+                  <dd>{detail.job ? `${jobName(detail.job)} (${className(detail.playerClass)})` : className(detail.playerClass)}</dd>
                   <dt>레벨</dt><dd>Lv {detail.level}</dd>
                   <dt>경험치</dt><dd>{detail.xp.toLocaleString()}</dd>
                   <dt>전투력</dt><dd className="power">{detail.power.toLocaleString()}</dd>

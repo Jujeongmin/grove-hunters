@@ -15,6 +15,7 @@ import { useFriends } from "./ui/useFriends";
 import { useParty } from "./ui/useParty";
 import { usePurchase } from "./ui/usePurchase";
 import { useUiScale } from "./ui/useUiScale";
+import { useLang } from "./ui/lang";
 
 const ONLINE_AVAILABLE = Boolean(import.meta.env.VITE_AGENT8_VERSE);
 const DEV_LOCAL = devLocalTransport();
@@ -24,6 +25,8 @@ export default function App() {
   const [returning, setReturning] = useState(false);
   const { server, connected, joinRoom, leaveRoom } = useGameServer();
   useUiScale();
+  // Read so the whole tree says itself again when the language changes.
+  useLang();
   const transport = useMemo(
     () => DEV_LOCAL ?? (ONLINE_AVAILABLE && connected ? new Verse8Transport(server, { joinRoom, leaveRoom }) : null),
     [connected, server, joinRoom, leaveRoom],

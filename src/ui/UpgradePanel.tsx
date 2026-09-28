@@ -1,4 +1,5 @@
-import { CLASSES, CLASS_LABEL, WEAPONS, isFreeClass } from "../game/combat/classes";
+import { CLASSES, isFreeClass } from "../game/combat/classes";
+import { className, weaponName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { Offer } from "../game/account/purchase";
 import { ZONES, ZONE_IDS } from "../game/world/zones";
@@ -12,8 +13,8 @@ export const FREE_UNTIL = Math.min(...LOCKED_ZONES.map((z) => ZONES[z].minLevel)
 // A class's weapon, without the class's own name in front of it: the cleric's staff is called
 // after the cleric, which reads twice when it sits under the name.
 function weaponOf(c: (typeof LOCKED_CLASSES)[number]): string {
-  const name = WEAPONS[c].name;
-  return name.replace(CLASS_LABEL[c], "").trim() || name;
+  const name = weaponName(c);
+  return name.replace(className(c), "").trim() || name;
 }
 
 // Why the panel opened, which decides its first line.
@@ -76,7 +77,7 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
               return (
                 <span key={c} className="upgrade-class">
                   {icon && <img src={icon} alt="" draggable={false} />}
-                  <em>{CLASS_LABEL[c]}</em>
+                  <em>{className(c)}</em>
                   <i>{weaponOf(c)}</i>
                 </span>
               );

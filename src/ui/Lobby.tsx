@@ -6,7 +6,8 @@ import type { PartyView } from "../game/account/party";
 import type { RankDetail, RankingView } from "../game/account/ranking";
 import { readWorld } from "../game/account/worlds";
 import { playMusic } from "../game/audio/music";
-import { CLASS_LABEL, readClass, type PlayerClass } from "../game/combat/classes";
+import { readClass, type PlayerClass } from "../game/combat/classes";
+import { className } from "./names";
 import { COSTUMES, costumeById, type Costume } from "../game/render/costumes";
 import { MenuScene } from "../game/render/MenuScene";
 import { nicknameProblem } from "../net/account";
@@ -251,7 +252,7 @@ export function Lobby({
                     onClick={() => void onSelect(c.id)}
                   >
                     <b>{c.name}</b>
-                    <span>Lv {c.level.level} · {CLASS_LABEL[c.playerClass]}</span>
+                    <span>Lv {c.level.level} · {className(c.playerClass)}</span>
                   </button>
                 </li>
               ))}

@@ -5,7 +5,6 @@ import {
 import { levelOf, readXp } from "../../src/game/account/level";
 import { NO_GEAR } from "../../src/game/account/items";
 import { QUEST_START, readDaily } from "../../src/game/account/quests";
-import { JOBS } from "../../src/game/combat/jobs";
 import {
   characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
 } from "../../src/game/account/characters";
@@ -290,7 +289,8 @@ export async function pickChannel(world: string, zone: ZoneId, account: string):
 
 // What the others in a zone see of a character: name, class, costume and level.
 export function zoneLook(c: Character): ZoneLook {
-  return { name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job ? JOBS[c.job].name : null };
+  // The advanced class goes out as its id, not its name: every client says it in its own language.
+  return { name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job };
 }
 
 // How far a reported pose may be from the last one: walking speed with room for lag, plus a little.

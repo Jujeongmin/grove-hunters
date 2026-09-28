@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { PlayerClass } from "../game/combat/classes";
+import { skillName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { WorldHud } from "../game/render/WorldView";
 import { POTION_AT } from "../game/account/controls";
@@ -129,7 +130,7 @@ export function SkillBar({ hud, playerClass, onSkill, onPotion }: SkillBarProps)
           key={i}
           slot={i}
           keyLabel={String(i + 1)}
-          name={skill ? skill.name : "빈 칸"}
+          name={skill ? skillName(playerClass, skill.skill) : "빈 칸"}
           icon={skill ? iconFor(skillIconId(playerClass, skill.skill)) : null}
           corner={!skill ? "" : !skill.open ? `Lv${skill.level}` : skill.readyInMs > 0 ? `${Math.ceil(skill.readyInMs / 1000)}` : ""}
           cooling={skill?.open ? skill.readyInMs / skill.cooldownMs : null}

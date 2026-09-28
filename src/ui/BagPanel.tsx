@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ITEMS, ITEM_IDS, SHOP_ITEMS, gearName, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
-import { ADVANCE_LEVEL, JOBS, jobsOf } from "../game/combat/jobs";
+import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
+import { jobBlurb, jobName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
@@ -52,7 +53,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
         </p>
         <div className="bag-job">
           {job ? (
-            <span>전직 · <b>{JOBS[job].name}</b> ({JOBS[job].blurb})</span>
+            <span>전직 · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
           ) : level < ADVANCE_LEVEL ? (
             <span>Lv{ADVANCE_LEVEL}이 되면 전직할 수 있어요 (지금 Lv{level})</span>
           ) : (
@@ -61,8 +62,8 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
               <div className="bag-job-paths">
                 {jobsOf(playerClass).map((id) => (
                   <button key={id} type="button" className="world-card" onClick={() => act(() => client.advance(id))}>
-                    <b>{JOBS[id].name}</b>
-                    <span>{JOBS[id].blurb}</span>
+                    <b>{jobName(id)}</b>
+                    <span>{jobBlurb(id)}</span>
                   </button>
                 ))}
               </div>

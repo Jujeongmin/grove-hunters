@@ -33,6 +33,7 @@ import { MonsterActor } from "./MonsterActor";
 import { MONSTER_SKINS } from "./monsterLooks";
 import { PlayerActor } from "./PlayerActor";
 import { QUALITY, hotbarFor, onSettings, settings } from "../../ui/settings";
+import { jobLabel } from "../../ui/names";
 
 export const LOOK_SENSITIVITY = 0.0022;
 // A portal is a summoning circle (Magic Summoning Circle, CityBuildingKit, CC0).
@@ -120,7 +121,7 @@ export interface WorldHud {
   // A locked portal needs the full game or, failing that, a level.
   portal: { to: string; locked: boolean; needLevel: number | null } | null;
   // The three slots of the bar (keys 1 to 3): the skill each holds, or null while empty.
-  skills: ({ skill: number; name: string; readyInMs: number; cooldownMs: number; level: number; open: boolean } | null)[];
+  skills: ({ skill: number; readyInMs: number; cooldownMs: number; level: number; open: boolean } | null)[];
   blocking: boolean;
   hp: number;
   maxHp: number;
@@ -817,7 +818,7 @@ export class WorldView {
         entry = { actor, key };
         this.others.set(other.account, entry);
       }
-      entry.actor.label(settings().showNames ? `Lv${other.look.level} ${other.look.job ? `${other.look.job} ` : ""}${other.look.name}` : "");
+      entry.actor.label(settings().showNames ? `Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}` : "");
       entry.actor.sync(other.pose, "active", dt);
       entry.actor.fadeLabel(this.camera.position.distanceTo(entry.actor.object.position));
     }
@@ -930,7 +931,7 @@ export class WorldView {
         if (index === null) return null;
         const skill = SKILLS[this.options.playerClass][index];
         return {
-          skill: index, name: skill.name, cooldownMs: skill.cooldownMs, level: skill.level, open: level.level >= skill.level,
+          skill: index, cooldownMs: skill.cooldownMs, level: skill.level, open: level.level >= skill.level,
           readyInMs: Math.max(0, this.lastSkillAt[index] + skill.cooldownMs - now),
         };
       }),

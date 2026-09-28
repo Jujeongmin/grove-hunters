@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { onSettings, settings, updateSettings } from "./settings";
 import { ko, type Bundle, type Key } from "./strings/ko";
 import { en } from "./strings/en";
@@ -73,4 +74,13 @@ export function t(key: Key, holes?: Record<string, string | number>): string {
 // The BCP 47 tag for Intl, which wants a real locale rather than our short names.
 export function locale(): string {
   return { ko: "ko-KR", en: "en-US", ja: "ja-JP", "zh-Hant": "zh-TW", "zh-Hans": "zh-CN" }[lang()];
+}
+
+// Everything on screen has to be said again when the language changes. A component that only reads
+// t() has no reason to render otherwise, so the top of the tree holds this and the change ripples
+// down from there.
+export function useLang(): Lang {
+  const [current, setCurrent] = useState(lang);
+  useEffect(() => onSettings(() => setCurrent(lang())), []);
+  return current;
 }

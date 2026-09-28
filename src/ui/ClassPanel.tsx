@@ -1,4 +1,5 @@
-import { CLASSES, CLASS_BLURB, CLASS_LABEL, WEAPONS, isFreeClass, type PlayerClass } from "../game/combat/classes";
+import { CLASSES, WEAPONS, isFreeClass, type PlayerClass } from "../game/combat/classes";
+import { classBlurb, className, skillBlurb, skillName, weaponName } from "./names";
 import { SKILLS } from "../game/combat/skills";
 
 interface ClassPanelProps {
@@ -27,7 +28,7 @@ export function ClassPanel({ picked, onPick, onConfirm, onBack, owned, onBuy }: 
             onClick={() => onPick(c)}
           >
             {locked(c) && <span className="class-lock" aria-label="정식판">🔒</span>}
-            {CLASS_LABEL[c]}
+            {className(c)}
           </button>
         ))}
       </div>
@@ -38,20 +39,20 @@ export function ClassPanel({ picked, onPick, onConfirm, onBack, owned, onBuy }: 
         </header>
         {picked && info ? (
           <>
-            <h3 className="class-name">{CLASS_LABEL[picked]}</h3>
-            <p>{CLASS_BLURB[picked]}</p>
+            <h3 className="class-name">{className(picked)}</h3>
+            <p>{classBlurb(picked)}</p>
             <dl className="class-stats">
-              <div><dt>무기</dt><dd>{info.weapon.name} ({info.weapon.ranged ? "원거리" : "근접"})</dd></div>
+              <div><dt>무기</dt><dd>{weaponName(picked)} ({info.weapon.ranged ? "원거리" : "근접"})</dd></div>
               <div><dt>공격력</dt><dd>{info.weapon.damage}</dd></div>
               <div><dt>공격 속도</dt><dd>{(1000 / info.weapon.intervalMs).toFixed(1)}회/초</dd></div>
               <div><dt>사거리</dt><dd>{info.weapon.reach} m</dd></div>
               <div><dt>막기</dt><dd>{Math.round(info.weapon.block * 100)}%</dd></div>
             </dl>
             {info.skills.map((skill, i) => (
-              <p key={skill.name} className="class-skill">
-                <b>스킬 {i + 1} · {skill.name}</b> ({skill.level > 1 ? `Lv${skill.level}부터, ` : ""}재사용 {skill.cooldownMs / 1000}초)
+              <p key={i} className="class-skill">
+                <b>스킬 {i + 1} · {skillName(picked, i)}</b> ({skill.level > 1 ? `Lv${skill.level}부터, ` : ""}재사용 {skill.cooldownMs / 1000}초)
                 <br />
-                {skill.blurb}
+                {skillBlurb(picked, i)}
               </p>
             ))}
             {locked(picked) ? (
