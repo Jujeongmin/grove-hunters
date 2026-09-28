@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { itemName } from "./names";
+import { dailyGoal, dailyName, itemName, questGoal, questName } from "./names";
 import { type BagView } from "../game/account/items";
 import { DAILY_QUESTS, QUESTS, dailyToday, questDone, type Quest } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
@@ -26,8 +26,8 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
         const done = count >= q.count;
         return (
           <div key={q.id} className={`quest-entry daily${done ? " done" : ""}${claimed ? " past" : ""}`}>
-            <b>{q.name}{claimed ? " ✔" : ""}</b>
-            <span>{q.goal}</span>
+            <b>{dailyName(q)}{claimed ? " ✔" : ""}</b>
+            <span>{dailyGoal(q)}</span>
             <div className="hud-bar xp"><i style={{ width: `${Math.round((count / q.count) * 100)}%` }} /></div>
             <span className="quest-count">{count} / {q.count}</span>
             <span className="quest-reward">보상: {rewardText(q)}</span>
@@ -77,8 +77,8 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
         <p className="note">불러오는 중…</p>
       ) : quest ? (
         <div className={`quest-entry current${done ? " done" : ""}`}>
-          <b>{quest.name}{done ? " ✔" : ""}</b>
-          <span>{quest.goal}</span>
+          <b>{questName(index)}{done ? " ✔" : ""}</b>
+          <span>{questGoal(index)}</span>
           <div className="hud-bar xp"><i style={{ width: `${Math.round((bag.quest.count / quest.count) * 100)}%` }} /></div>
           <span className="quest-count">{bag.quest.count} / {quest.count}</span>
           <span className="quest-reward">보상: {rewardText(quest)}</span>
@@ -97,10 +97,10 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
       {index > 0 && (
         <>
           <h3>완료한 퀘스트</h3>
-          {QUESTS.slice(0, index).reverse().map((q) => (
-            <div key={q.name} className="quest-entry past">
-              <b>{q.name} ✔</b>
-              <span>{q.goal}</span>
+          {QUESTS.slice(0, index).map((_, i) => index - 1 - i).map((past) => (
+            <div key={past} className="quest-entry past">
+              <b>{questName(past)} ✔</b>
+              <span>{questGoal(past)}</span>
             </div>
           ))}
         </>
@@ -112,12 +112,12 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
 }
 
 // The moment a quest is done: a panel in the middle of the screen, shown once, that fades by itself.
-export function QuestCompleteBanner({ quest, inVillage, onClose }: { quest: Quest; inVillage: boolean; onClose: () => void }) {
+export function QuestCompleteBanner({ index, inVillage, onClose }: { index: number; inVillage: boolean; onClose: () => void }) {
   return (
     <div className="quest-complete" role="status" onClick={onClose}>
       <span className="quest-complete-title">퀘스트 완료!</span>
-      <b>{quest.name}</b>
-      <span>보상: {rewardText(quest)}</span>
+      <b>{questName(index)}</b>
+      <span>보상: {rewardText(QUESTS[index])}</span>
       <span className="hint">{inVillage ? "촌장에게 보고하고 보상을 받으세요" : "마을의 촌장에게 보고하고 보상을 받으세요"}</span>
     </div>
   );

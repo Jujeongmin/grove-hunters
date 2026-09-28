@@ -468,7 +468,7 @@ function ZoneScreen({
         />
       )}
       {finished !== null && QUESTS[finished] && (
-        <QuestCompleteBanner quest={QUESTS[finished]} inVillage={inVillage} onClose={() => setFinished(null)} />
+        <QuestCompleteBanner index={finished} inVillage={inVillage} onClose={() => setFinished(null)} />
       )}
       {panel === "quest" && (
         <QuestPanel client={client} bag={bag} onSeek={(types) => view.current?.seekQuest(types)} onClose={() => setPanel(null)} />

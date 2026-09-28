@@ -2,6 +2,7 @@ import { ITEMS, type ItemId, type Plus } from "../game/account/items";
 import { readWorld } from "../game/account/worlds";
 import { JOBS, type JobId } from "../game/combat/jobs";
 import type { MonsterType } from "../game/world/monsters";
+import type { DailyQuest } from "../game/account/quests";
 import type { NpcId } from "../game/world/npcs";
 import type { ZoneId } from "../game/world/zones";
 import type { PlayerClass } from "../game/combat/classes";
@@ -107,4 +108,21 @@ export function serverName(id: string): string {
 export function gearName(id: ItemId, plus: Plus = {}): string {
   const n = plus[id] ?? 0;
   return n > 0 ? `+${n} ${itemName(id)}` : itemName(id);
+}
+
+// A quest is known by where it stands in the village's list; a daily one by its own id.
+export function questName(index: number): string {
+  return t(key("quest", index));
+}
+
+export function questGoal(index: number): string {
+  return t(key("quest", index, "goal"));
+}
+
+export function dailyName(quest: DailyQuest): string {
+  return t(key("daily", quest.id));
+}
+
+export function dailyGoal(quest: DailyQuest): string {
+  return t(key("daily", quest.id, "goal"));
 }

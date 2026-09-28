@@ -186,6 +186,40 @@ export const ko = {
 
   // The servers are this name and a number.
   "world.name": "초록숲",
+
+  // The village's quests, in the order they are taken, and the three that come back each day.
+  "quest.0": "슬라임 퇴치",
+  "quest.0.goal": "숲 필드 1의 초록 슬라임 15마리",
+  "quest.1": "버섯돌이 소탕",
+  "quest.1.goal": "숲 필드 1의 버섯돌이 20마리",
+  "quest.2": "들판의 골칫거리",
+  "quest.2.goal": "들쥐나 개구리 40마리",
+  "quest.3": "깊은 숲 정찰",
+  "quest.3.goal": "숲 필드 2의 숲거미나 독사 50마리",
+  "quest.4": "하늘의 사냥",
+  "quest.4.goal": "말벌이나 박쥐 60마리",
+  "quest.5": "돌의 정령",
+  "quest.5.goal": "골렘링 60마리",
+  "quest.6": "버섯왕 토벌",
+  "quest.6.goal": "버섯왕의 공터의 버섯왕",
+  "quest.7": "깊은 숲의 거미굴",
+  "quest.7.goal": "깊은 숲의 거대 독거미나 맹독사 60마리",
+  "quest.8": "하늘을 덮은 날개",
+  "quest.8.goal": "장수말벌이나 흡혈박쥐 80마리",
+  "quest.9": "숲의 수호석",
+  "quest.9.goal": "바위 골렘 60마리",
+  "quest.10": "골렘의 심장",
+  "quest.10.goal": "바위 골렘 100마리",
+  "quest.11": "버섯왕 재토벌",
+  "quest.11.goal": "버섯왕 3번 쓰러뜨리기",
+  "quest.12": "깊은 숲의 주인",
+  "quest.12.goal": "깊은 숲의 몬스터 200마리",
+  "daily.forest1": "숲 필드 1 순찰",
+  "daily.forest1.goal": "숲 필드 1의 몬스터 30마리",
+  "daily.forest2": "숲 필드 2 순찰",
+  "daily.forest2.goal": "숲 필드 2의 몬스터 40마리",
+  "daily.forest3": "깊은 숲 순찰",
+  "daily.forest3.goal": "깊은 숲의 몬스터 50마리",
 } as const;
 
 export type Key = keyof typeof ko;

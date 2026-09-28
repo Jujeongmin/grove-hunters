@@ -1,4 +1,5 @@
 import type { BagView } from "../game/account/items";
+import { questGoal, questName } from "./names";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 
@@ -20,7 +21,8 @@ interface QuestTrackerProps {
 // elder in the village.
 export function QuestTracker({ bag, seeking, inVillage, onSeek, onReport, keyLabel }: QuestTrackerProps) {
   if (!bag) return null;
-  const quest = QUESTS[bag.quest.index];
+  const index = bag.quest.index;
+  const quest = QUESTS[index];
   if (!quest) {
     return (
       <div className="hud-quest">
@@ -41,8 +43,8 @@ export function QuestTracker({ bag, seeking, inVillage, onSeek, onReport, keyLab
         else if (inVillage) onReport();
       }}
     >
-      <b>{quest.name}{done ? " ✔" : ""}</b>
-      <span>{quest.goal} <span className="count">{bag.quest.count}/{quest.count}</span></span>
+      <b>{questName(index)}{done ? " ✔" : ""}</b>
+      <span>{questGoal(index)} <span className="count">{bag.quest.count}/{quest.count}</span></span>
       <span className="hint">{hint}</span>
       {keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
     </div>

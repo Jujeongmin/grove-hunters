@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { itemName } from "./names";
+import { itemName, questGoal, questName } from "./names";
 import { type BagView } from "../game/account/items";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
@@ -23,7 +23,8 @@ const PROBLEM: Record<string, string> = {
 export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const quest = bag ? QUESTS[bag.quest.index] : undefined;
+  const index = bag?.quest.index ?? -1;
+  const quest = bag ? QUESTS[index] : undefined;
   const done = bag ? questDone(bag.quest) : false;
   const reward = quest
     ? [`${quest.xp.toLocaleString()} XP`, `${quest.gold.toLocaleString()} 골드`, ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`)]
@@ -39,11 +40,11 @@ export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
         ) : (
           <>
             <p className="npc-line">
-              {done ? `"${quest.name}, 잘 해냈군! 약속한 보상일세."` : `"${quest.goal}${objectParticle(quest.goal)} 부탁하네."`}
+              {done ? `"${questName(index)}, 잘 해냈군! 약속한 보상일세."` : `"${questGoal(index)}${objectParticle(questGoal(index))} 부탁하네."`}
             </p>
             <div className="npc-quest">
-              <b>{quest.name}</b>
-              <span>{quest.goal} · {bag.quest.count}/{quest.count}</span>
+              <b>{questName(index)}</b>
+              <span>{questGoal(index)} · {bag.quest.count}/{quest.count}</span>
               <span>보상: {reward.join(", ")}</span>
             </div>
             {done ? (
