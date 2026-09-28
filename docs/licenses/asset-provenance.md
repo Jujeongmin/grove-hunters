@@ -146,7 +146,7 @@ WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대�
 | `public/assets/fx/bolt.png` | 마법탄 | Pure_01 (Pure Projectile) | OpenGameArt | https://opengameart.org/content/pure-projectile-magic-effect |
 | `public/assets/fx/magic_circle.png` | 스킬 원, 보스 경고, 포털 빛 | teleportCircle.png 넷째 줄 첫 칸을 흰색으로 | OpenGameArt | https://opengameart.org/content/teleport-circle-sprite-sheet |
 | `fx_summon_circle.glb` | 포털 | Magic Summoning Circle (FBX, Unity로 GLB 변환; 그림 파일이 없어 색은 코드에서 칠함) | CityBuildingKit | https://opengameart.org/content/magic-summoning-circle |
-| `public/assets/ui/icons/*.png` | 스킬 18개, 메뉴 6개 | 496 RPG icons (S_Sword16 등, `art-src/review` 선택 결과) | Henrique Lazarini | https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg |
+| `public/assets/ui/icons/*.png` | 스킬 18개, 메뉴 8개 | 496 RPG icons (S_Sword16 등, `art-src/review` 선택 결과) | Henrique Lazarini | https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg |
 
 설정 아이콘(`ui_menu`)은 사용자가 고르지 않아 I_Key02를 썼다.
 
@@ -191,7 +191,7 @@ digital media"에 넣는 것을 허락하고 Unity 엔진을 조건으로 두지
 | ultimate-monsters | Ultimate Monsters — https://quaternius.com/packs/ultimatemonsters.html | Quaternius | CC0 1.0 | 일반 몬스터(mon_green_blob·mushnub·goleling·bat), 보스(mon_mushroom_king), ~~마을 NPC~~ (사람 모델로 교체, 아래 줄) |
 | ultimate-characters | Ultimate Animated Character Pack (2019-11) — https://quaternius.com/packs/ultimatedanimatedcharacter.html | Quaternius | CC0 1.0 (받은 폴더의 License.txt) | 마을 NPC: npc_merchant = OldClassy_Male, npc_elder = OldClassy_Female, npc_smith = Viking_Male (glTF의 Skin 색이 검게 나와 게임에서 색을 덮어씀) |
 | ultimate-monsters (FBX-20260921T060420Z zip) | Quaternius 애니메이션 동물 FBX(Rat·Frog·Snake·Spider·Wasp) | Quaternius | CC0 1.0 (같이 받은 License 파일 4개 모두 CC0 1.0) | 숲 몬스터(mon_rat·frog·snake·spider·wasp) |
-| 496_RPG_icons | 496 Pixel Art Icons for Medieval/Fantasy RPG — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg | Henrique Lazarini (7Soul1) | CC0 1.0 | 아이템 아이콘(물약·무기·갑옷·재료) 17개를 public/assets/ui/items/<아이템 id>.png로, 메뉴 아이콘(대장간 W_Mace003, 메뉴 I_Book)과 조작 버튼 그림(공격 S_Sword01, 막기 E_Metal04, 점프 A_Shoes05, 자동 I_Clock, 대화 I_Scroll), 절전 I_Torch01을 public/assets/ui/icons로 복사 (develop에만) |
+| 496_RPG_icons | 496 Pixel Art Icons for Medieval/Fantasy RPG — https://opengameart.org/content/496-pixel-art-icons-for-medievalfantasy-rpg | Henrique Lazarini (7Soul1) | CC0 1.0 | 아이템 아이콘(물약·무기·갑옷·재료) 17개를 public/assets/ui/items/<아이템 id>.png로, 메뉴 아이콘(대장간 W_Mace003, 메뉴 I_Book, 지도 I_Map, 정식판 I_Key01)과 조작 버튼 그림(공격 S_Sword01, 막기 E_Metal04, 점프 A_Shoes05, 자동 I_Clock, 대화 I_Scroll), 절전 I_Torch01을 public/assets/ui/icons로 복사 (develop에만) |
 | stylized-nature | Stylized Nature MegaKit [Standard] — https://quaternius.com (Reroll-Beasts/art-src/q-stylized-nature에서 복사) | Quaternius | CC0 1.0 (License_Standard.txt) | 숲과 들: 나무(sn_tree_1~4, sn_pine_1·3), 바위·덤불·고사리, 풀·클로버·꽃·자갈·버섯, 길의 디딤돌(sn_stepping). 먼 숲과 세계수는 이 나무들을 게임 시작 때 찍은 그림(treeSprites.ts) |
 | medieval-village | Medieval Village MegaKit [Standard] — https://quaternius.com (Reroll-Beasts/art-src/q-medieval-village에서 복사, 2026-08-31 받음) | Quaternius | CC0 1.0 (License_Standard.txt) | 마을 집 3종(bld_house_tall·long·small): 벽·지붕·문·창 조각을 `scripts/build-houses.mjs`가 조립, 텍스처는 512px webp로 줄임 |
 

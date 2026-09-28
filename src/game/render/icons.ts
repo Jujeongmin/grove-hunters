@@ -8,7 +8,7 @@ import { publicUrl } from "../assets/publicUrl";
 export const ICON_IDS = [
   "warrior_0", "warrior_1", "warrior_2", "ranger_0", "ranger_1", "ranger_2", "wizard_0", "wizard_1", "wizard_2",
   "cleric_0", "cleric_1", "cleric_2", "rogue_0", "rogue_1", "rogue_2", "monk_0", "monk_1", "monk_2",
-  "ui_ranking", "ui_quests", "ui_skills", "ui_bag", "ui_shop", "ui_menu",
+  "ui_ranking", "ui_quests", "ui_skills", "ui_bag", "ui_shop", "ui_menu", "ui_map", "ui_upgrade",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

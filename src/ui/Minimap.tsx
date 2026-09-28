@@ -7,6 +7,7 @@ import {
 } from "../game/world/minimap";
 import type { NpcId } from "../game/world/npcs";
 import type { ZoneId } from "../game/world/zones";
+import { pointIn } from "./useUiScale";
 
 // The map is drawn from the same pictures the world is: the grass and forest-floor photos that lie
 // under the ground, the runed circle that marks a portal, and each villager's own icon. The flat
@@ -266,10 +267,9 @@ export function Minimap({ zone, me, width, height, labels = false, onPick }: Min
 
   const pick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!onPick) return;
-    const box = e.currentTarget.getBoundingClientRect();
     const model = minimapModel(zone);
     const fit = minimapFit(model, width, height);
-    const hit = minimapPick(model, fit, { x: e.clientX - box.left, y: e.clientY - box.top }, labels ? 16 : 8);
+    const hit = minimapPick(model, fit, pointIn(e.currentTarget, e.clientX, e.clientY), labels ? 16 : 8);
     if (hit) onPick(hit);
   };
 

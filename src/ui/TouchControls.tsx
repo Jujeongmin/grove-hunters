@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FpsInput } from "../game/render/FpsInput";
 import { iconFor } from "../game/render/icons";
+import { pointIn } from "./useUiScale";
 
 // Whether this is a touch device (a phone or tablet): then the joystick and the look area show.
 export function isTouchDevice(): boolean {
@@ -23,9 +24,11 @@ export function TouchStick({ controls }: { controls: FpsInput }) {
   const moveKnob = (e: React.PointerEvent) => {
     const el = stick.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let dx = e.clientX - (rect.left + rect.width / 2);
-    let dy = e.clientY - (rect.top + rect.height / 2);
+    // In the pixels the ring is drawn in, not the screen's: the overlay is scaled to the stage, so
+    // a raw rect would make the knob saturate at a different reach than the ring shows.
+    const at = pointIn(el, e.clientX, e.clientY);
+    let dx = at.x - el.offsetWidth / 2;
+    let dy = at.y - el.offsetHeight / 2;
     const len = Math.hypot(dx, dy);
     if (len > STICK_RADIUS) {
       dx *= STICK_RADIUS / len;

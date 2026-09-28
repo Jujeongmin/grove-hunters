@@ -145,8 +145,10 @@ function ZoneScreen({
   const [panel, setPanel] = useState<Panel | null>(null);
   // The quest just finished, shown once as a panel in the middle of the screen.
   const [finished, setFinished] = useState<number | null>(null);
-  // The purchase panel, and why it opened; null while it is closed.
+  // The purchase panel, and why it opened; null while it is closed. Once the panel has said its
+  // piece about the free fields running out, it does not say it again this session.
   const [upgrade, setUpgrade] = useState<UpgradeReason | null>(null);
+  const shown = useRef(false);
   const lastQuest = useRef<{ index: number; done: boolean } | null>(null);
   useEffect(() => {
     if (!bag) return;
@@ -325,18 +327,26 @@ function ZoneScreen({
   }, [owned]);
 
   // The free fields stop at FREE_UNTIL, so the moment a character reaches it is the moment to say
-  // what lies past it — once per character, kept in this browser.
+  // what lies past it — once per character, kept in this browser. A character that was already past
+  // it when it first got here (another machine, cleared storage, or a level earned before any of
+  // this shipped) is told plainly instead of congratulated on a level it passed long ago.
   const level = hud?.level ?? 0;
+  const wasUnder = useRef<boolean | null>(null);
   useEffect(() => {
-    if (owned || level < FREE_UNTIL) return;
+    if (owned || level === 0) return;
+    const under = level < FREE_UNTIL;
+    const climbed = wasUnder.current === true && !under;
+    wasUnder.current = under;
+    if (under || shown.current) return;
     const key = `groveHunters.upgradeShown.${client.account}.${name}`;
+    shown.current = true;
     try {
       if (window.localStorage.getItem(key)) return;
       window.localStorage.setItem(key, String(level));
     } catch {
-      // A browser that will not keep it shows the panel once this session and no more.
+      // A browser that will not keep it: the ref above still holds it to this one session.
     }
-    setUpgrade({ kind: "level", level });
+    setUpgrade(climbed ? { kind: "level", level } : { kind: "menu" });
   }, [owned, level, client, name]);
 
   const showProblem = problem && now - problem.at < PROBLEM_MS;

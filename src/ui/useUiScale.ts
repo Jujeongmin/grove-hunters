@@ -20,3 +20,14 @@ export function useUiScale(): void {
     return () => observer.disconnect();
   }, []);
 }
+
+// Where a pointer landed inside an element, in the pixels the UI is laid out in. The whole overlay
+// is scaled to the stage, so a bounding rect comes back in screen pixels and reading it straight
+// would be out by --ui-scale — a click on the map would walk you somewhere else.
+export function pointIn(el: HTMLElement, clientX: number, clientY: number): { x: number; y: number } {
+  const box = el.getBoundingClientRect();
+  return {
+    x: box.width > 0 ? (clientX - box.left) * (el.offsetWidth / box.width) : 0,
+    y: box.height > 0 ? (clientY - box.top) * (el.offsetHeight / box.height) : 0,
+  };
+}
