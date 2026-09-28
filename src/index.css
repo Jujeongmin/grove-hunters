@@ -268,7 +268,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .hud-cell.empty { border-style: dashed; border-color: rgba(255, 255, 255, 0.25); }
 .ui .side-panel { top: 64px; width: 280px; }
-.hud-menu-buttons { position: absolute; top: 8px; right: 12px; display: flex; gap: 8px; }
+/* The menu: one button left of the corner map, unfolding into a grid four across under itself. The
+   whole block keeps to the left of the map and above the pad's buttons, so it covers neither. */
+.hud-menu-buttons { position: absolute; top: 12px; right: 164px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hud-menu-grid { display: grid; grid-template-columns: repeat(4, 60px); gap: 6px; }
+.hud-menu-grid .hud-icon-button { padding: 4px 2px; }
+.hud-menu-grid .hud-icon-button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hud-notes {
   position: absolute; right: 16px; top: 64px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
   font: 600 14px var(--font-head); color: #ffe08a; pointer-events: none;

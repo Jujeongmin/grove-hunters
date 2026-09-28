@@ -438,19 +438,25 @@ function ZoneScreen({
             </div>
           </div>
           {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
+          {/* The menu sits left of the corner map and unfolds into a grid below itself, so the two
+              never cover each other. */}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
-            {menuOpen && menuItems.map((item) => (
-              <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
-                {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
-                <span>{item.label}</span>
-                {keyHints && <kbd className="hud-key">{item.key}</kbd>}
-              </button>
-            ))}
             <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}${glow === "fold" ? " tutorial-glow" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
               <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
               <span>{t("common.menu")}</span>
               {keyHints && <kbd className="hud-key">M</kbd>}
             </button>
+            {menuOpen && (
+              <div className="hud-menu-grid">
+                {menuItems.map((item) => (
+                  <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
+                    {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
+                    <span>{item.label}</span>
+                    {keyHints && <kbd className="hud-key">{item.key}</kbd>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {hud.notes.length > 0 && (
             <div className="hud-notes">
@@ -496,8 +502,8 @@ function ZoneScreen({
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}
             glow={glow === "slot0" || glow === "bar" ? glow : null}
           />
-          {/* The side panels sit where the tracker is; it steps aside while one is open. */}
-          {panel !== "quests" && panel !== "skills" && (
+          {/* The side panels and the unfolded menu sit where the tracker is; it steps aside for them. */}
+          {panel !== "quests" && panel !== "skills" && !menuOpen && (
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
