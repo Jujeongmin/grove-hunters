@@ -25,8 +25,7 @@ export const zhHans: Bundle = {
   "settings.showNames": "其他玩家名称",
   "settings.damageNumbers": "伤害数字",
   "settings.language": "语言",
-  "settings.keys.show": "显示快捷键",
-  "settings.keys.hide": "隐藏快捷键",
+  "settings.keysTab": "快捷键",
   "settings.defaults": "默认值",
   "settings.exit": "回到菜单",
 

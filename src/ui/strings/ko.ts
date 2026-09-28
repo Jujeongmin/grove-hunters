@@ -28,8 +28,7 @@ export const ko = {
   "settings.showNames": "다른 플레이어 이름",
   "settings.damageNumbers": "데미지 숫자",
   "settings.language": "언어",
-  "settings.keys.show": "단축키 보기",
-  "settings.keys.hide": "단축키 닫기",
+  "settings.keysTab": "단축키",
   "settings.defaults": "기본값",
   "settings.exit": "메뉴로 나가기",
 

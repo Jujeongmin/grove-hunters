@@ -25,8 +25,7 @@ export const zhHant: Bundle = {
   "settings.showNames": "其他玩家名稱",
   "settings.damageNumbers": "傷害數字",
   "settings.language": "語言",
-  "settings.keys.show": "顯示快捷鍵",
-  "settings.keys.hide": "隱藏快捷鍵",
+  "settings.keysTab": "快捷鍵",
   "settings.defaults": "預設值",
   "settings.exit": "回到選單",
 

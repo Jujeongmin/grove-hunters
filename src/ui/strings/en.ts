@@ -25,8 +25,7 @@ export const en: Bundle = {
   "settings.showNames": "Other players' names",
   "settings.damageNumbers": "Damage numbers",
   "settings.language": "Language",
-  "settings.keys.show": "Show shortcuts",
-  "settings.keys.hide": "Hide shortcuts",
+  "settings.keysTab": "Shortcuts",
   "settings.defaults": "Defaults",
   "settings.exit": "Back to the menu",
 

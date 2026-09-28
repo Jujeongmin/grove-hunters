@@ -42,8 +42,9 @@ const KEYS: [string, Key][] = [
   ["O / L / K / U / I", "keys.panels"], ["B", "keys.powerSave"], ["P", "keys.settings"],
 ];
 
-// The settings, in sections: sound (music and effects apart), controls, screen and what is shown over
-// the world, with the keys to look up. Everything applies at once and is kept in this browser.
+// The settings, in two columns: the language, sound (music and effects apart) and controls on the
+// left, the screen and what is shown over the world on the right; the keys to look up are a page of
+// their own. Everything applies at once and is kept in this browser.
 // `onExit`, in the world: back out to the menus.
 export function SettingsPanel({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
   const [values, setValues] = useState(settings());
@@ -71,50 +72,60 @@ export function SettingsPanel({ onClose, onExit }: { onClose: () => void; onExit
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="dark-panel settings-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("settings.title")}</h2>
-        <h3>{t("settings.language")}</h3>
-        <div className="setting-row setting-langs">
-          <div className="setting-choice">
-            {LANGS.map((l) => (
-              <button
-                key={l.id} type="button" className={`text-button${lang() === l.id ? " on" : ""}`}
-                onClick={() => setLang(l.id)} lang={l.id}
-              >
-                {l.name}
-              </button>
-            ))}
-          </div>
+        {/* Two pages, so neither needs a scroll on the smallest stage: the settings, and the keys. */}
+        <div className="settings-tabs">
+          <button type="button" className={`text-button${keys ? "" : " on"}`} onClick={() => setKeys(false)}>{t("settings.title")}</button>
+          <button type="button" className={`text-button${keys ? " on" : ""}`} onClick={() => setKeys(true)}>{t("settings.keysTab")}</button>
         </div>
-        <h3>{t("settings.sound")}</h3>
-        {SOUND.map(slider)}
-        <h3>{t("settings.controls")}</h3>
-        {CONTROL.map(slider)}
-        <h3>{t("settings.screen")}</h3>
-        {SCREEN.map(slider)}
-        <div className="setting-row">
-          <span>{t("settings.quality")}</span>
-          <div className="setting-choice">
-            {(Object.keys(QUALITY) as Quality[]).map((q) => (
-              <button
-                key={q} type="button" className={`text-button${values.quality === q ? " on" : ""}`}
-                onClick={() => updateSettings({ quality: q })}
-              >
-                {t(QUALITY_LABEL[q])}
-              </button>
-            ))}
-          </div>
-          <span className="setting-value" />
-        </div>
-        <p className="setting-note">{t("settings.quality.note")}</p>
-        <h3>{t("settings.shown")}</h3>
-        {SHOWN.map((s) => flag(s.key, s.label))}
-        <button type="button" className="text-button" onClick={() => setKeys((k) => !k)}>{keys ? t("settings.keys.hide") : t("settings.keys.show")}</button>
-        {keys && (
+        {keys ? (
           <dl className="setting-keys">
             {KEYS.map(([k, what]) => (
               <div key={k}><dt>{k === "keys.click" ? t("keys.click") : k}</dt><dd>{t(what)}</dd></div>
             ))}
           </dl>
+        ) : (
+          <div className="settings-columns">
+            <section>
+              <h3>{t("settings.language")}</h3>
+              <div className="setting-row setting-langs">
+                <div className="setting-choice">
+                  {LANGS.map((l) => (
+                    <button
+                      key={l.id} type="button" className={`text-button${lang() === l.id ? " on" : ""}`}
+                      onClick={() => setLang(l.id)} lang={l.id}
+                    >
+                      {l.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <h3>{t("settings.sound")}</h3>
+              {SOUND.map(slider)}
+              <h3>{t("settings.controls")}</h3>
+              {CONTROL.map(slider)}
+            </section>
+            <section>
+              <h3>{t("settings.screen")}</h3>
+              {SCREEN.map(slider)}
+              <div className="setting-row">
+                <span>{t("settings.quality")}</span>
+                <div className="setting-choice">
+                  {(Object.keys(QUALITY) as Quality[]).map((q) => (
+                    <button
+                      key={q} type="button" className={`text-button${values.quality === q ? " on" : ""}`}
+                      onClick={() => updateSettings({ quality: q })}
+                    >
+                      {t(QUALITY_LABEL[q])}
+                    </button>
+                  ))}
+                </div>
+                <span className="setting-value" />
+              </div>
+              <p className="setting-note">{t("settings.quality.note")}</p>
+              <h3>{t("settings.shown")}</h3>
+              {SHOWN.map((s) => flag(s.key, s.label))}
+            </section>
+          </div>
         )}
         <div className="settings-actions">
           <button type="button" className="text-button" onClick={() => updateSettings({ ...DEFAULT_SETTINGS, ...keepBar(settings()) })}>

@@ -25,8 +25,7 @@ export const ja: Bundle = {
   "settings.showNames": "他のプレイヤーの名前",
   "settings.damageNumbers": "ダメージ数値",
   "settings.language": "言語",
-  "settings.keys.show": "ショートカットを見る",
-  "settings.keys.hide": "ショートカットを閉じる",
+  "settings.keysTab": "ショートカット",
   "settings.defaults": "初期設定",
   "settings.exit": "メニューに戻る",
 
