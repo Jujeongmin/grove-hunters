@@ -276,8 +276,7 @@ export class WorldClient {
     return this.bagCall("claimDaily", [id]);
   }
 
-  // The first tutorial (see tutorial.ts): the elder's lesson, a step done on the screen, the end,
-  // and skipping it.
+  // The first tutorial (see tutorial.ts): the elder's lesson, a step done on the screen, and the end.
   tutorialTalk(): Promise<string | null> {
     return this.bagCall("tutorialTalk", []);
   }
@@ -288,10 +287,6 @@ export class WorldClient {
 
   tutorialFinish(): Promise<string | null> {
     return this.bagCall("tutorialFinish", []);
-  }
-
-  tutorialSkip(): Promise<string | null> {
-    return this.bagCall("tutorialSkip", []);
   }
 
   // Payouts that came in since the last call, oldest first.

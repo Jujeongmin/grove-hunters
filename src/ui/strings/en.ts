@@ -585,7 +585,6 @@ export const en: Bundle = {
   "tutorial.step1": "Open the skill panel and drag your new skill onto slot 1",
   "tutorial.step2": "Drag the skill slot and the potion slot down to let them auto-use",
   "tutorial.step3": "Press the auto-battle button",
-  "tutorial.skip": "Skip",
   "tutorial.doneTitle": "All set!",
   "tutorial.doneHint": "See the elder's first request",
 };

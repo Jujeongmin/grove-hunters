@@ -3,7 +3,7 @@ import type { BagView } from "../game/account/items";
 import type { PlayerClass } from "../game/combat/classes";
 import { TUTORIAL, tutorialStepDone, type TutorialStep } from "../game/account/tutorial";
 import type { WorldClient } from "../net/worldClient";
-import { hotbarFor, onSettings, setHotbarSlot, settings, updateSettings } from "./settings";
+import { hotbarFor, onSettings, settings, updateSettings } from "./settings";
 
 // Whether auto-battle may use the slot holding the first skill, and the potion.
 function autoFlags(playerClass: PlayerClass): { skill: boolean; potion: boolean } {
@@ -55,12 +55,5 @@ export function useTutorial(client: WorldClient, bag: BagView | null, playerClas
     if (step === TUTORIAL.register) setPlacedSkill(true);
   }, [step]);
 
-  // Skipped: the first skill goes on the bar if it is not there, so nothing is left to set up.
-  const skip = useCallback(() => {
-    void client.tutorialSkip().then((code) => {
-      if (!code && !hotbarFor(playerClass).includes(0)) setHotbarSlot(playerClass, 0, 0);
-    });
-  }, [client, playerClass]);
-
-  return { step, placed, skip, finished, clearFinished: () => setFinished(false) };
+  return { step, placed, finished, clearFinished: () => setFinished(false) };
 }

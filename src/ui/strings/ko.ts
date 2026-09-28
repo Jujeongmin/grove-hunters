@@ -594,7 +594,6 @@ export const ko = {
   "tutorial.step1": "스킬 창을 열어 받은 스킬을 1번 칸에 끌어 놓으세요",
   "tutorial.step2": "스킬 칸과 물약 칸을 아래로 끌어 자동 사용을 켜세요",
   "tutorial.step3": "자동 전투 버튼을 눌러 보세요",
-  "tutorial.skip": "건너뛰기",
   "tutorial.doneTitle": "준비 끝!",
   "tutorial.doneHint": "촌장의 첫 부탁을 확인하세요",
 } as const;

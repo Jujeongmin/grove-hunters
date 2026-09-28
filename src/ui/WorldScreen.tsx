@@ -461,7 +461,7 @@ function ZoneScreen({
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
-                onWalk={() => view.current?.goToElder()} onSkip={tutorial.skip}
+                onWalk={() => view.current?.goToElder()}
               />
             ) : (
               <QuestTracker

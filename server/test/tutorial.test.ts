@@ -49,25 +49,6 @@ describe("the first tutorial", () => {
     expect((await server.tutorialFinish()).gold).toBe(TUTORIAL_GOLD);
   });
 
-  test("skipping at the elder still gives the skill and the potions, but not the gold", async (server) => {
-    await newcomer(server);
-    const skipped = await server.tutorialSkip();
-    expect(skipped.tutorial).toBeNull();
-    expect(skipped.bag.potion_small).toBe(TUTORIAL_POTIONS);
-    expect(skipped.gold).toBe(0);
-    expect(await errorOf(server.useSkill(0))).toBe("");
-    expect((await server.tutorialSkip()).bag.potion_small).toBe(TUTORIAL_POTIONS);
-  });
-
-  test("skipping later gives nothing more", async (server) => {
-    await newcomer(server);
-    await toNpc(server, "elder");
-    await server.tutorialTalk();
-    const skipped = await server.tutorialSkip();
-    expect(skipped.tutorial).toBeNull();
-    expect(skipped.bag.potion_small).toBe(TUTORIAL_POTIONS);
-  });
-
   test("a character from before the tutorial is left as it was", async (server) => {
     await makeCharacter(server, "test-b", "고참");
     await enterAs(server, "test-b");

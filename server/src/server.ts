@@ -725,19 +725,6 @@ export class Server {
     return bagView(next);
   }
 
-  // Skipping: still the elder's skill and potions if they were not had yet, but not the gold.
-  async tutorialSkip(): Promise<BagView> {
-    const account = $sender.account;
-    await playing(account);
-    const next = await updateActive(account, (c) => (c.tutorial === null ? c : {
-      ...c,
-      tutorial: null,
-      bag: c.tutorial === TUTORIAL.talk ? addItem(c.bag, "potion_small", TUTORIAL_POTIONS) : c.bag,
-    }));
-    await refreshFighter(next);
-    return bagView(next);
-  }
-
   // Claims the finished quest's reward (XP, gold, items) and moves on to the next one.
   async claimQuest(): Promise<BagView> {
     const account = $sender.account;

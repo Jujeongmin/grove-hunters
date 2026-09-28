@@ -1,3 +1,4 @@
+import { TUTORIAL_POTIONS } from "../../src/game/account/tutorial";
 import { npcSpot } from "../../src/game/world/npcs";
 
 export const PLAYERS = ["test-a", "test-b", "test-c", "test-d"];
@@ -13,13 +14,18 @@ export async function errorOf(promise: Promise<unknown>): Promise<string> {
 
 
 // Makes a character on the account's server and plays it. Unless a test is about the tutorial, the
-// character skips it, starting as characters did before it: first skill learned, potions in the bag.
+// character starts as one that has been through it: first skill learned, the elder's potions in the bag.
 export async function makeCharacter(
   server: any, account: string, name: string, playerClass = "warrior", costume = "0000", tutorial = false,
 ): Promise<any> {
   server.connect({ account });
   const view = await server.createCharacter(name, playerClass, costume);
-  if (!tutorial) await server.tutorialSkip();
+  if (!tutorial) {
+    const state = await $global.getUserState(account);
+    const map = { ...state.characterMap };
+    map[state.active] = { ...map[state.active], tutorial: null, bag: { potion_small: TUTORIAL_POTIONS } };
+    await $global.updateUserState(account, { characterMap: map });
+  }
   return view;
 }
 

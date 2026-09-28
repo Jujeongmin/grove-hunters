@@ -8,12 +8,11 @@ interface TutorialTrackerProps {
   keyLabel: string | null;
   // Tapping the elder's step walks there.
   onWalk: () => void;
-  onSkip: () => void;
 }
 
 // The first tutorial's next thing to do, where the quest usually sits. It never stands in the way:
-// the rest of the game works meanwhile, and it can be skipped.
-export function TutorialTracker({ step, glow, keyLabel, onWalk, onSkip }: TutorialTrackerProps) {
+// the rest of the game works meanwhile.
+export function TutorialTracker({ step, glow, keyLabel, onWalk }: TutorialTrackerProps) {
   const walks = step === 0;
   return (
     <div
@@ -23,15 +22,6 @@ export function TutorialTracker({ step, glow, keyLabel, onWalk, onSkip }: Tutori
     >
       <b>{t("tutorial.title")}</b>
       <span>{t(`tutorial.step${step}` as Key)}</span>
-      <button
-        type="button" className="tutorial-skip"
-        onClick={(e) => {
-          e.stopPropagation();
-          onSkip();
-        }}
-      >
-        {t("tutorial.skip")}
-      </button>
       {walks && keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
     </div>
   );
