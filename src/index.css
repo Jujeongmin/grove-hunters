@@ -400,6 +400,28 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .upgrade-class em { font: 700 12px var(--font-head); font-style: normal; }
 .upgrade-class i { font-style: normal; font-size: 10px; white-space: nowrap; color: var(--ink-dim); }
 .upgrade-sheet .brush-button { margin-top: 4px; min-width: 240px; }
+/* The one button that asks for money: gold instead of the dark brush the rest of the UI uses, with
+   a slow shine over it so the eye comes back to it. */
+.buy-cta { color: #2e1c06; text-shadow: 0 1px 0 rgba(255, 245, 220, 0.45); font-size: 19px; }
+.buy-cta::before { background: linear-gradient(180deg, #ffdf99, #f2ad40 55%, #c67c1b); }
+.buy-cta:hover:not(:disabled) { color: #241504; }
+.buy-cta:hover:not(:disabled)::before { background: linear-gradient(180deg, #ffecb8, #ffc25a 55%, #dd8f22); }
+.buy-cta::after {
+  content: "";
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.6) 50%, transparent 58%);
+  background-size: 260% 100%;
+  -webkit-mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
+  mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
+  animation: buy-shine 3.4s ease-in-out infinite;
+}
+@keyframes buy-shine {
+  0%, 55% { background-position: 160% 0; }
+  100% { background-position: -60% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buy-cta::after { animation: none; }
+}
 .upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
 .upgrade-sheet .text-button:hover { opacity: 1; }
 /* Talking to a village NPC. */
@@ -742,18 +764,31 @@ button.hud-prompt:hover { color: #ffe0b0; }
 
 /* Your characters on this server: one card each, the one you play highlighted, and a card to make
    another. */
-.character-select .note { margin: 0 0 8px 8px; }
-.character-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; width: 260px; }
+/* Picking a character: up to four cards and the buttons under them have to sit inside the stage, so
+   the column is given a definite height and the list is the part that gives way. */
+.character-select { top: 7%; bottom: 5%; }
+.character-select > * { flex: none; }
+.character-select .game-title.small { font-size: clamp(20px, 2.2vw, 26px); margin-bottom: 6px; }
+.character-select .brush-button { min-width: 230px; padding: 7px 26px; font-size: 16px; }
+.character-select .note { margin: 0 0 6px 8px; max-width: 260px; }
+.character-list {
+  list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 5px; width: 260px;
+  /* Two to a row, so all four and the "new" card stand in two rows instead of a scrolling column. */
+  grid-template-columns: repeat(2, 1fr);
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin;
+}
 .character-card {
-  width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px;
+  width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 12px;
   cursor: pointer; color: inherit; text-align: left; border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(14, 11, 9, 0.72);
 }
-.character-card b { font: 700 16px var(--font-head); }
+/* A long name shortens rather than widening its card out of the row. */
+.character-card b, .character-card span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.character-card b { font: 700 15px var(--font-head); }
 .character-card span { font-size: 12px; color: var(--ink-dim); }
 .character-card.picked { border-color: var(--ember); background: rgba(60, 38, 18, 0.85); }
 .character-card:hover { border-color: rgba(255, 179, 90, 0.7); }
-.character-card.new { align-items: center; font: 700 15px var(--font-head); color: var(--ember); border-style: dashed; }
+.character-card.new { align-items: center; font: 700 14px var(--font-head); color: var(--ember); border-style: dashed; }
 .wardrobe-panel { align-self: flex-start; max-height: calc(100% - 28px); }
 .character-select .guest-note { color: #ffcf8a; max-width: 280px; line-height: 1.5; }
 

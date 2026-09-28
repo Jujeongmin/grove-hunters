@@ -84,7 +84,7 @@ export function UpgradePanel({ reason, price, state, onBuy, onClose }: UpgradePa
 
         {onBuy
           ? (
-            <button type="button" className="brush-button" onClick={onBuy} disabled={state === "confirming"}>
+            <button type="button" className="brush-button buy-cta" onClick={onBuy} disabled={state === "confirming"}>
               {state === "confirming" ? "결제 확인 중…" : `정식판 구매 (${price} VX)`}
             </button>
           )
