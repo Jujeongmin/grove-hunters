@@ -361,7 +361,6 @@ export const zhHant: Bundle = {
   "pad.jump": "跳躍",
   "pad.auto": "自動",
   "pad.autoOn": "自動中",
-  "pad.talk": "對話",
   "pad.leftClick": "左鍵",
   "pad.rightClick": "右鍵",
 
@@ -546,6 +545,10 @@ export const zhHant: Bundle = {
   "quests.complete": "任務完成！",
   "quests.reportHere": "向村長回報並領取報酬",
   "quests.reportInVillage": "向村裡的村長回報並領取報酬",
+  "npc.merchant.hello": "「歡迎光臨！藥水、裝備應有盡有。」",
+  "npc.smith.hello": "「打鐵要趁熱。強化還是製作，都交給我。」",
+  "dialogue.shop": "查看商店",
+  "dialogue.forge": "打開鐵匠鋪",
   "npc.elder.done": "「這座森林裡已經沒有能難倒你的了。謝謝你，獵人。」",
   "npc.elder.tutorial": "「你來了。學會這個技能，把藥水也帶上。在技能視窗把技能拖到欄位上就能使用。」",
   "npc.elder.claim": "「{quest}，做得好！這是說好的報酬。」",

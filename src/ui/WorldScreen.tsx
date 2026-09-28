@@ -26,7 +26,8 @@ import { PadButtons, TouchStick, isTouchDevice } from "./TouchControls";
 import { SkillPanel } from "./SkillPanel";
 import { RankingPanel } from "./RankingPanel";
 import { iconFor } from "../game/render/icons";
-import { QuestPanel } from "./QuestPanel";
+import { DialogueBox } from "./DialogueBox";
+import type { NpcId } from "../game/world/npcs";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
 import type { Offer } from "../game/account/purchase";
@@ -130,7 +131,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quest" | "quests" | "map" | "channels";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -189,6 +190,8 @@ function ZoneScreen({
   // buttons that have one.
   const touch = isTouchDevice();
   const keyHints = !touch;
+  // Whom you are talking to: the HUD steps aside for their words while the camera is at their face.
+  const [talkingTo, setTalkingTo] = useState<NpcId | null>(null);
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
@@ -201,7 +204,10 @@ function ZoneScreen({
       onTalk: (id) => {
         // The elder's lesson in the first tutorial: the server checks you are by the elder.
         if (id === "elder" && tutorialStep.current === 0) void client.tutorialTalk();
-        setPanel(id === "merchant" ? "shop" : id === "smith" ? "smith" : "quest");
+        setPanel(null);
+        setMenuOpen(false);
+        setTalkingTo(id);
+        view.current?.beginDialogue(id);
       },
       onTravel: (to) => {
         void client.travel(to).then((code) => {
@@ -247,8 +253,15 @@ function ZoneScreen({
     // Only when it finishes: clearFinished is a new function every render.
   }, [tutorial.finished]);
   useWakeLock();
-  const open = useRef({ panel, menu, upgrade });
-  open.current = { panel, menu, upgrade };
+  const open = useRef({ panel, menu, upgrade, talkingTo });
+  open.current = { panel, menu, upgrade, talkingTo };
+  // A talk ends: the camera goes back over your shoulder and the HUD returns.
+  const endTalk = () => {
+    view.current?.endDialogue();
+    setTalkingTo(null);
+  };
+  const endTalkRef = useRef(endTalk);
+  endTalkRef.current = endTalk;
   const toggle = (next: Panel) => {
     setPanel((p) => (p === next ? null : next));
   };
@@ -316,6 +329,7 @@ function ZoneScreen({
       if (typing(e)) return;
       if (e.key === "Escape") {
         if (open.current.upgrade) setUpgrade(null);
+        else if (open.current.talkingTo) endTalkRef.current();
         else if (open.current.menu) setMenu(false);
         else if (open.current.panel) setPanel(null);
         else setMenuOpen(false);
@@ -378,7 +392,7 @@ function ZoneScreen({
       <div className="ui">
       {!ready && <div className="overlay">{t("world.loading", { n: Math.round(progress * 100) })}</div>}
       {travelling && <div className="overlay">{t("world.travelling")}</div>}
-      {hud && (
+      {hud && !talkingTo && (
         <>
           {view.current && <TouchStick controls={view.current.controls} look={touch} />}
           <div className="hud-left">
@@ -417,7 +431,7 @@ function ZoneScreen({
               {hud.notes.map((text, i) => <span key={i} className="band">{text}</span>)}
             </div>
           )}
-          {hud.npc && !hud.portal && (
+          {keyHints && hud.npc && !hud.portal && (
             <div className="hud-prompt band">{t("world.talk", { name: hud.npc.name, role: hud.npc.role })}</div>
           )}
           {hud.portal && (
@@ -448,8 +462,8 @@ function ZoneScreen({
           )}
           {view.current && (
             <PadButtons
-              controls={view.current.controls} auto={hud.auto} talkTo={hud.npc?.name ?? null}
-              onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()} onTalk={() => view.current?.talk()}
+              controls={view.current.controls} auto={hud.auto}
+              onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()}
               keys={keyHints} glowAuto={glow === "auto"}
             />
           )}
@@ -461,7 +475,7 @@ function ZoneScreen({
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
-                onWalk={() => view.current?.goToElder()}
+                onWalk={() => view.current?.goToElder()} way={hud.seeking ? hud.way : null}
               />
             ) : (
               <QuestTracker
@@ -481,6 +495,23 @@ function ZoneScreen({
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} travelling={travelling} />
           )}
         </>
+      )}
+      {talkingTo && (
+        <DialogueBox
+          id={talkingTo} bag={bag}
+          onClaim={async () => {
+            const code = await client.claimQuest();
+            if (!code) endTalk();
+            return code;
+          }}
+          onChoice={(choice) => {
+            endTalk();
+            const quest = bag ? QUESTS[bag.quest.index] : undefined;
+            if (choice === "seek" && quest) view.current?.seekQuest(quest.targets);
+            if (choice === "shop") setPanel("shop");
+            if (choice === "forge") setPanel("smith");
+          }}
+        />
       )}
       {menu && <SettingsPanel onClose={() => setMenu(false)} onExit={onExit} />}
       {panel === "bag" && (
@@ -512,9 +543,6 @@ function ZoneScreen({
         <QuestCompleteBanner index={finished} inVillage={inVillage} onClose={() => setFinished(null)} />
       )}
       {tutorial.finished && <TutorialDoneBanner onClose={tutorial.clearFinished} />}
-      {panel === "quest" && (
-        <QuestPanel client={client} bag={bag} onSeek={(types) => view.current?.seekQuest(types)} onClose={() => setPanel(null)} />
-      )}
       {upgrade && (
         <UpgradePanel
           reason={upgrade} offer={purchase.offer} state={purchase.state} onBuy={purchase.buy}

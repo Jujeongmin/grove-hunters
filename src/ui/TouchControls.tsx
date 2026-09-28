@@ -11,6 +11,8 @@ export function isTouchDevice(): boolean {
 
 // The joystick's ring, and how far the knob can be pushed, in CSS pixels.
 const STICK_RADIUS = 56;
+// A touch on the look area that moved less than this many pixels was a tap, not a look about.
+const TAP_SLOP = 10;
 
 // The joystick at the bottom left to walk, on every device (the mouse plays the whole game), and on
 // a touch screen a drag anywhere on the right to look round (a mouse drags the world itself).
@@ -18,7 +20,8 @@ export function TouchStick({ controls, look: lookArea }: { controls: FpsInput; l
   const [knob, setKnob] = useState<{ x: number; y: number } | null>(null);
   const stick = useRef<HTMLDivElement>(null);
   const stickPointer = useRef<number | null>(null);
-  const look = useRef<{ id: number; x: number; y: number } | null>(null);
+  // A finger on the look area: where it is, and how far it has moved since it went down.
+  const look = useRef<{ id: number; x: number; y: number; moved: number } | null>(null);
 
   // Let go when the controls unmount (leaving the zone).
   useEffect(() => () => controls.setVirtualMove(0, 0), [controls]);
@@ -53,17 +56,22 @@ export function TouchStick({ controls, look: lookArea }: { controls: FpsInput; l
           onPointerDown={(e) => {
             if (look.current) return;
             e.currentTarget.setPointerCapture(e.pointerId);
-            look.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+            look.current = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
           }}
           onPointerMove={(e) => {
             const l = look.current;
             if (!l || l.id !== e.pointerId) return;
             controls.addVirtualLook((e.clientX - l.x) * 2, (e.clientY - l.y) * 2);
+            l.moved += Math.abs(e.clientX - l.x) + Math.abs(e.clientY - l.y);
             l.x = e.clientX;
             l.y = e.clientY;
           }}
           onPointerUp={(e) => {
-            if (look.current?.id === e.pointerId) look.current = null;
+            const l = look.current;
+            if (l?.id !== e.pointerId) return;
+            look.current = null;
+            // A finger that stayed put tapped something in the world (a person to talk to).
+            if (l.moved < TAP_SLOP) controls.tap(e.clientX, e.clientY);
           }}
           onPointerCancel={() => {
             look.current = null;
@@ -94,11 +102,8 @@ export function TouchStick({ controls, look: lookArea }: { controls: FpsInput; l
 interface PadButtonsProps {
   controls: FpsInput;
   auto: boolean;
-  // Someone to talk to close by: then a talk button shows.
-  talkTo: string | null;
   onJump: () => void;
   onAuto: () => void;
-  onTalk: () => void;
   // Keyboard players see each button's key in its corner.
   keys: boolean;
   // The tutorial's pointer at the auto-battle button.
@@ -119,8 +124,8 @@ function PadButton({ id, label, keyLabel, className = "", ...rest }: {
 }
 
 // The round buttons at the bottom right, on every device: a big attack button (held for a flurry)
-// with guard, jump, auto-battle and (by someone) talk round it.
-export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, keys, glowAuto }: PadButtonsProps) {
+// with guard, jump and auto-battle round it. People are talked to by clicking (or tapping) them.
+export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto }: PadButtonsProps) {
   useEffect(() => () => {
     controls.setVirtualFiring(false);
     controls.setVirtualBlocking(false);
@@ -141,7 +146,6 @@ export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, key
       <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
       <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
       <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={[auto && "on", glowAuto && "tutorial-glow"].filter(Boolean).join(" ")} onClick={onAuto} />
-      {talkTo && <PadButton id="talk" label={t("pad.talk")} keyLabel={keys ? "E" : null} onClick={onTalk} />}
     </div>
   );
 }

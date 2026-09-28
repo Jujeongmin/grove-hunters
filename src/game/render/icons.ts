@@ -19,11 +19,13 @@ export const ICON_IDS = [
   "cleric_0", "cleric_1", "cleric_2", "rogue_0", "rogue_1", "rogue_2", "monk_0", "monk_1", "monk_2",
   ...PATH_ICONS,
   "ui_ranking", "ui_quests", "ui_skills", "ui_bag", "ui_shop", "ui_menu", "ui_map", "ui_upgrade", "ui_lock",
+  // Over the elder's head (PixelLab): ! for something to hear, ? for a quest to hand in.
+  "marker_quest", "marker_report",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {
   ui_forge: "forge.png", ui_more: "menu.png", ui_sleep: "sleep.png",
-  pad_attack: "pad_attack.png", pad_block: "pad_block.png", pad_jump: "pad_jump.png", pad_auto: "pad_auto.png", pad_talk: "pad_talk.png",
+  pad_attack: "pad_attack.png", pad_block: "pad_block.png", pad_jump: "pad_jump.png", pad_auto: "pad_auto.png",
 };
 
 // The icon for a skill (see skillIconId), a menu or pad button, or an item (by id), as an image URL.

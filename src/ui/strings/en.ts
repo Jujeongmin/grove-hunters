@@ -361,7 +361,6 @@ export const en: Bundle = {
   "pad.jump": "Jump",
   "pad.auto": "Auto",
   "pad.autoOn": "Auto on",
-  "pad.talk": "Talk",
   "pad.leftClick": "Left click",
   "pad.rightClick": "Right click",
 
@@ -546,6 +545,10 @@ export const en: Bundle = {
   "quests.complete": "Quest complete!",
   "quests.reportHere": "Report to the elder to be paid",
   "quests.reportInVillage": "Report to the elder in the village to be paid",
+  "npc.merchant.hello": "\"Welcome! Potions, gear, all you need.\"",
+  "npc.smith.hello": "\"Strike while the iron's hot. Enhancing or crafting, leave it to me.\"",
+  "dialogue.shop": "Browse the shop",
+  "dialogue.forge": "Open the forge",
   "npc.elder.done": "\"Nothing in this forest is a match for you now. Thank you, hunter.\"",
   "npc.elder.tutorial": "\"There you are. Take this skill, and these potions. Drag the skill onto a slot from the skill panel to use it.\"",
   "npc.elder.claim": "\"{quest} — well done! Here is what I promised.\"",

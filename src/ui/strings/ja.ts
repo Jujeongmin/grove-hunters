@@ -361,7 +361,6 @@ export const ja: Bundle = {
   "pad.jump": "ジャンプ",
   "pad.auto": "オート",
   "pad.autoOn": "オート中",
-  "pad.talk": "会話",
   "pad.leftClick": "左クリック",
   "pad.rightClick": "右クリック",
 
@@ -546,6 +545,10 @@ export const ja: Bundle = {
   "quests.complete": "クエスト完了！",
   "quests.reportHere": "村長に報告して報酬を受け取りましょう",
   "quests.reportInVillage": "村の村長に報告して報酬を受け取りましょう",
+  "npc.merchant.hello": "「いらっしゃい！薬も装備もそろってるよ。」",
+  "npc.smith.hello": "「鉄は熱いうちに打て。強化でも製作でも任せな。」",
+  "dialogue.shop": "店を見る",
+  "dialogue.forge": "鍛冶場を開く",
   "npc.elder.done": "「もうこの森に君を負かすものはないよ。ありがとう、狩人さん。」",
   "npc.elder.tutorial": "「来たか。この技を覚えて、薬も持って行きなさい。スキル画面で技をスロットにドラッグすれば使えるぞ。」",
   "npc.elder.claim": "「{quest}、よくやった！約束の報酬だ。」",

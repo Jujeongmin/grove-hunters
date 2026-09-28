@@ -4,6 +4,8 @@ import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
 import { ITEMS } from "../account/items";
 import { levelOf } from "../account/level";
 import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
+import { npcMarker, type NpcMarker } from "../world/dialogue";
+import { iconFor } from "./icons";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { WEAPONS, type PlayerClass } from "../combat/classes";
 import { facing, inStrikeReach } from "../combat/melee";
@@ -84,6 +86,12 @@ const STUCK_GIVE_UP_MS = 4000;
 const UNREACHABLE_MS = 10_000;
 // A walk to an NPC ends this close to them.
 const TALK_ARRIVE = 2.2;
+// Talking to someone, the camera comes round to their face over this many seconds (and goes back).
+const DIALOGUE_EASE_S = 0.6;
+// The picture over each NPC's head, by what it means (see dialogue.ts).
+const MARKER_ICONS: Record<NpcMarker, string> = {
+  quest: "marker_quest", report: "marker_report", shop: "ui_shop", forge: "ui_forge",
+};
 // On a quest trip, a portal is walked this far into, well inside the ring that takes you through.
 const PORTAL_ARRIVE = 0.5;
 // A route's corner counts as reached this close.
@@ -191,6 +199,10 @@ export class WorldView {
   private readonly others = new Map<string, { actor: PlayerActor; key: string }>();
   private readonly monsters = new Map<string, MonsterActor>();
   private readonly npcs: { id: NpcId; actor: NpcActor; at: Point2 }[] = [];
+  private readonly raycaster = new THREE.Raycaster();
+  // A talk under way: whom with, how far the camera has come round to them (0 to 1), and whether it
+  // is going back.
+  private dialogue: { id: NpcId; blend: number; closing: boolean } | null = null;
   // Where you were sent to walk (to an NPC), and whom to talk to on arrival.
   // Where you were sent: to talk to someone at the end, or into a portal on a quest trip.
   private walkGoal: { to: Point2; talk: NpcId | null; portal?: boolean } | null = null;
@@ -427,6 +439,7 @@ export class WorldView {
 
   // The on-screen buttons: a skill or the potion by tap, a jump, talking to the NPC close by.
   talk(): void {
+    if (this.dialogue) return;
     const id = npcNear(this.pose.x, this.pose.z);
     if (id) this.options.onTalk(id);
   }
@@ -539,6 +552,15 @@ export class WorldView {
     const rooted = this.me?.rooted === true;
     const potion = this.input.consumePress("KeyQ");
     if (this.input.consumePress("KeyE")) this.talk();
+    // A click or tap on someone in the village walks you to them to talk, instead of a blow.
+    const click = this.input.consumeClick();
+    const clicked = click && here && !this.dialogue ? this.npcAt(click) : null;
+    if (clicked) {
+      this.input.consumePress("VirtualFire");
+      this.walkToNpc(clicked);
+    }
+    // Talking, you stand still and the pad and the buttons wait.
+    const talking = this.dialogue !== null;
     if (this.input.consumePress("KeyR")) this.toggleAuto();
     // The auto potion works whether or not auto-battle is on, at the threshold the player set.
     const autoPotion = settings().autoPotion && !!state.me && state.me.hp <= state.me.maxHp * (settings().potionAt / 100);
@@ -552,14 +574,15 @@ export class WorldView {
       }
       for (const npc of this.npcs) this.bodies.push({ x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 });
       const speed = WALK_SPEED * (this.input.blocking ? GUARD_WALK : 1);
-      const move = this.input.moveInput();
+      const move = talking ? { forward: 0, strafe: 0 } : this.input.moveInput();
       const idle = move.forward === 0 && move.strafe === 0;
       // Your own steps cancel a walk you were sent on, and the trip it was part of.
       if (!idle) {
         this.walkGoal = null;
         if (this.trip) this.setTrip(null);
       }
-      const chase = idle && this.walkGoal ? this.walkTo(this.walkGoal) : this.auto && idle ? this.autoChase(state.monsters) : null;
+      const chase = talking ? null
+        : idle && this.walkGoal ? this.walkTo(this.walkGoal) : this.auto && idle ? this.autoChase(state.monsters) : null;
       if (rooted) {
         facingYaw = chase ? chase.yaw : this.pose.yaw;
       } else if (chase) {
@@ -577,7 +600,7 @@ export class WorldView {
     const jump = this.input.consumePress("Space");
     const ground = groundAt(this.layout.platforms, this.pose.x, this.pose.z, PLAYER_RADIUS);
     this.air = here ? stepJump(this.air, jump, dt, ground) : GROUNDED;
-    facingYaw = this.handleActions(here, state.monsters, facingYaw);
+    facingYaw = this.handleActions(here && !talking, state.monsters, facingYaw);
     this.pose = {
       ...this.pose, yaw: facingYaw, y: this.air.y, block: here && this.input.blocking, swing: this.swings, skill: this.skills,
       slot: this.lastSlot,
@@ -595,6 +618,7 @@ export class WorldView {
     this.lod?.setNear(QUALITY[settings().quality].near);
     this.lod?.update(this.pose.x, this.pose.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    this.frameDialogue(dt);
     this.emitHud();
     if (draw) this.renderer.render(this.scene, this.camera);
   }
@@ -650,6 +674,70 @@ export class WorldView {
     if (!points || points.length === 0) return { yaw: this.yawTo(m), walk: true };
     while (points.length > 1 && this.distanceTo(points[0]) < WAYPOINT_REACH) points.shift();
     return { yaw: this.yawTo(points[0]), walk: true };
+  }
+
+  // A talk begins: the camera comes round to the NPC's face and they turn to you. The screen shows the
+  // words and ends the talk with endDialogue.
+  beginDialogue(id: NpcId): void {
+    this.walkGoal = null;
+    this.auto = false;
+    this.questSeek = null;
+    this.target = null;
+    this.dialogue = { id, blend: this.dialogue?.blend ?? 0, closing: false };
+  }
+
+  endDialogue(): void {
+    if (this.dialogue) this.dialogue.closing = true;
+  }
+
+  // The NPC under a click (client pixels), if any: the nearest whose body or marker the ray meets.
+  private npcAt(click: { x: number; y: number }): NpcId | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const ndc = new THREE.Vector2(((click.x - rect.left) / rect.width) * 2 - 1, -((click.y - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    let best: { id: NpcId; d: number } | null = null;
+    for (const npc of this.npcs) {
+      const hit = this.raycaster.ray.intersectBox(npc.actor.hitBox(), new THREE.Vector3());
+      if (!hit) continue;
+      const d = hit.distanceTo(this.camera.position);
+      if (!best || d < best.d) best = { id: npc.id, d };
+    }
+    return best?.id ?? null;
+  }
+
+  // During a talk the camera eases from over your shoulder to a close shot of the NPC's face (a
+  // little to one side, so the words below leave them in view), and back when it ends. Your own
+  // figure steps out of the shot while it is close.
+  private frameDialogue(dt: number): void {
+    const d = this.dialogue;
+    if (!d) return;
+    d.blend = Math.min(1, Math.max(0, d.blend + (d.closing ? -dt : dt) / DIALOGUE_EASE_S));
+    if (d.closing && d.blend === 0) {
+      this.dialogue = null;
+      if (this.me) this.me.object.visible = true;
+      return;
+    }
+    const npc = this.npcs.find((n) => n.id === d.id);
+    const spec = NPCS.find((n) => n.id === d.id);
+    if (!npc || !spec) return;
+    const at = npc.actor.object.position;
+    let dx = this.pose.x - at.x;
+    let dz = this.pose.z - at.z;
+    const len = Math.hypot(dx, dz) || 1;
+    dx /= len;
+    dz /= len;
+    // Across the line from them to you, to put them a little off the middle.
+    const sx = -dz;
+    const sz = dx;
+    const eye = new THREE.Vector3(at.x + dx * 1.7 + sx * 0.4, spec.height * 0.9, at.z + dz * 1.7 + sz * 0.4);
+    // Aimed below the face, so the face sits in the upper half of the screen above the words.
+    const look = new THREE.Vector3(at.x + sx * 0.3, spec.height * 0.55, at.z + sz * 0.3);
+    const shot = new THREE.Matrix4().lookAt(eye, look, new THREE.Vector3(0, 1, 0));
+    const ease = d.blend * d.blend * (3 - 2 * d.blend);
+    this.camera.position.lerp(eye, ease);
+    this.camera.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(shot), ease);
+    if (this.me) this.me.object.visible = ease < 0.5;
   }
 
   // Heading for a spot you were sent to: straight when clear, by the route otherwise. On arrival the
@@ -909,7 +997,14 @@ export class WorldView {
     // The camera sits behind you, so your own body is drawn from your local pose.
     if (this.me) this.me.path = this.path;
     this.me?.sync(this.pose, dead ? "dead" : "active", dt);
+    const bag = this.client.state.bag;
+    const npcState = bag ? { quest: bag.quest, tutorial: bag.tutorial } : null;
     for (const npc of this.npcs) {
+      const marker = npcMarker(npc.id, npcState);
+      // Nothing over the head of the one you are talking to: the camera is at their face.
+      npc.actor.setMarker(marker && this.dialogue?.id !== npc.id ? iconFor(MARKER_ICONS[marker]) : null);
+      npc.actor.faceToward(this.dialogue?.id === npc.id && !this.dialogue.closing ? this.pose : null);
+      npc.actor.inTalk = this.dialogue?.id === npc.id;
       npc.actor.sync(dt, this.distanceTo(npc.at), this.camera.position.distanceTo(npc.actor.object.position));
     }
     const seen = new Set<string>();

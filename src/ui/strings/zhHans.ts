@@ -361,7 +361,6 @@ export const zhHans: Bundle = {
   "pad.jump": "跳跃",
   "pad.auto": "自动",
   "pad.autoOn": "自动中",
-  "pad.talk": "对话",
   "pad.leftClick": "左键",
   "pad.rightClick": "右键",
 
@@ -546,6 +545,10 @@ export const zhHans: Bundle = {
   "quests.complete": "任务完成！",
   "quests.reportHere": "向村长汇报并领取报酬",
   "quests.reportInVillage": "向村里的村长汇报并领取报酬",
+  "npc.merchant.hello": "「欢迎光临！药水、装备应有尽有。」",
+  "npc.smith.hello": "「打铁要趁热。强化还是制作，都交给我。」",
+  "dialogue.shop": "查看商店",
+  "dialogue.forge": "打开铁匠铺",
   "npc.elder.done": "「这座森林里已经没有能难倒你的了。谢谢你，猎人。」",
   "npc.elder.tutorial": "「你来了。学会这个技能，把药水也带上。在技能窗口把技能拖到栏位上就能使用。」",
   "npc.elder.claim": "「{quest}，做得好！这是说好的报酬。」",

@@ -6,13 +6,14 @@ interface TutorialTrackerProps {
   glow: TutorialGlow;
   // J does what tapping it does (none on a touch screen).
   keyLabel: string | null;
-  // Tapping the elder's step walks there.
+  // Tapping the elder's step walks there; on the way, how far is left in metres.
   onWalk: () => void;
+  way: number | null;
 }
 
 // The first tutorial's next thing to do, where the quest usually sits. It never stands in the way:
 // the rest of the game works meanwhile.
-export function TutorialTracker({ step, glow, keyLabel, onWalk }: TutorialTrackerProps) {
+export function TutorialTracker({ step, glow, keyLabel, onWalk, way }: TutorialTrackerProps) {
   const walks = step === 0;
   return (
     <div
@@ -21,7 +22,7 @@ export function TutorialTracker({ step, glow, keyLabel, onWalk }: TutorialTracke
       onClick={walks ? onWalk : undefined}
     >
       <b>{t("tutorial.title")}</b>
-      <span>{t(`tutorial.step${step}` as Key)}</span>
+      <span>{t(`tutorial.step${step}` as Key)}{walks && way !== null && <b className="way"> {Math.max(1, Math.round(way))}m</b>}</span>
       {walks && keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
     </div>
   );

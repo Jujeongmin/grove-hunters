@@ -35,6 +35,8 @@ export class FpsInput {
   // something, which lands a blow.
   private dragging = false;
   private dragged = 0;
+  // Where the last click (or tap) that did not drag landed, in client pixels, until read.
+  private click: { x: number; y: number } | null = null;
 
   // Walking is the on-screen pad's alone, on every device, so the mouse plays the whole game.
   moveInput(): MoveInput {
@@ -67,6 +69,18 @@ export class FpsInput {
 
   press(code: string): void {
     this.pressed.add(code);
+  }
+
+  // A tap on the world on a touch screen: a click at something (a person to talk to), not a blow
+  // (the attack button strikes).
+  tap(x: number, y: number): void {
+    this.click = { x, y };
+  }
+
+  consumeClick(): { x: number; y: number } | null {
+    const click = this.click;
+    this.click = null;
+    return click;
   }
 
   private mouseBlocking = false;
@@ -105,7 +119,10 @@ export class FpsInput {
     if (e.button === 0 && this.dragging) {
       this.dragging = false;
       // A press that stayed put was a click at something, not a look about.
-      if (this.dragged < DRAG_SLOP) this.press("VirtualFire");
+      if (this.dragged < DRAG_SLOP) {
+        this.press("VirtualFire");
+        this.click = { x: e.clientX, y: e.clientY };
+      }
     }
     if (e.button === 2) this.mouseBlocking = false;
     this.blocking = this.mouseBlocking || this.virtualBlocking;
@@ -120,6 +137,7 @@ export class FpsInput {
   };
   private onBlur = () => {
     this.pressed.clear();
+    this.click = null;
     this.dragging = false;
     this.mouseBlocking = false;
     this.firing = this.virtualFiring;

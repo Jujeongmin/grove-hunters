@@ -370,7 +370,6 @@ export const ko = {
   "pad.jump": "점프",
   "pad.auto": "자동",
   "pad.autoOn": "자동 중",
-  "pad.talk": "대화",
   "pad.leftClick": "좌클릭",
   "pad.rightClick": "우클릭",
 
@@ -555,6 +554,10 @@ export const ko = {
   "quests.complete": "퀘스트 완료!",
   "quests.reportHere": "촌장에게 보고하고 보상을 받으세요",
   "quests.reportInVillage": "마을의 촌장에게 보고하고 보상을 받으세요",
+  "npc.merchant.hello": "\"어서 오게! 물약이며 장비며 다 갖춰 두었다네.\"",
+  "npc.smith.hello": "\"쇠는 뜨거울 때 두드려야지. 강화든 제작이든 맡겨 두게.\"",
+  "dialogue.shop": "상점 보기",
+  "dialogue.forge": "대장간 열기",
   "npc.elder.done": "\"이제 이 숲에서 자네를 당해낼 것은 없네. 고맙네, 사냥꾼.\"",
   "npc.elder.tutorial": "\"왔구먼. 이 기술을 익히고 물약도 챙겨 가게. 스킬 창에서 기술을 칸에 끌어 두면 쓸 수 있다네.\"",
   "npc.elder.claim": "\"{quest}, 잘 해냈군! 약속한 보상일세.\"",

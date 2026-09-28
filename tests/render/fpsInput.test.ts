@@ -42,6 +42,24 @@ describe("mouse and keys", () => {
     expect(input.consumePress("VirtualFire")).toBe(true);
   });
 
+  it("keeps where a click landed, so the world can see what was clicked", () => {
+    canvas.dispatchEvent(event("mousedown", { button: 0, clientX: 120, clientY: 80 }));
+    window.dispatchEvent(event("mouseup", { button: 0, clientX: 121, clientY: 80 }));
+    expect(input.consumeClick()).toEqual({ x: 121, y: 80 });
+    expect(input.consumeClick()).toBeNull();
+    // A drag is a look about, not a click at something.
+    canvas.dispatchEvent(event("mousedown", { button: 0, clientX: 10, clientY: 10 }));
+    document.dispatchEvent(event("mousemove", { movementX: 40, movementY: 0 }));
+    window.dispatchEvent(event("mouseup", { button: 0, clientX: 50, clientY: 10 }));
+    expect(input.consumeClick()).toBeNull();
+  });
+
+  it("takes a tap on a touch screen as a click that does not strike", () => {
+    input.tap(33, 44);
+    expect(input.consumeClick()).toEqual({ x: 33, y: 44 });
+    expect(input.consumePress("VirtualFire")).toBe(false);
+  });
+
   it("does not turn the view when the mouse moves without a button held", () => {
     document.dispatchEvent(event("mousemove", { movementX: 50, movementY: 50 }));
     expect(input.consumeLook()).toEqual({ dx: 0, dy: 0 });

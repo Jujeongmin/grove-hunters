@@ -23,7 +23,7 @@ html:lang(ko), html:lang(ja), html:lang(zh-Hant), html:lang(zh-Hans) { word-brea
 /* A sentence that ends with one stray word on its own line reads as a mistake. The lines of the
    game's short notes are evened out instead; a language whose sentence is longer than Korean's
    then breaks in the middle rather than leaving a tail. */
-.note, .hint, .npc-line, .class-locked-note, .upgrade-list span, .skill-row-text, .quest-reward {
+.note, .hint, .class-locked-note, .upgrade-list span, .skill-row-text, .quest-reward {
   text-wrap: balance;
 }
 body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -324,7 +324,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-quest.clickable:hover { border-color: var(--ember); }
 .hud-quest.seeking { border-color: var(--ember); box-shadow: 0 0 12px rgba(255, 179, 90, 0.35); }
 .hud-quest .hint { font-size: 11px; color: var(--ember); }
-.hud-quest .hint .way { color: var(--ink); font-weight: 700; }
+.hud-quest .hint .way, .hud-quest.tutorial .way { color: var(--ink); font-weight: 700; }
 /* The first tutorial: what to do next sits where the quest does, and what to press next glows. */
 .hud-quest.tutorial > span { color: var(--ink); }
 .tutorial-glow { animation: tutorial-glow 1.4s ease-in-out infinite; }
@@ -361,11 +361,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .pad-attack img { width: 50px; height: 50px; }
 .pad-jump { right: 104px; bottom: 2px; }
 .pad-block { right: 86px; bottom: 76px; }
-/* Auto-battle and talking sit left of the block and the jump, so nothing stands above the attack
+/* Auto-battle sits left of the block, so nothing stands above the attack
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
-.pad-talk { right: 170px; bottom: 2px; border-color: rgba(255, 211, 106, 0.7); }
 /* The quest sits right under the corner map (62px down, 132px tall, and the brush around it), at
    a fixed height rather than a share of the stage, so it neither runs into the map on a tall stage
    nor down into the buttons at the bottom right on a short one. */
@@ -501,11 +500,24 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
 .upgrade-sheet .text-button:hover { opacity: 1; }
 /* Talking to a village NPC. */
-.npc-panel { width: min(440px, 92%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
-.npc-name { margin: 0; font: 800 18px var(--font-head); color: #ffd36a; }
-.npc-line { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); }
-.npc-quest { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 12px; color: var(--ink-dim); }
-.npc-quest b { font: 700 15px var(--font-head); color: var(--ink); }
+/* A talk with someone in the village (as in Lineage M or Lost Ark): the camera at their face, the HUD
+   gone, and their words across the bottom, the ways on at the right. */
+/* The whole screen takes the tap that moves the talk on (and keeps it from reaching the world). */
+.dialogue-layer { position: absolute; inset: 0; pointer-events: auto; cursor: pointer; }
+.dialogue {
+  position: absolute; left: 0; right: 0; bottom: 0; min-height: 132px; padding: 14px 24px 18px;
+  display: flex; gap: 20px; align-items: flex-end;
+  background: linear-gradient(to top, rgba(10, 8, 6, 0.94) 70%, rgba(10, 8, 6, 0));
+  animation: dialogue-in 0.35s ease;
+}
+@keyframes dialogue-in { from { opacity: 0; transform: translateY(16px); } }
+.dialogue-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.dialogue-name { margin: 0; font: 800 18px var(--font-head); color: #ffd36a; text-shadow: var(--shadow); }
+.dialogue-name span { margin-left: 6px; font: 600 12px var(--font-body); color: var(--ink-dim); }
+.dialogue-text { margin: 0; min-height: 48px; font-size: 15px; line-height: 1.6; color: var(--ink); }
+.dialogue-quest { margin: 0; font-size: 12px; color: var(--ink-dim); }
+.dialogue-quest b { margin-right: 4px; font: 700 13px var(--font-head); color: var(--ink); }
+.dialogue-choices { display: flex; flex-direction: column; gap: 8px; align-items: stretch; min-width: 150px; cursor: default; }
 .hud-quest b { font: 700 14px var(--font-head); color: #ffd36a; }
 .hud-quest .count { color: var(--ink); font-variant-numeric: tabular-nums; }
 .hud-quest .brush-button.small { margin-top: 4px; padding: 8px 16px; font-size: 13px; }
