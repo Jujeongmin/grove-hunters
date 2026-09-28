@@ -37,7 +37,10 @@ import {
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
 import type { GroveView } from "../../src/game/world/grove";
-import { countGroveKills, flushRoom, markHunter, viewOf } from "./grove";
+import {
+  countGroveKills, flushRoom, giveToVillage, markHunter, settleOnArrive, takeFromBag, viewOf, villageOf,
+} from "./grove";
+import { deathLossFactor, huntXpFactor, potionPriceFactor } from "../../src/game/world/grove";
 import {
   TUTORIAL, TUTORIAL_GOLD, TUTORIAL_POTIONS, readTutorial, type TutorialStep,
 } from "../../src/game/account/tutorial";
@@ -118,9 +121,12 @@ interface Pay {
 
 // A character has fallen: it loses a little XP (never a level), and the room shows how much.
 async function fallen(account: string, roomId: string): Promise<void> {
+  // The village's inn, once built, halves what a fall costs on this server.
+  const here = readChannelRoom(roomId);
+  const factor = here ? deathLossFactor(await villageOf(here.world)) : 1;
   let lost = 0;
   const next = await updateActive(account, (c) => {
-    lost = deathXpLoss(c.xp);
+    lost = Math.round(deathXpLoss(c.xp) * factor);
     return { ...c, xp: c.xp - lost };
   });
   if (lost > 0) await writeRanking(account, next);
@@ -132,7 +138,10 @@ async function fallen(account: string, roomId: string): Promise<void> {
 // Pays a character (gold onto its account as a Verse8 asset, the rest into the character) and shows
 // it in the room: the new XP (a new level heals it to its new, larger health) and the payout itself,
 // which its client shows and refreshes the bag on.
-async function payHunter(account: string, roomId: string, pay: Pay): Promise<void> {
+async function payHunter(account: string, roomId: string, paid: Pay): Promise<void> {
+  // The village's training ground, once built, adds to every hunt's XP on this server.
+  const here = readChannelRoom(roomId);
+  const pay = here ? { ...paid, xp: Math.round(paid.xp * huntXpFactor(await villageOf(here.world))) } : paid;
   // Verse8 mints only to the caller; another hunter's gold is minted here, then handed over.
   if (pay.gold > 0) {
     await $asset.mint(GOLD, pay.gold);
@@ -463,7 +472,7 @@ export class Server {
 
   // After the client has joined the room enterWorld or travel picked: stands your character at
   // its spot for everyone in the room to see.
-  async arrive(): Promise<{ x: number; z: number }> {
+  async arrive(): Promise<{ x: number; z: number; grove: { gold: number; xp: number } | null }> {
     const account = $sender.account;
     const { zone } = currentChannel();
     const character = await playing(account);
@@ -478,7 +487,15 @@ export class Server {
       savedAt: now,
       xp: character.xp, hp: maxHp, maxHp, gear, dead: false, hitAt: 0, strikeReadyAt: 0, skillReady: {},
     });
-    return { x: spot.x, z: spot.z };
+    // What the grove owes: this week's and last week's stages, and finished buildings' thanks.
+    const owed = await settleOnArrive(account, (await readAccountWorld(account)).id);
+    if (owed.gold > 0) await $asset.mint(GOLD, owed.gold);
+    if (owed.xp > 0) {
+      const next = await updateActive(account, (c) => ({ ...c, xp: c.xp + owed.xp }));
+      await writeRanking(account, next);
+      await refreshFighter(next);
+    }
+    return { x: spot.x, z: spot.z, grove: owed.gold > 0 || owed.xp > 0 ? owed : null };
   }
 
   // Back to the menu: keeps where you stood. The client leaves the room itself.
@@ -549,6 +566,32 @@ export class Server {
     return viewOf((await readAccountWorld($sender.account)).id, Date.now());
   }
 
+  // A gift of materials and gold to the village's building under way, from beside the elder.
+  async donate(rawItems: unknown, rawGold: unknown): Promise<GroveView> {
+    await requireNpc("elder");
+    const account = $sender.account;
+    const world = (await readAccountWorld(account)).id;
+    const character = await playing(account);
+    const items: Partial<Record<ItemId, number>> = {};
+    if (rawItems && typeof rawItems === "object") {
+      for (const [id, n] of Object.entries(rawItems as Record<string, unknown>)) {
+        const item = readItemId(id);
+        if (item && typeof n === "number" && Number.isInteger(n) && n > 0) items[item] = n;
+      }
+    }
+    const offered = typeof rawGold === "number" && Number.isInteger(rawGold) && rawGold > 0 ? rawGold : 0;
+    const held = await $asset.get(GOLD);
+    const { take } = await giveToVillage(account, world, character, { items, gold: offered }, held);
+    if (take.gold > 0) await $asset.burn(GOLD, take.gold);
+    try {
+      await updateActive(account, (c) => ({ ...c, bag: takeFromBag(c.bag, take) }));
+    } catch (error) {
+      if (take.gold > 0) await $asset.mint(GOLD, take.gold);
+      throw error;
+    }
+    return viewOf(world, Date.now());
+  }
+
   // Your gold, and your active character's bag and gear.
   async getBag(): Promise<BagView> {
     return bagView(await playing($sender.account));
@@ -594,10 +637,14 @@ export class Server {
     const item = readItem(id);
     const n = readCount(count);
     await requireNpc("merchant");
-    const price = ITEMS[item].price;
-    if (price === null) throw new RuleViolation("unavailable");
+    const listed = ITEMS[item].price;
+    if (listed === null) throw new RuleViolation("unavailable");
     const account = $sender.account;
     await playing(account);
+    // The village's herbalist, once built, sells potions cheaper on this server.
+    const price = ITEMS[item].kind === "potion"
+      ? Math.round(listed * potionPriceFactor(await villageOf((await readAccountWorld(account)).id)))
+      : listed;
     const cost = price * n;
     if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost);

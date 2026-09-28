@@ -24,7 +24,7 @@ export const RANGE_SLACK = 1.5;
 export const RULE_ERRORS = [
   "unavailable", "not_owned", "no_character", "character_limit", "no_zone", "not_near", "zone_full", "channel_full", "too_fast", "blocking",
   "no_monster", "monster_dead", "out_of_range", "no_item", "not_enough_gold", "max_plus", "not_in_village", "too_low",
-  "quest_unfinished",
+  "quest_unfinished", "nothing", "no_building",
   "nickname_invalid", "nickname_taken", "name_mismatch",
   "friend_not_found", "friend_self", "already_friends", "friend_limit", "request_limit", "no_request",
 ] as const;

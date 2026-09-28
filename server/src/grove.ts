@@ -1,3 +1,7 @@
+import { addItem, type ItemId } from "../../src/game/account/items";
+import { completionRewards, donation, giveTo, settle, underWay, type Offer } from "../../src/game/world/grove";
+import type { Character } from "../../src/game/account/characters";
+import { RuleViolation } from "../../src/game/world/types";
 import {
   FLUSH_MS, addKills, groveView, markHunted, openSite, readGrove, readUserGrove, readVillage, weekOf,
   type GroveRecord, type GroveView, type VillageRecord,
@@ -117,4 +121,51 @@ function guardianSpot(): { x: number; z: number } {
   const layout = zoneLayout(GROVE_GUARDIAN_ZONE);
   const mid = { x: (layout.cols * layout.tileSize) / 2, z: (layout.rows * layout.tileSize) / 2 };
   return [...layout.zombieSpawns].sort((a, b) => Math.hypot(a.x - mid.x, a.z - mid.z) - Math.hypot(b.x - mid.x, b.z - mid.z))[0];
+}
+
+async function userGroves(account: string): Promise<Record<string, unknown>> {
+  const all = (await $global.getUserState(account)).grove;
+  return all && typeof all === "object" ? (all as Record<string, unknown>) : {};
+}
+
+// On coming into a zone: the stages owed (this week's and last week's) and what finished buildings
+// left the account, paid once. Answers what to pay; the caller mints the gold and adds the XP.
+export async function settleOnArrive(account: string, world: string): Promise<{ gold: number; xp: number }> {
+  const all = await userGroves(account);
+  const user = readUserGrove(all[world]);
+  const [{ record }, village] = await Promise.all([readGroveRecord(world), villageOf(world)]);
+  const out = settle(user, record, village);
+  if (out.gold === 0 && out.xp === 0 && JSON.stringify(out.user) === JSON.stringify(user)) return { gold: 0, xp: 0 };
+  await $global.updateUserState(account, { grove: { ...all, [world]: out.user } });
+  return { gold: out.gold, xp: out.xp };
+}
+
+// A gift to the building under way. Takes no more than it needs; a finished building leaves each
+// giver's reward on their account. Answers what was taken and the village after.
+export async function giveToVillage(
+  account: string, world: string, character: Character, offer: Offer, gold: number,
+): Promise<{ take: Offer; village: VillageRecord }> {
+  return withGroveLock(world, async () => {
+    const { id, village } = await readVillageRecord(world);
+    const gift = donation(village, offer, character.bag, gold);
+    if (!gift) throw new RuleViolation(underWay(village) ? "nothing" : "no_building");
+    const next = giveTo(village, gift.building.id, gift.take, gift.points, account, character.name);
+    await writeVillageRecord(world, id, next);
+    if (next.buildings[gift.building.id].done) {
+      for (const [giver, reward] of Object.entries(completionRewards(next.buildings[gift.building.id]))) {
+        const all = await userGroves(giver);
+        const user = readUserGrove(all[world]);
+        await $global.updateUserState(giver, {
+          grove: { ...all, [world]: { ...user, pending: { gold: user.pending.gold + reward.gold, xp: user.pending.xp + reward.xp } } },
+        });
+      }
+    }
+    return { take: gift.take, village: next };
+  });
+}
+
+export function takeFromBag(bag: Character["bag"], take: Offer): Character["bag"] {
+  let next = bag;
+  for (const [item, n] of Object.entries(take.items) as [ItemId, number][]) next = addItem(next, item, -n);
+  return next;
 }
