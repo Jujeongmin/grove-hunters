@@ -1,10 +1,17 @@
 import { TILE_SIZE, parseLevel, type LevelLayout, type Point2 } from "../rules/levelLayout";
-import { fieldMap, type House } from "./fieldMap";
+import { fieldMap, portalCell, type House, type Side } from "./fieldMap";
 
 // The open world: a village, two forest fields and the boss's clearing, joined by portals (O cells).
 // Each zone runs as channels of at most CHANNEL_CAPACITY players (one Verse8 room each). The
 // village and the first field are free; the rest open with the full game.
 export type ZoneId = "village" | "forest1" | "forest2" | "forest3" | "boss";
+
+// One way out of a zone: the edge it stands on, how far along that edge, and the zone it leads to.
+export interface ZonePortal {
+  to: ZoneId;
+  side: Side;
+  at: number;
+}
 
 export interface Zone {
   id: ZoneId;
@@ -16,8 +23,9 @@ export interface Zone {
   // # forest, . ground, P where you appear when nothing else says, O a portal, Z a monster's spot,
   // K the boss's spot, c B C H things to stand on (see levelLayout.ts).
   map: string[];
-  // Where each O leads, in reading order.
-  portals: ZoneId[];
+  // The ways out: each says which edge it is on, how far along, and where it leads. The map is drawn
+  // from this same list, so a destination belongs to one O cell and cannot slide onto another's.
+  portals: readonly ZonePortal[];
   // The houses standing in it (their cells are in the map as h).
   houses?: House[];
 }
@@ -31,42 +39,52 @@ const VILLAGE_HOUSES: House[] = [
   { model: "bld_house_small", at: [4, 9], face: "E" },
 ];
 
+// Each zone's ways out, named once: the map below is drawn from the very same list.
+const VILLAGE_PORTALS: readonly ZonePortal[] = [{ to: "forest1", side: "E", at: 13 }];
+const FOREST1_PORTALS: readonly ZonePortal[] = [
+  { to: "village", side: "W", at: 18 }, { to: "forest2", side: "E", at: 17 },
+];
+const FOREST2_PORTALS: readonly ZonePortal[] = [
+  { to: "forest1", side: "W", at: 17 }, { to: "boss", side: "N", at: 38 }, { to: "forest3", side: "E", at: 24 },
+];
+const FOREST3_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "W", at: 20 }];
+const BOSS_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "S", at: 15 }];
+
 // The fields are wide open country (drawn by fieldMap from a few numbers): about 200 by 140 metres
 // of meadow and groves between walls of forest, the village a little smaller.
 export const ZONES: Record<ZoneId, Zone> = {
   village: {
-    id: "village", name: "초록숲 마을", paid: false, minLevel: 1, portals: ["forest1"], houses: VILLAGE_HOUSES,
+    id: "village", name: "초록숲 마을", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
     map: fieldMap({
-      cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: [{ side: "E", at: 13 }],
+      cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: VILLAGE_PORTALS,
       monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: VILLAGE_HOUSES,
     }),
   },
   forest1: {
-    id: "forest1", name: "숲 필드 1", paid: false, minLevel: 1, portals: ["village", "forest2"],
+    id: "forest1", name: "숲 필드 1", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
     map: fieldMap({
-      cols: 50, rows: 36, seed: 11, spawn: [5, 18], portals: [{ side: "W", at: 18 }, { side: "E", at: 17 }],
+      cols: 50, rows: 36, seed: 11, spawn: [5, 18], portals: FOREST1_PORTALS,
       monsters: 24, groves: 16, edge: 3, props: "cBccB",
     }),
   },
   forest2: {
-    id: "forest2", name: "숲 필드 2", paid: true, minLevel: 10, portals: ["forest1", "boss", "forest3"],
+    id: "forest2", name: "숲 필드 2", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
     map: fieldMap({
-      cols: 50, rows: 36, seed: 29, spawn: [5, 17],
-      portals: [{ side: "W", at: 17 }, { side: "N", at: 38 }, { side: "E", at: 24 }],
+      cols: 50, rows: 36, seed: 29, spawn: [5, 17], portals: FOREST2_PORTALS,
       monsters: 26, groves: 20, edge: 3, props: "cBcH",
     }),
   },
   forest3: {
-    id: "forest3", name: "깊은 숲", paid: true, minLevel: 25, portals: ["forest2"],
+    id: "forest3", name: "깊은 숲", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
     map: fieldMap({
-      cols: 54, rows: 40, seed: 61, spawn: [5, 20], portals: [{ side: "W", at: 20 }],
+      cols: 54, rows: 40, seed: 61, spawn: [5, 20], portals: FOREST3_PORTALS,
       monsters: 28, groves: 26, edge: 4, props: "cBcHc",
     }),
   },
   boss: {
-    id: "boss", name: "버섯왕의 공터", paid: true, minLevel: 25, portals: ["forest2"],
+    id: "boss", name: "버섯왕의 공터", paid: true, minLevel: 25, portals: BOSS_PORTALS,
     map: fieldMap({
-      cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: [{ side: "S", at: 15 }],
+      cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: BOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
     }),
   },
@@ -111,8 +129,14 @@ export function zoneLayout(id: ZoneId): LevelLayout {
 
 export interface Portal extends Point2 { to: ZoneId }
 
+// Every way out of a zone, each standing on the cell its own side and place put it on. Reading the
+// map's O cells in order would only tell us where the portals are, not which is which.
 export function portalsOf(id: ZoneId): Portal[] {
-  return zoneLayout(id).portals.map((p, i) => ({ ...p, to: ZONES[id].portals[i] }));
+  const layout = zoneLayout(id);
+  return ZONES[id].portals.map((p) => {
+    const [c, r] = portalCell(layout.cols, layout.rows, p);
+    return { x: (c + 0.5) * layout.tileSize, z: (r + 0.5) * layout.tileSize, to: p.to };
+  });
 }
 
 // Where you stand after coming into `zone` from `from`: one cell inside the portal that leads back,

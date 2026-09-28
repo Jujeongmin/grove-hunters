@@ -6,6 +6,15 @@ import { cellNoise } from "../rules/nature";
 
 export type Side = "W" | "E" | "N" | "S";
 
+// Where a portal's O cell goes: on its edge, `at` along it (a column for N and S, a row for W and
+// E). The zone and the map both place portals with this, so neither can drift from the other.
+export function portalCell(cols: number, rows: number, portal: { side: Side; at: number }): [number, number] {
+  if (portal.side === "W") return [0, portal.at];
+  if (portal.side === "E") return [cols - 1, portal.at];
+  if (portal.side === "N") return [portal.at, 0];
+  return [portal.at, rows - 1];
+}
+
 export interface FieldSpec {
   cols: number;
   rows: number;
@@ -13,9 +22,9 @@ export interface FieldSpec {
   seed: number;
   // Where you appear when nothing else says, as [col, row].
   spawn: [number, number];
-  // One portal per entry, in the order the zone lists where they lead: which edge, and how far
-  // along it (a column for N and S, a row for W and E).
-  portals: { side: Side; at: number }[];
+  // The zone's portals: which edge each is on and how far along it. The zone hands over the same
+  // list it keeps, so the destinations and the O cells are one and the same.
+  portals: readonly { side: Side; at: number }[];
   // How many monster spots (Z), kept apart from each other and clear of the spawn and the portals.
   monsters: number;
   // The boss's spot (K), if any.
@@ -76,12 +85,7 @@ export function fieldMap(spec: FieldSpec): string[] {
   }
 
   // The portals, on their edges, with a clear way in from each.
-  const portals = spec.portals.map(({ side, at }) => {
-    if (side === "W") return [0, at] as const;
-    if (side === "E") return [cols - 1, at] as const;
-    if (side === "N") return [at, 0] as const;
-    return [at, rows - 1] as const;
-  });
+  const portals = spec.portals.map((portal) => portalCell(cols, rows, portal));
   const [sc, sr] = spec.spawn;
   const clearAround = (c: number, r: number, radius: number) => {
     for (let dr = -radius; dr <= radius; dr++) {

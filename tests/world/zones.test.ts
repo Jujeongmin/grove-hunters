@@ -13,7 +13,38 @@ describe("zones", () => {
     }
   });
 
-  it("joins the zones both ways: every portal has one leading back", () => {
+  it("stands every portal on its own O cell, and leaves none over", () => {
+    for (const id of ZONE_IDS) {
+      const cells = zoneLayout(id).portals.map((p) => `${p.x},${p.z}`).sort();
+      const stood = portalsOf(id).map((p) => `${p.x},${p.z}`).sort();
+      expect(stood).toEqual(cells);
+    }
+  });
+
+  it("faces joined zones at each other: a way out and the way back are on opposite edges", () => {
+    const OPPOSITE = { W: "E", E: "W", N: "S", S: "N" } as const;
+    for (const id of ZONE_IDS) {
+      for (const p of ZONES[id].portals) {
+        const back = ZONES[p.to].portals.find((q) => q.to === id);
+        expect(back, `${id} -> ${p.to}`).toBeDefined();
+        expect(back!.side, `${id} ${p.side} -> ${p.to}`).toBe(OPPOSITE[p.side]);
+      }
+    }
+  });
+
+  it("walks you across the world, not back on yourself: out of the village's east side is the field's west", () => {
+    const village = zoneLayout("village");
+    const field = zoneLayout("forest1");
+    const out = portalsOf("village").find((p) => p.to === "forest1")!;
+    expect(out.x).toBeGreaterThan(village.cols * village.tileSize * 0.9);
+    const at = arrivalFrom("forest1", "village");
+    expect(at.x).toBeLessThan(field.cols * field.tileSize * 0.1);
+    // And on from there: the way to the second field is at the first field's far side.
+    expect(portalsOf("forest1").find((p) => p.to === "forest2")!.x)
+      .toBeGreaterThan(field.cols * field.tileSize * 0.9);
+  });
+
+  it("joins the zones both ways: every portal has one leading back", () =>{
     for (const id of ZONE_IDS) {
       for (const p of portalsOf(id)) expect(portalsOf(p.to).map((q) => q.to)).toContain(id);
     }
