@@ -3,6 +3,9 @@ import { HOTBAR_SLOTS, POTION_AT, type Controls } from "../game/account/controls
 // Player settings, kept in this browser (the bar's set-up is also kept on the account; see
 // syncControls). Read live by the game view and the sound effects.
 export interface Settings extends Controls {
+  // The language the reader picked, as one of Lang; null follows the browser (see lang.ts). Kept as
+  // a plain string here so settings.ts does not have to know what the languages are.
+  lang: string | null;
   // Multiplies mouse look speed.
   sensitivity: number;
   // 0 to 1.
@@ -46,15 +49,16 @@ const STORAGE_KEY = "traitor-hunt:settings";
 // Graphics quality: how many pixels a point (at most) and how near trees and ground cover are drawn in
 // full (metres; beyond, pictures or nothing).
 export type Quality = "low" | "mid" | "high";
-export const QUALITY: Record<Quality, { label: string; pixelRatio: number; near: number }> = {
-  low: { label: "낮음", pixelRatio: 1, near: 26 },
-  mid: { label: "보통", pixelRatio: 1.5, near: 38 },
-  high: { label: "높음", pixelRatio: 2, near: 55 },
+export const QUALITY: Record<Quality, { pixelRatio: number; near: number }> = {
+  low: { pixelRatio: 1, near: 26 },
+  mid: { pixelRatio: 1.5, near: 38 },
+  high: { pixelRatio: 2, near: 55 },
 };
 // Phones and tablets start at the middle; computers at the top.
 const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;
 
 export const DEFAULT_SETTINGS: Settings = {
+  lang: null,
   quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true,
   sensitivity: 1, volume: 0.8, music: 0.5, brightness: 1, autoPotion: true, potionAt: POTION_AT.start, autoSkills: [true, false, false], hotbars: {},
 };

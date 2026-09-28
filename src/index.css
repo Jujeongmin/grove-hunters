@@ -562,6 +562,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: rgba(14, 11, 9, 0.94); border: 1px solid rgba(255, 179, 90, 0.35);
 }
 .settings-panel .setting-row { grid-template-columns: 140px 1fr 60px; }
+/* The languages, each written in itself, wrapping onto a second line when they do not fit. */
+.setting-langs { grid-template-columns: 1fr !important; }
+.setting-langs .setting-choice { flex-wrap: wrap; gap: 4px 10px; }
 .settings-panel h3 { margin: 14px 0 2px; font: 700 13px var(--font-head); color: var(--ember); letter-spacing: 0.05em; }
 .setting-flag input { justify-self: start; width: 18px; height: 18px; accent-color: var(--ember); }
 .setting-choice { display: flex; gap: 6px; }
