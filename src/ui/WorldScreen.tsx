@@ -502,8 +502,8 @@ function ZoneScreen({
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}
             glow={glow === "slot0" || glow === "bar" ? glow : null}
           />
-          {/* The side panels and the unfolded menu sit where the tracker is; it steps aside for them. */}
-          {panel !== "quests" && panel !== "skills" && !menuOpen && (
+          {/* The side panels sit where the tracker is; it steps aside while one is open. */}
+          {panel !== "quests" && panel !== "skills" && (
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}

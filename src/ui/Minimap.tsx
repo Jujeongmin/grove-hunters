@@ -299,7 +299,7 @@ export function Minimap({ zone, me, width, height, labels = false, onPick, bosse
   );
 }
 
-const CORNER = 132;
+const CORNER = 116;
 
 // The little map in the corner, always there while you play.
 export function MinimapCorner({ zone, me, bosses }: { zone: ZoneId; me: MinimapPose; bosses?: readonly { x: number; z: number }[] }) {

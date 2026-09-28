@@ -268,10 +268,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .hud-cell.empty { border-style: dashed; border-color: rgba(255, 255, 255, 0.25); }
 .ui .side-panel { top: 64px; width: 280px; }
-/* The menu: one button left of the corner map, unfolding into a grid four across under itself. The
-   whole block keeps to the left of the map and above the pad's buttons, so it covers neither. */
-.hud-menu-buttons { position: absolute; top: 12px; right: 164px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.hud-menu-grid { display: grid; grid-template-columns: repeat(4, 60px); gap: 6px; }
+/* The menu: one button at the top right (the corner map is at the top left now), unfolding into a
+   grid five across under itself, which leaves the quest below it in the clear. */
+.hud-menu-buttons { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hud-menu-grid { display: grid; grid-template-columns: repeat(5, 58px); gap: 6px; }
 .hud-menu-grid .hud-icon-button { padding: 4px 2px; }
 .hud-menu-grid .hud-icon-button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hud-notes {
@@ -341,7 +341,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
    the screen (a mouse drags the world itself). */
 .touch-look { position: absolute; left: 40%; top: 0; right: 0; bottom: 0; touch-action: none; }
 .touch-stick {
-  position: absolute; left: 36px; bottom: 120px; width: 132px; height: 132px; border-radius: 50%;
+  position: absolute; left: 36px; bottom: 72px; width: 132px; height: 132px; border-radius: 50%;
   background: rgba(14, 11, 9, 0.35); border: 2px solid rgba(255, 255, 255, 0.25); touch-action: none;
 }
 .touch-knob {
@@ -370,13 +370,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
-/* The quest sits right under the corner map (62px down, 132px tall, and the brush around it), at
-   a fixed height rather than a share of the stage, so it neither runs into the map on a tall stage
-   nor down into the buttons at the bottom right on a short one. */
+/* The quest sits at the right, just above the pad's buttons and under the unfolded menu, so neither
+   covers it. Its height is fixed rather than a share of the stage. */
 .hud-quest { top: 210px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }
-/* The map: a little one in the corner while you play, and the whole zone over the game with N.
-   Both are drawn north up, so a glance means the same thing every time, and both sit on plain black. */
-.minimap { position: absolute; right: 20px; top: 62px; isolation: isolate; pointer-events: none; }
+/* The map: a little one at the top left under the vitals while you play, and the whole zone over the
+   game with N. Both are drawn north up, so a glance means the same thing every time, and both sit on
+   plain black. */
+.minimap { position: absolute; left: 16px; top: 120px; isolation: isolate; pointer-events: none; }
 /* A plain black frame round the corner map. */
 .minimap::before {
   content: "";
@@ -1016,11 +1016,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .wardrobe-panel { align-self: flex-start; max-height: calc(100% - 28px); }
 .character-select .guest-note { color: #ffcf8a; max-width: 280px; line-height: 1.5; }
 
-/* The channel chat, at the left, above the joystick. */
+/* The channel chat, in the bottom left corner under the joystick; opened it grows up over the pad. */
 .chat {
-  position: absolute; left: 16px; bottom: 268px; width: 280px; max-width: calc(100vw - 32px);
+  position: absolute; left: 16px; bottom: 12px; width: 200px; max-width: calc(100vw - 32px);
   display: flex; flex-direction: column; gap: 6px; pointer-events: none;
 }
+.chat.open { width: 300px; }
 .chat-log {
   max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
   font: 500 14px var(--font-body); text-shadow: 0 1px 2px #000, 0 0 4px #000;
