@@ -9,7 +9,6 @@ export type Dye =
   | { kind: "hue"; degrees: number; saturation: number };
 
 export interface PartOption {
-  name: string;
   // A colour part's repaint; left out for the pack's own colours.
   dye?: Dye;
   // For the gear part: whether the accessories are worn.
@@ -17,25 +16,23 @@ export interface PartOption {
 }
 
 export interface Part {
-  label: string;
   options: readonly PartOption[];
 }
 
-const skin = (name: string, r: number, g: number, b: number): PartOption => ({ name, dye: { kind: "skin", rgb: [r, g, b] } });
-const hue = (name: string, degrees: number, saturation = 1): PartOption => ({ name, dye: { kind: "hue", degrees, saturation } });
+const skin = (r: number, g: number, b: number): PartOption => ({ dye: { kind: "skin", rgb: [r, g, b] } });
+const hue = (degrees: number, saturation = 1): PartOption => ({ dye: { kind: "hue", degrees, saturation } });
 const HUES: readonly PartOption[] = [
-  { name: "기본" }, hue("염색 1", 60), hue("염색 2", 120), hue("염색 3", 180), hue("염색 4", 240), hue("염색 5", 300),
-  hue("무채색", 0, 0),
+  {}, hue(60), hue(120), hue(180), hue(240), hue(300),
+  hue(0, 0),
 ];
 
 export const PARTS = {
-  gear: { label: "장식", options: [{ name: "착용", gear: true }, { name: "벗기", gear: false }] },
-  clothColor: { label: "옷 색", options: HUES },
+  gear: { options: [{ gear: true }, { gear: false }] },
+  clothColor: { options: HUES },
   skin: {
-    label: "피부",
-    options: [{ name: "기본" }, skin("밝은", 250, 222, 196), skin("구릿빛", 196, 132, 86), skin("짙은", 124, 82, 56)],
+    options: [{}, skin(250, 222, 196), skin(196, 132, 86), skin(124, 82, 56)],
   },
-  weaponColor: { label: "무기 색", options: HUES },
+  weaponColor: { options: HUES },
 } as const satisfies Record<string, Part>;
 
 export type PartKey = keyof typeof PARTS;
@@ -44,7 +41,6 @@ export type CostumeParts = Record<PartKey, number>;
 
 export interface Costume {
   id: string;
-  name: string;
   parts: CostumeParts;
 }
 
@@ -52,15 +48,15 @@ export function encodeCostume(parts: CostumeParts): string {
   return PART_KEYS.map((k) => String(parts[k])).join("");
 }
 
-function make(parts: CostumeParts, name = "나만의 모습"): Costume {
-  return { id: encodeCostume(parts), name, parts };
+function make(parts: CostumeParts): Costume {
+  return { id: encodeCostume(parts), parts };
 }
 
 // Ready-made looks.
 export const COSTUMES: readonly Costume[] = [
-  make({ gear: 0, clothColor: 0, skin: 0, weaponColor: 0 }, "기본"),
-  make({ gear: 1, clothColor: 4, skin: 1, weaponColor: 3 }, "가벼운 차림"),
-  make({ gear: 0, clothColor: 6, skin: 2, weaponColor: 6 }, "그림자"),
+  make({ gear: 0, clothColor: 0, skin: 0, weaponColor: 0 }),
+  make({ gear: 1, clothColor: 4, skin: 1, weaponColor: 3 }),
+  make({ gear: 0, clothColor: 6, skin: 2, weaponColor: 6 }),
 ];
 
 // Reads a costume id: one digit per part, each within its part's options. Anything else (including

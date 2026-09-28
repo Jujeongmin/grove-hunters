@@ -1,5 +1,7 @@
 import { CLASSES, isFreeClass } from "../game/combat/classes";
-import { className, weaponName, zoneName } from "./names";
+import { className, monsterName, weaponName, zoneName } from "./names";
+import { ADVANCE_LEVEL } from "../game/combat/jobs";
+import { t } from "./lang";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { Offer } from "../game/account/purchase";
 import { ZONES, ZONE_IDS } from "../game/world/zones";
@@ -37,11 +39,11 @@ interface UpgradePanelProps {
 function opening(reason: UpgradeReason): string {
   switch (reason.kind) {
     case "portal":
-      return `${reason.zone}(으)로 가는 길은 정식판부터예요.`;
+      return t("buy.reason.portal", { zone: reason.zone });
     case "level":
-      return `Lv ${reason.level} 달성! 무료로 갈 수 있는 곳은 여기까지예요.`;
+      return t("buy.reason.level", { n: reason.level });
     case "menu":
-      return `무료로는 마을과 숲 필드 1을 Lv ${FREE_UNTIL}까지 즐길 수 있어요.`;
+      return t("buy.reason.menu", { n: FREE_UNTIL });
   }
 }
 
@@ -51,26 +53,26 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
   return (
     <div className="upgrade-panel" role="dialog" onClick={onClose}>
       <div className="upgrade-sheet" onClick={(e) => e.stopPropagation()}>
-        <h2>정식판</h2>
+        <h2>{t("buy.title")}</h2>
         <p className="upgrade-lead">{opening(reason)}</p>
 
         <ul className="upgrade-list">
           <li className="big">
-            <b>새 사냥터 {LOCKED_ZONES.length}곳</b>
+            <b>{t("buy.fields", { n: LOCKED_ZONES.length })}</b>
             <span>{LOCKED_ZONES.map((z) => `${zoneName(z)} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
           </li>
           <li>
-            <b>레벨 제한 해제</b>
-            <span>Lv {FREE_UNTIL}에서 멈추지 않고 전직(Lv 30)까지</span>
+            <b>{t("buy.noCap")}</b>
+            <span>{t("buy.noCapNote", { n: FREE_UNTIL, advance: ADVANCE_LEVEL })}</span>
           </li>
           <li>
-            <b>버섯왕</b>
-            <span>내려찍기와 부하를 부르는 보스, 그 전용 장비</span>
+            <b>{monsterName("mushroom_king")}</b>
+            <span>{t("buy.bossNote")}</span>
           </li>
         </ul>
 
         <div className="upgrade-classes">
-          <b>직업 {LOCKED_CLASSES.length}개</b>
+          <b>{t("buy.classes", { n: LOCKED_CLASSES.length })}</b>
           <div className="upgrade-class-row">
             {LOCKED_CLASSES.map((c) => {
               const icon = iconFor(skillIconId(c, 0));
@@ -87,7 +89,7 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
 
         {offer.off !== null && (
           <p className="upgrade-sale">
-            <b>{offer.off}% 할인</b>
+            <b>{t("buy.off", { n: offer.off })}</b>
             <s>{offer.listPrice} VX</s>
           </p>
         )}
@@ -95,13 +97,13 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
         {onBuy
           ? (
             <button type="button" className="brush-button buy-cta" onClick={onBuy} disabled={state === "confirming"}>
-              {state === "confirming" ? "결제 확인 중…" : `정식판 구매 (${offer.price} VX)`}
+              {state === "confirming" ? t("buy.checking") : t("buy.buy", { price: offer.price })}
             </button>
           )
-          : <p className="note">지금은 구매할 수 없어요. 서버에 연결된 뒤 다시 시도해 주세요.</p>}
-        {state === "late" && <p className="note">결제 확인이 늦어지고 있어요. 잠시 뒤 새로고침해 주세요.</p>}
+          : <p className="note">{t("buy.noServer")}</p>}
+        {state === "late" && <p className="note">{t("buy.late")}</p>}
 
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );

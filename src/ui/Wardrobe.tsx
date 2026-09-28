@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
+import { t } from "./lang";
+import { costumeName, partLabel, partOptionName } from "./names";
 import {
-  COSTUMES, PARTS, PART_KEYS, optionOf, randomCostume, withPart, type Costume, type PartKey,
+  COSTUMES, PART_KEYS, randomCostume, withPart, type Costume, type PartKey,
 } from "../game/render/costumes";
 
 interface WardrobeProps {
@@ -52,17 +54,17 @@ export function Wardrobe({ costume, onPick, onSpin, onClose, onStart, busy }: Wa
           drag.current = null;
         }}
       >
-        <span className="wardrobe-hint">드래그해서 돌려 보기</span>
+        <span className="wardrobe-hint">{t("look.spin")}</span>
       </div>
 
       <aside className="wardrobe-panel">
         <header className="wardrobe-head">
-          <h2>캐릭터 외형 정하기</h2>
-          <button type="button" className="text-button" onClick={onClose}>뒤로</button>
+          <h2>{t("look.title")}</h2>
+          <button type="button" className="text-button" onClick={onClose}>{t("common.back")}</button>
         </header>
 
         <section>
-          <h3>모습</h3>
+          <h3>{t("look.shape")}</h3>
           <div className="wardrobe-presets">
             {COSTUMES.map((c) => (
               <button
@@ -71,19 +73,19 @@ export function Wardrobe({ costume, onPick, onSpin, onClose, onStart, busy }: Wa
                 className={`wardrobe-chip${preset?.id === c.id ? " picked" : ""}`}
                 onClick={() => onPick(c)}
               >
-                {c.name}
+                {costumeName(c, COSTUMES)}
               </button>
             ))}
-            <button type="button" className="wardrobe-chip" onClick={() => onPick(randomCostume())}>무작위</button>
+            <button type="button" className="wardrobe-chip" onClick={() => onPick(randomCostume())}>{t("look.random")}</button>
           </div>
           <PartRows keys={PART_KEYS} costume={costume} onPick={onPick} />
         </section>
 
         <button type="button" className="brush-button wardrobe-start" onClick={onStart} disabled={busy}>
-          {busy ? "만드는 중…" : "캐릭터 만들기"}
+          {busy ? t("look.making") : t("look.create")}
         </button>
 
-        <p className="note">외형은 캐릭터를 만든 뒤에는 바꿀 수 없어요.</p>
+        <p className="note">{t("look.onceNote")}</p>
       </aside>
     </div>
   );
@@ -95,13 +97,12 @@ function PartRows({ keys, costume, onPick }: { keys: PartKey[]; costume: Costume
   return (
     <ul className="wardrobe-parts">
       {keys.map((key) => {
-        const part = PARTS[key];
         return (
           <li key={key}>
-            <span className="wardrobe-part-label">{part.label}</span>
-            <button type="button" className="wardrobe-arrow" aria-label={`${part.label} 이전`} onClick={() => onPick(withPart(costume, key, -1))}>‹</button>
-            <span className="wardrobe-part-value">{optionOf(costume, key).name}</span>
-            <button type="button" className="wardrobe-arrow" aria-label={`${part.label} 다음`} onClick={() => onPick(withPart(costume, key, 1))}>›</button>
+            <span className="wardrobe-part-label">{partLabel(key)}</span>
+            <button type="button" className="wardrobe-arrow" aria-label={t("look.previous", { part: partLabel(key) })} onClick={() => onPick(withPart(costume, key, -1))}>‹</button>
+            <span className="wardrobe-part-value">{partOptionName(key, costume.parts[key])}</span>
+            <button type="button" className="wardrobe-arrow" aria-label={t("look.next", { part: partLabel(key) })} onClick={() => onPick(withPart(costume, key, 1))}>›</button>
           </li>
         );
       })}

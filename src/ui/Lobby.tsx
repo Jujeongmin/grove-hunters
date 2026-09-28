@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
 import { CHARACTERS_PER_WORLD } from "../game/account/characters";
 import type { FriendsView } from "../game/account/friends";
 import type { AccountView } from "../game/account/nickname";
@@ -117,7 +118,7 @@ export function Lobby({
     scene.current?.setWardrobe(step === "look");
   }, [step]);
   useEffect(() => {
-    const me = { account, name: making ? draftName || "새 캐릭터" : active?.name ?? "", costume: shownCostume, playerClass: shownClass };
+    const me = { account, name: making ? draftName || t("lobby.newCharacter") : active?.name ?? "", costume: shownCostume, playerClass: shownClass };
     scene.current?.setParty(step === "characters" && !active ? [] : partyLineup(me, making ? null : partyView));
   }, [account, making, draftName, active, shownCostume, shownClass, partyView, step, loading]);
 
@@ -138,15 +139,15 @@ export function Lobby({
   const tapTitle = () => {
     if (loading < 1) return;
     if (!online) {
-      setNotice("게임은 Verse8 서버에 연결되어야 시작할 수 있어요.");
+      setNotice(t("lobby.needServer"));
       return;
     }
     if (accountFailed) {
-      setNotice("계정 정보를 불러오지 못했어요. 새로고침해 주세요.");
+      setNotice(t("lobby.accountFailed"));
       return;
     }
     if (!view) {
-      setNotice("계정 정보를 불러오는 중…");
+      setNotice(t("lobby.accountLoading"));
       return;
     }
     setNotice(null);
@@ -201,12 +202,12 @@ export function Lobby({
         }}
       />
       <div className="ui">
-        {loading < 1 && <div className="menu-loading band">마을을 불러오는 중… {Math.round(loading * 100)}%</div>}
+        {loading < 1 && <div className="menu-loading band">{t("lobby.loading", { n: Math.round(loading * 100) })}</div>}
 
         {step === "title" && (
           <div className="title-screen" onClick={tapTitle}>
             <h1 className="game-title">{GAME_TITLE}</h1>
-            {loading >= 1 && <p className="tap-to-start">화면을 눌러 시작</p>}
+            {loading >= 1 && <p className="tap-to-start">{t("lobby.tapToStart")}</p>}
             {notice && <p className="title-notice band">{notice}</p>}
           </div>
         )}
@@ -214,17 +215,17 @@ export function Lobby({
         {step === "characters" && (
           <div className="menu-corner">
             <button type="button" className="brush-button small" onClick={() => setFriendsOpen((v) => !v)}>
-              친구{(friendsView?.incoming.length ?? 0) > 0 && <span className="badge">{friendsView?.incoming.length}</span>}
+              {t("lobby.friends")}{(friendsView?.incoming.length ?? 0) > 0 && <span className="badge">{friendsView?.incoming.length}</span>}
             </button>
-            <button type="button" className="brush-button small" onClick={() => setSheet("settings")}>설정</button>
+            <button type="button" className="brush-button small" onClick={() => setSheet("settings")}>{t("menu.settings")}</button>
           </div>
         )}
 
         {invite && (
           <div className="party-invite band">
-            <span><b>{invite.nickname ?? invite.account}</b>님이 파티에 초대했어요</span>
-            <button type="button" className="text-button" onClick={() => void answer(true)}>수락</button>
-            <button type="button" className="text-button" onClick={() => void answer(false)}>거절</button>
+            <span>{t("lobby.invited", { name: invite.nickname ?? invite.account })}</span>
+            <button type="button" className="text-button" onClick={() => void answer(true)}>{t("common.accept")}</button>
+            <button type="button" className="text-button" onClick={() => void answer(false)}>{t("common.decline")}</button>
           </div>
         )}
         {!invite && inviteProblem && <div className="party-invite band">{inviteProblem}</div>}
@@ -243,7 +244,7 @@ export function Lobby({
         {step === "characters" && (
           <nav className="menu-left character-select">
             <h1 className="game-title small">{GAME_TITLE}</h1>
-            <p className="note">{shownWorld} · 캐릭터 {characters.length}/{CHARACTERS_PER_WORLD}</p>
+            <p className="note">{t("lobby.characters", { world: shownWorld, n: characters.length, max: CHARACTERS_PER_WORLD })}</p>
             <ul className="character-list">
               {characters.map((c) => (
                 <li key={c.id}>
@@ -259,23 +260,23 @@ export function Lobby({
               ))}
               {characters.length < CHARACTERS_PER_WORLD && (
                 <li>
-                  <button type="button" className="character-card new" onClick={startMaking}>+ 캐릭터 생성</button>
+                  <button type="button" className="character-card new" onClick={startMaking}>{t("lobby.createCharacter")}</button>
                 </li>
               )}
             </ul>
-            <button type="button" className="brush-button" onClick={start} disabled={leaving || !active}>게임 시작</button>
-            <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>랭킹</button>
-            <button type="button" className="brush-button" onClick={() => setStep("world")}>서버 바꾸기</button>
+            <button type="button" className="brush-button" onClick={start} disabled={leaving || !active}>{t("lobby.start")}</button>
+            <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>{t("menu.ranking")}</button>
+            <button type="button" className="brush-button" onClick={() => setStep("world")}>{t("lobby.changeServer")}</button>
             {view && !view.owned && onBuy && (
               <button type="button" className="brush-button buy-button" onClick={() => setUpgrade(true)}>
-                정식판 구매 ({offer.price} VX)
+                {t("buy.buy", { price: offer.price })}
               </button>
             )}
-            {guest && <p className="note guest-note">로그인하지 않은 상태예요. 이대로 만든 캐릭터는 다음에 접속하면 불러올 수 없어요. Verse8에 로그인한 뒤 시작해 주세요.</p>}
-            {!active && <p className="note">캐릭터를 만들어 모험을 시작하세요.</p>}
-            {view && !view.owned && <p className="note">무료로 마을과 숲 필드 1을 즐길 수 있어요.</p>}
-            {purchase === "confirming" && <p className="note">결제를 확인하는 중…</p>}
-            {purchase === "late" && <p className="note">결제 확인이 늦어지고 있어요. 잠시 뒤 새로고침해 주세요.</p>}
+            {guest && <p className="note guest-note">{t("lobby.guestNote")}</p>}
+            {!active && <p className="note">{t("lobby.noCharacter")}</p>}
+            {view && !view.owned && <p className="note">{t("lobby.freeNote")}</p>}
+            {purchase === "confirming" && <p className="note">{t("buy.confirming")}</p>}
+            {purchase === "late" && <p className="note">{t("buy.late")}</p>}
           </nav>
         )}
 

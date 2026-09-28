@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { t } from "./lang";
 import { NICKNAME_MAX, parseNickname } from "../game/account/nickname";
 import { nicknameProblem } from "../net/account";
 import { RuleViolation } from "../game/world/types";
@@ -36,16 +37,16 @@ export function NicknamePanel({ current, isFree, onNext, onClose }: NicknamePane
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel nickname-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>캐릭터 이름</h2>
-        <p className="note">다른 플레이어와 친구가 이 이름으로 당신을 봅니다. 한글·영문·숫자·_ 로 2~12자, 다른 캐릭터와 겹칠 수 없어요.</p>
+        <h2>{t("name.title")}</h2>
+        <p className="note">{t("name.note")}</p>
         <form className="nickname-form" onSubmit={submit}>
-          <input value={value} onChange={(e) => setValue(e.target.value)} maxLength={NICKNAME_MAX} placeholder="이름" autoFocus />
+          <input value={value} onChange={(e) => setValue(e.target.value)} maxLength={NICKNAME_MAX} placeholder={t("name.placeholder")} autoFocus />
           <button type="submit" className="text-button" disabled={checking || value.trim() === ""}>
-            {checking ? "확인 중…" : "다음"}
+            {checking ? t("name.checking") : t("common.next")}
           </button>
         </form>
         {problem && <p className="nickname-problem">{problem}</p>}
-        <button type="button" className="text-button close" onClick={onClose}>뒤로</button>
+        <button type="button" className="text-button close" onClick={onClose}>{t("common.back")}</button>
       </div>
     </div>
   );

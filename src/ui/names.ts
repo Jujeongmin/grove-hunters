@@ -3,6 +3,7 @@ import { readWorld } from "../game/account/worlds";
 import { JOBS, type JobId } from "../game/combat/jobs";
 import type { MonsterType } from "../game/world/monsters";
 import type { DailyQuest } from "../game/account/quests";
+import { PARTS, type Costume, type PartKey } from "../game/render/costumes";
 import type { NpcId } from "../game/world/npcs";
 import type { ZoneId } from "../game/world/zones";
 import type { PlayerClass } from "../game/combat/classes";
@@ -125,4 +126,32 @@ export function dailyName(quest: DailyQuest): string {
 
 export function dailyGoal(quest: DailyQuest): string {
   return t(key("daily", quest.id, "goal"));
+}
+
+// What a part of a look is called, and what each of its options is. The table itself is colours and
+// flags; the words sit here, named after the part and the place the option holds in it.
+const PART_LABEL: Record<PartKey, Key> = {
+  gear: "part.gear", clothColor: "part.clothColor", skin: "part.skin", weaponColor: "part.weaponColor",
+};
+const SKIN_NAMES: Key[] = ["look.default", "look.skinLight", "look.skinTan", "look.skinDark"];
+
+export function partLabel(part: PartKey): string {
+  return t(PART_LABEL[part]);
+}
+
+export function partOptionName(part: PartKey, index: number): string {
+  if (part === "gear") return t(index === 0 ? "look.on" : "look.off");
+  if (part === "skin") return t(SKIN_NAMES[index] ?? "look.default");
+  // The colour parts: the pack's own, five dyes, then the one without colour at all.
+  if (index === 0) return t("look.default");
+  if (index === PARTS[part].options.length - 1) return t("look.grey");
+  return t("look.dye", { n: index });
+}
+
+// The three ready-made looks have names; anything the player put together is their own.
+const PRESET_NAMES: Key[] = ["look.default", "look.preset.light", "look.preset.shadow"];
+
+export function costumeName(costume: Costume, presets: readonly Costume[]): string {
+  const made = presets.findIndex((c) => c.id === costume.id);
+  return made >= 0 ? t(PRESET_NAMES[made] ?? "look.mine") : t("look.mine");
 }

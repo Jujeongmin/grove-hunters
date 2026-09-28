@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { t } from "./lang";
 import { worldName } from "./names";
 import { WORLDS } from "../game/account/worlds";
 
@@ -30,20 +31,20 @@ export function WorldPicker({ current, onPick, onClose }: WorldPickerProps) {
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel world-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>서버 선택</h2>
-        <p className="note">같은 서버를 고른 플레이어끼리 만나요. 친구와 같은 서버를 골라 보세요.</p>
+        <h2>{t("server.pick")}</h2>
+        <p className="note">{t("server.note")}</p>
         <ul className="world-list">
           {WORLDS.map((w) => (
             <li key={w.id}>
               <button type="button" className={`world-card${w.id === current ? " picked" : ""}`} onClick={() => void pick(w.id)} disabled={!!saving}>
                 <b>{worldName(w.number)}</b>
-                <span>{saving === w.id ? "들어가는 중…" : w.id === current ? "최근 접속" : ""}</span>
+                <span>{saving === w.id ? t("server.entering") : w.id === current ? t("server.recent") : ""}</span>
               </button>
             </li>
           ))}
         </ul>
-        {failed && <p className="nickname-problem">서버를 고르지 못했어요. 잠시 뒤 다시 시도해 주세요</p>}
-        <button type="button" className="text-button close" onClick={onClose}>닫기</button>
+        {failed && <p className="nickname-problem">{t("server.failed")}</p>}
+        <button type="button" className="text-button close" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );
