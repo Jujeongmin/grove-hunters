@@ -561,7 +561,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
   min-width: 460px; max-height: 86vh; overflow-y: auto; padding: 22px 28px; border-radius: 12px;
   background: rgba(14, 11, 9, 0.94); border: 1px solid rgba(255, 179, 90, 0.35);
 }
-.settings-panel .setting-row { grid-template-columns: 140px 1fr 60px; }
+/* The label column holds the longest of the five languages on one line ("他のプレイヤーの名前" is
+   the one that sets it); the row's type is a size down from the panel's so they all have room. */
+.settings-panel .setting-row { grid-template-columns: 152px 1fr 60px; }
 /* The languages, each written in itself, wrapping onto a second line when they do not fit. */
 .setting-langs { grid-template-columns: 1fr !important; }
 .setting-langs .setting-choice { flex-wrap: wrap; gap: 4px 10px; }
@@ -574,7 +576,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .setting-keys div { display: flex; gap: 8px; }
 .setting-keys dt { min-width: 64px; color: #ffd36a; font-weight: 700; }
 .setting-keys dd { margin: 0; color: var(--ink-dim); }
-.setting-row { display: grid; grid-template-columns: 100px 1fr 60px; align-items: center; gap: 14px; margin: 10px 0; font-size: 15px; }
+.setting-row { display: grid; grid-template-columns: 100px 1fr 60px; align-items: center; gap: 14px; margin: 10px 0; font-size: 14px; }
 .setting-row input { accent-color: var(--ember); }
 /* The sliders: one dark trough, one ember fill, and a handle cut from the brush the rest of the UI
    is drawn with. The trough keeps a clean edge — masking it with the brush frayed both ends away,
