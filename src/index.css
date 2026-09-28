@@ -370,15 +370,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
    nor down into the buttons at the bottom right on a short one. */
 .hud-quest { top: 210px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }
 /* The map: a little one in the corner while you play, and the whole zone over the game with N.
-   Both are drawn north up, so a glance means the same thing every time, and both sit on the same
-   ragged brush shape the rest of the UI uses. */
+   Both are drawn north up, so a glance means the same thing every time. The corner one sits in a
+   plain black frame; the big one on the ragged brush shape the rest of the UI uses. */
 .minimap { position: absolute; right: 20px; top: 62px; isolation: isolate; pointer-events: none; }
+/* A plain black frame round the corner map. */
 .minimap::before {
   content: "";
-  position: absolute; inset: -10px -14px; z-index: -1;
-  background: rgba(9, 7, 6, 0.86);
-  -webkit-mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
-  mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
+  position: absolute; inset: -5px; z-index: -1;
+  background: rgba(0, 0, 0, 0.85);
 }
 .minimap-canvas { display: block; }
 .minimap-canvas.pickable { cursor: pointer; }
