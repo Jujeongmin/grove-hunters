@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { JobId } from "../game/combat/jobs";
 import { t } from "./lang";
 import type { PlayerClass } from "../game/combat/classes";
 import { skillName } from "./names";
@@ -13,6 +14,8 @@ const DRAG_TOGGLE = 28;
 interface SkillBarProps {
   hud: WorldHud;
   playerClass: PlayerClass;
+  // The advanced path, whose skills sit on keys 2 and 3.
+  job: JobId | null;
   onSkill: (slot: number) => void;
   onPotion: () => void;
 }
@@ -115,7 +118,7 @@ function PotionSetting({ on }: { on: boolean }) {
 }
 
 // The potion and the three skills, bottom centre, as a row of squares.
-export function SkillBar({ hud, playerClass, onSkill, onPotion }: SkillBarProps) {
+export function SkillBar({ hud, playerClass, job, onSkill, onPotion }: SkillBarProps) {
   const [auto, setAuto] = useState(() => ({ potion: settings().autoPotion, skills: settings().autoSkills }));
   useEffect(() => onSettings((s) => setAuto({ potion: s.autoPotion, skills: s.autoSkills })), []);
   return (
@@ -131,7 +134,7 @@ export function SkillBar({ hud, playerClass, onSkill, onPotion }: SkillBarProps)
           key={i}
           slot={i}
           keyLabel={String(i + 1)}
-          name={skill ? skillName(playerClass, skill.skill) : t("bar.emptySlot")}
+          name={skill ? skillName(playerClass, job, skill.skill) : t("bar.emptySlot")}
           icon={skill ? iconFor(skillIconId(playerClass, skill.skill)) : null}
           corner={!skill ? "" : !skill.open ? `Lv${skill.level}` : skill.readyInMs > 0 ? `${Math.ceil(skill.readyInMs / 1000)}` : ""}
           cooling={skill?.open ? skill.readyInMs / skill.cooldownMs : null}

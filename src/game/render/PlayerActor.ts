@@ -2,7 +2,9 @@ import * as THREE from "three";
 import type { Pose } from "../world/types";
 import type { Costume } from "./costumes";
 import { applyCostume } from "./dyes";
-import type { HeroRig } from "./heroes";
+import { skillFx, type HeroRig } from "./heroes";
+import { CLASS_SKILLS, skillAt } from "../combat/skills";
+import type { JobId } from "../combat/jobs";
 import type { Effects } from "./effects";
 import { createLabel, setLabel } from "./labels";
 import { ActionBlender, clipByName, skinnedHeight } from "./skinned";
@@ -82,6 +84,8 @@ export class PlayerActor {
   private lastSwing: number | null = null;
   private lastSkill: number | null = null;
   private readonly rig: HeroRig | null;
+  // The hero's advanced path, which decides what its second and third skills look like.
+  path: JobId | null = null;
   private readonly effects: Effects | null;
   // Shots waiting for the bow or staff to let go: seconds left, and how far each flies.
   private pendingShots: { left: number; reach: number }[] = [];
@@ -202,7 +206,8 @@ export class PlayerActor {
       this.commitLeft = Math.min(this.swingLeft, SKILL_COMMIT);
       if (a.blender.active === a.skill) a.skill.reset().play();
       else a.blender.fadeTo(a.skill, 0.05);
-      const fx = this.rig?.skillFx[pose.slot ?? 0] ?? this.rig?.skillFx[0];
+      const used = this.rig ? skillAt(this.rig.playerClass, this.path, pose.slot ?? 0) ?? CLASS_SKILLS[this.rig.playerClass] : null;
+      const fx = this.rig && used ? skillFx(this.rig, used) : null;
       if (fx && this.effects) this.effects.ring(p, fx.ring.radius, fx.ring.color);
       if (fx?.shot) this.pendingShots.push({ left: RELEASE_SECONDS, reach: fx.shot });
     }

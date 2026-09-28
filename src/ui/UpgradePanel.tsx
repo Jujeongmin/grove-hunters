@@ -1,6 +1,6 @@
 import { CLASSES, isFreeClass } from "../game/combat/classes";
 import { className, monsterName, weaponName, zoneName } from "./names";
-import { ADVANCE_LEVEL } from "../game/combat/jobs";
+import { THIRD_SKILL_LEVEL } from "../game/combat/skills";
 import { t } from "./lang";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { Offer } from "../game/account/purchase";
@@ -63,7 +63,7 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
           </li>
           <li>
             <b>{t("buy.noCap")}</b>
-            <span>{t("buy.noCapNote", { n: FREE_UNTIL, advance: ADVANCE_LEVEL })}</span>
+            <span>{t("buy.noCapNote", { n: FREE_UNTIL, third: THIRD_SKILL_LEVEL })}</span>
           </li>
           <li>
             <b>{monsterName("mushroom_king")}</b>

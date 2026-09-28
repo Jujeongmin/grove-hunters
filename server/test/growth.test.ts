@@ -1,7 +1,7 @@
 import { levelCost } from "../../src/game/account/level";
 import { QUESTS } from "../../src/game/account/quests";
-import { JOBS } from "../../src/game/combat/jobs";
-import { SKILLS } from "../../src/game/combat/skills";
+import { ADVANCE_LEVEL, JOBS } from "../../src/game/combat/jobs";
+import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
@@ -40,37 +40,42 @@ async function ring(type: string, n: number, hp = 1): Promise<void> {
 }
 
 describe("skills", () => {
-  test("the second and third skills wait for their level", async (server) => {
-    await hunter(server, "test-a", 1);
+  test("the second and third skills wait for advancing, and the third for its level too", async (server) => {
+    await hunter(server, "test-a", 15);
     expect(await errorOf(server.useSkill(1))).toContain("unavailable");
     expect(await errorOf(server.useSkill(2))).toContain("unavailable");
     expect(await errorOf(server.useSkill(7))).toContain("unavailable");
+    await server.advance("guardian");
+    await ring("frog", 3, 500);
+    await server.useSkill(1);
+    expect(await errorOf(server.useSkill(2))).toContain("unavailable");
   });
 
-  test("at level 20 all three go off one after another", async (server) => {
+  test("advanced, at level 20 all three go off one after another", async (server) => {
     await hunter(server, "test-a", 20);
+    await server.advance("berserker");
     await ring("frog", 3, 500);
     await server.useSkill(0);
     await server.useSkill(1);
     await server.useSkill(2);
     expect(await errorOf(server.useSkill(2))).toContain("too_fast");
     const hp = (await $room.getRoomState()).monsters.m0.hp;
-    expect(hp).toBeLessThan(500 - SKILLS.warrior[0].damage);
+    expect(hp).toBeLessThan(500 - CLASS_SKILLS.warrior.damage);
   });
 });
 
 describe("advancement", () => {
   test("waits for its level, then takes one path of your own class for good", async (server) => {
-    await hunter(server, "test-a", 29);
+    await hunter(server, "test-a", ADVANCE_LEVEL - 1);
     expect(await errorOf(server.advance("berserker"))).toContain("too_low");
-    await giveXp("test-a", xpFor(30));
+    await giveXp("test-a", xpFor(ADVANCE_LEVEL));
     expect(await errorOf(server.advance("sniper"))).toContain("unavailable");
     const view = await server.advance("guardian");
     expect(view.job).toBe("guardian");
     const mine = await $room.getMyState();
     // The room carries the path's id, not its name: every client says it in its own language.
     expect(mine.look.job).toBe("guardian");
-    expect(mine.maxHp).toBe(maxHpAt(30) + JOBS.guardian.hp);
+    expect(mine.maxHp).toBe(maxHpAt(ADVANCE_LEVEL) + JOBS.guardian.hp);
     expect(await errorOf(server.advance("berserker"))).toContain("unavailable");
   });
 

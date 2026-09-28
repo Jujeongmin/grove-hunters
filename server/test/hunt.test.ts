@@ -1,5 +1,5 @@
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
-import { SKILLS } from "../../src/game/combat/skills";
+import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { REVIVE_HP_SHARE, deathXpLoss, levelCost, levelOf, reviveCost } from "../../src/game/account/level";
@@ -142,7 +142,7 @@ describe("hunting", () => {
     await $room.updateRoomState({ monsters: { a: at(0, -1.5), b: at(0, 1.5), c: at(9, 0) } });
     const used = await server.useSkill();
     expect([...used.hit].sort()).toEqual(["a", "b"]);
-    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - SKILLS.warrior[0].damage);
+    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - CLASS_SKILLS.warrior.damage);
     expect(await errorOf(server.useSkill())).toContain("too_fast");
   });
 

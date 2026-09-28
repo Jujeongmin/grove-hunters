@@ -3,7 +3,7 @@ import { gearName, itemBlurb, itemName } from "./names";
 import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
-import { jobBlurb, jobName } from "./names";
+import { jobBlurb, jobName, pathSkillName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
 import { iconFor } from "../game/render/icons";
 import { locale, t } from "./lang";
@@ -68,6 +68,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
                 {jobsOf(playerClass).map((id) => (
                   <button key={id} type="button" className="world-card" onClick={() => act(() => client.advance(id))}>
                     <b>{jobName(id)}</b>
+                    <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)}</span>
                     <span>{jobBlurb(id)}</span>
                   </button>
                 ))}

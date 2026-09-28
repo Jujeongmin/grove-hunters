@@ -1,10 +1,11 @@
 import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
-import { SKILLS } from "../combat/skills";
+import type { Skill } from "../combat/skills";
 import type { ShotKind } from "./effects";
 
 // The RPG Character Pack (Quaternius, CC0): one hero model per class, and which of its clips play
 // for each thing a player does. The pack has no jump or strafe clips, so those borrow the run.
 export interface HeroRig {
+  playerClass: PlayerClass;
   model: string;
   idle: string;
   walk: string;
@@ -19,12 +20,11 @@ export interface HeroRig {
   // What flies out on an attack (ranged classes), and how far.
   shot: ShotKind | null;
   reach: number;
-  // For each skill slot: the ring of light it leaves (size and colour), and how far the one long
-  // shot of a narrow ranged skill flies (null for the rest).
-  skillFx: readonly { ring: { radius: number; color: number }; shot: number | null }[];
+  // The colour of the ring of light a skill leaves at the hero's feet.
+  ringColor: number;
 }
 
-type Clips = Omit<HeroRig, "shot" | "reach" | "skillFx">;
+type Clips = Omit<HeroRig, "playerClass" | "shot" | "reach" | "ringColor">;
 
 const SHOTS: Partial<Record<PlayerClass, ShotKind>> = { ranger: "arrow", wizard: "bolt" };
 const RING_COLOR: Record<PlayerClass, number> = {
@@ -32,13 +32,17 @@ const RING_COLOR: Record<PlayerClass, number> = {
 };
 
 function rig(c: PlayerClass, clips: Clips): HeroRig {
-  const shot = SHOTS[c] ?? null;
-  const skillFx = SKILLS[c].map((skill) => ({
+  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
+}
+
+// What a skill shows: the ring of light it leaves (size and colour), and how far the one long shot of
+// a narrow ranged skill flies (null for the rest).
+export function skillFx(hero: HeroRig, skill: Skill): { ring: { radius: number; color: number }; shot: number | null } {
+  return {
     // A narrow skill (a line of arrows, one stab) still shows a small ring at your feet.
-    ring: { radius: skill.arc >= Math.PI ? skill.reach : 1.2, color: RING_COLOR[c] },
-    shot: shot && skill.arc < Math.PI ? skill.reach : null,
-  }));
-  return { ...clips, shot, reach: WEAPONS[c].reach, skillFx };
+    ring: { radius: skill.arc >= Math.PI ? skill.reach : 1.2, color: hero.ringColor },
+    shot: hero.shot && skill.arc < Math.PI ? skill.reach : null,
+  };
 }
 
 const CLIPS: Record<PlayerClass, Clips> = {

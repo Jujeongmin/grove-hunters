@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { QUESTS, countKills, questDone, readQuest } from "../../src/game/account/quests";
 import { CLASSES } from "../../src/game/combat/classes";
-import { JOBS, jobsOf } from "../../src/game/combat/jobs";
-import { SKILLS } from "../../src/game/combat/skills";
+import { ADVANCE_LEVEL, JOBS, jobsOf } from "../../src/game/combat/jobs";
+import { CLASS_SKILLS, JOB_SKILLS, THIRD_SKILL_LEVEL, skillAt } from "../../src/game/combat/skills";
 import { MONSTERS, XP_GRACE, xpFor } from "../../src/game/world/monsters";
 
 describe("quests", () => {
@@ -24,12 +24,23 @@ describe("quests", () => {
 });
 
 describe("growth tables", () => {
-  it("every class has three skills opening in order, and two paths to advance", () => {
+  it("every class has a skill of its own, and two paths that each bring two skills of their own", () => {
     for (const c of CLASSES) {
-      expect(SKILLS[c].map((s) => s.level)).toEqual([1, 10, 20]);
+      expect(CLASS_SKILLS[c].level).toBe(1);
+      const [a, b] = jobsOf(c);
       expect(jobsOf(c)).toHaveLength(2);
-      for (const id of jobsOf(c)) expect(JOBS[id].playerClass).toBe(c);
+      for (const id of [a, b]) {
+        expect(JOBS[id].playerClass).toBe(c);
+        expect(JOB_SKILLS[id].map((s) => s.level)).toEqual([ADVANCE_LEVEL, THIRD_SKILL_LEVEL]);
+      }
+      expect(JOB_SKILLS[a]).not.toEqual(JOB_SKILLS[b]);
+      // Before advancing, only the first slot holds a skill.
+      expect(skillAt(c, null, 0)).toBe(CLASS_SKILLS[c]);
+      expect(skillAt(c, null, 1)).toBeNull();
+      expect(skillAt(c, a, 2)).toBe(JOB_SKILLS[a][1]);
     }
+    // A path of another class gives nothing.
+    expect(skillAt("warrior", "sniper", 1)).toBeNull();
   });
 });
 

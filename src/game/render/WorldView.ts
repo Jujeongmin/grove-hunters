@@ -5,7 +5,8 @@ import { levelOf } from "../account/level";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { WEAPONS, type PlayerClass } from "../combat/classes";
 import { facing, inStrikeReach } from "../combat/melee";
-import { SKILLS, SKILL_KEYS, skillTargets, type Skill } from "../combat/skills";
+import { SKILL_KEYS, SKILL_SLOTS, skillAt, skillTargets, type Skill } from "../combat/skills";
+import { readJob, type JobId } from "../combat/jobs";
 import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
 import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
@@ -195,7 +196,7 @@ export class WorldView {
   private skills = 0;
   private lastAttackAt = Number.NEGATIVE_INFINITY;
   // When each skill slot was last used, and which one went last (others see it by the slot).
-  private readonly lastSkillAt = SKILLS.warrior.map(() => Number.NEGATIVE_INFINITY);
+  private readonly lastSkillAt = Array.from({ length: SKILL_SLOTS }, () => Number.NEGATIVE_INFINITY);
   private lastSlot = 0;
   // The level the last HUD went out with, so a level going up rings once.
   private lastLevel: number | null = null;
@@ -696,24 +697,28 @@ export class WorldView {
     if (now - Math.max(...this.lastSkillAt) < SKILL_GAP_MS) return yaw;
     // The bar's slots hold skills; a key or auto-battle picks a slot, and the skill in it is used.
     const bar = hotbarFor(c);
-    const ready = (index: number | null): index is number =>
-      index !== null && this.skillOpen(SKILLS[c][index]) && now - this.lastSkillAt[index] >= SKILLS[c][index].cooldownMs;
+    const skillIn = (index: number) => skillAt(c, this.path, index);
+    const ready = (index: number | null): index is number => {
+      const skill = index === null ? null : skillIn(index);
+      return skill !== null && this.skillOpen(skill) && now - this.lastSkillAt[index!] >= skill.cooldownMs;
+    };
     let slot = pressed.findIndex((p, i) => p && ready(bar[i]));
     // Auto-battle reaches for the strongest skill it may use that would help.
     if (slot < 0 && this.auto) {
       const allowed = settings().autoSkills;
       let bestDamage = -1;
       bar.forEach((index, i) => {
-        if (allowed[i] && ready(index) && SKILLS[c][index].damage + SKILLS[c][index].heal > bestDamage
-          && this.skillHelps(SKILLS[c][index], monsters, yaw)) {
-          bestDamage = SKILLS[c][index].damage + SKILLS[c][index].heal;
+        if (!allowed[i] || !ready(index)) return;
+        const skill = skillIn(index)!;
+        if (skill.damage + skill.heal > bestDamage && this.skillHelps(skill, monsters, yaw)) {
+          bestDamage = skill.damage + skill.heal;
           slot = i;
         }
       });
     }
     const index = slot < 0 ? null : bar[slot];
     if (index === null) return yaw;
-    const skill = SKILLS[c][index];
+    const skill = skillIn(index)!;
     const target = this.aim(monsters, yaw);
     if (target && skill.damage > 0) yaw = this.yawTo(monsters[target]);
     this.lastSkillAt[index] = now;
@@ -724,6 +729,11 @@ export class WorldView {
       for (const id of r?.hit ?? []) this.skillHits.set(id, performance.now());
     });
     return yaw;
+  }
+
+  // Your advanced path, once the bag has said: it decides the skills on keys 2 and 3.
+  private get path(): JobId | null {
+    return this.client.state.bag?.job ?? null;
   }
 
   private skillOpen(skill: Skill): boolean {
@@ -803,6 +813,7 @@ export class WorldView {
   private syncActors(others: OtherPlayer[], dt: number, dead: boolean): void {
     if (!this.library) return;
     // The camera sits behind you, so your own body is drawn from your local pose.
+    if (this.me) this.me.path = this.path;
     this.me?.sync(this.pose, dead ? "dead" : "active", dt);
     for (const npc of this.npcs) {
       npc.actor.sync(dt, this.distanceTo(npc.at), this.camera.position.distanceTo(npc.actor.object.position));
@@ -823,6 +834,7 @@ export class WorldView {
         this.others.set(other.account, entry);
       }
       entry.actor.label(settings().showNames ? `Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}` : "");
+      entry.actor.path = readJob(other.look.job);
       entry.actor.sync(other.pose, "active", dt);
       entry.actor.fadeLabel(this.camera.position.distanceTo(entry.actor.object.position));
     }
@@ -934,8 +946,8 @@ export class WorldView {
         }
         : null,
       skills: hotbarFor(this.options.playerClass).map((index) => {
-        if (index === null) return null;
-        const skill = SKILLS[this.options.playerClass][index];
+        const skill = index === null ? null : skillAt(this.options.playerClass, this.path, index);
+        if (index === null || !skill) return null;
         return {
           skill: index, cooldownMs: skill.cooldownMs, level: skill.level, open: level.level >= skill.level,
           readyInMs: Math.max(0, this.lastSkillAt[index] + skill.cooldownMs - now),

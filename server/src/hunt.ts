@@ -1,6 +1,7 @@
 import { WEAPONS, readClass, type PlayerClass } from "../../src/game/combat/classes";
 import { BLOCK_ARC, facing, inStrikeReach } from "../../src/game/combat/melee";
-import { SKILLS, readSlot, skillTargets } from "../../src/game/combat/skills";
+import { readSlot, skillAt, skillTargets } from "../../src/game/combat/skills";
+import { readJob, type JobId } from "../../src/game/combat/jobs";
 import type { FightBonus } from "../../src/game/combat/power";
 import { stepMonsters, type Prey } from "../../src/game/world/monsterAi";
 import {
@@ -35,6 +36,8 @@ export function withRoomLock<T>(roomId: string, fn: () => Promise<T>): Promise<T
 interface Fighter {
   pose: Pose | null;
   playerClass: PlayerClass;
+  // The advanced path, which the second and third skills come from.
+  job: JobId | null;
   level: number;
   hp: number;
   maxHp: number;
@@ -56,6 +59,7 @@ function readFighter(state: Record<string, any>): Fighter {
     gear,
     pose: isPose(state.pose) ? state.pose : null,
     playerClass: readClass(state.look?.playerClass) ?? "warrior",
+    job: readJob(state.look?.job),
     level,
     hp: typeof state.hp === "number" ? state.hp : maxHp,
     maxHp,
@@ -208,15 +212,15 @@ export async function strike(zone: ZoneId, account: string, monsterId: unknown, 
   return result;
 }
 
-// One of your class's skills (slot 0 to 2), once your level has opened it and its own cooldown is
-// over: every monster it reaches takes its damage (and stun); a heal also mends you and everyone
+// One of your skills (slot 0 is the class's own, 1 and 2 come with your advanced path), once your
+// path and level have opened it and its own cooldown is over: every monster it reaches takes its damage (and stun); a heal also mends you and everyone
 // standing close.
 export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, yaw: unknown, now: number): Promise<HitResult> {
   const slot = readSlot(rawSlot ?? 0);
   if (slot === null) throw new RuleViolation("unavailable");
   const { f, state: mine } = await me(yaw);
-  const skill = SKILLS[f.playerClass][slot];
-  if (f.level < skill.level) throw new RuleViolation("unavailable");
+  const skill = skillAt(f.playerClass, f.job, slot);
+  if (!skill || f.level < skill.level) throw new RuleViolation("unavailable");
   const ready: Record<string, unknown> = mine.skillReady && typeof mine.skillReady === "object" ? mine.skillReady : {};
   const readyAt = ready[slot];
   if (typeof readyAt === "number" && now < readyAt) throw new RuleViolation("too_fast");

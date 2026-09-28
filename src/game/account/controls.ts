@@ -1,5 +1,5 @@
 import { CLASSES, readClass } from "../combat/classes";
-import { SKILLS } from "../combat/skills";
+import { SKILL_SLOTS } from "../combat/skills";
 
 // How a player has set up the bar, kept on the account so it follows them to any device: which skill
 // sits in each of the three slots (per class), and which of them and the potion auto-battle may use.
@@ -32,8 +32,7 @@ export function readControls(value: unknown): Controls | null {
   for (const [key, bar] of Object.entries(bars as Record<string, unknown>)) {
     const playerClass = readClass(key);
     if (!playerClass || !Array.isArray(bar) || bar.length !== HOTBAR_SLOTS) return null;
-    const skills = SKILLS[playerClass].length;
-    if (!bar.every((s) => s === null || (Number.isInteger(s) && s >= 0 && s < skills))) return null;
+    if (!bar.every((s) => s === null || (Number.isInteger(s) && s >= 0 && s < SKILL_SLOTS))) return null;
     hotbars[playerClass] = bar as (number | null)[];
   }
   if (Object.keys(hotbars).length > CLASSES.length) return null;

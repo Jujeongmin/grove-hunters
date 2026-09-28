@@ -430,7 +430,7 @@ function ZoneScreen({
               keys={!touch}
             />
           )}
-          <SkillBar hud={hud} playerClass={playerClass} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()} />
+          <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()} />
           {/* The side panels sit where the tracker is; it steps aside while one is open. */}
           {panel !== "quests" && panel !== "skills" && (
             <QuestTracker
@@ -460,7 +460,7 @@ function ZoneScreen({
       )}
       {panel === "shop" && <ShopPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "smith" && <SmithPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
-      {panel === "skills" && <SkillPanel playerClass={playerClass} level={hud?.level ?? 1} onClose={() => setPanel(null)} />}
+      {panel === "skills" && <SkillPanel playerClass={playerClass} job={bag?.job ?? null} level={hud?.level ?? 1} onClose={() => setPanel(null)} />}
       {panel === "quests" && (
         <QuestLog
           bag={bag} inVillage={inVillage}
