@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { combatPowerAt } from "../game/combat/power";
 import { typing } from "../game/render/FpsInput";
 import { ChatBox } from "./ChatBox";
 import { SmithPanel } from "./SmithPanel";
@@ -431,6 +432,12 @@ function ZoneScreen({
               <div className="hud-vitals-row">
                 <b>Lv {hud.level}</b>
                 <span>{Math.ceil(hud.hp)} / {hud.maxHp}</span>
+                <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
+                {bag && (
+                  <span className="hud-power" title={t("rank.power")}>
+                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString()}
+                  </span>
+                )}
                 {hud.gain !== null && <em className="hud-gain">+{hud.gain} XP</em>}
               </div>
               <div className="hud-bar hp"><i style={{ width: `${Math.round((hud.hp / hud.maxHp) * 100)}%` }} /></div>

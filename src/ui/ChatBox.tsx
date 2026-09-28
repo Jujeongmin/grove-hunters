@@ -15,14 +15,17 @@ const PROBLEM: Record<string, Key> = {
   too_fast: "problem.tooFast",
 };
 
-// The channel chat, at the left: the latest lines, and a box to say one. Enter opens it on a
-// keyboard (and sends), the chat button on a touch screen; Escape closes it.
+// The channel chat, at the bottom left: the latest lines, and a box to say one. Enter opens it on a
+// keyboard (and sends), the chat button on a touch screen, and a tap on the lines themselves
+// anywhere; closing it (the button, Escape) also clears the lines seen so far off the screen.
 export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  // Lines heard up to when the chat was last closed have been seen: they stay off the closed box.
+  const [seenUntil, setSeenUntil] = useState(0);
   const input = useRef<HTMLInputElement>(null);
   const log = useRef<HTMLDivElement>(null);
 
@@ -49,9 +52,12 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [lines, open]);
 
-  const close = () => {
+  // Closing by hand marks the lines so far as seen; closing on a send does not, so what you just
+  // said (and what came meanwhile) still shows in the closed box.
+  const close = (seen = true) => {
     setOpen(false);
     setProblem(null);
+    if (seen) setSeenUntil(Date.now());
     input.current?.blur();
   };
   const send = async () => {
@@ -65,14 +71,16 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
       return;
     }
     setText("");
-    close();
+    close(false);
   };
 
-  const shown = open ? lines.slice(-OPEN_LINES) : lines.slice(-QUIET_LINES).filter((l) => now - l.heardAt < QUIET_MS);
+  const shown = open
+    ? lines.slice(-OPEN_LINES)
+    : lines.slice(-QUIET_LINES).filter((l) => l.heardAt > seenUntil && now - l.heardAt < QUIET_MS);
   return (
     <div className={`chat${open ? " open" : ""}`}>
       {shown.length > 0 && (
-        <div className="chat-log" ref={log}>
+        <div className="chat-log" ref={log} onClick={open ? undefined : () => setOpen(true)}>
           {shown.map((l) => (
             <p key={l.id} className={l.mine ? "mine" : undefined}><b>{l.name}</b> {l.text}</p>
           ))}
@@ -99,7 +107,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
               }
             }}
           />
-          {!keyHints && <button type="button" className="chat-close" onClick={close}>{t("common.close")}</button>}
+          <button type="button" className="chat-close" onClick={() => close()}>{t("common.close")}</button>
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (

@@ -170,6 +170,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-vitals-row { display: flex; align-items: baseline; gap: 10px; font: 600 13px var(--font-head); }
 .hud-vitals-row b { font-size: 15px; color: var(--ember); }
 .hud-vitals-row span { font-variant-numeric: tabular-nums; color: var(--ink-dim); }
+.hud-xp { font-size: 11px; color: #ffd36a; }
+.hud-power { font-size: 11px; color: #ffb35a; }
 .hud-gain { margin-left: auto; font-style: normal; color: #ffe08a; }
 .hud-bar { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .hud-bar i { position: absolute; left: 0; top: 0; bottom: 0; transition: width 0.15s; }
@@ -1023,10 +1025,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .chat.open { width: 300px; }
 .chat-log {
-  max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+  max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; pointer-events: auto; cursor: pointer;
   font: 500 14px var(--font-body); text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
-.chat.open .chat-log { max-height: 220px; background: rgba(14, 11, 9, 0.55); border-radius: 6px; padding: 6px 8px; pointer-events: auto; }
+.chat.open .chat-log { max-height: 220px; background: rgba(14, 11, 9, 0.55); border-radius: 6px; padding: 6px 8px; cursor: default; }
 .chat-log p { margin: 0; overflow-wrap: anywhere; }
 .chat-log b { color: #d9c7a4; font-weight: 700; margin-right: 4px; }
 .chat-log p.mine b { color: #ffd36a; }
