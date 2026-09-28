@@ -80,9 +80,11 @@ export const IDLE_POSE_MS = 1000;
 // Verse8 turns away more than 10 calls a second to one function, so no two poses leave closer than
 // this; a guard, attack or skill that comes sooner goes out with the next one.
 export const MIN_POSE_GAP_MS = 110;
-// Joining a room is tried this many times, waiting this much longer before each retry.
-const JOIN_ATTEMPTS = 4;
-const JOIN_RETRY_MS = 800;
+// Joining a room is tried this many times, waiting this much longer before each retry. The room
+// servers are a shared fleet and can be away for a good few seconds at a time (seen in the editor
+// as "[RS:connect] … terminal=false"), so the waits add up to about twenty before giving up.
+const JOIN_ATTEMPTS = 7;
+const JOIN_RETRY_MS = 900;
 // Smaller changes than these count as standing still.
 const POSE_EPSILON = 0.01;
 

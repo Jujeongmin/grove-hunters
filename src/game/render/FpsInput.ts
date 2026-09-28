@@ -6,6 +6,9 @@ export function typing(e: KeyboardEvent): boolean {
   return !!target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
 }
 
+// A press that moved less than this many pixels was a click, not a drag to look about.
+const DRAG_SLOP = 6;
+
 export class FpsInput {
   // Left button held: swing. Right button held: raise the shield.
   firing = false;
@@ -28,7 +31,17 @@ export class FpsInput {
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
     document.addEventListener("mousemove", this.onMouseMove);
+    document.addEventListener("pointerlockerror", this.onLockError);
   }
+
+  // Some embeds refuse the pointer lock — an iframe without allow="pointer-lock", which is how the
+  // Verse8 editor loads the preview. Without it the mouse was dead: no looking (the move handler
+  // wanted the lock) and no attacking (so did the button handler). Where the lock is refused the
+  // mouse falls back to what a mouse can do without it: hold the left button and drag to look, and
+  // a click that did not drag lands a blow.
+  private lockDenied = false;
+  private dragging = false;
+  private dragged = 0;
 
   get locked(): boolean {
     return document.pointerLockElement === this.element;
@@ -37,7 +50,10 @@ export class FpsInput {
   // Captures the mouse for looking about (hiding the cursor); the browser allows it just after a
   // click or a key, and says no quietly otherwise.
   lock(): void {
-    if (!this.locked) this.element.requestPointerLock()?.catch(() => {});
+    if (this.locked || this.lockDenied) return;
+    this.element.requestPointerLock()?.catch(() => {
+      this.lockDenied = true;
+    });
   }
 
   moveInput(): MoveInput {
@@ -90,6 +106,11 @@ export class FpsInput {
     return had;
   }
 
+  // Whether the browser turned the pointer lock down here, so the game can say how to look about.
+  get dragToLook(): boolean {
+    return this.lockDenied;
+  }
+
   dispose(): void {
     this.element.removeEventListener("click", this.onClick);
     this.element.removeEventListener("mousedown", this.onMouseDown);
@@ -99,20 +120,35 @@ export class FpsInput {
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.onBlur);
     document.removeEventListener("mousemove", this.onMouseMove);
+    document.removeEventListener("pointerlockerror", this.onLockError);
     if (this.locked) document.exitPointerLock();
   }
 
   private onClick = () => {
-    // Browsers refuse the lock in some embeds (e.g. an iframe without allow="pointer-lock").
-    if (!this.locked) this.element.requestPointerLock()?.catch(() => {});
+    this.lock();
+  };
+  // Older browsers answer a refused lock with an event rather than a rejected promise.
+  private onLockError = () => {
+    this.lockDenied = true;
   };
   private onMouseDown = (e: MouseEvent) => {
-    if (e.button === 0 && this.locked) this.mouseFiring = true;
-    if (e.button === 2 && this.locked) this.mouseBlocking = true;
+    if (e.button === 0) {
+      if (this.locked) this.mouseFiring = true;
+      else if (this.lockDenied) {
+        this.dragging = true;
+        this.dragged = 0;
+      }
+    }
+    if (e.button === 2 && (this.locked || this.lockDenied)) this.mouseBlocking = true;
     this.firing = this.mouseFiring || this.virtualFiring;
     this.blocking = this.mouseBlocking || this.virtualBlocking;
   };
   private onMouseUp = (e: MouseEvent) => {
+    if (e.button === 0 && this.dragging) {
+      this.dragging = false;
+      // A press that stayed put was a click at something, not a look about.
+      if (this.dragged < DRAG_SLOP) this.press("VirtualFire");
+    }
     if (e.button === 0) this.mouseFiring = false;
     if (e.button === 2) this.mouseBlocking = false;
     this.firing = this.mouseFiring || this.virtualFiring;
@@ -140,8 +176,9 @@ export class FpsInput {
     this.blocking = this.virtualBlocking;
   };
   private onMouseMove = (e: MouseEvent) => {
-    if (!this.locked) return;
+    if (!this.locked && !this.dragging) return;
     this.lookX += e.movementX;
     this.lookY += e.movementY;
+    if (this.dragging) this.dragged += Math.abs(e.movementX) + Math.abs(e.movementY);
   };
 }
