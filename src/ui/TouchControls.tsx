@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
 import type { FpsInput } from "../game/render/FpsInput";
 import { iconFor } from "../game/render/icons";
 import { pointIn } from "./useUiScale";
@@ -131,11 +132,11 @@ export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, key
 
   return (
     <div className="pad-buttons">
-      <PadButton id="attack" label="공격" keyLabel={keys ? "좌클릭" : null} {...hold((on) => controls.setVirtualFiring(on))} />
-      <PadButton id="block" label="막기" keyLabel={keys ? "우클릭" : null} {...hold((on) => controls.setVirtualBlocking(on))} />
-      <PadButton id="jump" label="점프" keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
-      <PadButton id="auto" label={auto ? "자동 중" : "자동"} keyLabel={keys ? "R" : null} className={auto ? "on" : ""} onClick={onAuto} />
-      {talkTo && <PadButton id="talk" label="대화" keyLabel={keys ? "E" : null} onClick={onTalk} />}
+      <PadButton id="attack" label={t("pad.attack")} keyLabel={keys ? t("pad.leftClick") : null} {...hold((on) => controls.setVirtualFiring(on))} />
+      <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
+      <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
+      <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={auto ? "on" : ""} onClick={onAuto} />
+      {talkTo && <PadButton id="talk" label={t("pad.talk")} keyLabel={keys ? "E" : null} onClick={onTalk} />}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { BagView } from "../game/account/items";
+import { t } from "./lang";
 import { questGoal, questName } from "./names";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
@@ -26,14 +27,14 @@ export function QuestTracker({ bag, seeking, inVillage, onSeek, onReport, keyLab
   if (!quest) {
     return (
       <div className="hud-quest">
-        <b>모든 퀘스트 완료</b>
+        <b>{t("quest.allDone")}</b>
       </div>
     );
   }
   const done = questDone(bag.quest);
   const hint = done
-    ? inVillage ? "눌러서 촌장에게 보고하기" : "마을의 촌장에게 보고하세요"
-    : seeking ? "찾아가는 중…" : "눌러서 찾아가기";
+    ? inVillage ? t("quest.reportHere") : t("quest.reportInVillage")
+    : seeking ? t("quest.seeking") : t("quest.goFind");
   return (
     <div
       className={`hud-quest${seeking ? " seeking" : ""}${done && !inVillage ? "" : " clickable"}${done ? " done" : ""}`}

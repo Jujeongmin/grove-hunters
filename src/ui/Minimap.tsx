@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { t } from "./lang";
 import { publicUrl } from "../game/assets/publicUrl";
 import { iconFor } from "../game/render/icons";
 import {
@@ -334,12 +335,12 @@ export function MapPanel({ zone, me, onWalk, onClose }: MapPanelProps) {
           )}
         </div>
         <p className="note">
-          눌러서 그곳으로 걸어갑니다
-          <i className="map-key portal" /> 구역 출입구
-          <i className="map-key npc" /> 마을 사람
-          <i className="map-key me" /> 나
+          {t("map.tapToWalk")}
+          <i className="map-key portal" /> {t("map.portals")}
+          <i className="map-key npc" /> {t("map.villagers")}
+          <i className="map-key me" /> {t("map.you")}
         </p>
-        <button type="button" className="text-button" onClick={onClose}>닫기 (N)</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("map.close")}</button>
       </div>
     </div>
   );

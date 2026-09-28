@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { problemText } from "./BagPanel";
+import { locale, t } from "./lang";
 import { DEATH_XP_SHARE, REVIVE_HP_SHARE, reviveCost } from "../game/account/level";
 import type { WorldClient } from "../net/worldClient";
 
-const PROBLEM: Record<string, string> = {
-  not_enough_gold: "골드가 모자라요",
-};
+
 
 // Fallen: what it cost, and the two ways up: back in the village for nothing, or here for gold.
 export function DeathPanel({ client, level, lostXp, gold, travelling }: {
@@ -22,10 +22,10 @@ export function DeathPanel({ client, level, lostXp, gold, travelling }: {
   return (
     <div className="pain fallen">
       <div className="solid-panel world-panel death-panel">
-        <p className="band">쓰러졌어요</p>
+        <p className="band">{t("death.fallen")}</p>
         <p className="death-loss">
-          {lostXp > 0 ? `경험치 ${lostXp.toLocaleString()}를 잃었어요` : "잃은 경험치는 없어요"}
-          <span className="note">쓰러지면 이번 레벨 경험치의 {Math.round(DEATH_XP_SHARE * 100)}%를 잃어요 (레벨은 내려가지 않아요)</span>
+          {lostXp > 0 ? t("death.lostXp", { n: lostXp.toLocaleString(locale()) }) : t("death.lostNone")}
+          <span className="note">{t("death.lossNote", { n: Math.round(DEATH_XP_SHARE * 100) })}</span>
         </p>
         <button
           type="button" className="brush-button" disabled={busy || travelling || short}
@@ -34,15 +34,15 @@ export function DeathPanel({ client, level, lostXp, gold, travelling }: {
             setProblem(null);
             void client.reviveHere().then((code) => {
               setBusy(false);
-              if (code) setProblem(PROBLEM[code] ?? "지금은 할 수 없어요");
+              if (code) setProblem(problemText(code));
             });
           }}
         >
-          이 자리에서 부활 · {cost.toLocaleString()} 골드
+          {t("death.here", { gold: t("common.gold", { n: cost.toLocaleString(locale()) }) })}
         </button>
-        <span className="note">체력 {Math.round(REVIVE_HP_SHARE * 100)}%로 일어나고, 잠깐 몬스터가 공격하지 않아요{short ? " · 골드가 모자라요" : ""}</span>
+        <span className="note">{t("death.hereNote", { n: Math.round(REVIVE_HP_SHARE * 100) })}{short ? t("death.short") : ""}</span>
         <button type="button" className="brush-button" disabled={busy || travelling} onClick={() => void client.respawn()}>
-          마을에서 부활 · 무료
+          {t("death.village")}
         </button>
         {problem && <p className="bag-problem">{problem}</p>}
       </div>

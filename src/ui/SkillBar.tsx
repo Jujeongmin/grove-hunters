@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
 import type { PlayerClass } from "../game/combat/classes";
 import { skillName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
@@ -92,20 +93,20 @@ function PotionSetting({ on }: { on: boolean }) {
   useEffect(() => onSettings((s) => setAt(s.potionAt)), []);
   return (
     <div className="potion-setting">
-      <button type="button" className={`potion-setting-button${open ? " on" : ""}`} onClick={() => setOpen((o) => !o)} title="자동 물약 설정">
+      <button type="button" className={`potion-setting-button${open ? " on" : ""}`} onClick={() => setOpen((o) => !o)} title={t("bar.autoPotionTitle")}>
         <span>HP</span>
         <b>{at}%</b>
       </button>
       {open && (
         <div className="potion-setting-pop solid-panel">
-          <b>자동 물약</b>
-          <span>HP가 {at}% 이하가 되면 물약을 마셔요{on ? "" : " (지금은 꺼져 있어요)"}</span>
+          <b>{t("bar.autoPotion")}</b>
+          <span>{t("bar.autoPotionAt", { n: at })}{on ? "" : t("bar.autoPotionOff")}</span>
           <input
             type="range" min={POTION_AT.min} max={POTION_AT.max} step={POTION_AT.step} value={at}
             onChange={(e) => updateSettings({ potionAt: Number(e.target.value) })}
           />
           <button type="button" className="text-button" onClick={() => updateSettings({ autoPotion: !settings().autoPotion })}>
-            {on ? "자동 물약 끄기" : "자동 물약 켜기"}
+            {on ? t("bar.autoPotionTurnOff") : t("bar.autoPotionTurnOn")}
           </button>
         </div>
       )}
@@ -121,7 +122,7 @@ export function SkillBar({ hud, playerClass, onSkill, onPotion }: SkillBarProps)
     <div className="hud-skills">
       <PotionSetting on={auto.potion} />
       <Cell
-        slot={-1} keyLabel="Q" name="물약" icon={iconFor("potion_small")} corner={String(hud.potions)} cooling={null}
+        slot={-1} keyLabel="Q" name={t("bar.potion")} icon={iconFor("potion_small")} corner={String(hud.potions)} cooling={null}
         locked={hud.potions === 0} isAuto={auto.potion} use={onPotion}
         flip={() => updateSettings({ autoPotion: !settings().autoPotion })}
       />
@@ -130,7 +131,7 @@ export function SkillBar({ hud, playerClass, onSkill, onPotion }: SkillBarProps)
           key={i}
           slot={i}
           keyLabel={String(i + 1)}
-          name={skill ? skillName(playerClass, skill.skill) : "빈 칸"}
+          name={skill ? skillName(playerClass, skill.skill) : t("bar.emptySlot")}
           icon={skill ? iconFor(skillIconId(playerClass, skill.skill)) : null}
           corner={!skill ? "" : !skill.open ? `Lv${skill.level}` : skill.readyInMs > 0 ? `${Math.ceil(skill.readyInMs / 1000)}` : ""}
           cooling={skill?.open ? skill.readyInMs / skill.cooldownMs : null}

@@ -26,6 +26,8 @@ import { QuestPanel } from "./QuestPanel";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
 import type { Offer } from "../game/account/purchase";
+import { t } from "./lang";
+import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
 import { QUESTS, questDone } from "../game/account/quests";
 import { SettingsPanel } from "./SettingsPanel";
@@ -41,24 +43,22 @@ interface WorldScreenProps {
   onExit: () => void;
 }
 
-const TRAVEL_PROBLEM: Record<string, string> = {
-  not_owned: "정식판을 구매하면 들어갈 수 있는 구역이에요",
-  zone_full: "모든 채널이 가득 찼어요. 잠시 뒤 다시 시도해 주세요",
-  not_near: "포털 가까이 서 주세요",
-  too_low: "레벨이 모자라요",
-};
-
-const ENTER_PROBLEM: Record<string, string> = {
-  unavailable: "월드에 들어가지 못했어요",
+// Why a portal turned you away. The codes the server sends for travel are its own, so they are
+// named here rather than shared with the bag's.
+const TRAVEL_PROBLEM: Record<string, Key> = {
+  not_owned: "problem.not_owned",
+  zone_full: "problem.zone_full",
+  not_near: "problem.not_near_portal",
+  too_low: "problem.too_low",
 };
 
 // A room server that would not take the connection: usually the network or a busy server.
 function enterProblem(error: string | null): string {
-  if (error && ENTER_PROBLEM[error]) return ENTER_PROBLEM[error];
+  if (error === "unavailable") return t("problem.enter");
   if (error?.includes("RS connect") || error?.includes("RS:connect") || error?.includes("rs_connect_failed")) {
-    return "게임 서버에 연결하지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.";
+    return t("problem.connect");
   }
-  return `월드에 들어가지 못했어요 (${error})`;
+  return t("problem.enterWith", { error: String(error) });
 }
 
 // The world: enters on mount, shows the zone you are in (one WorldView per zone and channel), and
@@ -89,13 +89,13 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
       <div className="overlay">
         <div className="solid-panel world-panel">
           <p>{enterProblem(state.error)}</p>
-          <button type="button" className="brush-button small" onClick={() => void client.enter()}>다시 시도</button>
-          <button type="button" className="text-button" onClick={onExit}>메뉴로</button>
+          <button type="button" className="brush-button small" onClick={() => void client.enter()}>{t("common.retry")}</button>
+          <button type="button" className="text-button" onClick={onExit}>{t("common.toMenu")}</button>
         </div>
       </div>
     );
   }
-  if (!state.entry) return <div className="overlay">월드에 들어가는 중…</div>;
+  if (!state.entry) return <div className="overlay">{t("world.entering")}</div>;
   return (
     <ZoneScreen
       key={state.entry.roomId}
@@ -109,7 +109,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
       travelling={state.phase === "travelling"}
       bag={state.bag}
       problem={problem}
-      onProblem={(code) => setProblem({ text: TRAVEL_PROBLEM[code] ?? "지금은 갈 수 없어요", at: performance.now() })}
+      onProblem={(code) => setProblem({ text: t(TRAVEL_PROBLEM[code] ?? "problem.cannotTravel"), at: performance.now() })}
       onExit={onExit}
     />
   );
@@ -217,19 +217,19 @@ function ZoneScreen({
     setPanel((p) => (p === next ? null : next));
   };
   const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean }[] = [
-    { id: "map", label: "지도", key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
+    { id: "map", label: t("menu.map"), key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
     ...(owned ? [] : [{
-      id: "upgrade", label: "정식판", key: "V", code: "KeyV",
+      id: "upgrade", label: t("menu.upgrade"), key: "V", code: "KeyV",
       act: () => setUpgrade({ kind: "menu" }), on: upgrade !== null,
     }]),
-    { id: "ranking", label: "랭킹", key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
-    { id: "quests", label: "퀘스트", key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
-    { id: "skills", label: "스킬", key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
-    { id: "forge", label: "대장간", key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith" },
-    { id: "bag", label: "가방", key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
-    { id: "sleep", label: "절전", key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
+    { id: "ranking", label: t("menu.ranking"), key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
+    { id: "quests", label: t("menu.quests"), key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
+    { id: "skills", label: t("menu.skills"), key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
+    { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith" },
+    { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
+    { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
-      id: "menu", label: "설정", key: "P", code: "KeyP",
+      id: "menu", label: t("menu.settings"), key: "P", code: "KeyP",
       act: () => {
         document.exitPointerLock?.();
         setMenu((m) => !m);
@@ -354,15 +354,15 @@ function ZoneScreen({
   return (
     <div className="app" ref={host}>
       <div className={`ui${touch ? " touch" : ""}`}>
-      {!ready && <div className="overlay">숲을 불러오는 중… {Math.round(progress * 100)}%</div>}
-      {travelling && <div className="overlay">이동하는 중…</div>}
+      {!ready && <div className="overlay">{t("world.loading", { n: Math.round(progress * 100) })}</div>}
+      {travelling && <div className="overlay">{t("world.travelling")}</div>}
       {hud && (
         <>
           {touch && view.current && <TouchStick controls={view.current.controls} />}
           <div className="hud-left">
             <div className="hud-top band">
               <b>{hud.zone}</b>
-              <span>채널 {hud.channel}</span>
+              <span>{t("world.channel", { n: hud.channel })}</span>
             </div>
             <div className="hud-vitals">
               <div className="hud-vitals-row">
@@ -385,7 +385,7 @@ function ZoneScreen({
             ))}
             <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
               <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
-              <span>메뉴</span>
+              <span>{t("common.menu")}</span>
               {!touch && <kbd className="hud-key">M</kbd>}
             </button>
           </div>
@@ -395,7 +395,7 @@ function ZoneScreen({
             </div>
           )}
           {hud.npc && !hud.portal && (
-            <div className="hud-prompt band">{hud.npc.name} — {hud.npc.role} · 대화 (E)</div>
+            <div className="hud-prompt band">{t("world.talk", { name: hud.npc.name, role: hud.npc.role })}</div>
           )}
           {hud.portal && (
             hud.portal.locked
@@ -404,18 +404,19 @@ function ZoneScreen({
                   type="button" className="hud-prompt band locked-portal"
                   onClick={() => setUpgrade({ kind: "portal", zone: hud.portal!.to })}
                 >
-                  {hud.portal.to} — 정식판으로 열려요 {touch ? "· 눌러서 보기" : "(E)"}
+                  {t("world.portalLocked", { zone: hud.portal.to, how: touch ? t("world.portalLocked.tap") : "(E)" })}
                 </button>
               )
               : (
                 <div className="hud-prompt band">
-                  {hud.portal.needLevel ? `${hud.portal.to} — Lv${hud.portal.needLevel}부터 갈 수 있어요`
-                    : `${hud.portal.to}(으)로 가는 길`}
+                  {hud.portal.needLevel
+                    ? t("world.portalLevel", { zone: hud.portal.to, n: hud.portal.needLevel })
+                    : t("world.portalTo", { zone: hud.portal.to })}
                 </div>
               )
           )}
           {showProblem && <div className="hud-error band">{problem.text}</div>}
-          {hud.blocking && <div className="hud-shield band">막는 중</div>}
+          {hud.blocking && <div className="hud-shield band">{t("world.blocking")}</div>}
           {hud.target && (
             <div className="hud-target band">
               <b>{hud.target.name}</b>

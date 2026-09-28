@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
+import type { Key } from "./strings/ko";
 import { typing } from "../game/render/FpsInput";
 import { CHAT_MAX } from "../game/world/chat";
 import type { ChatLine, WorldClient } from "../net/worldClient";
@@ -9,8 +11,8 @@ const QUIET_MS = 15_000;
 // Open, it shows this many to scroll back through.
 const OPEN_LINES = 30;
 
-const PROBLEM: Record<string, string> = {
-  too_fast: "조금 천천히 말해 주세요",
+const PROBLEM: Record<string, Key> = {
+  too_fast: "problem.tooFast",
 };
 
 // The channel chat, at the left: the latest lines, and a box to say one. Enter opens it on a
@@ -59,7 +61,7 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
     }
     const code = await client.say(text);
     if (code) {
-      setProblem(PROBLEM[code] ?? "보낼 수 없어요");
+      setProblem(t(PROBLEM[code] ?? "problem.cannotSend"));
       return;
     }
     setText("");
@@ -85,7 +87,7 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
           }}
         >
           <input
-            ref={input} value={text} maxLength={CHAT_MAX} placeholder="채널에 말하기" enterKeyHint="send"
+            ref={input} value={text} maxLength={CHAT_MAX} placeholder={t("chat.placeholder")} enterKeyHint="send"
             onChange={(e) => {
               setText(e.target.value);
               setProblem(null);
@@ -97,11 +99,11 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
               }
             }}
           />
-          {touch && <button type="button" className="chat-close" onClick={close}>닫기</button>}
+          {touch && <button type="button" className="chat-close" onClick={close}>{t("common.close")}</button>}
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (
-        touch && <button type="button" className="chat-open band" onClick={() => setOpen(true)}>채팅</button>
+        touch && <button type="button" className="chat-open band" onClick={() => setOpen(true)}>{t("chat.open")}</button>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "./lang";
 import type { PlayerClass } from "../game/combat/classes";
 import { SKILLS } from "../game/combat/skills";
 import { skillBlurb, skillName } from "./names";
@@ -28,8 +29,8 @@ export function SkillPanel({ playerClass, level, onClose }: SkillPanelProps) {
   return (
     <>
       <div className="side-panel skill-panel">
-        <h2>스킬</h2>
-        <p className="note">배운 스킬을 아래 칸으로 끌어다 놓으세요.</p>
+        <h2>{t("skills.title")}</h2>
+        <p className="note">{t("skills.dragNote")}</p>
         {SKILLS[playerClass].map((skill, i) => {
           const learned = level >= skill.level;
           const slot = bar.indexOf(i);
@@ -63,17 +64,17 @@ export function SkillPanel({ playerClass, level, onClose }: SkillPanelProps) {
                 <b>{skillName(playerClass, i)}</b>
                 <span>{skillBlurb(playerClass, i)}</span>
                 <span className="skill-row-note">
-                  {!learned ? `Lv${skill.level}에 배움` : slot >= 0 ? `${slot + 1}번 칸` : "끌어서 칸에 넣기"}
-                  {" · "}재사용 {skill.cooldownMs / 1000}초
+                  {!learned ? t("skills.learnAt", { n: skill.level }) : slot >= 0 ? t("skills.inSlot", { n: slot + 1 }) : t("skills.dragIn")}
+                  {" · "}{t("skills.cooldown", { n: skill.cooldownMs / 1000 })}
                 </span>
               </div>
               {slot >= 0 && (
-                <button type="button" className="text-button" onClick={() => setHotbarSlot(playerClass, slot, null)}>빼기</button>
+                <button type="button" className="text-button" onClick={() => setHotbarSlot(playerClass, slot, null)}>{t("skills.remove")}</button>
               )}
             </div>
           );
         })}
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
       {drag && (
         <img
