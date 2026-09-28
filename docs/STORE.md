@@ -40,6 +40,10 @@ Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의
 ■ 보스, 버섯왕
 숲 깊은 곳의 공터에는 버섯왕이 기다립니다. 땅을 내려치는 공격을 피하고, 불러내는 호위병을 막아 내세요.
 
+■ 함께 숲을 되살리기
+서버의 모두가 잡은 몬스터가 한 주 동안 숲을 정화합니다. 단계마다 꽃이 피고 하늘이 맑아지며, 끝까지 정화하면 정화의 수호자가 나타납니다.
+정화로 열린 터에 재료와 골드를 모아 약초상·훈련소·여관·망루를 지으면, 서버 전체가 그 혜택을 영원히 누립니다. 가장 많이 도운 이름은 건물 위에 남습니다.
+
 ■ 편한 조작
 PC는 마우스만으로, 모바일은 손가락만으로 플레이합니다. 가상 패드로 걷고, 화면을 끌어 둘러보고, 버튼으로 싸웁니다.
 처음 만든 캐릭터는 촌장에게 첫 기술과 물약을 받으며 스킬 등록과 자동 사용을 차근차근 익힙니다.
@@ -72,6 +76,10 @@ Trade with the village merchant and follow the elder's thirteen quests for rewar
 
 ■ The Mushroom King
 Deep in the forest the Mushroom King waits in his clearing. Dodge his ground slam and hold off the guards he calls.
+
+■ Bring the grove back together
+Every monster anyone on the server fells cleanses the grove for the week. Flowers bloom and the skies clear as it goes, and at the end the Grove Guardian appears.
+Pool materials and gold on the sites it opens to raise a herbalist, a training ground, an inn and a watchtower: their perks are the whole server's for good, and the top givers' names stand over them.
 
 ■ Easy controls
 Play with just a mouse on PC, or just your fingers on mobile: walk with the on-screen pad, drag to look, fight with the buttons.
