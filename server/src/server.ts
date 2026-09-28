@@ -351,7 +351,7 @@ export class Server {
     return {
       id, nickname: character.name, level: levelOf(character.xp).level, xp: character.xp,
       playerClass: character.playerClass, job: character.job, power: combatPower(character), gear: character.gear, plus: character.plus,
-      world: readWorld(character.world)?.name ?? character.world, rank: rankOf(board, id),
+      world: readWorld(character.world)?.id ?? character.world, rank: rankOf(board, id),
     };
   }
 

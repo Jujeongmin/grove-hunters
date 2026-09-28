@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { worldName } from "./names";
 import { WORLDS } from "../game/account/worlds";
 
 interface WorldPickerProps {
@@ -35,7 +36,7 @@ export function WorldPicker({ current, onPick, onClose }: WorldPickerProps) {
           {WORLDS.map((w) => (
             <li key={w.id}>
               <button type="button" className={`world-card${w.id === current ? " picked" : ""}`} onClick={() => void pick(w.id)} disabled={!!saving}>
-                <b>{w.name}</b>
+                <b>{worldName(w.number)}</b>
                 <span>{saving === w.id ? "들어가는 중…" : w.id === current ? "최근 접속" : ""}</span>
               </button>
             </li>

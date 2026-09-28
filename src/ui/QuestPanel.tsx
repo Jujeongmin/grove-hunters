@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ITEMS, type BagView } from "../game/account/items";
+import { itemName } from "./names";
+import { type BagView } from "../game/account/items";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 import type { WorldClient } from "../net/worldClient";
@@ -25,7 +26,7 @@ export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
   const quest = bag ? QUESTS[bag.quest.index] : undefined;
   const done = bag ? questDone(bag.quest) : false;
   const reward = quest
-    ? [`${quest.xp.toLocaleString()} XP`, `${quest.gold.toLocaleString()} 골드`, ...quest.items.map((i) => `${ITEMS[i.id].name}${i.n > 1 ? ` ×${i.n}` : ""}`)]
+    ? [`${quest.xp.toLocaleString()} XP`, `${quest.gold.toLocaleString()} 골드`, ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`)]
     : [];
   return (
     <div className="menu-modal" onClick={onClose}>

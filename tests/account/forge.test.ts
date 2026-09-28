@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BREAK_FROM, RECIPES, enhanceCost, rollEnhance } from "../../src/game/account/forge";
-import { ITEMS, MAX_PLUS, gearName, gearStats, sellPrice } from "../../src/game/account/items";
+import { ITEMS, MAX_PLUS, gearStats, sellPrice } from "../../src/game/account/items";
+import { gearName, itemName } from "../../src/ui/names";
 import { MONSTERS } from "../../src/game/world/monsters";
 
 describe("enhancing", () => {
@@ -33,7 +34,7 @@ describe("enhancing", () => {
     expect(plus.power).toBeGreaterThan(plain.power);
     expect(plus.hp).toBeGreaterThan(plain.hp);
     expect(plus.guard).toBeGreaterThan(plain.guard);
-    expect(gearName("weapon_2", { weapon_2: 5 })).toBe(`+5 ${ITEMS.weapon_2.name}`);
+    expect(gearName("weapon_2", { weapon_2: 5 })).toBe(`+5 ${itemName("weapon_2")}`);
   });
 });
 

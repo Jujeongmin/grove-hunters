@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ITEMS, ITEM_IDS, SHOP_ITEMS, gearName, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
+import { gearName, itemBlurb, itemName } from "./names";
+import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName } from "./names";
@@ -78,7 +79,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
                 <span className="bag-slot">{SLOT_LABEL[slot]}</span>
                 {worn && <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />}
                 <b>{worn ? gearName(worn, bag?.plus) : "없음"}</b>
-                <span className="bag-blurb">{worn ? ITEMS[worn].blurb : ""}</span>
+                <span className="bag-blurb">{worn ? itemBlurb(worn) : ""}</span>
                 {worn && <button type="button" className="text-button" onClick={() => act(() => client.unequip(slot))}>해제</button>}
               </div>
             );
@@ -89,9 +90,9 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
           {items.map((id) => (
             <div key={id} className="bag-row">
               <img className="bag-icon" src={iconFor(id) ?? undefined} alt="" />
-              <b>{ITEMS[id].kind === "material" ? ITEMS[id].name : gearName(id, bag!.plus)}</b>
+              <b>{ITEMS[id].kind === "material" ? itemName(id) : gearName(id, bag!.plus)}</b>
               <span className="bag-count">×{bag!.bag[id]}</span>
-              <span className="bag-blurb">{ITEMS[id].blurb}</span>
+              <span className="bag-blurb">{itemBlurb(id)}</span>
               {ITEMS[id].kind === "potion" && (
                 <button type="button" className="text-button" onClick={() => act(() => client.drink(id))}>마시기</button>
               )}
@@ -127,9 +128,9 @@ export function ShopPanel({ client, bag, onClose }: PanelProps) {
           {SHOP_ITEMS.map((id) => (
             <div key={id} className="bag-row">
               <img className="bag-icon" src={iconFor(id) ?? undefined} alt="" />
-              <b>{ITEMS[id].name}</b>
+              <b>{itemName(id)}</b>
               <span className="bag-count">{ITEMS[id].price} 골드</span>
-              <span className="bag-blurb">{ITEMS[id].blurb}</span>
+              <span className="bag-blurb">{itemBlurb(id)}</span>
               <button type="button" className="text-button" onClick={() => buy(id, 1)}>사기</button>
               {ITEMS[id].kind === "potion" && (
                 <button type="button" className="text-button" onClick={() => buy(id, 10)}>10개</button>

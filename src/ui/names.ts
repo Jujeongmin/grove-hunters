@@ -1,4 +1,9 @@
+import { ITEMS, type ItemId, type Plus } from "../game/account/items";
+import { readWorld } from "../game/account/worlds";
 import { JOBS, type JobId } from "../game/combat/jobs";
+import type { MonsterType } from "../game/world/monsters";
+import type { NpcId } from "../game/world/npcs";
+import type { ZoneId } from "../game/world/zones";
 import type { PlayerClass } from "../game/combat/classes";
 import { t } from "./lang";
 import type { Key } from "./strings/ko";
@@ -52,4 +57,54 @@ export function jobBlurb(id: JobId): string {
 export function jobLabel(value: string | null | undefined): string | null {
   if (!value) return null;
   return value in JOBS ? jobName(value as JobId) : value;
+}
+
+export function itemName(id: ItemId): string {
+  return t(key("item", id));
+}
+
+// What an item is for, read off its own numbers where it has them: a potion says what it gives
+// back, gear says what it adds, and a material says where it is found (which is words, not numbers).
+export function itemBlurb(id: ItemId): string {
+  const item = ITEMS[id];
+  if (item.kind === "potion") return t("item.heal", { n: item.heal });
+  if (item.kind === "material") return t(key("item", id, "blurb"));
+  const parts: string[] = [];
+  if (item.power) parts.push(t("stat.power", { n: Math.round(item.power * 100) }));
+  if (item.hp) parts.push(t("stat.hp", { n: item.hp }));
+  if (item.guard) parts.push(t("stat.guard", { n: Math.round(item.guard * 100) }));
+  return parts.join(t("list.join"));
+}
+
+export function monsterName(type: MonsterType): string {
+  return t(key("monster", type));
+}
+
+export function zoneName(id: ZoneId): string {
+  return t(key("zone", id));
+}
+
+export function npcName(id: NpcId): string {
+  return t(key("npc", id));
+}
+
+export function npcRole(id: NpcId): string {
+  return t(key("npc", id, "role"));
+}
+
+// A server is the game's name and a number: 초록숲-1, Grove-1, みどり森-1.
+export function worldName(number: number): string {
+  return `${t("world.name")}-${number}`;
+}
+
+// A server as it arrives from the server, which sends its id.
+export function serverName(id: string): string {
+  const world = readWorld(id);
+  return world ? worldName(world.number) : id;
+}
+
+// A piece of gear's name with its +, as the screens show it.
+export function gearName(id: ItemId, plus: Plus = {}): string {
+  const n = plus[id] ?? 0;
+  return n > 0 ? `+${n} ${itemName(id)}` : itemName(id);
 }

@@ -1,8 +1,7 @@
 // The game servers you pick from when you start. Each is its own world: matchmaking only seats
 // players who picked the same one.
-export const WORLD_NAME = "초록숲";
-
-export const WORLDS = [1, 2, 3, 4].map((n) => ({ id: `w${n}`, name: `${WORLD_NAME}-${n}` }));
+// A server is the game's name and a number; the name itself is a word like any other (world.name).
+export const WORLDS = [1, 2, 3, 4].map((n) => ({ id: `w${n}`, number: n }));
 
 export type World = (typeof WORLDS)[number];
 

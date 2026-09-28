@@ -1,6 +1,6 @@
 import type { Point2 } from "../rules/levelLayout";
 import { NPCS, npcSpot, type NpcId } from "./npcs";
-import { START_ZONE, ZONES, portalsOf, zoneLayout, type ZoneId } from "./zones";
+import { START_ZONE, portalsOf, zoneLayout, type ZoneId } from "./zones";
 
 // The map of a zone, flattened to what a minimap needs: a grid to paint and the few places worth a
 // mark on it. Monsters and other players are left off on purpose — the map is for finding your way,
@@ -9,14 +9,14 @@ export type MinimapCell = "forest" | "house" | "ground";
 export type MinimapMarkKind = "portal" | "npc";
 export interface MinimapMark extends Point2 {
   kind: MinimapMarkKind;
-  label: string;
-  // The villager standing here, so a tap on them walks you over and opens the talk.
+  // What stands here, as an id: the zone a portal leads to, or the villager waiting at this door.
+  // The words are the screen's business (see ui/names.ts), not the map's.
+  to?: ZoneId;
   npc?: NpcId;
 }
 
 export interface MinimapModel {
   zone: ZoneId;
-  name: string;
   cols: number;
   rows: number;
   tileSize: number;
@@ -37,16 +37,16 @@ export function minimapModel(zone: ZoneId): MinimapModel {
     if (!solid) return "ground";
     return layout.forest[r][c] ? "forest" : "house";
   }));
-  const marks: MinimapMark[] = portalsOf(zone).map((p) => ({ kind: "portal", x: p.x, z: p.z, label: ZONES[p.to].name }));
+  const marks: MinimapMark[] = portalsOf(zone).map((p) => ({ kind: "portal", x: p.x, z: p.z, to: p.to }));
   // The NPCs all stand in the village, each at their own door.
   if (zone === START_ZONE) {
     for (const npc of NPCS) {
       const spot = npcSpot(npc.id);
-      marks.push({ kind: "npc", x: spot.x, z: spot.z, label: npc.name, npc: npc.id });
+      marks.push({ kind: "npc", x: spot.x, z: spot.z, npc: npc.id });
     }
   }
   model = {
-    zone, name: ZONES[zone].name, cols: layout.cols, rows: layout.rows, tileSize: layout.tileSize,
+    zone, cols: layout.cols, rows: layout.rows, tileSize: layout.tileSize,
     width: layout.cols * layout.tileSize, depth: layout.rows * layout.tileSize, cells, marks,
   };
   models.set(zone, model);

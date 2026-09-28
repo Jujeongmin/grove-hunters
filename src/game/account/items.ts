@@ -17,9 +17,6 @@ export type ItemId =
 export type Slot = "weapon" | "armor";
 
 export interface ItemSpec {
-  name: string;
-  // What the bag shows under the name.
-  blurb: string;
   // A potion is drunk; gear is worn in its slot; a material goes to the smith.
   kind: "potion" | Slot | "material";
   // Gold at the village shop; null when only monsters drop it (or the smith makes it). Selling gives
@@ -40,27 +37,27 @@ export interface ItemSpec {
 const none = { heal: 0, power: 0, hp: 0, guard: 0 };
 
 export const ITEMS: Record<ItemId, ItemSpec> = {
-  potion_small: { ...none, name: "작은 물약", blurb: "체력 40 회복", kind: "potion", price: 20, heal: 40 },
-  potion_big: { ...none, name: "큰 물약", blurb: "체력 120 회복", kind: "potion", price: 70, heal: 120 },
-  weapon_1: { ...none, name: "견습생의 무기", blurb: "공격력 +10%", kind: "weapon", price: 150, power: 0.1, tier: 1 },
-  weapon_2: { ...none, name: "숲지기의 무기", blurb: "공격력 +25%", kind: "weapon", price: 600, power: 0.25, tier: 2 },
-  weapon_4: { ...none, name: "강철 무기", blurb: "공격력 +35%", kind: "weapon", price: null, sell: 700, power: 0.35, tier: 3 },
-  weapon_3: { ...none, name: "버섯왕의 무기", blurb: "공격력 +45%", kind: "weapon", price: null, power: 0.45, tier: 4 },
-  weapon_5: { ...none, name: "바위심장 무기", blurb: "공격력 +55%", kind: "weapon", price: null, sell: 1800, power: 0.55, tier: 5 },
-  armor_1: { ...none, name: "가죽 갑옷", blurb: "체력 +25", kind: "armor", price: 120, hp: 25, tier: 1 },
-  armor_2: { ...none, name: "숲지기의 갑옷", blurb: "체력 +60, 받는 피해 -10%", kind: "armor", price: 500, hp: 60, guard: 0.1, tier: 2 },
+  potion_small: { ...none, kind: "potion", price: 20, heal: 40 },
+  potion_big: { ...none, kind: "potion", price: 70, heal: 120 },
+  weapon_1: { ...none, kind: "weapon", price: 150, power: 0.1, tier: 1 },
+  weapon_2: { ...none, kind: "weapon", price: 600, power: 0.25, tier: 2 },
+  weapon_4: { ...none, kind: "weapon", price: null, sell: 700, power: 0.35, tier: 3 },
+  weapon_3: { ...none, kind: "weapon", price: null, power: 0.45, tier: 4 },
+  weapon_5: { ...none, kind: "weapon", price: null, sell: 1800, power: 0.55, tier: 5 },
+  armor_1: { ...none, kind: "armor", price: 120, hp: 25, tier: 1 },
+  armor_2: { ...none, kind: "armor", price: 500, hp: 60, guard: 0.1, tier: 2 },
   armor_4: {
-    ...none, name: "강철 갑옷", blurb: "체력 +85, 받는 피해 -12%", kind: "armor", price: null, sell: 650, hp: 85, guard: 0.12, tier: 3,
+    ...none, kind: "armor", price: null, sell: 650, hp: 85, guard: 0.12, tier: 3,
   },
-  armor_3: { ...none, name: "버섯왕의 갑옷", blurb: "체력 +100, 받는 피해 -20%", kind: "armor", price: null, hp: 100, guard: 0.2, tier: 4 },
+  armor_3: { ...none, kind: "armor", price: null, hp: 100, guard: 0.2, tier: 4 },
   armor_5: {
-    ...none, name: "바위심장 갑옷", blurb: "체력 +140, 받는 피해 -20%", kind: "armor", price: null, sell: 1700, hp: 140, guard: 0.2, tier: 5,
+    ...none, kind: "armor", price: null, sell: 1700, hp: 140, guard: 0.2, tier: 5,
   },
-  stone: { ...none, name: "강화석", blurb: "장비 강화 재료. 모든 사냥터", kind: "material", price: null, sell: 15 },
-  jelly: { ...none, name: "슬라임 젤리", blurb: "제작 재료. 숲 필드 1", kind: "material", price: null, sell: 5 },
-  silk: { ...none, name: "거미 비단", blurb: "제작 재료. 숲 필드 2", kind: "material", price: null, sell: 12 },
-  core: { ...none, name: "바위 심장석", blurb: "제작 재료. 깊은 숲", kind: "material", price: null, sell: 30 },
-  spore: { ...none, name: "버섯왕의 포자", blurb: "제작 재료. 버섯왕", kind: "material", price: null, sell: 150 },
+  stone: { ...none, kind: "material", price: null, sell: 15 },
+  jelly: { ...none, kind: "material", price: null, sell: 5 },
+  silk: { ...none, kind: "material", price: null, sell: 12 },
+  core: { ...none, kind: "material", price: null, sell: 30 },
+  spore: { ...none, kind: "material", price: null, sell: 150 },
 };
 
 export const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
@@ -96,12 +93,6 @@ export function readPlus(raw: unknown): Plus {
       && n > 0) out[item] = Math.min(n, MAX_PLUS);
   }
   return out;
-}
-
-// A piece of gear's name with its +, as the screens show it.
-export function gearName(id: ItemId, plus: Plus = {}): string {
-  const n = plus[id] ?? 0;
-  return n > 0 ? `+${n} ${ITEMS[id].name}` : ITEMS[id].name;
 }
 
 export const NO_GEAR: Gear = { weapon: null, armor: null };

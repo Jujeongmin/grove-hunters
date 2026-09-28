@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ITEMS } from "../game/account/items";
+
 import type { RankDetail, RankRow, RankingView } from "../game/account/ranking";
 import type { PlayerClass } from "../game/combat/classes";
-import { className, jobName } from "./names";
+import { className, itemName, jobName, serverName } from "./names";
 import type { JobId } from "../game/combat/jobs";
 
 interface RankingPanelProps {
@@ -112,14 +112,14 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                 <h3>{detail.nickname}</h3>
                 <dl>
                   <dt>순위</dt><dd>{detail.rank === null ? "-" : `${detail.rank}위`}</dd>
-                  <dt>서버</dt><dd>{detail.world}</dd>
+                  <dt>서버</dt><dd>{serverName(detail.world)}</dd>
                   <dt>직업</dt>
                   <dd>{detail.job ? `${jobName(detail.job)} (${className(detail.playerClass)})` : className(detail.playerClass)}</dd>
                   <dt>레벨</dt><dd>Lv {detail.level}</dd>
                   <dt>경험치</dt><dd>{detail.xp.toLocaleString()}</dd>
                   <dt>전투력</dt><dd className="power">{detail.power.toLocaleString()}</dd>
-                  <dt>무기</dt><dd>{detail.gear.weapon ? ITEMS[detail.gear.weapon].name : "없음"}</dd>
-                  <dt>갑옷</dt><dd>{detail.gear.armor ? ITEMS[detail.gear.armor].name : "없음"}</dd>
+                  <dt>무기</dt><dd>{detail.gear.weapon ? itemName(detail.gear.weapon) : "없음"}</dd>
+                  <dt>갑옷</dt><dd>{detail.gear.armor ? itemName(detail.gear.armor) : "없음"}</dd>
                 </dl>
               </>
             )}

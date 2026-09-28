@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials, type EnhanceOutcome } from "../game/account/forge";
-import { ITEMS, MAX_PLUS, gearName, type BagView, type Slot } from "../game/account/items";
+import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
 import { PROBLEM, SLOT_LABEL } from "./BagPanel";
@@ -100,16 +101,16 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
           <div className="bag-list">
             {RECIPES.map((recipe) => {
               const ready = hasMaterials(bag.bag, recipe) && bag.gold >= recipe.gold;
-              const name = ITEMS[recipe.makes].name;
+              const name = itemName(recipe.makes);
               return (
                 <div key={recipe.id} className="bag-row smith-row">
                   <img className="bag-icon" src={iconFor(recipe.makes) ?? undefined} alt="" />
                   <b>{name}{recipe.n > 1 ? ` ×${recipe.n}` : ""}</b>
                   <button type="button" className="text-button" disabled={busy || !ready} onClick={() => craft(recipe.id, name)}>제작</button>
                   <span className="bag-blurb">
-                    {ITEMS[recipe.makes].blurb} · {recipe.needs.map((need) => {
+                    {itemBlurb(recipe.makes)} · {recipe.needs.map((need) => {
                       const have = bag.bag[need.item] ?? 0;
-                      return <span key={need.item} className={have >= need.n ? "" : "smith-short"}>{ITEMS[need.item].name} {have}/{need.n} · </span>;
+                      return <span key={need.item} className={have >= need.n ? "" : "smith-short"}>{itemName(need.item)} {have}/{need.n} · </span>;
                     })}
                     {recipe.gold.toLocaleString()} 골드
                   </span>

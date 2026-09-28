@@ -15,7 +15,6 @@ export interface ZonePortal {
 
 export interface Zone {
   id: ZoneId;
-  name: string;
   // Needs the full game bought.
   paid: boolean;
   // The level a character needs to go in.
@@ -54,35 +53,35 @@ const BOSS_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "S", at: 15 
 // of meadow and groves between walls of forest, the village a little smaller.
 export const ZONES: Record<ZoneId, Zone> = {
   village: {
-    id: "village", name: "초록숲 마을", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
+    id: "village", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
     map: fieldMap({
       cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: VILLAGE_PORTALS,
       monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: VILLAGE_HOUSES,
     }),
   },
   forest1: {
-    id: "forest1", name: "숲 필드 1", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
+    id: "forest1", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 11, spawn: [5, 18], portals: FOREST1_PORTALS,
       monsters: 24, groves: 16, edge: 3, props: "cBccB",
     }),
   },
   forest2: {
-    id: "forest2", name: "숲 필드 2", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
+    id: "forest2", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 29, spawn: [5, 17], portals: FOREST2_PORTALS,
       monsters: 26, groves: 20, edge: 3, props: "cBcH",
     }),
   },
   forest3: {
-    id: "forest3", name: "깊은 숲", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
+    id: "forest3", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
     map: fieldMap({
       cols: 54, rows: 40, seed: 61, spawn: [5, 20], portals: FOREST3_PORTALS,
       monsters: 28, groves: 26, edge: 4, props: "cBcHc",
     }),
   },
   boss: {
-    id: "boss", name: "버섯왕의 공터", paid: true, minLevel: 25, portals: BOSS_PORTALS,
+    id: "boss", paid: true, minLevel: 25, portals: BOSS_PORTALS,
     map: fieldMap({
       cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: BOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",

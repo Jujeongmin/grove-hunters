@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ITEMS, type BagView } from "../game/account/items";
+import { itemName } from "./names";
+import { type BagView } from "../game/account/items";
 import { DAILY_QUESTS, QUESTS, dailyToday, questDone, type Quest } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 
@@ -7,7 +8,7 @@ import type { MonsterType } from "../game/world/monsters";
 export function rewardText(quest: { xp?: number; gold: number; items: Quest["items"] }): string {
   return [
     ...(quest.xp ? [`${quest.xp.toLocaleString()} XP`] : []), `${quest.gold.toLocaleString()} 골드`,
-    ...quest.items.map((i) => `${ITEMS[i.id].name}${i.n > 1 ? ` ×${i.n}` : ""}`),
+    ...quest.items.map((i) => `${itemName(i.id)}${i.n > 1 ? ` ×${i.n}` : ""}`),
   ].join(", ");
 }
 

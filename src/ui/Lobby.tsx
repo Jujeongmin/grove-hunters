@@ -7,7 +7,7 @@ import type { RankDetail, RankingView } from "../game/account/ranking";
 import { readWorld } from "../game/account/worlds";
 import { playMusic } from "../game/audio/music";
 import { readClass, type PlayerClass } from "../game/combat/classes";
-import { className } from "./names";
+import { className, worldName } from "./names";
 import { COSTUMES, costumeById, type Costume } from "../game/render/costumes";
 import { MenuScene } from "../game/render/MenuScene";
 import { nicknameProblem } from "../net/account";
@@ -184,7 +184,8 @@ export function Lobby({
     else onStart();
   };
 
-  const worldName = readWorld(view?.world)?.name ?? readWorld("w1")?.name ?? "";
+  const server = readWorld(view?.world) ?? readWorld("w1");
+  const shownWorld = server ? worldName(server.number) : "";
 
   return (
     <div className="main-menu">
@@ -242,7 +243,7 @@ export function Lobby({
         {step === "characters" && (
           <nav className="menu-left character-select">
             <h1 className="game-title small">{GAME_TITLE}</h1>
-            <p className="note">{worldName} · 캐릭터 {characters.length}/{CHARACTERS_PER_WORLD}</p>
+            <p className="note">{shownWorld} · 캐릭터 {characters.length}/{CHARACTERS_PER_WORLD}</p>
             <ul className="character-list">
               {characters.map((c) => (
                 <li key={c.id}>

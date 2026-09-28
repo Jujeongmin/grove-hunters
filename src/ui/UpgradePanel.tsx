@@ -1,5 +1,5 @@
 import { CLASSES, isFreeClass } from "../game/combat/classes";
-import { className, weaponName } from "./names";
+import { className, weaponName, zoneName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { Offer } from "../game/account/purchase";
 import { ZONES, ZONE_IDS } from "../game/world/zones";
@@ -57,7 +57,7 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
         <ul className="upgrade-list">
           <li className="big">
             <b>새 사냥터 {LOCKED_ZONES.length}곳</b>
-            <span>{LOCKED_ZONES.map((z) => `${ZONES[z].name} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
+            <span>{LOCKED_ZONES.map((z) => `${zoneName(z)} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
           </li>
           <li>
             <b>레벨 제한 해제</b>

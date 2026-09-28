@@ -33,7 +33,7 @@ import { MonsterActor } from "./MonsterActor";
 import { MONSTER_SKINS } from "./monsterLooks";
 import { PlayerActor } from "./PlayerActor";
 import { QUALITY, hotbarFor, onSettings, settings } from "../../ui/settings";
-import { jobLabel } from "../../ui/names";
+import { itemName, jobLabel, monsterName, npcName, npcRole, zoneName } from "../../ui/names";
 
 export const LOOK_SENSITIVITY = 0.0022;
 // A portal is a summoning circle (Magic Summoning Circle, CityBuildingKit, CC0).
@@ -326,7 +326,7 @@ export class WorldView {
   seekQuest(types: readonly MonsterType[]): void {
     if (!Object.values(this.client.state.monsters).some((m) => types.includes(m.type))) {
       const zones = ZONE_IDS.filter((z) => ZONE_MONSTERS[z].some((t) => types.includes(t)) || types.includes(ZONE_BOSS[z]!));
-      this.notes.push({ text: `이 구역에는 없어요${zones.length ? ` (${zones.map((z) => ZONES[z].name).join(", ")})` : ""}`, at: performance.now() });
+      this.notes.push({ text: `이 구역에는 없어요${zones.length ? ` (${zones.map(zoneName).join(", ")})` : ""}`, at: performance.now() });
       return;
     }
     this.questSeek = [...types];
@@ -628,7 +628,7 @@ export class WorldView {
       const out = npcFacing(npc.id);
       const yaw = Math.atan2(-out.x, -out.z);
       const actor = new NpcActor(
-        library.instance(npc.model), library.get(npc.model).animations, npc, `${npc.name} · ${npc.role}`, at.x, at.z, yaw,
+        library.instance(npc.model), library.get(npc.model).animations, npc, `${npcName(npc.id)} · ${npcRole(npc.id)}`, at.x, at.z, yaw,
       );
       this.scene.add(actor.object);
       this.npcs.push({ id: npc.id, actor, at });
@@ -744,7 +744,7 @@ export class WorldView {
     }
     if (result.gold > 0 || result.items.length > 0) playCue("gold");
     if (result.gold > 0) this.notes.push({ text: `+${result.gold} 골드`, at: now });
-    for (const id of result.items) this.notes.push({ text: `${ITEMS[id]?.name ?? id} 획득`, at: now });
+    for (const id of result.items) this.notes.push({ text: `${id in ITEMS ? itemName(id) : id} 획득`, at: now });
   }
 
   // Drinks the potion that fits: the big one when a lot is missing, otherwise the small one.
@@ -894,7 +894,7 @@ export class WorldView {
       const label = createLabel(2.6);
       label.position.set(portal.x, 3.3, portal.z);
       const why = ZONES[portal.to].paid && !this.options.owned ? " (정식판)" : locked ? ` (Lv${ZONES[portal.to].minLevel})` : "";
-      setLabel(label, `${ZONES[portal.to].name}${why}`, locked ? "#ffb08a" : "#bff0ff");
+      setLabel(label, `${zoneName(portal.to)}${why}`, locked ? "#ffb08a" : "#bff0ff");
       this.scene.add(ring, glow, label);
     }
   }
@@ -917,13 +917,13 @@ export class WorldView {
     }
     const fighting = this.target ? this.client.state.monsters[this.target] : undefined;
     const hud: WorldHud = {
-      zone: ZONES[entry.zone].name,
+      zone: zoneName(entry.zone),
       zoneId: entry.zone,
       channel: entry.channel,
       me: { x: this.pose.x, z: this.pose.z, yaw: this.yaw },
       portal: near && near.d <= PORTAL_REARM + 2
         ? {
-          to: ZONES[near.portal.to].name, locked: ZONES[near.portal.to].paid && !this.options.owned,
+          to: zoneName(near.portal.to), locked: ZONES[near.portal.to].paid && !this.options.owned,
           needLevel: level.level < ZONES[near.portal.to].minLevel ? ZONES[near.portal.to].minLevel : null,
         }
         : null,
@@ -949,9 +949,9 @@ export class WorldView {
       npc: (() => {
         const id = npcNear(this.pose.x, this.pose.z);
         const npc = id ? NPCS.find((n) => n.id === id)! : null;
-        return npc ? { id: npc.id, name: npc.name, role: npc.role } : null;
+        return npc ? { id: npc.id, name: npcName(npc.id), role: npcRole(npc.id) } : null;
       })(),
-      target: fighting?.alive ? { name: `Lv${MONSTERS[fighting.type].level} ${MONSTERS[fighting.type].name}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp } : null,
+      target: fighting?.alive ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp } : null,
       potions: (this.client.state.bag?.bag.potion_small ?? 0) + (this.client.state.bag?.bag.potion_big ?? 0),
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),
       notes: this.notes.map((n) => n.text),

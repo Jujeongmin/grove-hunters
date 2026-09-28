@@ -25,14 +25,14 @@ describe("minimapModel", () => {
       const portals = portalsOf(zone);
       const marks = minimapModel(zone).marks.filter((m) => m.kind === "portal");
       expect(marks).toHaveLength(portals.length);
-      expect(marks.map((m) => m.label)).toEqual(portals.map((p) => ZONES[p.to].name));
+      expect(marks.map((m) => m.to)).toEqual(portals.map((p) => p.to));
       expect(marks.map((m) => [m.x, m.z])).toEqual(portals.map((p) => [p.x, p.z]));
     }
   });
 
   it("marks the villagers, and only in the village", () => {
     const village = minimapModel("village").marks.filter((m) => m.kind === "npc");
-    expect(village.map((m) => m.label)).toEqual(NPCS.map((n) => n.name));
+    expect(village.map((m) => m.npc)).toEqual(NPCS.map((n) => n.id));
     expect(village.map((m) => [m.x, m.z])).toEqual(NPCS.map((n) => [npcSpot(n.id).x, npcSpot(n.id).z]));
     expect(minimapModel("forest1").marks.some((m) => m.kind === "npc")).toBe(false);
   });

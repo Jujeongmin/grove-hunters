@@ -11,7 +11,6 @@ export type MonsterType =
   | "mushnub_guard" | "mushroom_king";
 
 export interface MonsterSpec {
-  name: string;
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
   level: number;
   hp: number;
@@ -81,27 +80,27 @@ const field2 = {
 // The first field is for levels 1 to about 11, the second for 12 to 29, the deep forest for 28 to
 // 40 (its monsters are the second field's, grown and darker); the boss is a level-32 fight for a group. Health, damage and XP climb with each monster's level.
 export const MONSTERS: Record<MonsterType, MonsterSpec> = {
-  green_blob: { ...field1, name: "초록 슬라임", level: 1, hp: 50, damage: 5, speed: 1.6, xp: 6 },
-  mushnub: { ...field1, name: "버섯돌이", level: 3, hp: 80, damage: 8, xp: 9 },
-  rat: { ...field1, name: "들쥐", level: 5, hp: 110, damage: 11, speed: 2.4, xp: 12 },
-  frog: { ...field1, name: "개구리", level: 7, hp: 150, damage: 14, xp: 15 },
-  spider: { ...field2, name: "숲거미", level: 12, hp: 420, damage: 26, speed: 2.2, aggro: 11, xp: 40 },
-  snake: { ...field2, name: "독사", level: 15, hp: 480, damage: 30, aggro: 10, xp: 48 },
-  wasp: { ...field2, name: "말벌", level: 18, hp: 520, damage: 34, speed: 2.6, aggro: 12, xp: 56 },
-  bat: { ...field2, name: "박쥐", level: 21, hp: 600, damage: 38, speed: 2.8, aggro: 12, xp: 64 },
-  goleling: { ...field2, name: "골렘링", level: 24, hp: 800, damage: 44, speed: 1.7, aggro: 10, body: 0.5, xp: 80 },
-  dire_spider: { ...field3, name: "거대 독거미", level: 28, hp: 1400, damage: 58, speed: 2.3, xp: 120 },
-  venom_snake: { ...field3, name: "맹독사", level: 31, hp: 1600, damage: 64, xp: 140 },
-  hornet: { ...field3, name: "장수말벌", level: 34, hp: 1700, damage: 70, speed: 2.8, xp: 160 },
-  vampire_bat: { ...field3, name: "흡혈박쥐", level: 37, hp: 1900, damage: 76, speed: 3, xp: 180 },
-  stone_golem: { ...field3, name: "바위 골렘", level: 40, hp: 3200, damage: 90, speed: 1.6, body: 0.8, xp: 240 },
+  green_blob: { ...field1, level: 1, hp: 50, damage: 5, speed: 1.6, xp: 6 },
+  mushnub: { ...field1, level: 3, hp: 80, damage: 8, xp: 9 },
+  rat: { ...field1, level: 5, hp: 110, damage: 11, speed: 2.4, xp: 12 },
+  frog: { ...field1, level: 7, hp: 150, damage: 14, xp: 15 },
+  spider: { ...field2, level: 12, hp: 420, damage: 26, speed: 2.2, aggro: 11, xp: 40 },
+  snake: { ...field2, level: 15, hp: 480, damage: 30, aggro: 10, xp: 48 },
+  wasp: { ...field2, level: 18, hp: 520, damage: 34, speed: 2.6, aggro: 12, xp: 56 },
+  bat: { ...field2, level: 21, hp: 600, damage: 38, speed: 2.8, aggro: 12, xp: 64 },
+  goleling: { ...field2, level: 24, hp: 800, damage: 44, speed: 1.7, aggro: 10, body: 0.5, xp: 80 },
+  dire_spider: { ...field3, level: 28, hp: 1400, damage: 58, speed: 2.3, xp: 120 },
+  venom_snake: { ...field3, level: 31, hp: 1600, damage: 64, xp: 140 },
+  hornet: { ...field3, level: 34, hp: 1700, damage: 70, speed: 2.8, xp: 160 },
+  vampire_bat: { ...field3, level: 37, hp: 1900, damage: 76, speed: 3, xp: 180 },
+  stone_golem: { ...field3, level: 40, hp: 3200, damage: 90, speed: 1.6, body: 0.8, xp: 240 },
   // The boss's brood: they come when it calls, and do not come back.
   mushnub_guard: {
-    ...common, name: "버섯 호위병", level: 30, hp: 900, damage: 40, speed: 2.2, aggro: 30, xp: 60,
+    ...common, level: 30, hp: 900, damage: 40, speed: 2.2, aggro: 30, xp: 60,
     gold: [5, 10], drops: [],
   },
   mushroom_king: {
-    name: "버섯왕", level: 32, hp: 30000, damage: 90, range: 2.8, attackMs: 1800, speed: 1.6, aggro: 22, body: 1.0, xp: 6000,
+    level: 32, hp: 30000, damage: 90, range: 2.8, attackMs: 1800, speed: 1.6, aggro: 22, body: 1.0, xp: 6000,
     respawnMs: 300_000, gold: [800, 1200],
     drops: [
       { item: "potion_big", chance: 1 }, { item: "weapon_3", chance: 0.25 }, { item: "armor_3", chance: 0.25 },

@@ -44,7 +44,8 @@ describe("ranking", () => {
       nickname: "궁수왕", playerClass: "ranger", level: levelOf(900).level, xp: 900, rank: 1, power: combatPower(active),
       gear: active.gear,
     });
-    expect(detail.world).toContain("초록숲");
+    // The server sends the server's id; the screen turns it into a name in the reader's language.
+    expect(detail.world).toBe("w1");
     expect(await errorOf(server.getRankDetail("nobody"))).toContain("unavailable");
   });
 });

@@ -7,6 +7,7 @@ import {
 } from "../game/world/minimap";
 import type { NpcId } from "../game/world/npcs";
 import type { ZoneId } from "../game/world/zones";
+import { npcName, zoneName } from "./names";
 import { pointIn } from "./useUiScale";
 
 // The map is drawn from the same pictures the world is: the grass and forest-floor photos that lie
@@ -231,14 +232,15 @@ export function Minimap({ zone, me, width, height, labels = false, onPick }: Min
         ctx.fill();
       }
       if (!labels) continue;
+      const label = m.npc ? npcName(m.npc) : m.to ? zoneName(m.to) : "";
       // A mark at the zone's edge would have its name hang off the map, so the name slides back in.
-      const half = ctx.measureText(m.label).width / 2 + 2;
+      const half = ctx.measureText(label).width / 2 + 2;
       const x = Math.min(Math.max(at.x, fit.left + half), fit.left + fit.width - half);
       ctx.fillStyle = m.kind === "portal" ? "#ffe0b0" : "#e6f3ff";
       ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
       ctx.lineWidth = 3;
-      ctx.strokeText(m.label, x, at.y - mark / 2 - 2);
-      ctx.fillText(m.label, x, at.y - mark / 2 - 2);
+      ctx.strokeText(label, x, at.y - mark / 2 - 2);
+      ctx.fillText(label, x, at.y - mark / 2 - 2);
     }
 
     // You: an arrowhead pointing the way you look. Turning the canvas by -yaw sends its tip, drawn
@@ -303,7 +305,6 @@ interface MapPanelProps {
 // The whole zone, opened with N: the same map drawn large, with the portals and the villagers named.
 // Tapping a place you can stand on closes the map and walks you there.
 export function MapPanel({ zone, me, onWalk, onClose }: MapPanelProps) {
-  const model = minimapModel(zone);
   // The sheet is sized by the stage, which is itself sized by the window, so the map is measured
   // rather than fixed: a small window gets a small map, not one hanging over the edge.
   const area = useRef<HTMLDivElement>(null);
@@ -320,7 +321,7 @@ export function MapPanel({ zone, me, onWalk, onClose }: MapPanelProps) {
   return (
     <div className="map-panel" role="dialog" onClick={onClose}>
       <div className="map-sheet" onClick={(e) => e.stopPropagation()}>
-        <h2>{model.name}</h2>
+        <h2>{zoneName(zone)}</h2>
         <div className="map-area" ref={area}>
           {box && (
             <Minimap
