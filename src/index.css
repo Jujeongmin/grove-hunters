@@ -352,12 +352,15 @@ button.hud-prompt:hover { color: #ffe0b0; }
   width: min(820px, 94%); height: 94%;
   display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 40px 28px;
 }
+/* The brush artwork's very top and bottom are a ragged tail that, stretched over a panel this tall,
+   breaks off into a smudge of its own below the content. Drawing the mask a little larger than the
+   panel puts those ends outside it and leaves one even edge. */
 .map-sheet::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
   background: radial-gradient(ellipse at 50% 40%, rgba(40, 26, 16, 0.97), rgba(8, 6, 5, 0.97) 70%);
-  -webkit-mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
-  mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
+  -webkit-mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
+  mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
 }
 .map-sheet h2 { margin: 0; flex: none; font: 800 20px var(--font-head); text-shadow: var(--shadow); }
 .map-area { flex: 1 1 auto; align-self: stretch; min-height: 0; display: grid; place-items: center; }
@@ -377,12 +380,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
   display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px clamp(26px, 12%, 76px) 10px;
   text-align: center;
 }
+/* See the note by .map-sheet::before for why the mask is drawn larger than the panel. */
 .upgrade-sheet::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
   background: radial-gradient(ellipse at 50% 40%, rgba(44, 29, 17, 0.97), rgba(8, 6, 5, 0.97) 70%);
-  -webkit-mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
-  mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
+  -webkit-mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
+  mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
 }
 .upgrade-sheet h2 { margin: 0; font: 800 21px var(--font-head); color: var(--ember); text-shadow: var(--shadow); }
 .upgrade-lead { margin: 0; font-size: 14px; color: var(--ink); }
