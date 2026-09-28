@@ -1,5 +1,5 @@
 import {
-  acceptFriend, isOnline, removeFriend, requestFriend, type FriendSide, type FriendsView,
+  acceptFriend, removeFriend, requestFriend, type FriendSide, type FriendsView,
 } from "../../src/game/account/friends";
 import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
@@ -22,19 +22,16 @@ import { rankOf, type RankDetail, type RankingView } from "../../src/game/accoun
 import { enhanceCost, hasMaterials, readRecipe, rollEnhance, type EnhanceOutcome } from "../../src/game/account/forge";
 import { parseNickname, type AccountView } from "../../src/game/account/nickname";
 import { readWorld } from "../../src/game/account/worlds";
-import {
-  addInvite, checkInvite, joinParty, kickFromParty, leaveParty, type Party, type PartyView,
-} from "../../src/game/account/party";
 import { costumeById } from "../../src/game/render/costumes";
 import { PROTOCOL_VERSION, RuleViolation, isPose } from "../../src/game/world/types";
 import {
   START_ZONE, ZONES, arrivalFrom, portalsOf, readChannelRoom, readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
 import {
-  claimName, findNickname, friendEntry, grantPurchase, markSeen, ownsFullGame, partyMember, pickChannel,
-  readAccountWorld, readFriendSide, readNickname, readPartyInvites, readPartyOf, readProfile, readRanking,
-  returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withPartyLock, withProfileLock,
-  writeFriendSide, writeParty, writePartyInvites, writeRanking, writeZonePose, zoneLook,
+  claimName, findNickname, friendEntry, grantPurchase, markSeen, ownsFullGame, pickChannel,
+  readAccountWorld, readFriendSide, readNickname, readProfile, readRanking,
+  returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
+  writeFriendSide, writeRanking, writeZonePose, zoneLook,
 } from "./store";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
@@ -92,28 +89,7 @@ async function enter(account: string, character: Character, zone: ZoneId, x: num
   if (levelOf(character.xp).level < ZONES[zone].minLevel) throw new RuleViolation("too_low");
   const { roomId, channel } = await pickChannel(character.world, zone, account);
   await saveSpot(account, { zone, x, z });
-  await $global.updateUserState(account, { activity: "world" });
   return { roomId, zone, channel, x, z };
-}
-
-// Party members this close to a kill, alive and in the same channel, share its XP and its quest
-// count; the XP grows by PARTY_BONUS for every member beyond the first before it is split.
-const PARTY_SHARE_RANGE = 30;
-const PARTY_BONUS = 0.1;
-
-// The caller's party members standing near them in this room.
-async function partyNearby(account: string): Promise<string[]> {
-  const stored = await readPartyOf(account);
-  const others = stored?.party.members.filter((m) => m !== account) ?? [];
-  if (others.length === 0) return [];
-  const [me, ...rest]: (Record<string, any> & { account: string })[] = await $room.getUserStates(
-    [account, ...others], ["pose", "dead"],
-  );
-  if (!isPose(me.pose)) return [];
-  const at = me.pose;
-  return rest
-    .filter((u) => isPose(u.pose) && u.dead !== true && Math.hypot(u.pose.x - at.x, u.pose.z - at.z) <= PARTY_SHARE_RANGE)
-    .map((u) => u.account);
 }
 
 // What one hunter is paid for a blow or skill: XP, gold, items and the kinds it counts toward its
@@ -167,8 +143,7 @@ async function payHunter(account: string, roomId: string, pay: Pay): Promise<voi
 }
 
 // Pays for what a blow or skill felled. Each monster's XP, gold and drops go to whoever still here
-// dealt it the most damage, the XP shared with that hunter's party members close by; everyone here
-// who hit it at all counts it toward their quest. Answers with what the caller itself was paid.
+// dealt it the most damage; everyone here who hit it at all counts it toward their quest. Answers with what the caller itself was paid.
 async function reward(caller: string, roomId: string, result: HitResult): Promise<HitResult> {
   if (result.kills.length === 0) return result;
   const present = new Set<string>((await $room.getRoomState([])).$users);
@@ -180,7 +155,6 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
     return pay;
   };
   const levels = new Map<string, number>();
-  const parties = new Map<string, string[]>();
   for (const kill of result.kills) {
     const hunters = rankHitters(kill.hitters, present);
     const owner = hunters[0] ?? caller;
@@ -188,16 +162,12 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
       const [state] = await $room.getUserStates([owner], ["look"]);
       levels.set(owner, typeof state?.look?.level === "number" ? state.look.level : 1);
     }
-    if (!parties.has(owner)) parties.set(owner, await partyNearby(owner));
-    const party = parties.get(owner)!;
     const loot = rollLoot(kill.type);
-    const xp = xpFor(kill.type, levels.get(owner)!);
-    const share = Math.max(1, Math.round((xp * (1 + PARTY_BONUS * party.length)) / (party.length + 1)));
     const own = payOf(owner);
+    own.xp += xpFor(kill.type, levels.get(owner)!);
     own.gold += loot.gold;
     own.items.push(...loot.items);
-    for (const member of [owner, ...party]) payOf(member).xp += share;
-    for (const counted of new Set([owner, ...party, ...hunters])) payOf(counted).felled.push(kill.type);
+    for (const counted of new Set([owner, ...hunters])) payOf(counted).felled.push(kill.type);
   }
   for (const [account, pay] of pays) await payHunter(account, roomId, pay);
   const mine = pays.get(caller);
@@ -474,7 +444,6 @@ export class Server {
       const pose = (await $room.getMyState()).pose;
       if (isPose(pose)) await saveSpot(account, { zone: here.zone, x: pose.x, z: pose.z });
     }
-    await $global.updateUserState(account, { activity: "menu" });
   }
 
   // Where you are in your zone. The room carries it to everyone there; the account keeps a copy
@@ -777,91 +746,4 @@ export class Server {
     await saveSpot(account, { zone: here.zone, x: pose.x, z: pose.z });
   }
 
-  // Marks you online (and on the menu or in the world), drops party members who went quiet,
-  // and returns your party and your invites.
-  async syncParty(activity?: unknown): Promise<PartyView> {
-    const account = $sender.account;
-    const now = Date.now();
-    await markSeen(account, now);
-    if (activity === "menu" || activity === "world") await $global.updateUserState(account, { activity });
-    return withPartyLock(async () => {
-      let stored = await readPartyOf(account);
-      if (stored) {
-        let party: Party | null = stored.party;
-        for (const member of stored.party.members) {
-          if (party && member !== account && !isOnline((await $global.getUserState(member)).lastSeenAt, now)) {
-            party = leaveParty(party, member);
-          }
-        }
-        if (party !== stored.party) {
-          await writeParty(stored, party);
-          stored = party ? { id: stored.id, party } : null;
-        }
-      }
-      const invites = await readPartyInvites(account, now);
-      return {
-        party: stored && {
-          leader: stored.party.leader,
-          members: await Promise.all(stored.party.members.map((m) => partyMember(m, now))),
-        },
-        invites: await Promise.all(invites.map(async (i) => ({ account: i.from, nickname: await readNickname(i.from) }))),
-      };
-    });
-  }
-
-  async inviteToParty(target: unknown): Promise<void> {
-    const to = requireText(target);
-    const account = $sender.account;
-    const now = Date.now();
-    await withPartyLock(async () => {
-      const stored = await readPartyOf(account);
-      checkInvite(stored?.party ?? null, to, (await readFriendSide(account)).lists.friends);
-      await writePartyInvites(to, addInvite(await readPartyInvites(to, now), account, now));
-    });
-  }
-
-  async acceptPartyInvite(from: unknown): Promise<void> {
-    const inviter = requireText(from);
-    const account = $sender.account;
-    const now = Date.now();
-    await withPartyLock(async () => {
-      const invites = await readPartyInvites(account, now);
-      if (!invites.some((i) => i.from === inviter)) throw new RuleViolation("no_invite");
-      const theirs = await readPartyOf(inviter);
-      const mine = await readPartyOf(account);
-      if (!theirs || theirs.id !== mine?.id) {
-        const joined = joinParty(theirs?.party ?? null, inviter, account);
-        if (mine) await writeParty(mine, leaveParty(mine.party, account));
-        await writeParty(theirs, joined);
-      }
-      await writePartyInvites(account, invites.filter((i) => i.from !== inviter));
-    });
-  }
-
-  async declinePartyInvite(from: unknown): Promise<void> {
-    const inviter = requireText(from);
-    const account = $sender.account;
-    await withPartyLock(async () => {
-      const invites = await readPartyInvites(account, Date.now());
-      await writePartyInvites(account, invites.filter((i) => i.from !== inviter));
-    });
-  }
-
-  async leaveParty(): Promise<void> {
-    const account = $sender.account;
-    await withPartyLock(async () => {
-      const mine = await readPartyOf(account);
-      if (mine) await writeParty(mine, leaveParty(mine.party, account));
-    });
-  }
-
-  async kickFromParty(target: unknown): Promise<void> {
-    const who = requireText(target);
-    const account = $sender.account;
-    await withPartyLock(async () => {
-      const mine = await readPartyOf(account);
-      if (!mine) throw new RuleViolation("unavailable");
-      await writeParty(mine, kickFromParty(mine.party, account, who));
-    });
-  }
 }

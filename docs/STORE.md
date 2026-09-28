@@ -1,7 +1,7 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-09-22): 직업 6개(무료 2), 전직 12종, 사냥터 4곳 + 보스, 퀘스트 10개, 채널당 10명, 정식판 500 VX.
+숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 10개, 채널당 6명, 정식판 500 VX.
 
 ## 제목
 
@@ -11,10 +11,10 @@ Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 
 ## 짧은 소개 (카드·미리보기용)
 
 한국어:
-> 친구와 파티를 맺고 숲의 몬스터를 사냥하세요. 레벨을 올리고, 장비를 모으고, Lv30에 전직해 버섯왕에게 도전하는 웹 MMORPG.
+> 친구와 함께 숲의 몬스터를 사냥하세요. 레벨을 올리고, 장비를 모으고, Lv10에 전직해 새 스킬을 익히고 버섯왕에게 도전하는 웹 MMORPG.
 
 English:
-> Team up with friends and hunt the forest's monsters. Level up, gather gear, advance your class at Lv 30 and take on the Mushroom King in this browser MMORPG.
+> Hunt the forest's monsters with your friends. Level up, gather gear, advance your class at Lv 10 for new skills and take on the Mushroom King in this browser MMORPG.
 
 ## 설명 (Description)
 
@@ -25,11 +25,11 @@ English:
 마을 사람들의 부탁을 받아 숲으로 나가 몬스터를 사냥하고, 레벨을 올리고, 더 깊은 숲으로 나아가세요.
 
 ■ 6가지 직업
-전사, 궁수, 마법사, 성직자, 도적, 무도가. 직업마다 무기와 공격 방식, 스킬 3개가 다릅니다.
-Lv30이 되면 직업마다 두 갈래 중 하나로 전직합니다. (총 12종)
+전사, 궁수, 마법사, 성직자, 도적, 무도가. 직업마다 무기와 공격 방식, 첫 스킬이 다릅니다.
+Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 2개를 익힙니다. (총 12종)
 
 ■ 함께하는 사냥
-한 채널에 최대 10명. 파티를 맺으면 가까이 있는 파티원과 경험치를 나누고, 인원이 많을수록 보너스가 붙습니다.
+한 채널에 최대 6명.
 몬스터의 보상은 가장 많이 싸운 사람에게, 퀘스트 카운트는 함께 때린 모두에게 올라갑니다.
 채팅으로 대화하고, 친구를 맺고, 랭킹에서 겨뤄 보세요.
 
@@ -57,11 +57,11 @@ Your adventure begins in Greenwood Village.
 Take on the villagers' requests, head into the forest to hunt monsters, level up and push deeper into the woods.
 
 ■ Six classes
-Warrior, Ranger, Wizard, Cleric, Rogue and Monk, each with its own weapon, fighting style and three skills.
-At Lv 30 each class advances down one of two paths (12 in all).
+Warrior, Ranger, Wizard, Cleric, Rogue and Monk, each with its own weapon, fighting style and first skill.
+At Lv 10 each class advances down one of two paths and learns that path's two skills (12 paths in all).
 
 ■ Hunt together
-Up to 10 players per channel. Party members nearby share XP, with a bonus for every extra member.
+Up to 6 players per channel.
 A monster's rewards go to whoever fought it hardest, and everyone who hit it counts it toward their quest.
 Chat, make friends and climb the rankings.
 

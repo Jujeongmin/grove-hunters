@@ -122,30 +122,3 @@ describe("quests", () => {
   });
 });
 
-describe("party hunting", () => {
-  test("a kill's XP is shared with party members standing close, with a bonus", async (server) => {
-    await hunter(server, "test-a", 1);
-    await hunter(server, "test-b", 1);
-    await server.syncFriends();
-    server.connect({ account: "test-a" });
-    await server.syncFriends();
-    await server.requestFriend("성장b");
-    server.connect({ account: "test-b" });
-    await server.acceptFriend("test-a");
-    server.connect({ account: "test-a" });
-    await server.inviteToParty("test-b");
-    server.connect({ account: "test-b" });
-    await server.acceptPartyInvite("test-a");
-
-    const forest = "rpg-w1-forest1-1";
-    server.connect({ account: "test-a", roomId: forest });
-    await ring("rat", 1);
-    const result = await server.strike("m0");
-    // Two in the party: 10% more, split in two.
-    expect(result.xp).toBe(Math.round((MONSTERS.rat.xp * 1.1) / 2));
-    expect((await server.getAccount()).xp).toBe(result.xp);
-    server.connect({ account: "test-b", roomId: forest });
-    expect((await server.getAccount()).xp).toBe(result.xp);
-    expect((await server.getBag()).quest.count).toBe(0);
-  });
-});

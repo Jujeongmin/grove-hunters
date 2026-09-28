@@ -748,8 +748,8 @@ export class WorldView {
     return skill.heal > 0 ? hurt || hits : hits;
   }
 
-  // What the server paid you: for your kills, and for ones you dealt the most damage to or your
-  // party took (anyone's kill you hit counts toward your quest, which pays nothing here).
+  // What the server paid you: for the kills you dealt the most damage to (anyone's kill you hit
+  // counts toward your quest, which pays nothing here).
   private gained(result: Payout): void {
     const now = performance.now();
     if (result.xp > 0) {

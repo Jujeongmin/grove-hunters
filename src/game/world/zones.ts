@@ -105,9 +105,13 @@ export const MENU_MAP = [
 
 export const ZONE_IDS = Object.keys(ZONES) as ZoneId[];
 export const START_ZONE: ZoneId = "village";
-export const CHANNEL_CAPACITY = 10;
-// Channels are numbered from 1; this many at most per zone and server.
-export const MAX_CHANNELS = 50;
+// Players in one channel (one Verse8 room). Everyone in a room hears everyone else's every move,
+// so the room is kept small: this is what holds the lag down.
+export const CHANNEL_CAPACITY = 6;
+// Channels are numbered from 1; this many at most per zone and server, so a zone of one server holds
+// CHANNEL_CAPACITY x MAX_CHANNELS at once. Past that the zone says it is full rather than pile more
+// onto the shared Verse8 servers.
+export const MAX_CHANNELS = 10;
 // Standing this close to a portal's centre takes you through.
 export const PORTAL_RADIUS = 1.4;
 

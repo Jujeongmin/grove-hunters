@@ -12,7 +12,6 @@ import { ModelGallery, galleryEnabled } from "./ui/ModelGallery";
 import { WorldScreen } from "./ui/WorldScreen";
 import { useAccount } from "./ui/useAccount";
 import { useFriends } from "./ui/useFriends";
-import { useParty } from "./ui/useParty";
 import { usePurchase } from "./ui/usePurchase";
 import { useUiScale } from "./ui/useUiScale";
 import { t, useLang } from "./ui/lang";
@@ -34,7 +33,6 @@ export default function App() {
   const { view, failed, pickWorld, checkName, create, select, refresh } = useAccount(transport);
   const purchase = usePurchase(transport, refresh);
   const friends = useFriends(transport);
-  const party = useParty(transport, inWorld ? "world" : "menu");
   const world = useMemo(() => (transport ? new WorldClient(transport) : null), [transport]);
 
   // The bar's set-up follows the account.
@@ -87,8 +85,6 @@ export default function App() {
         offer={purchase.offer}
         friends={friends.client}
         friendsView={friends.view}
-        party={party.client}
-        partyView={party.view}
         onStart={() => setInWorld(true)}
         returning={returning && !!view}
       />

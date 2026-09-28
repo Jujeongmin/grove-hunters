@@ -3,7 +3,6 @@ import { t } from "./lang";
 import { CHARACTERS_PER_WORLD } from "../game/account/characters";
 import type { FriendsView } from "../game/account/friends";
 import type { AccountView } from "../game/account/nickname";
-import type { PartyView } from "../game/account/party";
 import type { RankDetail, RankingView } from "../game/account/ranking";
 import { readWorld } from "../game/account/worlds";
 import { playMusic } from "../game/audio/music";
@@ -14,7 +13,6 @@ import { MenuScene } from "../game/render/MenuScene";
 import { nicknameProblem } from "../net/account";
 import { loginState } from "../net/login";
 import type { FriendsClient } from "../net/friends";
-import { partyLineup, partyProblem, type PartyClient } from "../net/party";
 import { GAME_TITLE } from "./brand";
 import { ClassPanel } from "./ClassPanel";
 import { UpgradePanel } from "./UpgradePanel";
@@ -46,8 +44,6 @@ interface LobbyProps {
   offer: Offer;
   friends: FriendsClient | null;
   friendsView: FriendsView | null;
-  party: PartyClient | null;
-  partyView: PartyView | null;
   // Into the world with the active character.
   onStart: () => void;
   // Back from the world: straight to your characters, not the title.
@@ -61,7 +57,7 @@ type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
   account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, loadRanking, loadRankDetail, onBuy, purchase, offer,
-  friends, friendsView, party, partyView, onStart, returning,
+  friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
   const scene = useRef<MenuScene | null>(null);
@@ -71,7 +67,6 @@ export function Lobby({
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const [inviteProblem, setInviteProblem] = useState<string | null>(null);
   // The purchase panel: what the full game opens, and the button that buys it. Once bought, it has
   // done its work and steps aside.
   const [upgrade, setUpgrade] = useState(false);
@@ -111,7 +106,7 @@ export function Lobby({
   // The row of classes while picking one (and behind the title for a newcomer); otherwise the
   // character in the square.
   useEffect(() => {
-    scene.current?.setMode(step === "class" || (step === "title" && !active) ? "lineup" : "party");
+    scene.current?.setMode(step === "class" || (step === "title" && !active) ? "lineup" : "hero");
     scene.current?.setPicked(step === "class" ? draftClass : null);
   }, [step, draftClass, active, loading]);
   useEffect(() => {
@@ -119,21 +114,8 @@ export function Lobby({
   }, [step]);
   useEffect(() => {
     const me = { account, name: making ? draftName || t("lobby.newCharacter") : active?.name ?? "", costume: shownCostume, playerClass: shownClass };
-    scene.current?.setParty(step === "characters" && !active ? [] : partyLineup(me, making ? null : partyView));
-  }, [account, making, draftName, active, shownCostume, shownClass, partyView, step, loading]);
-
-  const invite = partyView?.invites[0] ?? null;
-  const answer = async (accept: boolean) => {
-    if (!party || !invite) return;
-    setInviteProblem(null);
-    try {
-      if (accept) await party.accept(invite.account);
-      else await party.decline(invite.account);
-    } catch (error) {
-      setInviteProblem(partyProblem(error));
-      await party.decline(invite.account).catch(() => undefined);
-    }
-  };
+    scene.current?.setHeroes(step === "characters" && !active ? [] : [{ name: me.name, costume: me.costume, playerClass: me.playerClass, isYou: true }]);
+  }, [account, making, draftName, active, shownCostume, shownClass, step, loading]);
 
   // Tap anywhere on the title to go on: the server comes first.
   const tapTitle = () => {
@@ -220,15 +202,6 @@ export function Lobby({
             <button type="button" className="brush-button small" onClick={() => setSheet("settings")}>{t("menu.settings")}</button>
           </div>
         )}
-
-        {invite && (
-          <div className="party-invite band">
-            <span>{t("lobby.invited", { name: invite.nickname ?? invite.account })}</span>
-            <button type="button" className="text-button" onClick={() => void answer(true)}>{t("common.accept")}</button>
-            <button type="button" className="text-button" onClick={() => void answer(false)}>{t("common.decline")}</button>
-          </div>
-        )}
-        {!invite && inviteProblem && <div className="party-invite band">{inviteProblem}</div>}
 
         {step === "world" && (
           <WorldPicker
@@ -323,9 +296,6 @@ export function Lobby({
             onClose={() => setFriendsOpen(false)}
             client={friends}
             view={friendsView}
-            account={account}
-            party={party}
-            partyView={partyView}
             hasCharacter={!!active}
           />
         )}

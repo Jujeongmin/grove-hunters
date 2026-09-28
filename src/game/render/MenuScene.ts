@@ -17,7 +17,7 @@ const MENU_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ...MONSTER_MOD
 
 // Everything stands in the village square, facing the camera (yaw π faces +z).
 const FACING = Math.PI;
-// You and your party, you in front.
+// Your character, in front.
 const SLOTS = [
   { x: 26.6, z: 17.4, yaw: FACING + 0.15 },
   { x: 25.1, z: 16.3, yaw: FACING + 0.3 },
@@ -32,9 +32,9 @@ const LINEUP_X = 26.2;
 const STEP_OUT = 0.9;
 const LABEL_HEIGHT = 1.95;
 
-export interface PartyMember { name: string; costume: Costume; playerClass: PlayerClass; isYou: boolean }
+export interface MenuHero { name: string; costume: Costume; playerClass: PlayerClass; isYou: boolean }
 
-type Mode = "party" | "lineup";
+type Mode = "hero" | "lineup";
 
 const CAMERA_HOME = new THREE.Vector3(26.4, 1.55, 22.6);
 const CAMERA_LOOK = new THREE.Vector3(26.2, 0.95, 16.4);
@@ -50,7 +50,7 @@ const ENTER_SECONDS = 0.7;
 // A slime hops across the back of the square now and then.
 const SLIME_PATH = { fromX: 8, toX: 46, z: 10.5, speed: 1.2, restSeconds: 7 };
 
-// The 3D backdrop of the menus: the village square, and either your party or the six classes to
+// The 3D backdrop of the menus: the village square, and either your character or the six classes to
 // choose from.
 export class MenuScene {
   private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -62,9 +62,9 @@ export class MenuScene {
   private resizeFrame = 0;
   private library: ModelLibrary | null = null;
   private mode: Mode = "lineup";
-  // One actor per party slot, rebuilt when the member in that slot changes.
+  // One actor per slot, rebuilt when the character in that slot changes.
   private readonly slots: ({ key: string; actor: PlayerActor; label: THREE.Sprite } | null)[] = SLOTS.map(() => null);
-  private party: PartyMember[] = [];
+  private heroes: MenuHero[] = [];
   private readonly lineup = new Map<PlayerClass, { actor: PlayerActor; label: THREE.Sprite; step: number }>();
   private picked: PlayerClass | null = null;
   private slime: MonsterActor | null = null;
@@ -77,7 +77,7 @@ export class MenuScene {
   // 0 on the menu, 1 in the wardrobe; eased toward focusTarget.
   private focus = 0;
   private focusTarget = 0;
-  // 0 showing the party, 1 showing the row of classes; eased like focus.
+  // 0 showing your character, 1 showing the row of classes; eased like focus.
   private rowView = 1;
   // How far you have turned your hero by dragging, in the wardrobe.
   private spinYaw = 0;
@@ -108,14 +108,14 @@ export class MenuScene {
     buildLevelScene(this.scene, library, parseLevel(MENU_MAP, TILE_SIZE), this.renderer);
     this.library = library;
     this.buildLineup();
-    this.placeParty();
+    this.placeHeroes();
     this.slime = new MonsterActor("menu-slime", library.instance(GREEN_BLOB.model), library.get(GREEN_BLOB.model).animations, GREEN_BLOB.look);
     this.scene.add(this.slime.object);
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
   }
 
-  // The six classes in a row (for a new character), or you and your party.
+  // The six classes in a row (for a new character), or your character.
   setMode(mode: Mode): void {
     this.mode = mode;
   }
@@ -144,10 +144,10 @@ export class MenuScene {
     return best?.c ?? null;
   }
 
-  // Shows you and your party; members beyond the slots are not drawn.
-  setParty(members: PartyMember[]): void {
-    this.party = members;
-    this.placeParty();
+  // Shows your character; any beyond the slots are not drawn.
+  setHeroes(heroes: MenuHero[]): void {
+    this.heroes = heroes;
+    this.placeHeroes();
   }
 
   // The wardrobe view: close on your hero, the rest of the squad out of sight.
@@ -188,11 +188,11 @@ export class MenuScene {
     });
   }
 
-  private placeParty(): void {
+  private placeHeroes(): void {
     const library = this.library;
     if (!library) return;
     SLOTS.forEach((spot, i) => {
-      const member = this.party[i];
+      const member = this.heroes[i];
       const key = member ? `${member.name}|${member.playerClass}|${member.costume.id}` : "";
       const current = this.slots[i];
       if (current?.key === key) return;

@@ -1,19 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { t } from "./lang";
 import type { FriendEntry, FriendsView } from "../game/account/friends";
-import { PARTY_MAX, type PartyView } from "../game/account/party";
 import { friendProblem, sortFriends, type FriendsClient } from "../net/friends";
-import { partyProblem, type PartyClient } from "../net/party";
 
 interface FriendsPanelProps {
   onClose: () => void;
   // Null while offline: friends live on the game server.
   client: FriendsClient | null;
   view: FriendsView | null;
-  account: string;
-  party: PartyClient | null;
-  partyView: PartyView | null;
-  // Friends find each other by nickname, so adding one needs yours first.
   // Friends find you by your character's name, so adding them waits for a character.
   hasCharacter: boolean;
 }
@@ -24,7 +18,7 @@ function nameOf(entry: FriendEntry): string {
 
 // Right-hand side drawer: add a friend by nickname, answer requests, see who is online.
 export function FriendsPanel({
-  onClose, client, view, account, party, partyView, hasCharacter,
+  onClose, client, view, hasCharacter,
 }: FriendsPanelProps) {
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
@@ -39,7 +33,7 @@ export function FriendsPanel({
     try {
       setNotice(await action());
     } catch (error) {
-      setNotice(key.startsWith("party:") ? partyProblem(error) : friendProblem(error));
+      setNotice(friendProblem(error));
     } finally {
       setBusy(null);
     }
@@ -70,17 +64,6 @@ export function FriendsPanel({
 
   const friends = view ? sortFriends(view.friends) : [];
   const onlineCount = friends.filter((f) => f.online).length;
-  const members = partyView?.party?.members ?? [];
-  const leading = partyView?.party?.leader === account;
-  const canInvite = (entry: FriendEntry) =>
-    !!party && entry.online && members.length < PARTY_MAX && !members.some((m) => m.account === entry.account);
-
-  const inviteFriend = (entry: FriendEntry) =>
-    void run(`party:${entry.account}`, async () => {
-      await party!.invite(entry.account);
-      return t("party.invited", { name: nameOf(entry) });
-    });
-
   return (
     <aside className="friends-panel">
       <header>
@@ -101,37 +84,6 @@ export function FriendsPanel({
 
       {!client && <p className="note">{t("friends.needServer")}</p>}
       {client && !view && <p className="note">{t("friends.loading")}</p>}
-
-      {partyView?.party && (
-        <>
-          <h3>{t("party.title", { n: members.length, max: PARTY_MAX })}</h3>
-          <ul className="friend-list">
-            {members.map((m) => (
-              <li key={m.account} className={m.online ? "online" : "offline"}>
-                <span className="presence" />
-                <span className="friend-name">
-                  {m.nickname ?? m.account}
-                  {m.account === partyView.party!.leader && <span className="party-leader">{t("party.leader")}</span>}
-                </span>
-                {leading && m.account !== account && (
-                  <button type="button" className="text-button" disabled={busy !== null}
-                    onClick={() => void run(`party:${m.account}`, async () => {
-                      await party!.kick(m.account);
-                      return null;
-                    })}>{t("party.kick")}</button>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div className="party-actions">
-            <button type="button" className="text-button" disabled={busy !== null}
-              onClick={() => void run("party:leave", async () => {
-                await party!.leave();
-                return t("party.left");
-              })}>{t("party.leave")}</button>
-          </div>
-        </>
-      )}
 
       {view && view.incoming.length > 0 && (
         <>
@@ -165,11 +117,6 @@ export function FriendsPanel({
               <li key={entry.account} className={entry.online ? "online" : "offline"}>
                 <span className="presence" aria-label={t(entry.online ? "friends.isOnline" : "friends.isOffline")} />
                 <span className="friend-name">{nameOf(entry)}</span>
-                {canInvite(entry) && (
-                  <button type="button" className="text-button" disabled={busy !== null} onClick={() => inviteFriend(entry)}>
-                    {t("friends.invite")}
-                  </button>
-                )}
                 <button type="button" className="text-button" disabled={busy !== null} onClick={() => remove(entry)}>
                   {t(confirming === entry.account ? "common.removeSure" : "common.remove")}
                 </button>
