@@ -14,7 +14,7 @@ export interface MonsterHit { monsterId: string; account: string; damage: number
 export const LEASH = 20;
 
 // One step of every monster in a room: the fallen come back when their time is up, the rest chase
-// the nearest player they can see, walk round each other, the players and the forest, and swing
+// whoever hit them (or else the nearest player they can see), walk round each other, the players and the forest, and swing
 // when close enough. Returns the blows landed; the caller takes them off the players.
 export function stepMonsters(
   monsters: Record<string, MonsterState>, prey: readonly Prey[], layout: LevelLayout, dt: number, now: number,
@@ -35,9 +35,12 @@ export function stepMonsters(
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
     let target: { prey: Prey; d: number } | null = null;
     if (fromHome <= LEASH) {
-      for (const p of prey) {
+      // Whoever hit it is chased from any distance (an archer out of its sight included); otherwise
+      // the nearest player it can see. Past the leash it gives up on both.
+      const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
+      for (const p of provoked.length > 0 ? provoked : prey) {
         const d = Math.hypot(p.x - m.x, p.z - m.z);
-        if (d <= spec.aggro && (!target || d < target.d)) target = { prey: p, d };
+        if ((provoked.length > 0 || d <= spec.aggro) && (!target || d < target.d)) target = { prey: p, d };
       }
     }
     const goal = target ? target.prey : { x: m.homeX, z: m.homeZ };

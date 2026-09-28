@@ -41,7 +41,7 @@ const third = { ...base, level: THIRD_SKILL_LEVEL };
 // Each class's own skill, on key 1 from level 1.
 export const CLASS_SKILLS: Record<PlayerClass, Skill> = {
   warrior: { ...base, level: 1, cooldownMs: 8000, damage: 55, reach: 2.8, arc: all },
-  ranger: { ...base, level: 1, cooldownMs: 8000, damage: 45, reach: 16, arc: deg(12) },
+  ranger: { ...base, level: 1, cooldownMs: 8000, damage: 45, reach: 11, arc: deg(12) },
   wizard: { ...base, level: 1, cooldownMs: 10000, damage: 50, reach: 4.5, arc: all },
   cleric: { ...base, level: 1, cooldownMs: 12000, damage: 0, reach: 6, arc: all, heal: 35 },
   rogue: { ...base, level: 1, cooldownMs: 7000, damage: 90, reach: 3, arc: deg(90), maxTargets: 1 },
@@ -60,12 +60,12 @@ export const JOB_SKILLS: Record<JobId, readonly [Skill, Skill]> = {
     { ...third, cooldownMs: 22000, damage: 30, reach: 6, arc: all, heal: 60 },
   ],
   sniper: [
-    { ...second, cooldownMs: 6000, damage: 80, reach: 14, arc: deg(30), maxTargets: 1 },
+    { ...second, cooldownMs: 6000, damage: 80, reach: 11, arc: deg(30), maxTargets: 1 },
     { ...third, cooldownMs: 18000, damage: 90, reach: 7, arc: all },
   ],
   tracker: [
-    { ...second, cooldownMs: 7000, damage: 40, reach: 14, arc: deg(20), maxTargets: 1, stunMs: 2000 },
-    { ...third, cooldownMs: 14000, damage: 65, reach: 12, arc: deg(60) },
+    { ...second, cooldownMs: 7000, damage: 40, reach: 11, arc: deg(20), maxTargets: 1, stunMs: 2000 },
+    { ...third, cooldownMs: 14000, damage: 65, reach: 10, arc: deg(60) },
   ],
   elementalist: [
     { ...second, cooldownMs: 8000, damage: 60, reach: 11, arc: deg(20), maxTargets: 1, stunMs: 2000 },

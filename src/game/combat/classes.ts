@@ -28,7 +28,7 @@ const deg = (d: number) => (d * Math.PI) / 180;
 
 export const WEAPONS: Record<PlayerClass, Weapon> = {
   warrior: { damage: 40, intervalMs: 600, reach: 2.6, arc: deg(110), block: 0.7, ranged: false },
-  ranger: { damage: 26, intervalMs: 750, reach: 12, arc: deg(18), block: 0.3, ranged: true },
+  ranger: { damage: 26, intervalMs: 750, reach: 9, arc: deg(18), block: 0.3, ranged: true },
   wizard: { damage: 32, intervalMs: 950, reach: 9, arc: deg(24), block: 0.3, ranged: true },
   cleric: { damage: 24, intervalMs: 700, reach: 2.8, arc: deg(110), block: 0.5, ranged: false },
   rogue: { damage: 30, intervalMs: 400, reach: 2.2, arc: deg(90), block: 0.4, ranged: false },

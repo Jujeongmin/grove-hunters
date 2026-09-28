@@ -39,6 +39,15 @@ describe("monsters", () => {
     expect(far.m.x).toBe(home.x);
   });
 
+  it("chase whoever hit them, even from out of sight, instead of going home to heal", () => {
+    // Shot from 13 metres, past a rat's sight, it comes for the archer and keeps its wounds.
+    const archer = { account: "a", x: home.x, z: home.z + 13 };
+    const monsters = { m: rat(home.x, home.z, { hp: MONSTERS.rat.hp - 30, hitters: { a: 30 } }) };
+    for (let t = 0; t < 4; t++) stepMonsters(monsters, [archer, { account: "b", x: home.x + 30, z: home.z }], layout, 0.5, 1000 + t * 500);
+    expect(monsters.m.z).toBeGreaterThan(home.z + 2);
+    expect(monsters.m.hp).toBe(MONSTERS.rat.hp - 30);
+  });
+
   it("give up past the leash and go home", () => {
     const monsters = { m: rat(home.x, home.z, { homeX: home.x, homeZ: home.z - LEASH - 2, hp: 5 }) };
     stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z + 1 }], layout, 0.5, 1000);
