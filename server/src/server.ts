@@ -36,6 +36,8 @@ import {
 } from "./store";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
+import type { GroveView } from "../../src/game/world/grove";
+import { countGroveKills, flushRoom, markHunter, viewOf } from "./grove";
 import {
   TUTORIAL, TUTORIAL_GOLD, TUTORIAL_POTIONS, readTutorial, type TutorialStep,
 } from "../../src/game/account/tutorial";
@@ -159,6 +161,9 @@ async function payHunter(account: string, roomId: string, pay: Pay): Promise<voi
 // dealt it the most damage; everyone here who hit it at all counts it toward their quest. Answers with what the caller itself was paid.
 async function reward(caller: string, roomId: string, result: HitResult): Promise<HitResult> {
   if (result.kills.length === 0) return result;
+  // Every kill cleanses the server's grove (added to its record every few seconds; see grove.ts).
+  const here = readChannelRoom(roomId);
+  await countGroveKills(roomId, result.kills.length);
   const present = new Set<string>((await $room.getRoomState([])).$users);
   present.add(caller);
   const pays = new Map<string, Pay>();
@@ -182,6 +187,7 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
     own.items.push(...loot.items);
     for (const counted of new Set([owner, ...hunters])) payOf(counted).felled.push(kill.type);
   }
+  if (here) for (const account of pays.keys()) await markHunter(account, here.world, Date.now());
   for (const [account, pay] of pays) await payHunter(account, roomId, pay);
   const mine = pays.get(caller);
   return { ...result, xp: mine?.xp ?? 0, gold: mine?.gold ?? 0, items: mine?.items ?? [] };
@@ -538,6 +544,11 @@ export class Server {
     return reward($sender.account, roomId, result);
   }
 
+  // The server's grove this week and its village (the grove panel, and how the world looks).
+  async grove(): Promise<GroveView> {
+    return viewOf((await readAccountWorld($sender.account)).id, Date.now());
+  }
+
   // Your gold, and your active character's bag and gear.
   async getBag(): Promise<BagView> {
     return bagView(await playing($sender.account));
@@ -836,6 +847,7 @@ export class Server {
     if (!here || !hasMonsters(here.zone)) return;
     const fell = await withRoomLock(roomId, () => tickRoom(here.zone, delta, Date.now()));
     for (const account of fell) await fallen(account, roomId);
+    await flushRoom(here.world, here.zone, roomId, delta, Date.now());
   }
 
   // Verse8 calls this when someone leaves a room for good (after the reconnect grace period):

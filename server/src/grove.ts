@@ -1,0 +1,120 @@
+import {
+  FLUSH_MS, addKills, groveView, markHunted, openSite, readGrove, readUserGrove, readVillage, weekOf,
+  type GroveRecord, type GroveView, type VillageRecord,
+} from "../../src/game/world/grove";
+import { GROVE_GUARDIAN_ZONE, MONSTERS, type MonsterState } from "../../src/game/world/monsters";
+import { zoneLayout, type ZoneId } from "../../src/game/world/zones";
+import { withRoomLock } from "./hunt";
+
+// A server's grove and village records (one item each in these collections), and the room side of
+// the grove: kills counted in the room and added to the record every FLUSH_MS of ticks.
+const GROVE_COLLECTION = "grove";
+const VILLAGE_COLLECTION = "village";
+// Perks are read on every kill; the village is kept this long between reads (a write refreshes it).
+const VILLAGE_CACHE_MS = 30_000;
+
+export function withGroveLock<T>(world: string, fn: () => Promise<T>): Promise<T> {
+  return $lock(`grove-${world}`, fn);
+}
+
+async function readItem(collection: string, world: string): Promise<{ id: string | null; raw: unknown }> {
+  const [item] = await $global.getCollectionItems(collection, { filters: [{ field: "world", operator: "==", value: world }], limit: 1 });
+  return { id: (item as { __id?: string } | undefined)?.__id ?? null, raw: item ?? null };
+}
+
+async function writeItem(collection: string, world: string, id: string | null, value: object): Promise<void> {
+  if (id) await $global.updateCollectionItem(collection, { __id: id, world, ...value });
+  else await $global.addCollectionItem(collection, { world, ...value });
+}
+
+export async function readGroveRecord(world: string): Promise<{ id: string | null; record: GroveRecord }> {
+  const { id, raw } = await readItem(GROVE_COLLECTION, world);
+  return { id, record: readGrove(raw) };
+}
+
+export async function readVillageRecord(world: string): Promise<{ id: string | null; village: VillageRecord }> {
+  const { id, raw } = await readItem(VILLAGE_COLLECTION, world);
+  return { id, village: readVillage(raw) };
+}
+
+const villageCache = new Map<string, { at: number; village: VillageRecord }>();
+
+export async function writeVillageRecord(world: string, id: string | null, village: VillageRecord): Promise<void> {
+  await writeItem(VILLAGE_COLLECTION, world, id, village);
+  villageCache.set(world, { at: Date.now(), village });
+}
+
+export async function villageOf(world: string): Promise<VillageRecord> {
+  const cached = villageCache.get(world);
+  if (cached && Date.now() - cached.at < VILLAGE_CACHE_MS) return cached.village;
+  const { village } = await readVillageRecord(world);
+  villageCache.set(world, { at: Date.now(), village });
+  return village;
+}
+
+export async function viewOf(world: string, now: number): Promise<GroveView> {
+  const [{ record }, { village }] = await Promise.all([readGroveRecord(world), readVillageRecord(world)]);
+  return groveView(record, village, now);
+}
+
+// Kills felled in a room, counted there until the next flush.
+export async function countGroveKills(roomId: string, n: number): Promise<void> {
+  if (n <= 0) return;
+  await withRoomLock(roomId, async () => {
+    const { groveKills } = await $room.getRoomState(["groveKills"]);
+    await $room.updateRoomState({ groveKills: (typeof groveKills === "number" ? groveKills : 0) + n });
+  });
+}
+
+// Marks an account as having hunted on this server this week (written once a week).
+export async function markHunter(account: string, world: string, now: number): Promise<void> {
+  const all = (await $global.getUserState(account)).grove;
+  const mine = readUserGrove(all && typeof all === "object" ? (all as Record<string, unknown>)[world] : null);
+  const next = markHunted(mine, weekOf(now));
+  if (next) await $global.updateUserState(account, { grove: { ...(all ?? {}), [world]: next } });
+}
+
+// Every tick: once FLUSH_MS of ticks have passed, the room's kills go into the server's record (which
+// may open a site), and the first field calls up the guardian in a week the grove was cleansed.
+// How much of each room's ticks has passed since it last flushed. Kept in memory, not in the room:
+// writing it every tick would be a room write five times a second. A restart only delays a flush.
+const sinceFlush = new Map<string, number>();
+
+export async function flushRoom(world: string, zone: ZoneId, roomId: string, delta: number, now: number): Promise<void> {
+  const since = (sinceFlush.get(roomId) ?? 0) + delta;
+  sinceFlush.set(roomId, since);
+  if (since < FLUSH_MS) return;
+  sinceFlush.set(roomId, 0);
+  const state = await $room.getRoomState(["groveKills", "guardianWeek"]);
+  const kills = typeof state.groveKills === "number" ? state.groveKills : 0;
+  const record = await withGroveLock(world, async () => {
+    const { id, record } = await readGroveRecord(world);
+    const added = addKills(record, kills, now);
+    if (kills > 0 || added.record.week !== record.week) await writeItem(GROVE_COLLECTION, world, id, added.record);
+    if (added.opened) {
+      const { id: villageId, village } = await readVillageRecord(world);
+      await writeVillageRecord(world, villageId, openSite(village));
+    }
+    return added.record;
+  });
+  await withRoomLock(roomId, async () => {
+    const latest = (await $room.getRoomState(["groveKills"])).groveKills;
+    await $room.updateRoomState({ groveKills: Math.max(0, (typeof latest === "number" ? latest : 0) - kills) });
+    if (zone === GROVE_GUARDIAN_ZONE && record.paid >= 3 && state.guardianWeek !== record.week) {
+      const monsters = ((await $room.getRoomState(["monsters"])).monsters ?? {}) as Record<string, MonsterState>;
+      const at = guardianSpot();
+      monsters.guardian = {
+        type: "grove_guardian", x: at.x, z: at.z, yaw: 0, hp: MONSTERS.grove_guardian.hp, alive: true, stunnedUntil: 0,
+        attackReadyAt: 0, respawnAt: 0, homeX: at.x, homeZ: at.z,
+      };
+      await $room.updateRoomState({ monsters, guardianWeek: record.week });
+    }
+  });
+}
+
+// Where the guardian stands: the monster spot nearest the middle of the first field.
+function guardianSpot(): { x: number; z: number } {
+  const layout = zoneLayout(GROVE_GUARDIAN_ZONE);
+  const mid = { x: (layout.cols * layout.tileSize) / 2, z: (layout.rows * layout.tileSize) / 2 };
+  return [...layout.zombieSpawns].sort((a, b) => Math.hypot(a.x - mid.x, a.z - mid.z) - Math.hypot(b.x - mid.x, b.z - mid.z))[0];
+}

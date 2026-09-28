@@ -563,7 +563,7 @@ const VILLAGE_SITES: House[] = BUILDINGS.map((b) => ({ model: b.model, at: b.at,
 **Interfaces — Produces (server/src/grove.ts):**
 - `withGroveLock<T>(world, fn)`, `readGroveRecord(world): Promise<{ id: string | null; record: GroveRecord }>`, `writeGroveRecord(world, id, record)`
 - `readVillageRecord(world)`, `writeVillageRecord(world, id, village)`, `villageOf(world): Promise<VillageRecord>` (30초 캐시, 쓰기 때 갱신)
-- `countKills(roomId, n)` (방 잠금 안에서 `groveKills += n`)
+- `countGroveKills(roomId, n)` (방 잠금 안에서 `groveKills += n`)
 - `flushRoom(world, zone, roomId, delta, now)` — `$roomTick`이 부름
 - `markHunter(account, world, now)`
 
@@ -703,7 +703,7 @@ export async function viewOf(world: string, now: number): Promise<GroveView> {
 }
 
 // Kills felled in a room, counted there until the next flush.
-export async function countKills(roomId: string, n: number): Promise<void> {
+export async function countGroveKills(roomId: string, n: number): Promise<void> {
   if (n <= 0) return;
   await withRoomLock(roomId, async () => {
     const { groveKills } = await $room.getRoomState(["groveKills"]);
@@ -766,11 +766,11 @@ function guardianSpot(): { x: number; z: number } {
 ```
 
 - [ ] **Step 4: `server.ts` 연결**
-  - import: `import { countKills, flushRoom, markHunter, viewOf } from "./grove";`
+  - import: `import { countGroveKills, flushRoom, markHunter, viewOf } from "./grove";`
   - `reward()`: `if (result.kills.length === 0) return result;` 다음 줄에
     ```ts
     const here = readChannelRoom(roomId);
-    await countKills(roomId, result.kills.length);
+    await countGroveKills(roomId, result.kills.length);
     ```
     끝의 `for (const [account, pay] of pays) await payHunter(account, roomId, pay);` 앞에
     ```ts
