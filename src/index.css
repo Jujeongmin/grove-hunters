@@ -402,22 +402,19 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .map-key.npc { background: #9fd6ff; }
 .map-key.me { background: #fff; }
 /* The one thing on sale, shown where the free game stops: at a locked portal, the moment the free
-   fields run out, and from the menu. The same ragged brush shape as the rest of the UI. */
+   fields run out, and from the menu. */
 .upgrade-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: rgba(4, 3, 2, 0.72); }
 .upgrade-sheet {
   position: relative; isolation: isolate; box-sizing: border-box;
-  /* The brush shape frays at its edges, so the text keeps well inside the width it is stretched to. */
   width: min(660px, 94%); max-height: 94%; overflow-y: auto;
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px clamp(26px, 9%, 60px) 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 24px 10px;
   text-align: center;
 }
-/* See the note by .map-sheet::before for why the mask is drawn larger than the panel. */
+/* A plain black sheet, like the maps'. */
 .upgrade-sheet::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
-  background: radial-gradient(ellipse at 50% 40%, rgba(44, 29, 17, 0.97), rgba(8, 6, 5, 0.97) 70%);
-  -webkit-mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
-  mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
+  background: rgba(0, 0, 0, 0.85);
 }
 .upgrade-sheet h2 { margin: 0; font: 800 21px var(--font-head); color: var(--ember); text-shadow: var(--shadow); }
 .upgrade-lead { margin: 0; font-size: 13px; color: var(--ink); }
