@@ -7,8 +7,8 @@ GitLab `develop`에 푸시한 코드는 **Verse8 에디터에서 곧바로, 어�
 
 | 원격 | 브랜치 | 용도 |
 |---|---|---|
-| `origin` (GitHub, **공개**) | `master` | 실제 작업 기록 |
-| `gitlab` (gitlab.verse8.io/anjshdkdl99/traitor-hunt) | `develop` | Verse8 배포용. **푸시하면 자동 배포**된다 |
+| `origin` (github.com/Jujeongmin/grove-hunters, **공개**) | `master` | 실제 작업 기록 |
+| `gitlab` (gitlab.verse8.io/anjshdkdl99/traitor-hunt) | `develop` | Verse8 배포용. **푸시하면 자동 배포**된다. 프로젝트 이름은 옛 작업명 그대로 둔다(배포 연결이 끊긴다) |
 
 - 작업은 `master`에서 하고, 끝날 때마다 `master`를 로컬 `develop`에 병합해 두 곳에 푸시한다. 직접 배포(`@agent8/deploy`)는 하지 않는다.
 - `develop`은 처음에 Verse8 템플릿에서 시작해 `master`와 공통 기록이 없었다(첫 병합에 `--allow-unrelated-histories`). **강제 푸시 금지. `develop`을 `master`에 병합하지 않는다.**
@@ -66,7 +66,7 @@ git restore --staged public/assets
 ## 로컬에서 Verse8 없이 연습 모드 보기
 
 `.env` 때문에 로컬 개발 서버도 Verse8 미리보기 서버에 붙는다. 서버 없이 보려면 `.env.offline.local`에
-`VITE_AGENT8_VERSE=`(빈 값)를 두고 `npm run dev -- --mode offline`으로 띄운다(`.claude/launch.json`의 `traitor-hunt-offline`).
+`VITE_AGENT8_VERSE=`(빈 값)를 두고 `npm run dev -- --mode offline`으로 띄운다(`.claude/launch.json`의 `grove-hunters-offline`).
 이 파일은 `.git/info/exclude`로 로컬에서만 무시한다.
 
 ## 저장한 데이터는 모두 공개다

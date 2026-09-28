@@ -1,7 +1,7 @@
 # Grove Hunters
 
-Verse8 web MMORPG (Vite + React + TypeScript + three.js, server in `server/src/server.ts`). The repo keeps its old
-working name, traitor-hunt.
+Verse8 web MMORPG (Vite + React + TypeScript + three.js, server in `server/src/server.ts`). The GitLab remote still
+carries the old working name, traitor-hunt; leave it alone.
 
 **Before any work, read [docs/VERSE8-EDITOR.md](docs/VERSE8-EDITOR.md).** Every GitLab `develop` push auto-deploys
 and must run in the Verse8 editor as-is.
