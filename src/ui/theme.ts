@@ -12,6 +12,11 @@ const PIECES = ["grunge_band", "grunge_frame"] as const;
 export function installUiTheme(): void {
   const style = document.documentElement.style;
   for (const piece of PIECES) {
-    style.setProperty(`--ui-${piece.replace(/_/g, "-")}`, `url("${publicUrl(`assets/ui/${piece}.webp`)}")`);
+    // Absolute, not base-relative: a url() carried in a custom property resolves against the
+    // stylesheet that uses it, and the built stylesheet sits in assets/, so "./assets/ui/..." became
+    // assets/assets/ui/... and every brush mask vanished on the deployed build (not in dev, where the
+    // styles are inlined into the page).
+    const href = new URL(publicUrl(`assets/ui/${piece}.webp`), document.baseURI).href;
+    style.setProperty(`--ui-${piece.replace(/_/g, "-")}`, `url("${href}")`);
   }
 }
