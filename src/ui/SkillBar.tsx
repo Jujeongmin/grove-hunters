@@ -135,7 +135,7 @@ export function SkillBar({ hud, playerClass, job, onSkill, onPotion }: SkillBarP
           slot={i}
           keyLabel={String(i + 1)}
           name={skill ? skillName(playerClass, job, skill.skill) : t("bar.emptySlot")}
-          icon={skill ? iconFor(skillIconId(playerClass, skill.skill)) : null}
+          icon={skill ? iconFor(skillIconId(playerClass, job, skill.skill)) : null}
           corner={!skill ? "" : !skill.open ? `Lv${skill.level}` : skill.readyInMs > 0 ? `${Math.ceil(skill.readyInMs / 1000)}` : ""}
           cooling={skill?.open ? skill.readyInMs / skill.cooldownMs : null}
           locked={!skill || !skill.open}

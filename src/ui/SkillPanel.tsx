@@ -63,7 +63,7 @@ export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps
                   setDrag(null);
                 }}
               >
-                <img src={iconFor(skillIconId(playerClass, i)) ?? undefined} alt="" draggable={false} />
+                <img src={iconFor(skillIconId(playerClass, job, i)) ?? undefined} alt="" draggable={false} />
               </div>
               <div className="skill-row-text">
                 <b>{skill ? skillName(playerClass, job, i) : t("skills.pathSlot", { n: i })}</b>
@@ -86,7 +86,7 @@ export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps
       {drag && (
         <img
           className="skill-drag-ghost"
-          src={iconFor(skillIconId(playerClass, drag.skill)) ?? undefined}
+          src={iconFor(skillIconId(playerClass, job, drag.skill)) ?? undefined}
           alt=""
           style={{ left: drag.x, top: drag.y }}
         />

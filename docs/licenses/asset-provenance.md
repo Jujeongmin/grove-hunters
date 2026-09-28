@@ -150,6 +150,26 @@ WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대�
 
 설정 아이콘(`ui_menu`)은 사용자가 고르지 않아 I_Key02를 썼다.
 
+## 전직 스킬 아이콘과 자물쇠 (2026-09-28)
+
+PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 RPG icons 스킬 아이콘 18개에서 뽑은
+40색 팔레트를 강제 팔레트로 넘겨 기존 아이콘과 색을 맞췄다. 사용자가 후보 페이지에서 추천안을 골랐다.
+이용 조건은 PixelLab 약관(https://pixellab.ai/termsofservice)을 따른다. develop 브랜치에만 있다.
+
+| 게임 파일 | 쓰임 | 비고 |
+|---|---|---|
+| `public/assets/ui/icons/guardian_1.png`, `guardian_2.png` | 수호기사 방패 강타, 수호의 함성 | |
+| `public/assets/ui/icons/tracker_1.png`, `tracker_2.png` | 숲의 추적자 덫 화살, 부채꼴 사격 | 2차 생성. tracker_1은 생성기가 그린 1px 테두리를 지움 |
+| `public/assets/ui/icons/warder_1.png`, `warder_2.png` | 결계술사 결계 파동, 수호 결계 | |
+| `public/assets/ui/icons/high_priest_1.png` | 대사제 정화의 빛 | |
+| `public/assets/ui/icons/paladin_2.png` | 성기사 심판의 망치 | 2차 생성 |
+| `public/assets/ui/icons/scout_1.png`, `scout_2.png` | 척후병 연막, 투척 단검 | 2차 생성. scout_2는 모서리 잡티를 지움 |
+| `public/assets/ui/icons/iron_monk_1.png`, `iron_monk_2.png` | 철벽 수도승 철산고, 금강불괴 | iron_monk_1은 2차 생성 |
+| `public/assets/ui/icons/ui_lock.png` | 정식판 직업 탭의 자물쇠 (🔒 이모지 대신) | |
+
+나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
+물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.
+
 ## 바닥 텍스처 (2026-09-22)
 
 모두 CC0. 사용자가 후보 페이지(art-src/ground/후보.html)에서 E안을 골랐다. 1K 원본은 `art-src/ground/`에 있고,

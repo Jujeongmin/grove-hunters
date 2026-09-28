@@ -1,5 +1,6 @@
 import { CLASSES, WEAPONS, isFreeClass, type PlayerClass } from "../game/combat/classes";
 import { t } from "./lang";
+import { iconFor } from "../game/render/icons";
 import { classBlurb, className, jobBlurb, jobName, pathSkillBlurb, pathSkillName, skillBlurb, skillName, weaponName } from "./names";
 import { CLASS_SKILLS, JOB_SKILLS } from "../game/combat/skills";
 import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
@@ -30,7 +31,7 @@ export function ClassPanel({ picked, onPick, onConfirm, onBack, owned, onBuy }: 
             className={`class-tab${c === picked ? " picked" : ""}${locked(c) ? " locked" : ""}`}
             onClick={() => onPick(c)}
           >
-            {locked(c) && <span className="class-lock" aria-label={t("buy.title")}>🔒</span>}
+            {locked(c) && <img className="class-lock" src={iconFor("ui_lock") ?? undefined} alt={t("buy.title")} />}
             {className(c)}
           </button>
         ))}

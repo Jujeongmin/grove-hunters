@@ -75,7 +75,7 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
           <b>{t("buy.classes", { n: LOCKED_CLASSES.length })}</b>
           <div className="upgrade-class-row">
             {LOCKED_CLASSES.map((c) => {
-              const icon = iconFor(skillIconId(c, 0));
+              const icon = iconFor(skillIconId(c, null, 0));
               return (
                 <span key={c} className="upgrade-class">
                   {icon && <img src={icon} alt="" draggable={false} />}
