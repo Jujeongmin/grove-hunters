@@ -112,7 +112,11 @@ npm 패키지(@fontsource)로 넣었고 모두 SIL Open Font License 1.1이다(�
 
 모두 CC0. 사용자가 후보 페이지(art-src/sfx/후보.html)에서 귀로 골랐다. 원본 zip과 풀린 파일은 `art-src/sfx/`에 있다.
 WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대로 복사했다. 크기는 `src/game/audio/sfx.ts`의 `CUES`에서 맞춘다.
-타격음, 피격음, 레벨업, 퀘스트 완료, 발소리는 소리를 내지 않는다(사용자 선택).
+타격음과 발소리는 소리를 내지 않는다(사용자 선택).
+
+2026-09-28에 비어 있던 레벨업·퀘스트 완료·피격을 채웠다. 후보 페이지는 `art-src/sfx/후보-알림3종.html`.
+사용자가 레벨업과 퀘스트 완료로 강화 성공과 같은 `metal-ringing.wav`를 골랐으므로 파일을 새로 두지 않고
+`enhance_ok.wav`를 세 자리에서 함께 쓰며, `CUES`의 크기만 자리마다 다르게 둔다.
 
 | 파일 | 원본 | 팩 | 제작자 | 출처 |
 |---|---|---|---|---|
@@ -127,7 +131,8 @@ WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대�
 | `gold.wav` | inventory/coin.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `click.wav` | interface/interface1.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `cloth.wav` (창 열기·닫기) | inventory/cloth.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
-| `enhance_ok.wav` | inventory/metal-ringing.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
+| `enhance_ok.wav` (강화 성공·레벨업·퀘스트 완료) | inventory/metal-ringing.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
+| `hurt.wav` (내가 맞았을 때) | inventory/chainmail2.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 
 ## 코드 그림 교체 (2026-09-22)
 

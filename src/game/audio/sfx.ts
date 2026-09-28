@@ -18,6 +18,12 @@ const CUES = {
   open: { file: "cloth.wav", level: 0.15 },
   close: { file: "cloth.wav", level: 0.12 },
   enhance_ok: { file: "enhance_ok.wav", level: 0.21 },
+  // A level and a finished quest ring the same bell as a finished enhancement (the player chose it),
+  // each a little louder than the last, since each comes round less often.
+  levelup: { file: "enhance_ok.wav", level: 0.28 },
+  quest: { file: "enhance_ok.wav", level: 0.33 },
+  // Heard far more than any of them, so it sits under the loudness the others share.
+  hurt: { file: "hurt.wav", level: 0.2 },
   enhance_fail: { file: "enhance_fail.ogg", level: 0.66 },
   enhance_break: { file: "enhance_break.ogg", level: 0.6 },
 } as const;

@@ -195,6 +195,8 @@ export class WorldView {
   // When each skill slot was last used, and which one went last (others see it by the slot).
   private readonly lastSkillAt = SKILLS.warrior.map(() => Number.NEGATIVE_INFINITY);
   private lastSlot = 0;
+  // The level the last HUD went out with, so a level going up rings once.
+  private lastLevel: number | null = null;
   private bodies: Body[] = [];
   // No portal takes you until you have walked clear of the one you came through.
   private portalArmed = false;
@@ -832,6 +834,7 @@ export class WorldView {
       const at = new THREE.Vector3(this.pose.x, 2.1, this.pose.z);
       if (settings().damageNumbers) this.effects.floatText(at, `-${Math.round(this.lastHp - hp)}`, "#ff5a4a");
       this.hurtAt = performance.now();
+      playCue("hurt");
     }
     this.lastHp = hp;
   }
@@ -905,6 +908,12 @@ export class WorldView {
     const near = this.nearestPortal();
     const me = this.client.state.me;
     const level = levelOf(me?.xp ?? 0);
+    // Only once the server has said what you are: before that the level reads 1, and arriving at
+    // your real level is not a level-up.
+    if (me) {
+      if (this.lastLevel !== null && level.level > this.lastLevel) playCue("levelup");
+      this.lastLevel = level.level;
+    }
     const fighting = this.target ? this.client.state.monsters[this.target] : undefined;
     const hud: WorldHud = {
       zone: ZONES[entry.zone].name,
