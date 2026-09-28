@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AccountView } from "../game/account/nickname";
-import { buyFullGame, fullGamePrice, onShopClosed, startShop } from "../net/shop";
+import { buyFullGame, fullGameOffer, onShopClosed, startShop } from "../net/shop";
 import type { MatchTransport } from "../net/transport";
 
 const VERSE = import.meta.env.VITE_AGENT8_VERSE as string | undefined;
@@ -11,12 +11,12 @@ const CONFIRM_FOR_MS = 30_000;
 // The purchase button's side: open Verse8's dialog, then wait for the server to unlock the game.
 export function usePurchase(transport: MatchTransport | null, refresh: () => Promise<AccountView | null>) {
   const [state, setState] = useState<"idle" | "confirming" | "late">("idle");
-  const [price, setPrice] = useState(fullGamePrice());
+  const [offer, setOffer] = useState(fullGameOffer());
 
   useEffect(() => {
     if (!transport || !VERSE) return;
     startShop(VERSE, transport.account);
-    const timer = setInterval(() => setPrice(fullGamePrice()), 3000);
+    const timer = setInterval(() => setOffer(fullGameOffer()), 3000);
     return () => clearInterval(timer);
   }, [transport]);
 
@@ -43,5 +43,5 @@ export function usePurchase(transport: MatchTransport | null, refresh: () => Pro
     if (VERSE) buyFullGame(VERSE);
   }, []);
 
-  return { state, price, buy: transport && VERSE ? buy : null };
+  return { state, price: offer.price, offer, buy: transport && VERSE ? buy : null };
 }

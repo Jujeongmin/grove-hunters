@@ -25,6 +25,7 @@ import { iconFor } from "../game/render/icons";
 import { QuestPanel } from "./QuestPanel";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
+import type { Offer } from "../game/account/purchase";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
 import { QUESTS, questDone } from "../game/account/quests";
 import { SettingsPanel } from "./SettingsPanel";
@@ -36,7 +37,7 @@ interface WorldScreenProps {
   name: string;
   owned: boolean;
   // The purchase, so the locked portal and the menu can open it where the wall is met.
-  purchase: { price: number; state: "idle" | "confirming" | "late"; buy: (() => void) | null };
+  purchase: { offer: Offer; state: "idle" | "confirming" | "late"; buy: (() => void) | null };
   onExit: () => void;
 }
 
@@ -474,7 +475,7 @@ function ZoneScreen({
       )}
       {upgrade && (
         <UpgradePanel
-          reason={upgrade} price={purchase.price} state={purchase.state} onBuy={purchase.buy}
+          reason={upgrade} offer={purchase.offer} state={purchase.state} onBuy={purchase.buy}
           onClose={() => setUpgrade(null)}
         />
       )}

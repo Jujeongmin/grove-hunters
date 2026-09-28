@@ -16,6 +16,7 @@ import { partyLineup, partyProblem, type PartyClient } from "../net/party";
 import { GAME_TITLE } from "./brand";
 import { ClassPanel } from "./ClassPanel";
 import { UpgradePanel } from "./UpgradePanel";
+import type { Offer } from "../game/account/purchase";
 import { FriendsPanel } from "./FriendsPanel";
 import { NicknamePanel } from "./NicknamePanel";
 import { RankingPanel } from "./RankingPanel";
@@ -39,7 +40,8 @@ interface LobbyProps {
   // Opens Verse8's purchase dialog; null when there is no shop.
   onBuy: (() => void) | null;
   purchase: "idle" | "confirming" | "late";
-  price: number;
+  // What the shop is asking, and what it is marked down from when the product says so.
+  offer: Offer;
   friends: FriendsClient | null;
   friendsView: FriendsView | null;
   party: PartyClient | null;
@@ -56,7 +58,7 @@ type Step = "title" | "world" | "characters" | "class" | "name" | "look";
 type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
-  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, loadRanking, loadRankDetail, onBuy, purchase, price,
+  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, loadRanking, loadRankDetail, onBuy, purchase, offer,
   friends, friendsView, party, partyView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -264,7 +266,7 @@ export function Lobby({
             <button type="button" className="brush-button" onClick={() => setStep("world")}>서버 바꾸기</button>
             {view && !view.owned && onBuy && (
               <button type="button" className="brush-button buy-button" onClick={() => setUpgrade(true)}>
-                정식판 구매 ({price} VX)
+                정식판 구매 ({offer.price} VX)
               </button>
             )}
             {guest && <p className="note guest-note">로그인하지 않은 상태예요. 이대로 만든 캐릭터는 다음에 접속하면 불러올 수 없어요. Verse8에 로그인한 뒤 시작해 주세요.</p>}
@@ -326,7 +328,7 @@ export function Lobby({
         )}
         {upgrade && (
           <UpgradePanel
-            reason={{ kind: "menu" }} price={price} state={purchase} onBuy={onBuy}
+            reason={{ kind: "menu" }} offer={offer} state={purchase} onBuy={onBuy}
             onClose={() => setUpgrade(false)}
           />
         )}

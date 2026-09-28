@@ -81,7 +81,7 @@ export default function App() {
         loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
         onBuy={purchase.buy}
         purchase={purchase.state}
-        price={purchase.price}
+        offer={purchase.offer}
         friends={friends.client}
         friendsView={friends.view}
         party={party.client}

@@ -1,5 +1,6 @@
 import { CLASSES, CLASS_LABEL, WEAPONS, isFreeClass } from "../game/combat/classes";
 import { iconFor, skillIconId } from "../game/render/icons";
+import type { Offer } from "../game/account/purchase";
 import { ZONES, ZONE_IDS } from "../game/world/zones";
 
 // What buying opens, read from the game itself rather than written out here: the zones that ask for
@@ -15,6 +16,11 @@ function weaponOf(c: (typeof LOCKED_CLASSES)[number]): string {
   return name.replace(CLASS_LABEL[c], "").trim() || name;
 }
 
+// The day a sale ends, in the reader's own reckoning.
+function saleEnds(at: number): string {
+  return new Date(at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+}
+
 // Why the panel opened, which decides its first line.
 export type UpgradeReason =
   | { kind: "portal"; zone: string }
@@ -23,7 +29,8 @@ export type UpgradeReason =
 
 interface UpgradePanelProps {
   reason: UpgradeReason;
-  price: number;
+  // What the shop is asking, and what it is marked down from when the product itself says so.
+  offer: Offer;
   // Where the purchase stands: waiting for the platform to confirm, or taking too long.
   state: "idle" | "confirming" | "late";
   // Opens Verse8's purchase dialog; null when there is no server to buy through.
@@ -44,7 +51,7 @@ function opening(reason: UpgradeReason): string {
 
 // The one thing on sale, and what it opens. Shown at the locked portal, once when the free fields
 // run out, from the menu, and when a locked class is picked.
-export function UpgradePanel({ reason, price, state, onBuy, onClose }: UpgradePanelProps) {
+export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePanelProps) {
   return (
     <div className="upgrade-panel" role="dialog" onClick={onClose}>
       <div className="upgrade-sheet" onClick={(e) => e.stopPropagation()}>
@@ -82,10 +89,18 @@ export function UpgradePanel({ reason, price, state, onBuy, onClose }: UpgradePa
           </div>
         </div>
 
+        {offer.off !== null && (
+          <p className="upgrade-sale">
+            <b>{offer.off}% 할인</b>
+            <s>{offer.listPrice} VX</s>
+            {offer.endsAt !== null && <i>{saleEnds(offer.endsAt)}까지</i>}
+          </p>
+        )}
+
         {onBuy
           ? (
             <button type="button" className="brush-button buy-cta" onClick={onBuy} disabled={state === "confirming"}>
-              {state === "confirming" ? "결제 확인 중…" : `정식판 구매 (${price} VX)`}
+              {state === "confirming" ? "결제 확인 중…" : `정식판 구매 (${offer.price} VX)`}
             </button>
           )
           : <p className="note">지금은 구매할 수 없어요. 서버에 연결된 뒤 다시 시도해 주세요.</p>}
