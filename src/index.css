@@ -576,6 +576,46 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .setting-keys dd { margin: 0; color: var(--ink-dim); }
 .setting-row { display: grid; grid-template-columns: 100px 1fr 60px; align-items: center; gap: 14px; margin: 10px 0; font-size: 15px; }
 .setting-row input { accent-color: var(--ember); }
+/* The sliders: one dark trough, one ember fill, and a handle cut from the brush the rest of the UI
+   is drawn with. The trough keeps a clean edge — masking it with the brush frayed both ends away,
+   and a slider frayed at both ends looks the same empty as it does full — and the fill is a single
+   flat colour, since a gradient under a grain read as two bars stacked on each other. */
+.setting-row input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  height: 22px; background: none; margin: 0; cursor: pointer;
+}
+.setting-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 12px; border-radius: 6px;
+  border: 1px solid rgba(255, 179, 90, 0.28);
+  background:
+    linear-gradient(var(--ember), var(--ember)) 0 0 / var(--fill, 0%) 100% no-repeat,
+    rgba(0, 0, 0, 0.6);
+}
+.setting-row input[type="range"]::-moz-range-track {
+  height: 12px; border-radius: 6px;
+  border: 1px solid rgba(255, 179, 90, 0.28);
+  background:
+    linear-gradient(var(--ember), var(--ember)) 0 0 / var(--fill, 0%) 100% no-repeat,
+    rgba(0, 0, 0, 0.6);
+}
+/* The handle stands above the fill it sits on: paler, taller than the trough, and thrown forward by
+   a shadow, or it disappears into the ember behind it. Its rough edge is the brush's, which is
+   where a ragged outline says "hand-painted" without costing the slider its meaning. */
+.setting-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 24px; margin-top: -7px; border: 0;
+  background: linear-gradient(180deg, #fffaea, #ffd98a 50%, #e0a03a);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+  -webkit-mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
+  mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
+}
+.setting-row input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 24px; border: 0;
+  background: linear-gradient(180deg, #fffaea, #ffd98a 50%, #e0a03a);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+  mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
+}
+/* The checkbox keeps the browser's own box; only the sliders are dressed. */
 .setting-value { text-align: right; color: var(--ink-dim); font-size: 13px; }
 .settings-actions { display: flex; justify-content: center; gap: 12px; margin-top: 12px; }
 

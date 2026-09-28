@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { DEFAULT_SETTINGS, QUALITY, onSettings, settings, updateSettings, type Quality, type Settings } from "./settings";
 import { LANGS, lang, setLang, t } from "./lang";
 import type { Key } from "./strings/ko";
@@ -54,6 +54,8 @@ export function SettingsPanel({ onClose, onExit }: { onClose: () => void; onExit
       <span>{t(s.label)}</span>
       <input
         type="range" min={s.min} max={s.max} step={s.step} value={values[s.key]}
+        // The fill has to be drawn by us: only Firefox has a pseudo-element for it.
+        style={{ "--fill": `${((values[s.key] - s.min) / (s.max - s.min)) * 100}%` } as CSSProperties}
         onChange={(e) => updateSettings({ [s.key]: Number(e.target.value) })}
       />
       <span className="setting-value">{s.format(values[s.key])}</span>
