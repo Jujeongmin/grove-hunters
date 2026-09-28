@@ -15,6 +15,7 @@ import type { FriendsClient } from "../net/friends";
 import { partyLineup, partyProblem, type PartyClient } from "../net/party";
 import { GAME_TITLE } from "./brand";
 import { ClassPanel } from "./ClassPanel";
+import { UpgradePanel } from "./UpgradePanel";
 import { FriendsPanel } from "./FriendsPanel";
 import { NicknamePanel } from "./NicknamePanel";
 import { RankingPanel } from "./RankingPanel";
@@ -67,6 +68,13 @@ export function Lobby({
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [inviteProblem, setInviteProblem] = useState<string | null>(null);
+  // The purchase panel: what the full game opens, and the button that buys it. Once bought, it has
+  // done its work and steps aside.
+  const [upgrade, setUpgrade] = useState(false);
+  const bought = view?.owned === true;
+  useEffect(() => {
+    if (bought) setUpgrade(false);
+  }, [bought]);
   // The character being made: its class, name and look until it is saved.
   const [draftClass, setDraftClass] = useState<PlayerClass | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -255,13 +263,13 @@ export function Lobby({
             <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>랭킹</button>
             <button type="button" className="brush-button" onClick={() => setStep("world")}>서버 바꾸기</button>
             {view && !view.owned && onBuy && (
-              <button type="button" className="brush-button buy-button" onClick={onBuy} disabled={purchase === "confirming"}>
+              <button type="button" className="brush-button buy-button" onClick={() => setUpgrade(true)}>
                 정식판 구매 ({price} VX)
               </button>
             )}
             {guest && <p className="note guest-note">로그인하지 않은 상태예요. 이대로 만든 캐릭터는 다음에 접속하면 불러올 수 없어요. Verse8에 로그인한 뒤 시작해 주세요.</p>}
             {!active && <p className="note">캐릭터를 만들어 모험을 시작하세요.</p>}
-            {view && !view.owned && <p className="note">무료로 마을과 숲 필드 1을 즐길 수 있어요. 정식판은 숲 필드 2와 보스 구역, 그리고 마법사·성직자·도적·무도가 직업을 엽니다.</p>}
+            {view && !view.owned && <p className="note">무료로 마을과 숲 필드 1을 즐길 수 있어요. 정식판이 무엇을 여는지는 위 버튼에서 볼 수 있어요.</p>}
             {purchase === "confirming" && <p className="note">결제를 확인하는 중…</p>}
             {purchase === "late" && <p className="note">결제 확인이 늦어지고 있어요. 잠시 뒤 새로고침해 주세요.</p>}
           </nav>
@@ -273,7 +281,7 @@ export function Lobby({
             onPick={setDraftClass}
             onBack={() => setStep("characters")}
             owned={view?.owned === true}
-            onBuy={onBuy}
+            onBuy={onBuy ? () => setUpgrade(true) : null}
             onConfirm={(c) => {
               setDraftClass(c);
               setStep("name");
@@ -314,6 +322,12 @@ export function Lobby({
             party={party}
             partyView={partyView}
             hasCharacter={!!active}
+          />
+        )}
+        {upgrade && (
+          <UpgradePanel
+            reason={{ kind: "menu" }} price={price} state={purchase} onBuy={onBuy}
+            onClose={() => setUpgrade(false)}
           />
         )}
         {sheet === "settings" && <SettingsPanel onClose={() => setSheet("none")} />}

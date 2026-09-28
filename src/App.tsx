@@ -55,6 +55,7 @@ export default function App() {
           costume={costumeById(active.costume) ?? COSTUMES[0]}
           name={active.name}
           owned={view.owned}
+          purchase={purchase}
           onExit={() => {
             setInWorld(false);
             setReturning(true);
