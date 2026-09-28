@@ -1,4 +1,5 @@
 import { readSlot } from "../game/combat/skills";
+import type { TutorialStep } from "../game/account/tutorial";
 import { readJumpY } from "../game/rules/movement";
 import { PROTOCOL_VERSION, isPose, readSwing, type Pose } from "../game/world/types";
 import type { BagView, ItemId, Slot } from "../game/account/items";
@@ -273,6 +274,24 @@ export class WorldClient {
 
   claimDaily(id: string): Promise<string | null> {
     return this.bagCall("claimDaily", [id]);
+  }
+
+  // The first tutorial (see tutorial.ts): the elder's lesson, a step done on the screen, the end,
+  // and skipping it.
+  tutorialTalk(): Promise<string | null> {
+    return this.bagCall("tutorialTalk", []);
+  }
+
+  tutorialStep(from: TutorialStep): Promise<string | null> {
+    return this.bagCall("tutorialStep", [from]);
+  }
+
+  tutorialFinish(): Promise<string | null> {
+    return this.bagCall("tutorialFinish", []);
+  }
+
+  tutorialSkip(): Promise<string | null> {
+    return this.bagCall("tutorialSkip", []);
   }
 
   // Payouts that came in since the last call, oldest first.

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
 import { ITEMS } from "../account/items";
 import { levelOf } from "../account/level";
@@ -700,7 +701,7 @@ export class WorldView {
     const skillIn = (index: number) => skillAt(c, this.path, index);
     const ready = (index: number | null): index is number => {
       const skill = index === null ? null : skillIn(index);
-      return skill !== null && this.skillOpen(skill) && now - this.lastSkillAt[index!] >= skill.cooldownMs;
+      return skill !== null && this.learned(index!) && this.skillOpen(skill) && now - this.lastSkillAt[index!] >= skill.cooldownMs;
     };
     let slot = pressed.findIndex((p, i) => p && ready(bar[i]));
     // Auto-battle reaches for the strongest skill it may use that would help.
@@ -734,6 +735,12 @@ export class WorldView {
   // Your advanced path, once the bag has said: it decides the skills on keys 2 and 3.
   private get path(): JobId | null {
     return this.client.state.bag?.job ?? null;
+  }
+
+  // Where the character is in the first tutorial: until the elder has taught it, the first skill
+  // is not there to use.
+  private learned(index: number): boolean {
+    return skillLearned(this.client.state.bag?.tutorial ?? null, index);
   }
 
   private skillOpen(skill: Skill): boolean {
@@ -947,7 +954,7 @@ export class WorldView {
         : null,
       skills: hotbarFor(this.options.playerClass).map((index) => {
         const skill = index === null ? null : skillAt(this.options.playerClass, this.path, index);
-        if (index === null || !skill) return null;
+        if (index === null || !skill || !this.learned(index)) return null;
         return {
           skill: index, cooldownMs: skill.cooldownMs, level: skill.level, open: level.level >= skill.level,
           readyInMs: Math.max(0, this.lastSkillAt[index] + skill.cooldownMs - now),

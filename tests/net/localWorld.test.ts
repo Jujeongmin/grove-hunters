@@ -104,4 +104,13 @@ describe("LocalWorld", () => {
     await world.leave("test-x", first.roomId);
     expect(world.roomState(first.roomId).$users).toEqual([]);
   });
+
+  it("brings a new character into the world at the tutorial's first step, the elder's lesson ahead", async () => {
+    const world = new LocalWorld(new Server());
+    const { roomId } = await enter(world, "test-a");
+    const bag = (await world.call("test-a", roomId, "getBag")) as { tutorial: number | null; bag: Record<string, number> };
+    expect(bag.tutorial).toBe(0);
+    expect(bag.bag).toEqual({});
+    expect(await codeOf(world.call("test-a", roomId, "useSkill", [0, 0]))).toContain("unavailable");
+  });
 });
