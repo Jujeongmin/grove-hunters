@@ -41,6 +41,12 @@ const CAMERA_LOOK = new THREE.Vector3(26.2, 0.95, 16.4);
 // Picking a class: the row stands in the middle, high enough to clear the panel along the bottom.
 const LINEUP_CAMERA = new THREE.Vector3(26.2, 1.25, 23.6);
 const LINEUP_LOOK = new THREE.Vector3(26.2, -0.35, 16.2);
+// A class picked from the row: the camera closes in on that hero, who stands left of the screen's
+// middle so the class panel on the right does not cover them.
+const PICK_OFFSET_X = 1.0;
+const PICK_DISTANCE = 3.8;
+const PICK_CAMERA_Y = 1.15;
+const PICK_LOOK_Y = 0.8;
 // The wardrobe: the camera closes in on you, standing left of the screen's middle so the panel on
 // the right does not cover you.
 const WARDROBE_CAMERA = new THREE.Vector3(27.2, 1.0, 20.9);
@@ -79,6 +85,12 @@ export class MenuScene {
   private focusTarget = 0;
   // 0 showing your character, 1 showing the row of classes; eased like focus.
   private rowView = 1;
+  // 0 showing the whole row, 1 closed in on the picked class; and where along the row it is, eased
+  // so a new pick glides over rather than cutting.
+  private pickView = 0;
+  private pickX = LINEUP_X;
+  private readonly pickCamera = new THREE.Vector3();
+  private readonly pickLook = new THREE.Vector3();
   // How far you have turned your hero by dragging, in the wardrobe.
   private spinYaw = 0;
   private readonly look = new THREE.Vector3();
@@ -247,8 +259,17 @@ export class MenuScene {
       CAMERA_HOME.z + Math.cos(t * 0.17) * 0.12,
     );
     this.rowView += ((lineup ? 1 : 0) - this.rowView) * (1 - Math.exp(-dt * FOCUS_RATE));
-    this.camera.position.copy(this.home).lerp(LINEUP_CAMERA, this.rowView).lerp(WARDROBE_CAMERA, this.focus);
-    this.look.copy(CAMERA_LOOK).lerp(LINEUP_LOOK, this.rowView).lerp(WARDROBE_LOOK, this.focus);
+    const pickedAt = this.picked ? CLASSES.indexOf(this.picked) : -1;
+    this.pickView += ((lineup && pickedAt >= 0 ? 1 : 0) - this.pickView) * (1 - Math.exp(-dt * FOCUS_RATE));
+    if (pickedAt >= 0) {
+      const heroX = LINEUP_X + (pickedAt - (CLASSES.length - 1) / 2) * LINEUP_GAP;
+      this.pickX += (heroX - this.pickX) * (1 - Math.exp(-dt * FOCUS_RATE));
+    }
+    const heroZ = LINEUP_Z + STEP_OUT;
+    this.pickCamera.set(this.pickX + PICK_OFFSET_X, PICK_CAMERA_Y, heroZ + PICK_DISTANCE);
+    this.pickLook.set(this.pickX + PICK_OFFSET_X, PICK_LOOK_Y, heroZ);
+    this.camera.position.copy(this.home).lerp(LINEUP_CAMERA, this.rowView).lerp(this.pickCamera, this.pickView).lerp(WARDROBE_CAMERA, this.focus);
+    this.look.copy(CAMERA_LOOK).lerp(LINEUP_LOOK, this.rowView).lerp(this.pickLook, this.pickView).lerp(WARDROBE_LOOK, this.focus);
     if (this.entering) {
       this.entering.t += dt / ENTER_SECONDS;
       const k = Math.min(1, this.entering.t) ** 2;

@@ -39,23 +39,35 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
   }];
 }
 
-// Your gold, what you wear and what you carry: wear gear, drink potions, and (in the village) sell.
+// Your gold, what you wear and what you carry. The things carried are a grid of pictures; the one
+// picked (or a worn piece) is told about on the right with what can be done with it — wear it,
+// drink it, take it off, sell it in the village — so a full bag never needs a scroll.
 export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }: PanelProps & {
   inVillage: boolean;
   playerClass: PlayerClass;
   level: number;
 }) {
   const [problem, act] = useAction();
+  const [picked, setPicked] = useState<{ gear: Slot } | { item: ItemId } | null>(null);
   const items = ITEM_IDS.filter((id) => (bag?.bag[id] ?? 0) > 0);
   const job = bag?.job ?? null;
+  // What the right side tells about: the worn piece or the carried item picked, while it is still there.
+  const shown = (() => {
+    if (!bag || !picked) return null;
+    if ("gear" in picked) {
+      const id = bag.gear[picked.gear];
+      return id ? { id, worn: picked.gear } : null;
+    }
+    return (bag.bag[picked.item] ?? 0) > 0 ? { id: picked.item, worn: null } : null;
+  })();
   return (
     <div className="menu-modal" onClick={onClose}>
-      <div className="solid-panel bag-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("bag.title")}</h2>
-        <p className="bag-gold">
-          {bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}
+      <div className="solid-panel bag-panel bag-inventory" onClick={(e) => e.stopPropagation()}>
+        <header className="bag-head">
+          <h2>{t("bag.title")}</h2>
+          <span className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</span>
           {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString(locale()) })}</span>}
-        </p>
+        </header>
         <div className="bag-job">
           {job ? (
             <span>{t("bag.job")} · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
@@ -76,45 +88,73 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
             </>
           )}
         </div>
-        <div className="bag-gear">
-          {(["weapon", "armor"] as Slot[]).map((slot) => {
-            const worn = bag?.gear[slot] ?? null;
-            return (
-              <div key={slot} className="bag-row">
-                <span className="bag-slot">{slotLabel(slot)}</span>
-                {worn && <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />}
-                <b>{worn ? gearName(worn, bag?.plus) : t("common.nothing")}</b>
-                <span className="bag-blurb">{worn ? itemBlurb(worn) : ""}</span>
-                {worn && <button type="button" className="text-button" onClick={() => act(() => client.unequip(slot))}>{t("bag.unequip")}</button>}
-              </div>
-            );
-          })}
-        </div>
-        <div className="bag-list">
-          {items.length === 0 && <p className="note">{t("bag.empty")}</p>}
-          {items.map((id) => (
-            <div key={id} className="bag-row">
-              <img className="bag-icon" src={iconFor(id) ?? undefined} alt="" />
-              <b>{ITEMS[id].kind === "material" ? itemName(id) : gearName(id, bag!.plus)}</b>
-              <span className="bag-count">×{bag!.bag[id]}</span>
-              <span className="bag-blurb">{itemBlurb(id)}</span>
-              {ITEMS[id].kind === "potion" && (
-                <button type="button" className="text-button" onClick={() => act(() => client.drink(id))}>{t("bag.drink")}</button>
-              )}
-              {(ITEMS[id].kind === "weapon" || ITEMS[id].kind === "armor") && (
-                <button type="button" className="text-button" onClick={() => act(() => client.equip(id))}>{t("bag.equip")}</button>
-              )}
-              {inVillage && (
-                <button type="button" className="text-button" onClick={() => act(() => client.sell(id))}>
-                  {t("bag.sell", { n: sellPrice(id) })}
-                </button>
-              )}
+        <div className="bag-body">
+          <div className="bag-left">
+            <div className="bag-gear">
+              {(["weapon", "armor"] as Slot[]).map((slot) => {
+                const worn = bag?.gear[slot] ?? null;
+                const on = !!picked && "gear" in picked && picked.gear === slot;
+                return (
+                  <button key={slot} type="button" className={`bag-worn${on ? " picked" : ""}`} disabled={!worn} onClick={() => setPicked({ gear: slot })}>
+                    <span className="bag-slot">{slotLabel(slot)}</span>
+                    {worn && <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />}
+                    <b>{worn ? gearName(worn, bag?.plus) : t("common.nothing")}</b>
+                  </button>
+                );
+              })}
             </div>
-          ))}
+            {items.length === 0 ? (
+              <p className="note">{t("bag.empty")}</p>
+            ) : (
+              <div className="bag-grid">
+                {items.map((id) => {
+                  const on = !!picked && "item" in picked && picked.item === id;
+                  return (
+                    <button key={id} type="button" className={`bag-cell${on ? " picked" : ""}`} onClick={() => setPicked({ item: id })} title={itemName(id)}>
+                      <img src={iconFor(id) ?? undefined} alt={itemName(id)} />
+                      <span className="bag-cell-count">{bag!.bag[id]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <div className="bag-detail">
+            {!shown ? (
+              <p className="note">{t("bag.pickHint")}</p>
+            ) : (
+              <>
+                <div className="bag-detail-head">
+                  <img className="bag-icon" src={iconFor(shown.id) ?? undefined} alt="" />
+                  <b>{ITEMS[shown.id].kind === "material" ? itemName(shown.id) : gearName(shown.id, bag!.plus)}</b>
+                  {!shown.worn && <span className="bag-count">×{bag!.bag[shown.id]}</span>}
+                </div>
+                <p className="bag-blurb">{itemBlurb(shown.id)}</p>
+                <div className="bag-actions">
+                  {shown.worn && (
+                    <button type="button" className="text-button" onClick={() => act(() => client.unequip(shown.worn!))}>{t("bag.unequip")}</button>
+                  )}
+                  {!shown.worn && ITEMS[shown.id].kind === "potion" && (
+                    <button type="button" className="text-button" onClick={() => act(() => client.drink(shown.id))}>{t("bag.drink")}</button>
+                  )}
+                  {!shown.worn && (ITEMS[shown.id].kind === "weapon" || ITEMS[shown.id].kind === "armor") && (
+                    <button type="button" className="text-button" onClick={() => act(() => client.equip(shown.id))}>{t("bag.equip")}</button>
+                  )}
+                  {!shown.worn && inVillage && (
+                    <button type="button" className="text-button" onClick={() => act(() => client.sell(shown.id))}>
+                      {t("bag.sell", { n: sellPrice(shown.id) })}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
         {problem && <p className="bag-problem">{problem}</p>}
-        <p className="note">{t("bag.keys")}</p>
-        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
+        <footer className="bag-foot">
+          <span className="note">{t("bag.keys")}</span>
+          <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
+        </footer>
       </div>
     </div>
   );

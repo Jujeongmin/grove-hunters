@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { t } from "./lang";
+import { usePages } from "./Pager";
 import { dailyGoal, dailyName, itemName, questGoal, questName } from "./names";
 import { type BagView } from "../game/account/items";
 import { DAILY_QUESTS, QUESTS, dailyToday, questDone, type Quest } from "../game/account/quests";
@@ -21,7 +22,7 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
   const today = dailyToday(bag.daily, Date.now());
   return (
     <>
-      <h3>{t("quests.daily")}</h3>
+      <p className="note">{t("quests.daily")}</p>
       {DAILY_QUESTS.map((q) => {
         const count = today.counts[q.id] ?? 0;
         const claimed = today.claimed.includes(q.id);
@@ -66,52 +67,69 @@ interface QuestLogProps {
   onClose: () => void;
 }
 
-// The quest tab: the quest you are on in full (what to hunt, how far along, the reward, what to do
-// next), the ones already done, and how many are still to come.
+// The quest tab, in three pages so it never needs a scroll: the quest you are on in full (what to
+// hunt, how far along, the reward, what to do next) with how many are still to come; the day's
+// quests; and the ones already done, a page at a time.
 export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClose }: QuestLogProps) {
+  const [tab, setTab] = useState<"now" | "daily" | "past">("now");
   const index = bag?.quest.index ?? 0;
   const quest = QUESTS[index];
   const done = bag ? questDone(bag.quest) : false;
+  const past = QUESTS.slice(0, index).map((_, i) => index - 1 - i);
+  const pastPage = usePages(past, PAST_PER_PAGE);
   return (
     <div className="side-panel quest-log">
       <h2>{t("quests.title")}</h2>
+      <div className="quest-tabs">
+        <button type="button" className={`text-button${tab === "now" ? " on" : ""}`} onClick={() => setTab("now")}>{t("quests.tabNow")}</button>
+        <button type="button" className={`text-button${tab === "daily" ? " on" : ""}`} onClick={() => setTab("daily")}>{t("quests.tabDaily")}</button>
+        <button type="button" className={`text-button${tab === "past" ? " on" : ""}`} onClick={() => setTab("past")}>{t("quests.tabPast")} {index}</button>
+      </div>
       {!bag ? (
         <p className="note">{t("common.loading")}</p>
-      ) : quest ? (
-        <div className={`quest-entry current${done ? " done" : ""}`}>
-          <b>{questName(index)}{done ? " ✔" : ""}</b>
-          <span>{questGoal(index)}</span>
-          <div className="hud-bar xp"><i style={{ width: `${Math.round((bag.quest.count / quest.count) * 100)}%` }} /></div>
-          <span className="quest-count">{bag.quest.count} / {quest.count}</span>
-          <span className="quest-reward">{t("common.reward", { what: rewardText(quest) })}</span>
-          {done ? (
-            inVillage
-              ? <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>{t("quests.goReport")}</button>
-              : <span className="hint">{t("quests.reportHint")}</span>
-          ) : (
-            <button type="button" className="brush-button small" onClick={() => { onSeek(quest.targets); onClose(); }}>{t("quests.goFind")}</button>
-          )}
-        </div>
-      ) : (
-        <p className="note">{t("quests.allDone")}</p>
-      )}
-      {bag && <DailyList bag={bag} onClaimDaily={onClaimDaily} />}
-      {index > 0 && (
+      ) : tab === "now" ? (
         <>
-          <h3>{t("quests.past")}</h3>
-          {QUESTS.slice(0, index).map((_, i) => index - 1 - i).map((past) => (
-            <div key={past} className="quest-entry past">
-              <b>{questName(past)} ✔</b>
-              <span>{questGoal(past)}</span>
+          {quest ? (
+            <div className={`quest-entry current${done ? " done" : ""}`}>
+              <b>{questName(index)}{done ? " ✔" : ""}</b>
+              <span>{questGoal(index)}</span>
+              <div className="hud-bar xp"><i style={{ width: `${Math.round((bag.quest.count / quest.count) * 100)}%` }} /></div>
+              <span className="quest-count">{bag.quest.count} / {quest.count}</span>
+              <span className="quest-reward">{t("common.reward", { what: rewardText(quest) })}</span>
+              {done ? (
+                inVillage
+                  ? <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>{t("quests.goReport")}</button>
+                  : <span className="hint">{t("quests.reportHint")}</span>
+              ) : (
+                <button type="button" className="brush-button small" onClick={() => { onSeek(quest.targets); onClose(); }}>{t("quests.goFind")}</button>
+              )}
+            </div>
+          ) : (
+            <p className="note">{t("quests.allDone")}</p>
+          )}
+          {quest && index + 1 < QUESTS.length && <p className="note">{t("quests.more", { n: QUESTS.length - index - 1 })}</p>}
+        </>
+      ) : tab === "daily" ? (
+        <DailyList bag={bag} onClaimDaily={onClaimDaily} />
+      ) : (
+        <>
+          {past.length === 0 && <p className="note">{t("quests.noPast")}</p>}
+          {pastPage.shown.map((i) => (
+            <div key={i} className="quest-entry past">
+              <b>{questName(i)} ✔</b>
+              <span>{questGoal(i)}</span>
             </div>
           ))}
+          {pastPage.pager}
         </>
       )}
-      {quest && index + 1 < QUESTS.length && <p className="note">{t("quests.more", { n: QUESTS.length - index - 1 })}</p>}
-      <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
+      <button type="button" className="text-button quest-log-close" onClick={onClose}>{t("common.close")}</button>
     </div>
   );
 }
+
+// Finished quests on one page of their tab.
+const PAST_PER_PAGE = 5;
 
 // The moment a quest is done: a panel in the middle of the screen, shown once, that fades by itself.
 export function QuestCompleteBanner({ index, inVillage, onClose }: { index: number; inVillage: boolean; onClose: () => void }) {

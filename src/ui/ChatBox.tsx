@@ -103,7 +103,10 @@ export function ChatBox({ client, touch }: { client: WorldClient; touch: boolean
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (
-        touch && <button type="button" className="chat-open band" onClick={() => setOpen(true)}>{t("chat.open")}</button>
+        touch
+          ? <button type="button" className="chat-open band" onClick={() => setOpen(true)}>{t("chat.open")}</button>
+          // On a keyboard the bar says how to talk: Enter opens it, like a click on it.
+          : <button type="button" className="chat-bar" onClick={() => setOpen(true)}><kbd>Enter</kbd>{t("chat.enterHint")}</button>
       )}
     </div>
   );

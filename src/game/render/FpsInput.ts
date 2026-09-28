@@ -32,6 +32,7 @@ export class FpsInput {
     window.addEventListener("blur", this.onBlur);
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("pointerlockerror", this.onLockError);
+    document.addEventListener("pointerlockchange", this.onLockChange);
   }
 
   // Some embeds refuse the pointer lock — an iframe without allow="pointer-lock", which is how the
@@ -39,6 +40,11 @@ export class FpsInput {
   // wanted the lock) and no attacking (so did the button handler). Where the lock is refused the
   // mouse falls back to what a mouse can do without it: hold the left button and drag to look, and
   // a click that did not drag lands a blow.
+  //
+  // A refusal is not taken as final. The browser also refuses for passing reasons — Chrome says no
+  // to a lock asked for within about a second of Escape letting it go — and treating one of those
+  // as final left the mouse uncaptured for the rest of the zone. Every click asks again; the drag
+  // is there meanwhile.
   private lockDenied = false;
   private dragging = false;
   private dragged = 0;
@@ -50,7 +56,7 @@ export class FpsInput {
   // Captures the mouse for looking about (hiding the cursor); the browser allows it just after a
   // click or a key, and says no quietly otherwise.
   lock(): void {
-    if (this.locked || this.lockDenied) return;
+    if (this.locked) return;
     this.element.requestPointerLock()?.catch(() => {
       this.lockDenied = true;
     });
@@ -106,9 +112,10 @@ export class FpsInput {
     return had;
   }
 
-  // Whether the browser turned the pointer lock down here, so the game can say how to look about.
+  // Whether the mouse is looking about by dragging (the browser turned the lock down), so the game
+  // can say how to look about.
   get dragToLook(): boolean {
-    return this.lockDenied;
+    return this.lockDenied && !this.locked;
   }
 
   dispose(): void {
@@ -121,6 +128,7 @@ export class FpsInput {
     window.removeEventListener("blur", this.onBlur);
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("pointerlockerror", this.onLockError);
+    document.removeEventListener("pointerlockchange", this.onLockChange);
     if (this.locked) document.exitPointerLock();
   }
 
@@ -130,6 +138,9 @@ export class FpsInput {
   // Older browsers answer a refused lock with an event rather than a rejected promise.
   private onLockError = () => {
     this.lockDenied = true;
+  };
+  private onLockChange = () => {
+    if (this.locked) this.dragging = false;
   };
   private onMouseDown = (e: MouseEvent) => {
     if (e.button === 0) {

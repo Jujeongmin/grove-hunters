@@ -259,6 +259,7 @@ export const zhHans: Bundle = {
   "bag.pickPath": "请选择转职的道路。一旦选定就不能更改。",
   "bag.unequip": "卸下",
   "bag.empty": "背包是空的",
+  "bag.pickHint": "点选物品，这里会显示说明与用法。",
   "bag.drink": "饮用",
   "bag.equip": "装备",
   "bag.sell": "卖出（{n}）",
@@ -342,6 +343,12 @@ export const zhHans: Bundle = {
 
   "chat.placeholder": "对频道说话",
   "chat.open": "聊天",
+  "chat.enterHint": "开始聊天",
+  "lobby.deleteCharacter": "删除 {name}",
+  "delete.title": "删除角色",
+  "delete.warning": "「{name}」的等级、装备与任务将全部消失，无法恢复。若要删除，请照样输入名称。",
+  "delete.confirm": "永久删除",
+  "problem.name_mismatch": "名称不符",
 
   "quest.allDone": "所有任务完成",
   "quest.reportHere": "点击向村长汇报",
@@ -561,4 +568,12 @@ export const zhHans: Bundle = {
   "keys.channel": "切换频道",
   "problem.channel_full": "该频道已满。请选择其他频道",
   "friends.where": "{server} · {channel} · {zone}",
+  "common.prevPage": "上一页",
+  "common.nextPage": "下一页",
+  "friends.noIncoming": "没有收到的邀请。",
+  "friends.noOutgoing": "没有发出的邀请。",
+  "quests.tabNow": "进行中",
+  "quests.tabDaily": "每日",
+  "quests.tabPast": "已完成",
+  "quests.noPast": "还没有完成的任务。",
 };

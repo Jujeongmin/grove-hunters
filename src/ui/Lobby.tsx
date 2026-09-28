@@ -15,6 +15,7 @@ import { loginState } from "../net/login";
 import type { FriendsClient } from "../net/friends";
 import { GAME_TITLE } from "./brand";
 import { ClassPanel } from "./ClassPanel";
+import { DeleteCharacterPanel } from "./DeleteCharacterPanel";
 import { UpgradePanel } from "./UpgradePanel";
 import type { Offer } from "../game/account/purchase";
 import { FriendsPanel } from "./FriendsPanel";
@@ -35,6 +36,8 @@ interface LobbyProps {
   checkName: (name: string) => Promise<boolean>;
   onCreate: (name: string, playerClass: string, costume: string) => Promise<void>;
   onSelect: (id: string) => Promise<void>;
+  // Deletes a character for good, its name typed back to be sure.
+  onDelete: (id: string, typedName: string) => Promise<void>;
   loadRanking: (() => Promise<RankingView>) | null;
   loadRankDetail: ((id: string) => Promise<RankDetail>) | null;
   // Opens Verse8's purchase dialog; null when there is no shop.
@@ -56,7 +59,7 @@ type Step = "title" | "world" | "characters" | "class" | "name" | "look";
 type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
-  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, loadRanking, loadRankDetail, onBuy, purchase, offer,
+  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, onBuy, purchase, offer,
   friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -70,6 +73,8 @@ export function Lobby({
   // The purchase panel: what the full game opens, and the button that buys it. Once bought, it has
   // done its work and steps aside.
   const [upgrade, setUpgrade] = useState(false);
+  // Asking to delete the picked character.
+  const [deleting, setDeleting] = useState(false);
   const bought = view?.owned === true;
   useEffect(() => {
     if (bought) setUpgrade(false);
@@ -237,6 +242,11 @@ export function Lobby({
                 </li>
               )}
             </ul>
+            {active && (
+              <button type="button" className="text-button character-delete" onClick={() => setDeleting(true)}>
+                {t("lobby.deleteCharacter", { name: active.name })}
+              </button>
+            )}
             <button type="button" className="brush-button" onClick={start} disabled={leaving || !active}>{t("lobby.start")}</button>
             <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>{t("menu.ranking")}</button>
             <button type="button" className="brush-button" onClick={() => setStep("world")}>{t("lobby.changeServer")}</button>
@@ -298,6 +308,9 @@ export function Lobby({
             view={friendsView}
             hasCharacter={!!active}
           />
+        )}
+        {deleting && active && (
+          <DeleteCharacterPanel id={active.id} name={active.name} onDelete={onDelete} onClose={() => setDeleting(false)} />
         )}
         {upgrade && (
           <UpgradePanel

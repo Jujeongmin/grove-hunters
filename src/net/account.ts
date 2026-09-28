@@ -27,6 +27,16 @@ export function selectCharacter(transport: MatchTransport, id: string): Promise<
   return transport.call<AccountView>("selectCharacter", [id]);
 }
 
+// Deletes one of your characters for good; the server wants its name typed to be sure.
+export function deleteCharacter(transport: MatchTransport, id: string, typedName: string): Promise<AccountView> {
+  return transport.call<AccountView>("deleteCharacter", [id, typedName]);
+}
+
+// What to show when deleting a character fails.
+export function deleteProblem(error: unknown): string {
+  return errorCode(error) === "name_mismatch" ? t("problem.name_mismatch") : t("problem.retryLater");
+}
+
 // What to show when making a character fails.
 export function nicknameProblem(error: unknown): string {
   const code = errorCode(error);

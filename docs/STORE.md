@@ -1,7 +1,7 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 10개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
+숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 13개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
 
 ## 제목
 
@@ -35,7 +35,7 @@ Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의
 
 ■ 성장
 몬스터를 잡아 경험치와 골드를 얻고, 장비와 물약을 모으세요.
-마을 상인에게서 장비를 사고팔고, 촌장의 퀘스트 10개를 따라가며 보상을 받습니다.
+마을 상인에게서 장비를 사고팔고, 촌장의 퀘스트 13개를 따라가며 보상을 받습니다.
 
 ■ 보스, 버섯왕
 숲 깊은 곳의 공터에는 버섯왕이 기다립니다. 땅을 내려치는 공격을 피하고, 불러내는 호위병을 막아 내세요.
@@ -53,7 +53,7 @@ PC는 키보드와 마우스, 모바일은 가상 조이스틱과 버튼으로 �
 English:
 
 ```
-Your adventure begins in Greenwood Village.
+Your adventure begins in Grove Village.
 Take on the villagers' requests, head into the forest to hunt monsters, level up and push deeper into the woods.
 
 ■ Six classes
@@ -67,7 +67,7 @@ Chat, make friends and climb the rankings.
 
 ■ Grow stronger
 Earn XP and gold from monsters and collect gear and potions.
-Trade with the village merchant and follow the elder's ten quests for rewards.
+Trade with the village merchant and follow the elder's thirteen quests for rewards.
 
 ■ The Mushroom King
 Deep in the forest the Mushroom King waits in his clearing. Dodge his ground slam and hold off the guards he calls.
@@ -78,7 +78,7 @@ Turn on auto-battle to find and fight nearby monsters, using skills and potions 
 Your skill bar is saved to your account, the same on PC and mobile.
 
 ■ Free to play / Full game
-Warrior and Ranger, Greenwood Village and Forest Field 1 are free.
+Warrior and Ranger, Grove Village and Forest Field 1 are free.
 The full game (500 VX) unlocks the Wizard, Cleric, Rogue and Monk and Forest Field 2, the Deep Forest and the Mushroom King's Clearing.
 ```
 

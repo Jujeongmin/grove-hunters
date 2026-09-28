@@ -259,6 +259,7 @@ export const ja: Bundle = {
   "bag.pickPath": "転職する道を選んでください。一度選ぶと変えられません。",
   "bag.unequip": "外す",
   "bag.empty": "カバンは空です",
+  "bag.pickHint": "アイテムを押すと、ここに説明と使い方が出ます。",
   "bag.drink": "飲む",
   "bag.equip": "装備",
   "bag.sell": "売る（{n}）",
@@ -342,6 +343,12 @@ export const ja: Bundle = {
 
   "chat.placeholder": "チャンネルに話す",
   "chat.open": "チャット",
+  "chat.enterHint": "でチャット",
+  "lobby.deleteCharacter": "{name}を削除",
+  "delete.title": "キャラクター削除",
+  "delete.warning": "「{name}」のレベル・装備・クエストはすべて消え、元に戻せません。削除するには名前をそのまま入力してください。",
+  "delete.confirm": "完全に削除",
+  "problem.name_mismatch": "名前が違います",
 
   "quest.allDone": "すべてのクエスト完了",
   "quest.reportHere": "押して村長に報告",
@@ -561,4 +568,12 @@ export const ja: Bundle = {
   "keys.channel": "チャンネル変更",
   "problem.channel_full": "そのチャンネルは満員です。別のチャンネルを選んでください",
   "friends.where": "{server} · {channel} · {zone}",
+  "common.prevPage": "前のページ",
+  "common.nextPage": "次のページ",
+  "friends.noIncoming": "受けた申請はありません。",
+  "friends.noOutgoing": "送った申請はありません。",
+  "quests.tabNow": "進行中",
+  "quests.tabDaily": "デイリー",
+  "quests.tabPast": "完了",
+  "quests.noPast": "まだ完了したクエストはありません。",
 };

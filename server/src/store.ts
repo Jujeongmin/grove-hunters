@@ -104,8 +104,33 @@ export async function readProfile(account: string): Promise<Profile> {
     const first = names.find((i) => !i.character);
     characters = characters.map((c) => (first && c.name === first.name ? { ...c, xp: Math.max(c.xp, oldXp) } : c));
   }
+  // Deleted characters stay listed by id and are left out here, whatever the platform does with a
+  // key dropped from an object it merges.
+  const deleted = readDeleted(state.deletedCharacters);
+  characters = characters.filter((c) => !deleted.includes(c.id));
   const activeId = saved ? state.active : characters[0]?.id;
   return { characters, active: characters.find((c) => c.id === activeId) ?? null };
+}
+
+function readDeleted(raw: unknown): string[] {
+  return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : [];
+}
+
+// Deletes a character for good: it is listed as deleted (see readProfile), dropped from the saved
+// characters, and another character plays in its place (one on the same server, if there is one).
+// Call inside withProfileLock.
+export async function deleteCharacter(account: string, doomed: Character, characters: Character[], activeId: string | null): Promise<void> {
+  const deleted = readDeleted((await $global.getUserState(account)).deletedCharacters);
+  const rest = characters.filter((c) => c.id !== doomed.id);
+  const next = activeId && activeId !== doomed.id ? activeId : rest.find((c) => c.world === doomed.world)?.id ?? null;
+  await $global.updateUserState(account, { deletedCharacters: [...deleted, doomed.id] });
+  await saveProfile(account, rest, next);
+}
+
+// Takes a deleted character's line off the board.
+export async function dropRanking(character: string): Promise<void> {
+  const rows = await $global.getCollectionItems(RANKING_COLLECTION, { filters: [{ field: "id", operator: "==", value: character }] });
+  for (const row of rows) await $global.deleteCollectionItem(RANKING_COLLECTION, row.__id);
 }
 
 // Saves the characters, and mirrors the active one's name on the account (friends find you by it).
@@ -165,6 +190,14 @@ export async function findNickname(key: string): Promise<NicknameItem | null> {
 export async function claimName(account: string, character: string, key: string, name: string): Promise<void> {
   if (await findNickname(key)) throw new RuleViolation("nickname_taken");
   await $global.addCollectionItem(NICKNAMES_COLLECTION, { key, name, account, character });
+}
+
+// Gives a deleted character's name back for anyone to take. Only the owner's claim on it goes (a
+// name claimed before characters existed carries no character id, so the key is what finds it).
+// Call inside withNicknameLock.
+export async function releaseName(account: string, key: string): Promise<void> {
+  const item = await findNickname(key);
+  if (item && item.account === account) await $global.deleteCollectionItem(NICKNAMES_COLLECTION, item.__id);
 }
 
 // The active character's name, which is how friends and parties see the account.

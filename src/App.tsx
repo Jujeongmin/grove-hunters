@@ -30,7 +30,7 @@ export default function App() {
     () => DEV_LOCAL ?? (ONLINE_AVAILABLE && connected ? new Verse8Transport(server, { joinRoom, leaveRoom }) : null),
     [connected, server, joinRoom, leaveRoom],
   );
-  const { view, failed, pickWorld, checkName, create, select, refresh } = useAccount(transport);
+  const { view, failed, pickWorld, checkName, create, select, remove, refresh } = useAccount(transport);
   const purchase = usePurchase(transport, refresh);
   const friends = useFriends(transport);
   const world = useMemo(() => (transport ? new WorldClient(transport) : null), [transport]);
@@ -79,6 +79,7 @@ export default function App() {
         checkName={checkName}
         onCreate={create}
         onSelect={select}
+        onDelete={remove}
         loadRanking={transport ? () => loadRanking(transport) : null}
         loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
         onBuy={purchase.buy}

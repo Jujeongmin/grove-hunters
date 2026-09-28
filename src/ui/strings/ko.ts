@@ -268,6 +268,7 @@ export const ko = {
   "bag.pickPath": "전직할 길을 고르세요. 한 번 고르면 바꿀 수 없어요.",
   "bag.unequip": "해제",
   "bag.empty": "가방이 비었어요",
+  "bag.pickHint": "아이템을 누르면 여기에 설명과 쓰는 법이 나와요.",
   "bag.drink": "마시기",
   "bag.equip": "장착",
   "bag.sell": "팔기 ({n})",
@@ -351,6 +352,12 @@ export const ko = {
 
   "chat.placeholder": "채널에 말하기",
   "chat.open": "채팅",
+  "chat.enterHint": "눌러서 채팅",
+  "lobby.deleteCharacter": "{name} 삭제",
+  "delete.title": "캐릭터 삭제",
+  "delete.warning": "‘{name}’의 레벨, 장비, 퀘스트가 모두 사라지고 되돌릴 수 없어요. 지우려면 이름을 그대로 입력하세요.",
+  "delete.confirm": "영구 삭제",
+  "problem.name_mismatch": "이름이 맞지 않아요",
 
   "quest.allDone": "모든 퀘스트 완료",
   "quest.reportHere": "눌러서 촌장에게 보고하기",
@@ -570,6 +577,14 @@ export const ko = {
   "keys.channel": "채널 바꾸기",
   "problem.channel_full": "그 채널은 가득 찼어요. 다른 채널을 골라 주세요",
   "friends.where": "{server} · {channel} · {zone}",
+  "common.prevPage": "이전 쪽",
+  "common.nextPage": "다음 쪽",
+  "friends.noIncoming": "받은 요청이 없어요.",
+  "friends.noOutgoing": "보낸 요청이 없어요.",
+  "quests.tabNow": "진행 중",
+  "quests.tabDaily": "일일",
+  "quests.tabPast": "완료",
+  "quests.noPast": "아직 마친 퀘스트가 없어요.",
 } as const;
 
 export type Key = keyof typeof ko;

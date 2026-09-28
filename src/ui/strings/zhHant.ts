@@ -259,6 +259,7 @@ export const zhHant: Bundle = {
   "bag.pickPath": "請選擇轉職的道路。一旦選定就不能更改。",
   "bag.unequip": "卸下",
   "bag.empty": "背包是空的",
+  "bag.pickHint": "點選物品，這裡會顯示說明與用法。",
   "bag.drink": "飲用",
   "bag.equip": "裝備",
   "bag.sell": "賣出（{n}）",
@@ -342,6 +343,12 @@ export const zhHant: Bundle = {
 
   "chat.placeholder": "對頻道說話",
   "chat.open": "聊天",
+  "chat.enterHint": "開始聊天",
+  "lobby.deleteCharacter": "刪除 {name}",
+  "delete.title": "刪除角色",
+  "delete.warning": "「{name}」的等級、裝備與任務將全部消失，無法復原。若要刪除，請照樣輸入名稱。",
+  "delete.confirm": "永久刪除",
+  "problem.name_mismatch": "名稱不符",
 
   "quest.allDone": "所有任務完成",
   "quest.reportHere": "點擊向村長回報",
@@ -561,4 +568,12 @@ export const zhHant: Bundle = {
   "keys.channel": "切換頻道",
   "problem.channel_full": "該頻道已滿。請選擇其他頻道",
   "friends.where": "{server} · {channel} · {zone}",
+  "common.prevPage": "上一頁",
+  "common.nextPage": "下一頁",
+  "friends.noIncoming": "沒有收到的邀請。",
+  "friends.noOutgoing": "沒有送出的邀請。",
+  "quests.tabNow": "進行中",
+  "quests.tabDaily": "每日",
+  "quests.tabPast": "已完成",
+  "quests.noPast": "還沒有完成的任務。",
 };

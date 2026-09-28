@@ -177,7 +177,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-bar.xp { height: 4px; }
 .hud-bar.xp i { background: #ffd36a; }
 .hud-target {
-  position: absolute; left: 50%; top: 48px; transform: translateX(-50%); width: 220px;
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: 200px;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   font: 600 14px var(--font-head); pointer-events: none;
 }
@@ -224,6 +224,22 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-hurt { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 90px 10px rgba(220, 30, 20, 0.6); }
 /* The quest tab. */
 .quest-log h3 { font: 700 13px var(--font-head); margin: 6px 0 0; color: var(--ink-dim); }
+/* The quest log has the full height of the right side (the bar below is not needed with it open),
+   and its three pages fit it without a scroll. */
+.ui .side-panel.quest-log { top: 12px; bottom: 12px; overflow: hidden; gap: 6px; }
+/* The skills reach up to the top, and stop above the bar they are dragged onto; the rows are tight
+   enough that three skills and their words fit without a scroll. */
+.ui .side-panel.skill-panel { top: 12px; overflow: hidden; gap: 4px; padding-top: 10px; padding-bottom: 10px; }
+.skill-panel .skill-row { gap: 8px; }
+.skill-panel .skill-row-text { font-size: 11px; line-height: 1.3; gap: 1px; }
+.skill-panel .skill-row-text b { font-size: 13px; }
+.quest-log h2 { margin: 0; }
+.quest-tabs { display: flex; gap: 14px; }
+.quest-tabs .text-button { font-size: 14px; padding: 2px 0; }
+.quest-tabs .on { color: var(--ember); text-decoration: underline; text-underline-offset: 4px; }
+.quest-log .quest-entry.daily { gap: 2px; padding: 6px 10px; }
+.quest-log .quest-entry.past { padding: 5px 10px; gap: 1px; }
+.quest-log-close { margin-top: auto; align-self: center; }
 .quest-entry { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); font-size: 12px; color: var(--ink-dim); }
 .quest-entry b { font: 700 14px var(--font-head); color: var(--ink); }
 .quest-entry.current { border: 1px solid rgba(255, 211, 106, 0.35); }
@@ -258,8 +274,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
   font: 600 14px var(--font-head); color: #ffe08a; pointer-events: none;
 }
 /* The potion and the three skills, in a row at the bottom centre, each with its auto mark under it. */
+/* A little left of centre, clear of the talk and auto buttons at the left of the pad on the
+   smallest stage. */
 .hud-skills {
-  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  position: absolute; left: calc(50% - 24px); bottom: 14px; transform: translateX(-50%);
   display: flex; gap: 8px; align-items: flex-start;
 }
 .hud-slot { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -335,12 +353,16 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .pad-attack img { width: 50px; height: 50px; }
 .pad-jump { right: 104px; bottom: 2px; }
 .pad-block { right: 86px; bottom: 76px; }
-.pad-auto { right: 14px; bottom: 104px; border-color: rgba(157, 255, 176, 0.55); }
+/* Auto-battle and talking sit left of the block and the jump, so nothing stands above the attack
+   button and the quest under the map has the right side to itself down to the buttons. */
+.pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
-.pad-talk { right: 158px; bottom: 120px; border-color: rgba(255, 211, 106, 0.7); }
-/* With touch controls the quest sits higher, clear of the buttons. */
-.hud-quest { top: 30%; transform: none; }
-.ui.touch .hud-quest { top: 26%; width: 210px; }
+.pad-talk { right: 170px; bottom: 2px; border-color: rgba(255, 211, 106, 0.7); }
+/* The quest sits right under the corner map (62px down, 132px tall, and the brush around it), at
+   a fixed height rather than a share of the stage, so it neither runs into the map on a tall stage
+   nor down into the buttons at the bottom right on a short one. */
+.hud-quest { top: 210px; right: 16px; transform: none; padding: 6px 10px; gap: 2px; }
+.ui.touch .hud-quest { width: 210px; }
 /* The map: a little one in the corner while you play, and the whole zone over the game with N.
    Both are drawn north up, so a glance means the same thing every time, and both sit on the same
    ragged brush shape the rest of the UI uses. */
@@ -385,8 +407,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .upgrade-sheet {
   position: relative; isolation: isolate; box-sizing: border-box;
   /* The brush shape frays at its edges, so the text keeps well inside the width it is stretched to. */
-  width: min(620px, 94%); max-height: 94%; overflow-y: auto;
-  display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px clamp(26px, 12%, 76px) 10px;
+  width: min(660px, 94%); max-height: 94%; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px clamp(26px, 9%, 60px) 6px;
   text-align: center;
 }
 /* See the note by .map-sheet::before for why the mask is drawn larger than the panel. */
@@ -398,18 +420,18 @@ button.hud-prompt:hover { color: #ffe0b0; }
   mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
 }
 .upgrade-sheet h2 { margin: 0; font: 800 21px var(--font-head); color: var(--ember); text-shadow: var(--shadow); }
-.upgrade-lead { margin: 0; font-size: 14px; color: var(--ink); }
-.upgrade-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.upgrade-lead { margin: 0; font-size: 13px; color: var(--ink); }
+.upgrade-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; width: 100%; }
 .upgrade-list li { display: flex; flex-direction: column; gap: 1px; }
 .upgrade-list b { font: 700 14px var(--font-head); color: #ffd36a; }
 .upgrade-list span { font-size: 12px; color: var(--ink-dim); }
-.upgrade-list li.big b { font-size: 18px; color: var(--ember); }
+.upgrade-list li.big b { font-size: 16px; color: var(--ember); }
 .upgrade-list li.big span { font-size: 13px; color: var(--ink); }
 .upgrade-classes { width: 100%; display: flex; flex-direction: column; gap: 4px; }
 .upgrade-classes b { font: 700 14px var(--font-head); color: #ffd36a; }
 .upgrade-class-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .upgrade-class { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 74px; }
-.upgrade-class img { width: 30px; height: 30px; image-rendering: pixelated; }
+.upgrade-class img { width: 26px; height: 26px; image-rendering: pixelated; }
 .upgrade-class em { font: 700 12px var(--font-head); font-style: normal; }
 .upgrade-class i { font-style: normal; font-size: 10px; white-space: nowrap; color: var(--ink-dim); }
 /* A sale, only ever shown when the Verse8 product itself is marked down (see readOffer). */
@@ -419,7 +441,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   padding: 2px 8px; border-radius: 4px;
 }
 .upgrade-sale s { font-size: 13px; color: var(--ink-dim); }
-.upgrade-sheet .brush-button { margin-top: 4px; min-width: 240px; }
+.upgrade-sheet .brush-button { margin-top: 2px; min-width: 240px; padding: 12px 36px; }
 /* The one button that asks for money: gold instead of the dark brush the rest of the UI uses. A
    sheen crosses it quickly and then rests, the way light moves over a struck coin when it turns —
    a slow constant drag reads cheap, a short pass with a long pause reads like metal. */
@@ -484,7 +506,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-job-paths { display: flex; gap: 8px; }
 .bag-job-paths .world-card { flex: 1; flex-direction: column; align-items: flex-start; gap: 2px; }
 /* The bag and the shop. */
-.bag-panel { width: min(560px, 92%); max-height: 86%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.bag-panel { width: min(560px, 92%); max-height: 86%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 14px 20px; }
+/* The shop and the smith keep to the smallest stage: a smaller title and tighter rows. */
+.bag-panel h2 { margin: 0; font-size: 20px; }
+.bag-panel .bag-gold { font-size: 16px; }
+.bag-panel .bag-list { gap: 2px; }
+.bag-panel .bag-row { gap: 8px; font-size: 13px; }
+.bag-panel .bag-blurb { font-size: 11px; line-height: 1.3; }
+.bag-panel > .note { margin: 0; font-size: 11px; }
 .bag-gold { margin: 0; text-align: center; font: 700 18px var(--font-head); color: #ffd36a; }
 .bag-gear, .bag-list { display: flex; flex-direction: column; gap: 4px; }
 .bag-gear { padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
@@ -497,6 +526,41 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-blurb { flex: 1; font-size: 12px; color: var(--ink-dim); }
 .bag-row .text-button { font-size: 13px; padding: 4px 8px; }
 .bag-problem { margin: 0; text-align: center; color: var(--ember); font-size: 13px; }
+/* The bag itself: what you wear and a grid of what you carry on the left, the piece picked on the
+   right with what can be done with it. Holds a full bag on the smallest stage without a scroll. */
+.bag-inventory { width: min(700px, 94%); max-height: none; overflow: visible; gap: 6px; padding: 12px 18px; }
+.bag-head { display: flex; align-items: baseline; gap: 14px; }
+.bag-inventory .bag-head h2 { margin: 0; font-size: 20px; text-align: left; }
+.bag-head .bag-gold { font-size: 16px; }
+.bag-head .bag-power { margin-left: auto; }
+.bag-inventory .bag-job { padding-bottom: 6px; gap: 4px; }
+.bag-body { display: grid; grid-template-columns: 1fr 200px; gap: 12px; }
+.bag-left { display: flex; flex-direction: column; gap: 8px; }
+.bag-inventory .bag-gear { gap: 4px; padding-bottom: 6px; }
+.bag-worn {
+  display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; text-align: left; cursor: pointer;
+  border: 1px solid transparent; background: rgba(255, 255, 255, 0.04); color: inherit;
+}
+.bag-worn b { font: 700 14px var(--font-head); }
+.bag-worn:disabled { cursor: default; }
+/* Nine to a row: every kind of item there is fits in two rows. */
+.bag-grid { display: grid; grid-template-columns: repeat(9, 44px); gap: 6px; }
+.bag-cell {
+  position: relative; width: 44px; height: 44px; padding: 4px; border-radius: 6px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.35);
+}
+.bag-cell img { width: 34px; height: 34px; image-rendering: pixelated; display: block; }
+.bag-cell-count { position: absolute; right: 3px; bottom: 1px; font: 700 11px var(--font-head); color: var(--ink); text-shadow: var(--shadow); }
+.bag-worn.picked, .bag-cell.picked, .bag-cell:hover, .bag-worn:hover:not(:disabled) { border-color: var(--ember); }
+.bag-detail { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); min-height: 140px; }
+.bag-detail .note { margin: auto 0; font-size: 12px; }
+.bag-detail-head { display: flex; align-items: center; gap: 8px; }
+.bag-detail-head b { font: 700 15px var(--font-head); }
+.bag-detail .bag-blurb { margin: 0; flex: none; }
+.bag-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: auto; }
+.bag-actions .text-button { font-size: 13px; padding: 4px 0; }
+.bag-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bag-foot .note { margin: 0; font-size: 12px; }
 .pain.fallen { align-items: center; padding-top: 0; pointer-events: auto; }
 .pain.fallen .world-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 
@@ -644,7 +708,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
   right: 0;
   bottom: 0;
   width: min(340px, 36%);
-  padding: 64px 22px 22px 40px;
+  padding: 22px 22px 16px 40px;
+  display: flex; flex-direction: column;
   box-sizing: border-box;
   background: linear-gradient(270deg, rgba(8, 6, 5, 0.96) 86%, rgba(8, 6, 5, 0));
   animation: friends-in 0.18s ease-out;
@@ -653,6 +718,15 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .friends-panel header { display: flex; justify-content: space-between; align-items: center; }
 .friends-panel h2 { font: 800 22px var(--font-head); margin: 0; }
 .friends-panel h3 { font: 700 14px var(--font-head); color: var(--ink-dim); margin: 22px 0 6px; }
+/* Friends, requests received and requests sent: one tab each, a page at a time. */
+.friend-tabs { display: flex; gap: 2px 10px; flex-wrap: wrap; margin: 14px 0 4px; }
+.friend-tabs .text-button { font-size: 13px; padding: 4px 0; }
+.friend-tabs .on { color: var(--ember); text-decoration: underline; text-underline-offset: 4px; }
+.friend-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
+.friend-foot .note { margin: 0; font-size: 12px; }
+/* The pages of a long list: back, where you are, forward. */
+.pager { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.pager .text-button { font-size: 18px; padding: 0 8px; line-height: 1; }
 .friends-panel .note { font-size: 13px; color: var(--ink-dim); line-height: 1.6; }
 .friend-add { display: flex; gap: 6px; margin-top: 16px; }
 .friend-add input, .nickname-form input {
@@ -697,15 +771,18 @@ button.hud-prompt:hover { color: #ffe0b0; }
 
 .matchmaking .text-button { justify-self: center; }
 
-.stats-panel { width: 480px; max-height: 76vh; overflow-y: auto; padding: 44px 56px; }
+/* The ranking: the board a page at a time, so it keeps to the smallest stage without a scroll. */
+.stats-panel { width: 480px; padding: 18px 28px; }
+.stats-panel .pager { justify-content: center; margin: 0 auto 6px; width: max-content; }
+.stats-panel .pager .text-button { display: inline-block; margin: 0; }
 .stats-panel h3 { font: 700 15px var(--font-head); margin: 18px 0 8px; }
 .stats-panel .note { font-size: 13px; color: var(--ink-dim); line-height: 1.6; margin: 0 0 10px; }
 .stats-mine { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
 .stats-mine .note { margin: 0; }
 .stats-level { font: 800 18px var(--font-logo); color: var(--ember); }
 
-.stats-board { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 4px; }
-.stats-board li { display: grid; grid-template-columns: 24px 1fr 88px 48px; align-items: baseline; gap: 10px; padding: 4px 8px; border-radius: 4px; }
+.stats-board { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 2px; }
+.stats-board li { display: grid; grid-template-columns: 24px 1fr 88px 48px; align-items: baseline; gap: 10px; padding: 3px 8px; border-radius: 4px; }
 .stats-board li.head { font: 600 12px var(--font-head); color: var(--ink-dim); }
 .stats-board li.pick { cursor: pointer; }
 .stats-board li.pick:hover { background: rgba(255, 255, 255, 0.07); }
@@ -927,6 +1004,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .chat-close { padding: 6px 10px; border-radius: 6px; border: 0; background: rgba(255, 255, 255, 0.15); color: var(--ink); font: 600 13px var(--font-body); }
 .chat-problem { width: 100%; color: var(--blood); font: 600 13px var(--font-body); }
 .chat-open { align-self: flex-start; pointer-events: auto; font: 600 14px var(--font-body); border: 0; background: none; color: var(--ink); cursor: pointer; }
+/* The chat's bar on a keyboard, at the bottom left: Enter to talk. */
+.chat-bar {
+  align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 6px 12px; min-width: 200px;
+  pointer-events: auto; cursor: pointer; border-radius: 6px; border: 1px solid rgba(242, 232, 213, 0.18);
+  background: rgba(14, 11, 9, 0.55); color: var(--ink-dim); font: 600 13px var(--font-body);
+}
+.chat-bar:hover { border-color: rgba(255, 179, 90, 0.6); color: var(--ink); }
+.chat-bar kbd { font: 700 11px var(--font-head); color: #2e1c06; background: #ffd36a; border-radius: 4px; padding: 1px 6px; }
 
 .bag-power { margin-left: 14px; color: var(--ember); font-weight: 700; }
 
@@ -1003,5 +1088,20 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .channel-card.full { opacity: 0.5; cursor: default; }
 .channel-friends { flex-basis: 100%; font-size: 11px; color: #7fd36a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* The zone's name at the top opens the channel list. */
-.hud-channel { position: relative; cursor: pointer; color: inherit; background: none; border: 0; pointer-events: auto; }
+.hud-channel { position: relative; align-self: flex-start; cursor: pointer; color: inherit; background: none; border: 0; pointer-events: auto; }
 .hud-channel > .hud-key { top: -6px; right: -6px; }
+
+/* Deleting a character: the name typed back before the button works. */
+.character-delete { align-self: flex-start; font-size: 12px; padding: 2px 4px; color: var(--ink-dim); }
+.character-delete:hover { color: var(--blood); }
+.delete-panel { width: min(420px, 92%); display: flex; flex-direction: column; gap: 10px; }
+.delete-panel h2 { margin: 0; font-size: 20px; color: var(--blood); }
+.delete-warning { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink); }
+.delete-panel input {
+  font: 600 15px var(--font-body); color: var(--ink); background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 107, 90, 0.4); border-radius: 6px; padding: 8px 10px; outline: none;
+}
+.delete-panel input:focus { border-color: var(--blood); }
+.delete-actions { display: flex; justify-content: flex-end; gap: 16px; }
+.delete-confirm { color: var(--blood); }
+.delete-confirm:disabled { opacity: 0.35; }

@@ -259,6 +259,7 @@ export const en: Bundle = {
   "bag.pickPath": "Choose a path. Once chosen it cannot be changed.",
   "bag.unequip": "Take off",
   "bag.empty": "Your bag is empty",
+  "bag.pickHint": "Pick an item to see what it is and what to do with it.",
   "bag.drink": "Drink",
   "bag.equip": "Wear",
   "bag.sell": "Sell ({n})",
@@ -342,6 +343,12 @@ export const en: Bundle = {
 
   "chat.placeholder": "Say something to the channel",
   "chat.open": "Chat",
+  "chat.enterHint": "to chat",
+  "lobby.deleteCharacter": "Delete {name}",
+  "delete.title": "Delete character",
+  "delete.warning": "Everything '{name}' has earned (levels, gear, quests) goes for good. Type the name to delete it.",
+  "delete.confirm": "Delete for good",
+  "problem.name_mismatch": "That is not the name",
 
   "quest.allDone": "Every quest done",
   "quest.reportHere": "Tap to report to the elder",
@@ -561,4 +568,12 @@ export const en: Bundle = {
   "keys.channel": "Change channel",
   "problem.channel_full": "That channel is full. Pick another one",
   "friends.where": "{server} · {channel} · {zone}",
+  "common.prevPage": "Previous page",
+  "common.nextPage": "Next page",
+  "friends.noIncoming": "No requests waiting.",
+  "friends.noOutgoing": "No requests sent.",
+  "quests.tabNow": "Current",
+  "quests.tabDaily": "Daily",
+  "quests.tabPast": "Done",
+  "quests.noPast": "No quests done yet.",
 };

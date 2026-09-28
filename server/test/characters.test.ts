@@ -1,5 +1,5 @@
 import { CHARACTERS_PER_WORLD } from "../../src/game/account/characters";
-import { errorOf, makeCharacter } from "./helpers";
+import { enterAs, errorOf, makeCharacter } from "./helpers";
 
 describe("characters", () => {
   test("a new account has none, and a new character becomes the one you play", async (server) => {
@@ -51,6 +51,35 @@ describe("characters", () => {
     const view = await server.selectCharacter(first.active.id);
     expect(view.active).toMatchObject({ name: "하나", playerClass: "warrior" });
     expect(await errorOf(server.selectCharacter("c-nobody"))).toContain("no_character");
+  });
+
+  test("deleting a character takes its typed name, frees the name and plays another in its place", async (server) => {
+    const first = await makeCharacter(server, "test-a", "하나", "warrior");
+    const second = await server.createCharacter("둘째", "wizard", "0000");
+    expect(second.active.name).toBe("둘째");
+    expect(await errorOf(server.deleteCharacter(second.active.id, "둘"))).toContain("name_mismatch");
+    expect(await errorOf(server.deleteCharacter("c-nobody", "둘째"))).toContain("no_character");
+    const view = await server.deleteCharacter(second.active.id, " 둘째 ");
+    expect(view.characters.map((c: { name: string }) => c.name)).toEqual(["하나"]);
+    expect(view.active.id).toBe(first.active.id);
+    // The name is anyone's again, and the deleted character does not come back on a later read.
+    expect(await server.checkName("둘째")).toEqual({ free: true });
+    expect((await server.getAccount()).characters).toHaveLength(1);
+    server.connect({ account: "test-b" });
+    expect((await server.createCharacter("둘째", "ranger", "0000")).active.name).toBe("둘째");
+  });
+
+  test("deleting the last character on a server leaves none playing there", async (server) => {
+    const only = await makeCharacter(server, "test-a", "혼자");
+    const view = await server.deleteCharacter(only.active.id, "혼자");
+    expect(view.characters).toEqual([]);
+    expect(view.active).toBeNull();
+  });
+
+  test("a character is not deleted from inside the world", async (server) => {
+    const made = await makeCharacter(server, "test-a", "사냥중");
+    await enterAs(server, "test-a");
+    expect(await errorOf(server.deleteCharacter(made.active.id, "사냥중"))).toContain("unavailable");
   });
 
   test("an account from before characters keeps its one character and its match XP", async (server) => {

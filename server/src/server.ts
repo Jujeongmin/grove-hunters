@@ -29,8 +29,8 @@ import {
   readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
 import {
-  channelPlayers, claimName, findNickname, friendChannels, friendEntry, grantPurchase, markSeen, ownsFullGame, pickChannel,
-  readAccountWorld, readFriendSide, readNickname, readProfile, readRanking,
+  channelPlayers, claimName, deleteCharacter, dropRanking, findNickname, friendChannels, friendEntry, grantPurchase, markSeen,
+  ownsFullGame, pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
@@ -299,6 +299,30 @@ export class Server {
       const picked = characters.find((c) => c.id === id && c.world === world);
       if (!picked) throw new RuleViolation("no_character");
       await saveProfile(account, characters, picked.id);
+    });
+    return accountView(account);
+  }
+
+  // Deletes one of your characters for good, once you have typed its name to be sure: its name is
+  // free for anyone again and its line leaves the board. Only from the menus, never while playing.
+  async deleteCharacter(id: unknown, typedName: unknown): Promise<AccountView> {
+    const account = $sender.account;
+    if (readChannelRoom($sender.roomId)) throw new RuleViolation("unavailable");
+    await withProfileLock(account, async () => {
+      const { characters, active } = await readProfile(account);
+      const doomed = characters.find((c) => c.id === id);
+      if (!doomed) throw new RuleViolation("no_character");
+      if (typeof typedName !== "string" || typedName.trim() !== doomed.name) throw new RuleViolation("name_mismatch");
+      await deleteCharacter(account, doomed, characters, active?.id ?? null);
+      const key = (() => {
+        try {
+          return parseNickname(doomed.name).key;
+        } catch {
+          return null;
+        }
+      })();
+      if (key) await withNicknameLock(() => releaseName(account, key));
+      await dropRanking(doomed.id);
     });
     return accountView(account);
   }

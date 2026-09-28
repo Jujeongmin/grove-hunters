@@ -6,6 +6,10 @@ import type { RankDetail, RankRow, RankingView } from "../game/account/ranking";
 import type { PlayerClass } from "../game/combat/classes";
 import { className, itemName, jobName, serverName } from "./names";
 import type { JobId } from "../game/combat/jobs";
+import { usePages } from "./Pager";
+
+// Lines of the board on one page.
+const BOARD_PER_PAGE = 8;
 
 interface RankingPanelProps {
   onClose: () => void;
@@ -62,6 +66,9 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
     };
   }, [picked]);
 
+  // The board a page at a time, so the panel keeps to the smallest stage without a scroll.
+  const boardPage = usePages(view?.board ?? [], BOARD_PER_PAGE);
+
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel stats-panel" onClick={(e) => e.stopPropagation()}>
@@ -87,14 +94,14 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                   <span>{t("rank.class")}</span>
                   <span>{t("rank.level")}</span>
                 </li>
-                {view.board.map((row, i) => (
+                {boardPage.shown.map((row) => (
                   <li
                     key={row.id} role="button" tabIndex={0}
                     className={`pick${row.account === account ? " me" : ""}`}
                     onClick={() => setPicked(row)}
                     onKeyDown={(e) => e.key === "Enter" && setPicked(row)}
                   >
-                    <span className="rank">{i + 1}</span>
+                    <span className="rank">{view.board.indexOf(row) + 1}</span>
                     <span className="who">{row.nickname ?? t("common.noName")}</span>
                     <span className="note">{classText(row.playerClass, row.job)}</span>
                     <span className="note">Lv {row.level}</span>
@@ -102,6 +109,7 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                 ))}
               </ol>
             )}
+            {boardPage.pager}
           </>
         )}
 
