@@ -196,6 +196,7 @@ export const ko = {
   "monster.stone_golem": "바위 골렘",
   "monster.mushnub_guard": "버섯 호위병",
   "monster.mushroom_king": "버섯왕",
+  "monster.grove_guardian": "정화의 수호자",
 
   "zone.village": "초록숲 마을",
   "zone.forest1": "숲 필드 1",

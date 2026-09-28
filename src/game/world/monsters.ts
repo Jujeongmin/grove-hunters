@@ -8,7 +8,7 @@ export type MonsterType =
   | "green_blob" | "mushnub" | "rat" | "frog"
   | "spider" | "snake" | "wasp" | "goleling" | "bat"
   | "dire_spider" | "venom_snake" | "hornet" | "vampire_bat" | "stone_golem"
-  | "mushnub_guard" | "mushroom_king";
+  | "mushnub_guard" | "mushroom_king" | "grove_guardian";
 
 export interface MonsterSpec {
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
@@ -99,6 +99,13 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
     ...common, level: 30, hp: 900, damage: 40, speed: 2.2, aggro: 30, xp: 60,
     gold: [5, 10], drops: [],
   },
+  // Called up in the first field when the grove is cleansed (see grove.ts); once felled it is gone
+  // for the week.
+  grove_guardian: {
+    ...common, level: 12, hp: 8000, damage: 30, range: 2.4, attackMs: 1600, speed: 1.6, aggro: 14, body: 0.8, xp: 3000,
+    respawnMs: 8 * 86_400_000, gold: [500, 800],
+    drops: [{ item: "potion_big", chance: 1 }, { item: "potion_big", chance: 1 }, { item: "potion_big", chance: 1 }, { item: "spore", chance: 1 }],
+  },
   mushroom_king: {
     level: 32, hp: 30000, damage: 90, range: 2.8, attackMs: 1800, speed: 1.6, aggro: 22, body: 1.0, xp: 6000,
     respawnMs: 300_000, gold: [800, 1200],
@@ -130,16 +137,18 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   boss: [],
 };
 export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king" };
+// Where the grove's guardian comes (see grove.ts).
+export const GROVE_GUARDIAN_ZONE: ZoneId = "forest1";
 
 // Monsters come back sooner the more hunters share the room, so a busy field does not run dry: the
-// full wait with one hunter, falling evenly to RESPAWN_FLOOR_MS with CROWD_FULL of them. A boss
-// keeps its own clock.
+// full wait with one hunter, falling evenly to RESPAWN_FLOOR_MS with CROWD_FULL of them. Only the
+// fields' own monsters: a boss, its brood and the grove's guardian keep their own clocks.
 const RESPAWN_FLOOR_MS = 6_000;
 const CROWD_FULL = 10;
 
 export function respawnDelay(type: MonsterType, hunters: number): number {
   const full = MONSTERS[type].respawnMs;
-  if (Object.values(ZONE_BOSS).includes(type) || full <= RESPAWN_FLOOR_MS) return full;
+  if (!Object.values(ZONE_MONSTERS).some((kinds) => kinds.includes(type)) || full <= RESPAWN_FLOOR_MS) return full;
   const crowd = Math.min(1, Math.max(0, (hunters - 1) / (CROWD_FULL - 1)));
   return Math.round(full - (full - RESPAWN_FLOOR_MS) * crowd);
 }

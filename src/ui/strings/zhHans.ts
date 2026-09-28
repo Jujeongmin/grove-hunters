@@ -189,6 +189,7 @@ export const zhHans: Bundle = {
   "monster.stone_golem": "岩石魔像",
   "monster.mushnub_guard": "蘑菇护卫",
   "monster.mushroom_king": "蘑菇王",
+  "monster.grove_guardian": "净化守护者",
 
   "zone.village": "绿林村",
   "zone.forest1": "森林原野 1",

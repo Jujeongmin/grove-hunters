@@ -189,6 +189,7 @@ export const en: Bundle = {
   "monster.stone_golem": "Stone Golem",
   "monster.mushnub_guard": "Mushnub Guard",
   "monster.mushroom_king": "Mushroom King",
+  "monster.grove_guardian": "Grove Guardian",
 
   "zone.village": "Grove Village",
   "zone.forest1": "Forest Field 1",

@@ -189,6 +189,7 @@ export const ja: Bundle = {
   "monster.stone_golem": "岩のゴーレム",
   "monster.mushnub_guard": "キノコ護衛兵",
   "monster.mushroom_king": "キノコ王",
+  "monster.grove_guardian": "浄化の守護者",
 
   "zone.village": "みどり森の村",
   "zone.forest1": "森フィールド1",

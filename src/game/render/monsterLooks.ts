@@ -15,6 +15,8 @@ const animal = (model: string, height: number, clips: Partial<MonsterLook["clips
   look: { height, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death", ...clips } },
 });
 
+const MUSHROOM_KING: MonsterLook = { height: 2.8, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Weapon", death: "Death" } };
+
 export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   green_blob: blob("mon_green_blob"),
   mushnub: blob("mon_mushnub"),
@@ -45,10 +47,9 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   mushnub_guard: {
     model: "mon_mushnub", look: { height: 1.3, tint: 0xd07060, clips: { idle: "Idle", walk: "Walk", attack: "Bite_Front", death: "Death" } },
   },
-  mushroom_king: {
-    model: "mon_mushroom_king",
-    look: { height: 2.8, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Weapon", death: "Death" } },
-  },
+  mushroom_king: { model: "mon_mushroom_king", look: MUSHROOM_KING },
+  // The grove's guardian: the Mushroom King's model, smaller and green with the forest.
+  grove_guardian: { model: "mon_mushroom_king", look: { ...MUSHROOM_KING, height: 2.8 * 0.7, tint: 0x9dffb0 } },
 };
 
 export const GREEN_BLOB = MONSTER_SKINS.green_blob;

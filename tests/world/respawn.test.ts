@@ -15,6 +15,10 @@ describe("monsters coming back", () => {
     expect(respawnDelay("green_blob", 30)).toBe(6_000);
   });
 
+  it("never hurry the grove's guardian back", () => {
+    expect(respawnDelay("grove_guardian", 10)).toBe(MONSTERS.grove_guardian.respawnMs);
+  });
+
   it("leave the boss to its own clock", () => {
     expect(respawnDelay("mushroom_king", 10)).toBe(MONSTERS.mushroom_king.respawnMs);
   });
