@@ -32,7 +32,7 @@ const SHOWN: { key: FlagKey; label: string }[] = [
 const KEYS: [string, string][] = [
   ["WASD", "이동"], ["Space", "점프"], ["좌클릭 / 우클릭", "공격 / 막기"], ["1 ~ 3", "스킬"], ["Q", "물약"],
   ["E", "대화"], ["R", "자동 전투"], ["J", "퀘스트 찾아가기·보고"], ["Enter", "채팅"], ["M", "메뉴 펼치기"],
-  ["Esc", "창 닫기"], ["O / L / K / U / I", "랭킹 / 퀘스트 / 스킬 / 대장간 / 가방"], ["B", "절전 모드"], ["P", "설정"],
+  ["Esc", "창 닫기"], ["N", "지도"], ["O / L / K / U / I", "랭킹 / 퀘스트 / 스킬 / 대장간 / 가방"], ["B", "절전 모드"], ["P", "설정"],
 ];
 
 // The settings, in sections: sound (music and effects apart), controls, screen and what is shown over

@@ -23,6 +23,7 @@ import { SkillPanel } from "./SkillPanel";
 import { RankingPanel } from "./RankingPanel";
 import { iconFor } from "../game/render/icons";
 import { QuestPanel } from "./QuestPanel";
+import { MapPanel, MinimapCorner } from "./Minimap";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
 import { QUESTS, questDone } from "../game/account/quests";
 import { SettingsPanel } from "./SettingsPanel";
@@ -110,7 +111,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, onExit 
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quest" | "quests";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quest" | "quests" | "map";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -204,6 +205,7 @@ function ZoneScreen({ entry, client, playerClass, costume, name, owned, travelli
     setPanel((p) => (p === next ? null : next));
   };
   const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean }[] = [
+    { id: "map", label: "지도", key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
     { id: "ranking", label: "랭킹", key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
     { id: "quests", label: "퀘스트", key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
     { id: "skills", label: "스킬", key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
@@ -317,10 +319,11 @@ function ZoneScreen({ entry, client, playerClass, costume, name, owned, travelli
               <div className="hud-bar xp"><i style={{ width: `${Math.round((hud.xpInto / hud.xpNeed) * 100)}%` }} /></div>
             </div>
           </div>
+          {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} />}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
             {menuOpen && menuItems.map((item) => (
               <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}`} onClick={item.act}>
-                <img src={iconFor(`ui_${item.id}`) ?? undefined} alt="" draggable={false} />
+                {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
                 <span>{item.label}</span>
                 {!touch && <kbd className="hud-key">{item.key}</kbd>}
               </button>
@@ -404,6 +407,15 @@ function ZoneScreen({ entry, client, playerClass, costume, name, owned, travelli
       )}
       {panel === "quest" && (
         <QuestPanel client={client} bag={bag} onSeek={(types) => view.current?.seekQuest(types)} onClose={() => setPanel(null)} />
+      )}
+      {panel === "map" && hud && (
+        <MapPanel
+          zone={hud.zoneId} me={hud.me} onClose={() => setPanel(null)}
+          onWalk={(spot) => {
+            if (spot.npc) view.current?.walkToNpc(spot.npc);
+            else view.current?.walkToSpot(spot);
+          }}
+        />
       )}
       {panel === "ranking" && <RankingPanel
         account={client.account} load={() => client.ranking()} loadDetail={(id) => client.rankDetail(id)} onClose={() => setPanel(null)}

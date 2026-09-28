@@ -7,7 +7,7 @@ import { WEAPONS, type PlayerClass } from "../combat/classes";
 import { facing, inStrikeReach } from "../combat/melee";
 import { SKILLS, SKILL_KEYS, skillTargets, type Skill } from "../combat/skills";
 import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
-import { solidWith, type LevelLayout } from "../rules/levelLayout";
+import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
   GROUNDED, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, type Airborne, type SolidTest,
 } from "../rules/movement";
@@ -113,7 +113,10 @@ function zoneMonsterModels(zone: ZoneId): string[] {
 
 export interface WorldHud {
   zone: string;
+  zoneId: ZoneId;
   channel: number;
+  // Where you stand and which way you look, for the map.
+  me: { x: number; z: number; yaw: number };
   // A locked portal needs the full game or, failing that, a level.
   portal: { to: string; locked: boolean; needLevel: number | null } | null;
   // The three slots of the bar (keys 1 to 3): the skill each holds, or null while empty.
@@ -333,6 +336,19 @@ export class WorldView {
   walkToNpc(id: NpcId): void {
     if (this.options.entry.zone !== START_ZONE) return;
     this.walkGoal = { to: npcSpot(id), talk: id };
+    this.auto = false;
+    this.questSeek = null;
+    this.route = null;
+  }
+
+  // Walks you to a place picked on the map. Nothing waits at the end; the forest and the houses are
+  // turned away rather than walked into.
+  walkToSpot(to: Point2): void {
+    if (solidAt(this.layout, to.x, to.z)) {
+      this.notes.push({ text: "그곳으로는 갈 수 없어요", at: performance.now() });
+      return;
+    }
+    this.walkGoal = { to, talk: null };
     this.auto = false;
     this.questSeek = null;
     this.route = null;
@@ -892,7 +908,9 @@ export class WorldView {
     const fighting = this.target ? this.client.state.monsters[this.target] : undefined;
     const hud: WorldHud = {
       zone: ZONES[entry.zone].name,
+      zoneId: entry.zone,
       channel: entry.channel,
+      me: { x: this.pose.x, z: this.pose.z, yaw: this.yaw },
       portal: near && near.d <= PORTAL_REARM + 2
         ? {
           to: ZONES[near.portal.to].name, locked: ZONES[near.portal.to].paid && !this.options.owned,
