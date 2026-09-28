@@ -13,8 +13,8 @@ export interface MonsterHit { monsterId: string; account: string; damage: number
 // A monster this far from where it started gives up the chase, walks home and heals.
 export const LEASH = 20;
 
-// One step of every monster in a room: the fallen come back when their time is up, the rest chase
-// whoever hit them (or else the nearest player they can see), walk round each other, the players and the forest, and swing
+// One step of every monster in a room: the fallen come back when their time is up, the rest leave
+// players be until hit and then chase whoever hit them, walk round each other, the players and the forest, and swing
 // when close enough. Returns the blows landed; the caller takes them off the players.
 export function stepMonsters(
   monsters: Record<string, MonsterState>, prey: readonly Prey[], layout: LevelLayout, dt: number, now: number,
@@ -29,18 +29,20 @@ export function stepMonsters(
       else if (now >= m.respawnAt) monsters[id] = respawned(m);
       continue;
     }
-    if (BOSSES.has(m.type) && stepBoss(id, m, monsters, prey, now, hits)) continue;
+    // Monsters are neutral until a player hits them: then they turn on whoever did. The boss's brood
+    // is the exception, called up mid-fight to go for any hunter in sight.
+    const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
+    if (BOSSES.has(m.type) && provoked.length > 0 && stepBoss(id, m, monsters, prey, now, hits)) continue;
     if (now < m.stunnedUntil) continue;
 
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
     let target: { prey: Prey; d: number } | null = null;
     if (fromHome <= LEASH) {
-      // Whoever hit it is chased from any distance (an archer out of its sight included); otherwise
-      // the nearest player it can see. Past the leash it gives up on both.
-      const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
-      for (const p of provoked.length > 0 ? provoked : prey) {
+      // Whoever hit it is chased from any distance (an archer out of its sight included); the brood
+      // takes the nearest hunter it can see. Past the leash it gives up and goes home to heal.
+      for (const p of m.summoned ? prey : provoked) {
         const d = Math.hypot(p.x - m.x, p.z - m.z);
-        if ((provoked.length > 0 || d <= spec.aggro) && (!target || d < target.d)) target = { prey: p, d };
+        if ((!m.summoned || d <= spec.aggro) && (!target || d < target.d)) target = { prey: p, d };
       }
     }
     const goal = target ? target.prey : { x: m.homeX, z: m.homeZ };

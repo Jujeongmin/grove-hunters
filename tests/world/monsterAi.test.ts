@@ -20,8 +20,15 @@ describe("monsters", () => {
     expect(spawnMonsters("village")).toEqual({});
   });
 
-  it("walk toward a player they can see and bite once close", () => {
-    const monsters = { m: rat(home.x, home.z - 5) };
+  it("leave players be, however close, until hit", () => {
+    const monsters = { m: rat(home.x, home.z - 1.2) };
+    const hits = [0, 500, 1000, 1500].flatMap((t) => stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z }], layout, 0.5, 1000 + t));
+    expect(hits).toEqual([]);
+    expect(monsters.m.z).toBe(home.z - 1.2);
+  });
+
+  it("once hit, walk toward whoever hit them and bite once close", () => {
+    const monsters = { m: rat(home.x, home.z - 5, { hitters: { a: 1 } }) };
     const prey = [{ account: "a", x: home.x, z: home.z }];
     stepMonsters(monsters, prey, layout, 0.5, 1000);
     expect(monsters.m.z).toBeGreaterThan(home.z - 5);
@@ -30,8 +37,8 @@ describe("monsters", () => {
     expect(hits).toEqual([{ monsterId: "m", account: "a", damage: MONSTERS.rat.damage }]);
   });
 
-  it("ignore players out of sight, and stand still while stunned", () => {
-    const monsters = { m: rat(home.x, home.z - 5, { stunnedUntil: 5000 }) };
+  it("stand still while stunned, and leave alone those who did not hit them", () => {
+    const monsters = { m: rat(home.x, home.z - 5, { stunnedUntil: 5000, hitters: { a: 1 } }) };
     stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z }], layout, 0.5, 1000);
     expect(monsters.m.z).toBe(home.z - 5);
     const far = { m: rat(home.x, home.z - 5) };
@@ -64,7 +71,7 @@ describe("the boss", () => {
   });
 
   it("rears up with a warning, then slams everyone close, not those who stepped out", () => {
-    const monsters: Record<string, MonsterState> = { boss: king() };
+    const monsters: Record<string, MonsterState> = { boss: king({ hitters: { near: 1, far: 1 } }) };
     const prey = [{ account: "near", x: at.x + 5, z: at.z }, { account: "far", x: at.x + 12, z: at.z }];
     stepMonsters(monsters, prey, arena, 0.2, 0);
     const slamAt = monsters.boss.slamAt!;
@@ -77,8 +84,8 @@ describe("the boss", () => {
   });
 
   it("calls its brood once at each threshold, and the brood does not come back", () => {
-    const monsters: Record<string, MonsterState> = { boss: king({ hp: MONSTERS.mushroom_king.hp * 0.69 }) };
-    // A hunter in sight keeps it fighting (alone at home it would heal).
+    const monsters: Record<string, MonsterState> = { boss: king({ hp: MONSTERS.mushroom_king.hp * 0.69, hitters: { a: 1 } }) };
+    // The hunter who hit it keeps it fighting (alone at home it would heal).
     const prey = [{ account: "a", x: at.x + 10, z: at.z }];
     stepMonsters(monsters, prey, arena, 0.2, 0);
     stepMonsters(monsters, prey, arena, 0.2, 100);
@@ -87,13 +94,18 @@ describe("the boss", () => {
     monsters.boss.hp = MONSTERS.mushroom_king.hp * 0.39;
     stepMonsters(monsters, prey, arena, 0.2, 200);
     expect(Object.values(monsters).filter((m) => m.summoned)).toHaveLength(BOSS_MOVES.summonCount * 2);
+    // The brood comes to fight: it goes for a hunter in sight without being hit first.
+    const guard = monsters[brood[1]];
+    const was = Math.hypot(guard.x - prey[0].x, guard.z - prey[0].z);
+    stepMonsters(monsters, prey, arena, 0.5, 300);
+    expect(Math.hypot(guard.x - prey[0].x, guard.z - prey[0].z)).toBeLessThan(was);
     monsters[brood[0]].alive = false;
     stepMonsters(monsters, [], arena, 0.2, 60_000);
     expect(monsters[brood[0]]).toBeUndefined();
   });
 
   it("rages when low: faster and harder bites", () => {
-    const monsters: Record<string, MonsterState> = { boss: king({ hp: 100, slamAt: 1e12 }) };
+    const monsters: Record<string, MonsterState> = { boss: king({ hp: 100, slamAt: 1e12, hitters: { a: 1 } }) };
     const hits = stepMonsters(monsters, [{ account: "a", x: at.x + 1.5, z: at.z }], arena, 0.2, 1000);
     expect(hits[0].damage).toBe(Math.round(MONSTERS.mushroom_king.damage * BOSS_MOVES.rageDamage));
     expect(monsters.boss.attackReadyAt - 1000).toBe(MONSTERS.mushroom_king.attackMs * BOSS_MOVES.rageSpeed);

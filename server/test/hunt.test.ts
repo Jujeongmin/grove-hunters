@@ -14,11 +14,17 @@ async function toForest(server: any, account: string, playerClass = "warrior"): 
   return join(server, account, await server.travel("forest1"), village.roomId);
 }
 
-// Puts one monster of `type` at (x, z) and nothing else in the room.
-async function only(type: string, x: number, z: number, hp = MONSTERS[type as keyof typeof MONSTERS].hp): Promise<void> {
+// Puts one monster of `type` at (x, z) and nothing else in the room. Monsters leave players be until
+// hit: `angryAt` is an account it has already been hit by, and so goes for.
+async function only(
+  type: string, x: number, z: number, hp = MONSTERS[type as keyof typeof MONSTERS].hp, angryAt: string | null = null,
+): Promise<void> {
   await $room.updateRoomState({
     monsters: {
-      m0: { type, x, z, yaw: 0, hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: x, homeZ: z },
+      m0: {
+        type, x, z, yaw: 0, hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: x, homeZ: z,
+        ...(angryAt ? { hitters: { [angryAt]: 1 } } : {}),
+      },
     },
   });
 }
@@ -53,7 +59,11 @@ describe("hunting", () => {
     const entry = await toForest(server, "test-a");
     const spawn = zoneLayout("forest1").playerSpawn;
     await standAt(server, spawn.x, spawn.z);
+    // Left alone it does nothing; once hit it bites back.
     await only("rat", spawn.x, spawn.z - 1);
+    await server.simulateTick(entry.roomId, 200);
+    expect((await $room.getMyState()).hp).toBe(maxHpAt(1));
+    await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
     await server.simulateTick(entry.roomId, 200);
     const full = maxHpAt(1);
     const bare = full - (await $room.getMyState()).hp;
@@ -154,7 +164,7 @@ describe("hunting", () => {
     const spawn = zoneLayout("forest1").playerSpawn;
     await standAt(server, spawn.x, spawn.z);
     expect(await errorOf(server.reviveHere())).toContain("unavailable");
-    await only("spider", spawn.x, spawn.z - 1);
+    await only("spider", spawn.x, spawn.z - 1, undefined, "test-a");
     await $room.updateMyState({ hp: 1 });
     await server.simulateTick(entry.roomId, 200);
     const lost = deathXpLoss(xp);
@@ -180,7 +190,7 @@ describe("hunting", () => {
     const spawn = zoneLayout("forest1").playerSpawn;
     await standAt(server, spawn.x, spawn.z);
     expect(await errorOf(server.respawn())).toContain("unavailable");
-    await only("spider", spawn.x, spawn.z - 1);
+    await only("spider", spawn.x, spawn.z - 1, undefined, "test-a");
     await $room.updateMyState({ hp: 1 });
     await server.simulateTick(entry.roomId, 200);
     expect((await $room.getMyState()).dead).toBe(true);
