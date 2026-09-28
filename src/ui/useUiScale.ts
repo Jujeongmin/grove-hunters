@@ -4,6 +4,9 @@ import { useEffect } from "react";
 export const UI_WIDTH = 800;
 // Beyond this the text would read too large on a big monitor; the layout widens instead.
 export const UI_MAX_SCALE = 1.2;
+// The whole overlay is drawn this much smaller than it is laid out, so the HUD takes less of the
+// view (a mobile MMO's proportions); the layout keeps its 800-wide measurements.
+export const UI_SHRINK = 0.85;
 
 // Keeps --ui-scale in step with the stage, so a small screen shows the same layout, only smaller.
 export function useUiScale(): void {
@@ -12,7 +15,7 @@ export function useUiScale(): void {
     if (!root) return;
     const apply = () => {
       const width = root.clientWidth;
-      if (width > 0) document.documentElement.style.setProperty("--ui-scale", String(Math.min(UI_MAX_SCALE, width / UI_WIDTH)));
+      if (width > 0) document.documentElement.style.setProperty("--ui-scale", String(Math.min(UI_MAX_SCALE, width / UI_WIDTH) * UI_SHRINK));
     };
     apply();
     const observer = new ResizeObserver(() => requestAnimationFrame(apply));
