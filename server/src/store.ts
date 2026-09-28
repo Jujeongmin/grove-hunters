@@ -13,7 +13,7 @@ import { readClass } from "../../src/game/combat/classes";
 import { readSlot } from "../../src/game/combat/skills";
 import { RuleViolation, readSwing, type Pose } from "../../src/game/world/types";
 import {
-  CHANNEL_CAPACITY, MAX_CHANNELS, channelRoomId, zoneLayout, type ZoneId, type ZoneLook,
+  CHANNEL_CAPACITY, MAX_CHANNELS, ZONE_IDS, channelRoomId, readWhereabouts, zoneLayout, type Whereabouts, type ZoneId, type ZoneLook,
 } from "../../src/game/world/zones";
 import { solidAt } from "../../src/game/rules/levelLayout";
 import { WALK_SPEED, readJumpY } from "../../src/game/rules/movement";
@@ -195,6 +195,7 @@ export async function friendEntry(account: string, now: number): Promise<FriendE
     account,
     nickname: typeof state.nickname === "string" ? state.nickname : null,
     online: isOnline(state.lastSeenAt, now),
+    where: isOnline(state.lastSeenAt, now) ? readWhereabouts(state.where) : null,
   };
 }
 
@@ -215,16 +216,43 @@ export async function saveSpot(account: string, spot: Spot): Promise<void> {
   await updateActive(account, (c) => ({ ...c, spot }));
 }
 
-// The first channel of a zone on this server that has room, counting from 1. The client joins it
-// (Verse8 2.0 moves room joins to the client), so two players picked at the same moment can both
-// land in the last seat: the cap is soft by one or two.
-export async function pickChannel(world: string, zone: ZoneId, account: string): Promise<{ roomId: string; channel: number }> {
-  for (let channel = 1; channel <= MAX_CHANNELS; channel++) {
-    const roomId = channelRoomId(world, zone, channel);
-    const members = await $global.getRoomUserAccounts(roomId);
-    if (members.includes(account) || members.length < CHANNEL_CAPACITY) return { roomId, channel };
+// A channel is one copy of the whole world on a server, as in MapleStory: you stay in yours as you
+// go from zone to zone, so two players on the same channel can always walk to each other. Its
+// players are counted across every zone, which also caps any one zone's room at CHANNEL_CAPACITY.
+export async function channelPlayers(world: string, channel: number): Promise<string[]> {
+  const rooms = await Promise.all(ZONE_IDS.map((zone) => $global.getRoomUserAccounts(channelRoomId(world, zone, channel))));
+  return rooms.flat();
+}
+
+// A channel of this server with room for `account`: the ones in `prefer` first (the last one you
+// played on, your friends'), then counting from 1. The client joins it (Verse8 2.0 moves room joins
+// to the client), so two players picked at the same moment can both land in the last seat: the cap
+// is soft by one or two.
+export async function pickChannel(world: string, account: string, prefer: number[] = []): Promise<number> {
+  const order = [...new Set([...prefer, ...Array.from({ length: MAX_CHANNELS }, (_, i) => i + 1)])];
+  for (const channel of order) {
+    const players = await channelPlayers(world, channel);
+    if (players.includes(account) || players.length < CHANNEL_CAPACITY) return channel;
   }
   throw new RuleViolation("zone_full");
+}
+
+// Kept on the account when you enter a zone, cleared when you go back to the menu.
+export async function writeWhereabouts(account: string, where: Whereabouts | null): Promise<void> {
+  await $global.updateUserState(account, where ? { where, lastChannel: { world: where.world, channel: where.channel } } : { where });
+}
+
+// The channels your friends are playing on in this server, the busiest first.
+export async function friendChannels(account: string, world: string): Promise<number[]> {
+  const now = Date.now();
+  const { lists } = await readFriendSide(account);
+  const counts = new Map<number, number>();
+  for (const friend of lists.friends) {
+    const state = await $global.getUserState(friend);
+    const where = readWhereabouts(state.where);
+    if (where && where.world === world && isOnline(state.lastSeenAt, now)) counts.set(where.channel, (counts.get(where.channel) ?? 0) + 1);
+  }
+  return [...counts].sort((a, b) => b[1] - a[1]).map(([channel]) => channel);
 }
 
 // What the others in a zone see of a character: name, class, costume and level.

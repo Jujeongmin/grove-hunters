@@ -1,4 +1,4 @@
-import { CHANNEL_CAPACITY, arrivalFrom, portalsOf, zoneLayout } from "../../src/game/world/zones";
+import { CHANNEL_CAPACITY, arrivalFrom, channelRoomId, portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
 
 // A real wallet account: it does not play for free like the test- accounts.
@@ -45,6 +45,63 @@ describe("entering the world", () => {
     }
     await makeCharacter(server, "test-late", "늦은손님");
     server.connect({ account: "test-late" });
+    expect((await server.enterWorld()).channel).toBe(2);
+  });
+
+  test("a channel counts its players across every zone", async (server) => {
+    // Seated straight into rooms of channel 1, some in the village and some out in the field.
+    for (let i = 0; i < CHANNEL_CAPACITY; i++) {
+      await server.simulateJoin(channelRoomId("w1", i % 2 === 0 ? "village" : "forest1", 1), `test-x${i}`);
+    }
+    await makeCharacter(server, "test-late", "늦은손님");
+    server.connect({ account: "test-late" });
+    expect((await server.enterWorld()).channel).toBe(2);
+  });
+
+  test("you move to another channel where you stand, and not into a full one", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    const first = await enterAs(server, "test-a");
+    await walkTo(server, 10, 13, 1);
+    const listed = await server.channels();
+    expect(listed.current).toBe(1);
+    expect(listed.players[0]).toBe(1);
+    const moved = await server.changeChannel(3);
+    expect(moved).toMatchObject({ zone: "village", channel: 3, x: 10, z: 13 });
+    await join(server, "test-a", moved, first.roomId);
+    expect(await errorOf(server.changeChannel(3))).toContain("unavailable");
+    for (let i = 0; i < CHANNEL_CAPACITY; i++) await server.simulateJoin(channelRoomId("w1", "forest1", 5), `test-x${i}`);
+    server.connect({ account: "test-a", roomId: moved.roomId });
+    expect(await errorOf(server.changeChannel(5))).toContain("channel_full");
+  });
+
+  test("you keep your channel through a portal", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    const first = await enterAs(server, "test-a");
+    const moved = await join(server, "test-a", await server.changeChannel(4), first.roomId);
+    const field = await through(server, "test-a", moved, "forest1");
+    expect(field).toMatchObject({ zone: "forest1", channel: 4 });
+  });
+
+  test("you come in on the channel you last played on, or else your friends'", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    await makeCharacter(server, "test-b", "비이");
+    server.connect({ account: "test-a" });
+    await server.requestFriend("비이");
+    server.connect({ account: "test-b" });
+    await server.acceptFriend("test-a");
+    const b = await enterAs(server, "test-b");
+    const six = await join(server, "test-b", await server.changeChannel(6), b.roomId);
+    // The friends heartbeat is what says someone is online.
+    server.connect({ account: "test-b", roomId: six.roomId });
+    await server.syncFriends();
+    server.connect({ account: "test-a" });
+    const a = await server.enterWorld();
+    expect(a.channel).toBe(6);
+    await join(server, "test-a", a);
+    const moved = await join(server, "test-a", await server.changeChannel(2), a.roomId);
+    server.connect({ account: "test-a", roomId: moved.roomId });
+    await server.leaveWorld();
+    server.connect({ account: "test-a" });
     expect((await server.enterWorld()).channel).toBe(2);
   });
 

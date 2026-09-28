@@ -554,4 +554,12 @@ export const en: Bundle = {
   "error.startFailed": "The game could not start.",
   "error.reload": "Load it again",
   "rotate.hint": "Turn your screen sideways for a better view",
+  "channel.title": "Channels",
+  "channel.note": "On the same channel you can always meet, in any zone. Moving keeps you where you stand.",
+  "channel.here": "You are here",
+  "channel.full": "Full",
+  "channel.friends": "Friends: {names}",
+  "keys.channel": "Change channel",
+  "problem.channel_full": "That channel is full. Pick another one",
+  "friends.where": "{server} · {channel} · {zone}",
 };

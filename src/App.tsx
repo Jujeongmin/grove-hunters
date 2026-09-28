@@ -57,6 +57,7 @@ export default function App() {
           name={active.name}
           owned={view.owned}
           purchase={purchase}
+          friends={friends.view}
           onExit={() => {
             setInWorld(false);
             setReturning(true);

@@ -554,4 +554,12 @@ export const zhHant: Bundle = {
   "error.startFailed": "無法啟動遊戲。",
   "error.reload": "重新載入",
   "rotate.hint": "把畫面轉成橫向會更好玩",
+  "channel.title": "頻道",
+  "channel.note": "同一頻道就能在任何區域相遇。切換後仍在原地。",
+  "channel.here": "目前所在",
+  "channel.full": "已滿",
+  "channel.friends": "好友：{names}",
+  "keys.channel": "切換頻道",
+  "problem.channel_full": "該頻道已滿。請選擇其他頻道",
+  "friends.where": "{server} · {channel} · {zone}",
 };

@@ -1,7 +1,7 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 10개, 채널당 6명, 정식판 500 VX.
+숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 10개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
 
 ## 제목
 
@@ -29,7 +29,7 @@ English:
 Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 2개를 익힙니다. (총 12종)
 
 ■ 함께하는 사냥
-한 채널에 최대 6명.
+서버마다 채널 10개, 채널당 10명. 친구가 어느 채널에 있는지 보고 바로 옮겨 갈 수 있습니다.
 몬스터의 보상은 가장 많이 싸운 사람에게, 퀘스트 카운트는 함께 때린 모두에게 올라갑니다.
 채팅으로 대화하고, 친구를 맺고, 랭킹에서 겨뤄 보세요.
 
@@ -61,7 +61,7 @@ Warrior, Ranger, Wizard, Cleric, Rogue and Monk, each with its own weapon, fight
 At Lv 10 each class advances down one of two paths and learns that path's two skills (12 paths in all).
 
 ■ Hunt together
-Up to 6 players per channel.
+Ten channels per server, ten players each. See which channel your friends are on and hop over to them.
 A monster's rewards go to whoever fought it hardest, and everyone who hit it counts it toward their quest.
 Chat, make friends and climb the rankings.
 

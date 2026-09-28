@@ -563,6 +563,14 @@ export const ko = {
   "error.startFailed": "게임을 시작하지 못했습니다.",
   "error.reload": "다시 불러오기",
   "rotate.hint": "화면을 가로로 돌리면 더 편하게 즐길 수 있어요",
+  "channel.title": "채널",
+  "channel.note": "같은 채널이면 어느 구역에서든 만날 수 있어요. 옮겨도 지금 서 있는 자리 그대로예요.",
+  "channel.here": "지금 여기",
+  "channel.full": "가득 참",
+  "channel.friends": "친구: {names}",
+  "keys.channel": "채널 바꾸기",
+  "problem.channel_full": "그 채널은 가득 찼어요. 다른 채널을 골라 주세요",
+  "friends.where": "{server} · {channel} · {zone}",
 } as const;
 
 export type Key = keyof typeof ko;

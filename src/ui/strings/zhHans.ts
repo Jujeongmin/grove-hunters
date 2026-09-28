@@ -554,4 +554,12 @@ export const zhHans: Bundle = {
   "error.startFailed": "无法启动游戏。",
   "error.reload": "重新加载",
   "rotate.hint": "把画面转成横向会更好玩",
+  "channel.title": "频道",
+  "channel.note": "同一频道就能在任何区域相遇。切换后仍在原地。",
+  "channel.here": "目前所在",
+  "channel.full": "已满",
+  "channel.friends": "好友：{names}",
+  "keys.channel": "切换频道",
+  "problem.channel_full": "该频道已满。请选择其他频道",
+  "friends.where": "{server} · {channel} · {zone}",
 };

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { t } from "./lang";
+import { serverName, zoneName } from "./names";
 import type { FriendEntry, FriendsView } from "../game/account/friends";
 import { friendProblem, sortFriends, type FriendsClient } from "../net/friends";
 
@@ -116,7 +117,18 @@ export function FriendsPanel({
             {friends.map((entry) => (
               <li key={entry.account} className={entry.online ? "online" : "offline"}>
                 <span className="presence" aria-label={t(entry.online ? "friends.isOnline" : "friends.isOffline")} />
-                <span className="friend-name">{nameOf(entry)}</span>
+                <span className="friend-name">
+                  {nameOf(entry)}
+                  {entry.where && (
+                    <span className="friend-where">
+                      {t("friends.where", {
+                        server: serverName(entry.where.world),
+                        channel: t("world.channel", { n: entry.where.channel }),
+                        zone: zoneName(entry.where.zone),
+                      })}
+                    </span>
+                  )}
+                </span>
                 <button type="button" className="text-button" disabled={busy !== null} onClick={() => remove(entry)}>
                   {t(confirming === entry.account ? "common.removeSure" : "common.remove")}
                 </button>

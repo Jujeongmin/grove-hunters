@@ -554,4 +554,12 @@ export const ja: Bundle = {
   "error.startFailed": "ゲームを開始できませんでした。",
   "error.reload": "読み込み直す",
   "rotate.hint": "画面を横にするともっと遊びやすくなります",
+  "channel.title": "チャンネル",
+  "channel.note": "同じチャンネルならどのエリアでも会えます。移っても今いる場所のままです。",
+  "channel.here": "現在地",
+  "channel.full": "満員",
+  "channel.friends": "フレンド: {names}",
+  "keys.channel": "チャンネル変更",
+  "problem.channel_full": "そのチャンネルは満員です。別のチャンネルを選んでください",
+  "friends.where": "{server} · {channel} · {zone}",
 };

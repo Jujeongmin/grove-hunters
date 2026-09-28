@@ -38,7 +38,7 @@ const QUALITY_LABEL: Record<Quality, Key> = {
 const KEYS: [string, Key][] = [
   ["WASD", "keys.move"], ["Space", "keys.jump"], ["keys.click", "keys.attackGuard"], ["1 ~ 3", "keys.skills"],
   ["Q", "keys.potion"], ["E", "keys.talk"], ["R", "keys.auto"], ["J", "keys.quest"], ["Enter", "keys.chat"],
-  ["M", "keys.menu"], ["Esc", "keys.closeWindow"], ["N", "keys.map"],
+  ["M", "keys.menu"], ["Esc", "keys.closeWindow"], ["N", "keys.map"], ["C", "keys.channel"],
   ["O / L / K / U / I", "keys.panels"], ["B", "keys.powerSave"], ["P", "keys.settings"],
 ];
 

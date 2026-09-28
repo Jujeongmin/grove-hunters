@@ -43,8 +43,8 @@ describe("FriendsClient", () => {
     await world.idle();
     await seeker.accept("test-0");
     await world.idle();
-    expect(hunter.view?.friends).toEqual([{ account: "test-1", nickname: "Seeker", online: true }]);
-    expect(seeker.view?.friends).toEqual([{ account: "test-0", nickname: "Hunter", online: true }]);
+    expect(hunter.view?.friends).toEqual([{ account: "test-1", nickname: "Seeker", online: true, where: null }]);
+    expect(seeker.view?.friends).toEqual([{ account: "test-0", nickname: "Hunter", online: true, where: null }]);
     await hunter.remove("test-1");
     await world.idle();
     expect(seeker.view).toEqual({ friends: [], incoming: [], outgoing: [] });
@@ -70,7 +70,7 @@ describe("FriendsClient", () => {
 
 describe("sortFriends", () => {
   it("puts online friends first, then by name", () => {
-    const f = (nickname: string, online: boolean): FriendEntry => ({ account: nickname, nickname, online });
+    const f = (nickname: string, online: boolean): FriendEntry => ({ account: nickname, nickname, online, where: null });
     expect(sortFriends([f("다", false), f("나", true), f("가", false), f("라", true)]).map((x) => x.nickname))
       .toEqual(["나", "라", "가", "다"]);
   });

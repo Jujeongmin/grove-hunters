@@ -2,7 +2,7 @@ import { TILE_SIZE, parseLevel, type LevelLayout, type Point2 } from "../rules/l
 import { fieldMap, portalCell, type House, type Side } from "./fieldMap";
 
 // The open world: a village, two forest fields and the boss's clearing, joined by portals (O cells).
-// Each zone runs as channels of at most CHANNEL_CAPACITY players (one Verse8 room each). The
+// A server runs as channels (see CHANNEL_CAPACITY), each zone of a channel one Verse8 room. The
 // village and the first field are free; the rest open with the full game.
 export type ZoneId = "village" | "forest1" | "forest2" | "forest3" | "boss";
 
@@ -105,12 +105,13 @@ export const MENU_MAP = [
 
 export const ZONE_IDS = Object.keys(ZONES) as ZoneId[];
 export const START_ZONE: ZoneId = "village";
-// Players in one channel (one Verse8 room). Everyone in a room hears everyone else's every move,
-// so the room is kept small: this is what holds the lag down.
-export const CHANNEL_CAPACITY = 6;
-// Channels are numbered from 1; this many at most per zone and server, so a zone of one server holds
-// CHANNEL_CAPACITY x MAX_CHANNELS at once. Past that the zone says it is full rather than pile more
-// onto the shared Verse8 servers.
+// A channel is one copy of the whole world on a server, as in MapleStory: you keep yours from zone
+// to zone, and each zone of it is one Verse8 room. This many players at most in a channel, counted
+// across every zone, so no room ever holds more: everyone in a room hears everyone else's every
+// move, and this is what holds the lag down.
+export const CHANNEL_CAPACITY = 10;
+// Channels per server, numbered from 1: a server holds CHANNEL_CAPACITY x MAX_CHANNELS at once, and
+// past that says it is full rather than pile more onto the shared Verse8 servers.
 export const MAX_CHANNELS = 10;
 // Standing this close to a portal's centre takes you through.
 export const PORTAL_RADIUS = 1.4;
@@ -171,6 +172,22 @@ export function readChannelRoom(roomId: unknown): { world: string; zone: ZoneId;
   const m = /^rpg-(w\d+)-([a-z0-9]+)-(\d+)$/.exec(roomId);
   const zone = m ? readZone(m[2]) : null;
   return m && zone ? { world: m[1], zone, channel: Number(m[3]) } : null;
+}
+
+export function readChannel(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= MAX_CHANNELS ? value : null;
+}
+
+// Where a player is playing: the server, the zone and the channel. Their friends see it, and they
+// come back to the same channel.
+export interface Whereabouts { world: string; zone: ZoneId; channel: number }
+
+export function readWhereabouts(raw: unknown): Whereabouts | null {
+  const w = raw as Record<string, unknown> | null;
+  if (!w || typeof w !== "object" || typeof w.world !== "string") return null;
+  const zone = readZone(w.zone);
+  const channel = readChannel(w.channel);
+  return zone && channel ? { world: w.world, zone, channel } : null;
 }
 
 // What entering a zone hands back: the room, and where you stand in it.

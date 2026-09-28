@@ -31,6 +31,9 @@ import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
 import { QUESTS, questDone } from "../game/account/quests";
 import { SettingsPanel } from "./SettingsPanel";
+import { ChannelPanel } from "./ChannelPanel";
+import type { FriendsView } from "../game/account/friends";
+import { readChannelRoom } from "../game/world/zones";
 
 interface WorldScreenProps {
   client: WorldClient;
@@ -40,6 +43,8 @@ interface WorldScreenProps {
   owned: boolean;
   // The purchase, so the locked portal and the menu can open it where the wall is met.
   purchase: { offer: Offer; state: "idle" | "confirming" | "late"; buy: (() => void) | null };
+  // Your friends, for the channel list to show who is on which.
+  friends: FriendsView | null;
   onExit: () => void;
 }
 
@@ -48,6 +53,7 @@ interface WorldScreenProps {
 const TRAVEL_PROBLEM: Record<string, Key> = {
   not_owned: "problem.not_owned",
   zone_full: "problem.zone_full",
+  channel_full: "problem.channel_full",
   not_near: "problem.not_near_portal",
   too_low: "problem.too_low",
 };
@@ -63,7 +69,7 @@ function enterProblem(error: string | null): string {
 
 // The world: enters on mount, shows the zone you are in (one WorldView per zone and channel), and
 // takes you through portals.
-export function WorldScreen({ client, playerClass, costume, name, owned, purchase, onExit }: WorldScreenProps) {
+export function WorldScreen({ client, playerClass, costume, name, owned, purchase, friends, onExit }: WorldScreenProps) {
   const [state, setState] = useState<WorldState>(client.state);
   const [problem, setProblem] = useState<{ text: string; at: number } | null>(null);
 
@@ -106,6 +112,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
       name={name}
       owned={owned}
       purchase={purchase}
+      friends={friends}
       travelling={state.phase === "travelling"}
       bag={state.bag}
       problem={problem}
@@ -116,7 +123,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quest" | "quests" | "map";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quest" | "quests" | "map" | "channels";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -133,7 +140,7 @@ const QUEST_BANNER_MS = 4500;
 const PROBLEM_MS = 3000;
 
 function ZoneScreen({
-  entry, client, playerClass, costume, name, owned, purchase, travelling, bag, problem, onProblem, onExit,
+  entry, client, playerClass, costume, name, owned, purchase, friends, travelling, bag, problem, onProblem, onExit,
 }: ZoneScreenProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<WorldView | null>(null);
@@ -242,6 +249,9 @@ function ZoneScreen({
   const lockedPortal = useRef<string | null>(null);
   lockedPortal.current = hud?.portal?.locked ? hud.portal.to : null;
 
+  // C opens the channel list, like tapping the zone's name at the top.
+  const toggleRef = useRef(toggle);
+  toggleRef.current = toggle;
   // J does what tapping the quest does: go after its monsters, or (done, in the village) report it.
   const questAct = useRef(() => {});
   questAct.current = () => {
@@ -311,6 +321,10 @@ function ZoneScreen({
         questAct.current();
         return;
       }
+      if (e.code === "KeyC") {
+        toggleRef.current("channels");
+        return;
+      }
       // E at a locked portal: nobody is there to talk to, so it opens what the portal asks for.
       if (e.code === "KeyE" && lockedPortal.current) {
         setUpgrade({ kind: "portal", zone: lockedPortal.current });
@@ -360,10 +374,11 @@ function ZoneScreen({
         <>
           {touch && view.current && <TouchStick controls={view.current.controls} />}
           <div className="hud-left">
-            <div className="hud-top band">
+            <button type="button" className="hud-top band hud-channel" onClick={() => toggle("channels")} title={t("channel.title")}>
               <b>{hud.zone}</b>
               <span>{t("world.channel", { n: hud.channel })}</span>
-            </div>
+              {!touch && <kbd className="hud-key">C</kbd>}
+            </button>
             <div className="hud-vitals">
               <div className="hud-vitals-row">
                 <b>Lv {hud.level}</b>
@@ -460,6 +475,12 @@ function ZoneScreen({
       )}
       {panel === "shop" && <ShopPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "smith" && <SmithPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
+      {panel === "channels" && (
+        <ChannelPanel
+          client={client} world={readChannelRoom(entry.roomId)?.world ?? ""} friends={friends}
+          onProblem={onProblem} onClose={() => setPanel(null)}
+        />
+      )}
       {panel === "skills" && <SkillPanel playerClass={playerClass} job={bag?.job ?? null} level={hud?.level ?? 1} onClose={() => setPanel(null)} />}
       {panel === "quests" && (
         <QuestLog

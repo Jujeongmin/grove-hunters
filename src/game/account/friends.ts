@@ -1,4 +1,5 @@
 import { RuleViolation } from "../world/types";
+import type { Whereabouts } from "../world/zones";
 
 export const FRIEND_LIMIT = 100;
 // Pending requests one account can have waiting for it.
@@ -86,6 +87,8 @@ export interface FriendEntry {
   account: string;
   nickname: string | null;
   online: boolean;
+  // Where they are playing, while online in the world; null on the menu or offline.
+  where: Whereabouts | null;
 }
 
 export interface FriendsView {

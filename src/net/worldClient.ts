@@ -183,6 +183,25 @@ export class WorldClient {
     }
   }
 
+  // The channels of your server and how many play on each; null when it cannot be read.
+  async channels(): Promise<{ current: number; players: number[] } | null> {
+    if (this.current.phase !== "in") return null;
+    return this.transport.call<{ current: number; players: number[] }>("channels").catch(() => null);
+  }
+
+  // To another channel of your server, where you stand. Null once there, or why it was refused.
+  async changeChannel(channel: number): Promise<string | null> {
+    if (this.current.phase !== "in") return "unavailable";
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(await this.transport.call<ZoneEntry>("changeChannel", [channel]));
+      return null;
+    } catch (error) {
+      this.set({ phase: "in" });
+      return errorCode(error);
+    }
+  }
+
   async leave(): Promise<void> {
     this.unlisten();
     this.set({ phase: "idle", entry: null, others: [], monsters: {}, me: null });

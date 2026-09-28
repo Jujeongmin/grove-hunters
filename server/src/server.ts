@@ -25,13 +25,14 @@ import { readWorld } from "../../src/game/account/worlds";
 import { costumeById } from "../../src/game/render/costumes";
 import { PROTOCOL_VERSION, RuleViolation, isPose } from "../../src/game/world/types";
 import {
-  START_ZONE, ZONES, arrivalFrom, portalsOf, readChannelRoom, readZone, zoneLayout, type ZoneEntry, type ZoneId,
+  CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
+  readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
 import {
-  claimName, findNickname, friendEntry, grantPurchase, markSeen, ownsFullGame, pickChannel,
+  channelPlayers, claimName, findNickname, friendChannels, friendEntry, grantPurchase, markSeen, ownsFullGame, pickChannel,
   readAccountWorld, readFriendSide, readNickname, readProfile, readRanking,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
-  writeFriendSide, writeRanking, writeZonePose, zoneLook,
+  writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
@@ -82,14 +83,23 @@ async function playing(account: string): Promise<Character> {
   return active;
 }
 
-// Picks a channel of `zone` for your character and keeps (x, z) as its spot. The client then joins
+// Puts your character in `zone` of `channel` and keeps (x, z) as its spot. The client then joins
 // the room and calls arrive, which puts you there.
-async function enter(account: string, character: Character, zone: ZoneId, x: number, z: number): Promise<ZoneEntry> {
+async function enter(account: string, character: Character, zone: ZoneId, x: number, z: number, channel: number): Promise<ZoneEntry> {
   if (ZONES[zone].paid && !(await ownsFullGame(account))) throw new RuleViolation("not_owned");
   if (levelOf(character.xp).level < ZONES[zone].minLevel) throw new RuleViolation("too_low");
-  const { roomId, channel } = await pickChannel(character.world, zone, account);
   await saveSpot(account, { zone, x, z });
-  return { roomId, zone, channel, x, z };
+  await writeWhereabouts(account, { world: character.world, zone, channel });
+  return { roomId: channelRoomId(character.world, zone, channel), zone, channel, x, z };
+}
+
+// The channel you come into the world on: the one you last played on in this server, or else one
+// your friends are on, if it has room; otherwise the first that does.
+async function channelToEnter(account: string, character: Character): Promise<number> {
+  const last = (await $global.getUserState(account)).lastChannel as { world?: unknown; channel?: unknown } | undefined;
+  const lastHere = last?.world === character.world ? readChannel(last.channel) : null;
+  const prefer = [...(lastHere ? [lastHere] : []), ...(await friendChannels(account, character.world))];
+  return pickChannel(character.world, account, prefer);
 }
 
 // What one hunter is paid for a blow or skill: XP, gold, items and the kinds it counts toward its
@@ -390,11 +400,12 @@ export class Server {
     const spot = returnSpot(character.spot);
     const owned = await ownsFullGame(account);
     const level = levelOf(character.xp).level;
+    const channel = await channelToEnter(account, character);
     if (spot && (!ZONES[spot.zone].paid || owned) && level >= ZONES[spot.zone].minLevel) {
-      return enter(account, character, spot.zone, spot.x, spot.z);
+      return enter(account, character, spot.zone, spot.x, spot.z, channel);
     }
     const home = zoneLayout(START_ZONE).playerSpawn;
-    return enter(account, character, START_ZONE, home.x, home.z);
+    return enter(account, character, START_ZONE, home.x, home.z, channel);
   }
 
   // Through a portal: only to a zone next to the one you are in, and only while standing at that
@@ -413,7 +424,8 @@ export class Server {
       throw new RuleViolation("not_near");
     }
     const at = arrivalFrom(target, here.zone);
-    return enter(account, await playing(account), target, at.x, at.z);
+    // You keep your channel: whoever you walked with is on the other side too.
+    return enter(account, await playing(account), target, at.x, at.z, here.channel);
   }
 
   // After the client has joined the room enterWorld or travel picked: stands your character at
@@ -444,6 +456,9 @@ export class Server {
       const pose = (await $room.getMyState()).pose;
       if (isPose(pose)) await saveSpot(account, { zone: here.zone, x: pose.x, z: pose.z });
     }
+    // Back on the menu your friends no longer see you in the world (the channel is still kept for
+    // coming back; see channelToEnter).
+    await writeWhereabouts(account, null);
   }
 
   // Where you are in your zone. The room carries it to everyone there; the account keeps a copy
@@ -721,8 +736,33 @@ export class Server {
   async respawn(): Promise<ZoneEntry> {
     const account = $sender.account;
     if ((await $room.getMyState()).dead !== true) throw new RuleViolation("unavailable");
+    const here = readChannelRoom($sender.roomId);
+    const character = await playing(account);
     const home = zoneLayout(START_ZONE).playerSpawn;
-    return enter(account, await playing(account), START_ZONE, home.x, home.z);
+    return enter(account, character, START_ZONE, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
+  }
+
+  // The channels of your server, with how many play on each, for choosing one to move to.
+  async channels(): Promise<{ current: number; players: number[] }> {
+    const here = readChannelRoom($sender.roomId);
+    if (!here) throw new RuleViolation("unavailable");
+    const players = await Promise.all(
+      Array.from({ length: MAX_CHANNELS }, (_, i) => channelPlayers(here.world, i + 1).then((p) => p.length)),
+    );
+    return { current: here.channel, players };
+  }
+
+  // Moves you to another channel of your server, where you stand: the same zone, the same spot.
+  async changeChannel(to: unknown): Promise<ZoneEntry> {
+    const account = $sender.account;
+    const here = readChannelRoom($sender.roomId);
+    const channel = readChannel(to);
+    if (!here || !channel || channel === here.channel) throw new RuleViolation("unavailable");
+    const mine = await $room.getMyState();
+    if (mine.dead === true || !isPose(mine.pose)) throw new RuleViolation("unavailable");
+    const players = await channelPlayers(here.world, channel);
+    if (!players.includes(account) && players.length >= CHANNEL_CAPACITY) throw new RuleViolation("channel_full");
+    return enter(account, await playing(account), here.zone, mine.pose.x, mine.pose.z, channel);
   }
 
   // Every room tick (Verse8 runs it about every 200 ms): the monsters of a hunting zone move and fight.

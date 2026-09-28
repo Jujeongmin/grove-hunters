@@ -11,10 +11,10 @@ describe("friends", () => {
     await named(server, "test-a", "Hunter");
     await server.syncFriends();
     expect(await server.requestFriend("seeker")).toEqual({ status: "requested" });
-    expect((await server.syncFriends()).outgoing).toEqual([{ account: "test-b", nickname: "Seeker", online: false }]);
+    expect((await server.syncFriends()).outgoing).toEqual([{ account: "test-b", nickname: "Seeker", online: false, where: null }]);
     server.connect({ account: "test-b" });
     const view = await server.syncFriends();
-    expect(view.incoming).toEqual([{ account: "test-a", nickname: "Hunter", online: true }]);
+    expect(view.incoming).toEqual([{ account: "test-a", nickname: "Hunter", online: true, where: null }]);
     expect(view.friends).toEqual([]);
   });
 
