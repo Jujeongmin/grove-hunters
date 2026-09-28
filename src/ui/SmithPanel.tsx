@@ -4,13 +4,15 @@ import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials, type EnhanceOutcome } f
 import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
-import { PROBLEM, SLOT_LABEL } from "./BagPanel";
+import { problemText, slotLabel } from "./BagPanel";
+import { locale, t } from "./lang";
+import type { Key } from "./strings/ko";
 import { playCue } from "../game/audio/sfx";
 
-const OUTCOME: Record<EnhanceOutcome, string> = {
-  success: "강화 성공!",
-  fail: "강화 실패… 장비는 그대로예요",
-  broken: "강화 실패… 장비가 부서졌어요",
+const OUTCOME: Record<EnhanceOutcome, Key> = {
+  success: "forge.success",
+  fail: "forge.fail",
+  broken: "forge.broken",
 };
 
 const percent = (n: number) => `${Math.round(n * 100)}%`;
@@ -29,10 +31,10 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
     void client.enhance(slot).then((r) => {
       setBusy(false);
       if ("outcome" in r) {
-        setNote({ text: OUTCOME[r.outcome], tone: r.outcome === "success" ? "good" : "bad" });
+        setNote({ text: t(OUTCOME[r.outcome]), tone: r.outcome === "success" ? "good" : "bad" });
         playCue(r.outcome === "success" ? "enhance_ok" : r.outcome === "broken" ? "enhance_break" : "enhance_fail");
       }
-      else setNote({ text: PROBLEM[r.problem] ?? "지금은 할 수 없어요", tone: "bad" });
+      else setNote({ text: problemText(r.problem)!, tone: "bad" });
     });
   };
   const craft = (id: string, name: string) => {
@@ -40,7 +42,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
     setNote(null);
     void client.craft(id).then((code) => {
       setBusy(false);
-      setNote(code ? { text: PROBLEM[code] ?? "지금은 할 수 없어요", tone: "bad" } : { text: `${name} 제작 완료!`, tone: "good" });
+      setNote(code ? { text: problemText(code)!, tone: "bad" } : { text: t("forge.crafted", { name }), tone: "good" });
       if (!code) playCue("enhance_ok");
     });
   };
@@ -48,11 +50,11 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel bag-panel smith-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>대장간</h2>
-        <p className="bag-gold">{bag ? `${bag.gold.toLocaleString()} 골드 · 강화석 ${stones}개` : "불러오는 중…"}</p>
+        <h2>{t("forge.title")}</h2>
+        <p className="bag-gold">{bag ? `${t("common.gold", { n: bag.gold.toLocaleString(locale()) })} · ${t("forge.stones", { n: stones })}` : t("common.loading")}</p>
         <div className="smith-tabs">
-          <button type="button" className={`text-button${tab === "enhance" ? " on" : ""}`} onClick={() => setTab("enhance")}>강화</button>
-          <button type="button" className={`text-button${tab === "craft" ? " on" : ""}`} onClick={() => setTab("craft")}>제작</button>
+          <button type="button" className={`text-button${tab === "enhance" ? " on" : ""}`} onClick={() => setTab("enhance")}>{t("forge.enhance")}</button>
+          <button type="button" className={`text-button${tab === "craft" ? " on" : ""}`} onClick={() => setTab("craft")}>{t("forge.craft")}</button>
         </div>
 
         {tab === "enhance" && bag && (
@@ -62,15 +64,15 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
               if (!worn) {
                 return (
                   <div key={slot} className="bag-row">
-                    <span className="bag-slot">{SLOT_LABEL[slot]}</span>
-                    <span className="note">장착한 장비가 없어요</span>
+                    <span className="bag-slot">{slotLabel(slot)}</span>
+                    <span className="note">{t("forge.noGear")}</span>
                   </div>
                 );
               }
               const cost = enhanceCost(worn, bag.plus[worn] ?? 0);
               return (
                 <div key={slot} className="bag-row smith-row">
-                  <span className="bag-slot">{SLOT_LABEL[slot]}</span>
+                  <span className="bag-slot">{slotLabel(slot)}</span>
                   <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />
                   <b>{gearName(worn, bag.plus)}</b>
                   {cost ? (
@@ -79,21 +81,21 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                         type="button" className="text-button" disabled={busy || stones < cost.stones || bag.gold < cost.gold}
                         onClick={() => enhance(slot)}
                       >
-                        강화
+                        {t("forge.enhance")}
                       </button>
                       <span className="bag-blurb">
-                        +{cost.to} 성공 {percent(cost.success)}
-                        {cost.breaks > 0 && <em className="smith-risk"> · 실패 시 파괴 {percent(cost.breaks)}</em>}
-                        {" "}· {cost.gold.toLocaleString()} 골드 · 강화석 {cost.stones}
+                        {t("forge.chance", { to: cost.to, pct: percent(cost.success) })}
+                        {cost.breaks > 0 && <em className="smith-risk"> · {t("forge.breakRisk", { pct: percent(cost.breaks) })}</em>}
+                        {" "}· {t("common.gold", { n: cost.gold.toLocaleString(locale()) })} · {t("forge.stones", { n: cost.stones })}
                       </span>
                     </>
                   ) : (
-                    <span className="bag-blurb">최대 강화 (+{MAX_PLUS})</span>
+                    <span className="bag-blurb">{t("forge.maxed", { n: MAX_PLUS })}</span>
                   )}
                 </div>
               );
             })}
-            <p className="note">+{BREAK_FROM}부터는 실패하면 장비가 부서질 수 있어요. 강화석은 모든 사냥터의 몬스터가 떨어뜨려요.</p>
+            <p className="note">{t("forge.note", { n: BREAK_FROM })}</p>
           </div>
         )}
 
@@ -106,13 +108,13 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                 <div key={recipe.id} className="bag-row smith-row">
                   <img className="bag-icon" src={iconFor(recipe.makes) ?? undefined} alt="" />
                   <b>{name}{recipe.n > 1 ? ` ×${recipe.n}` : ""}</b>
-                  <button type="button" className="text-button" disabled={busy || !ready} onClick={() => craft(recipe.id, name)}>제작</button>
+                  <button type="button" className="text-button" disabled={busy || !ready} onClick={() => craft(recipe.id, name)}>{t("forge.craft")}</button>
                   <span className="bag-blurb">
                     {itemBlurb(recipe.makes)} · {recipe.needs.map((need) => {
                       const have = bag.bag[need.item] ?? 0;
                       return <span key={need.item} className={have >= need.n ? "" : "smith-short"}>{itemName(need.item)} {have}/{need.n} · </span>;
                     })}
-                    {recipe.gold.toLocaleString()} 골드
+                    {t("common.gold", { n: recipe.gold.toLocaleString(locale()) })}
                   </span>
                 </div>
               );
@@ -121,7 +123,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
         )}
 
         {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );

@@ -6,19 +6,23 @@ import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
 import { iconFor } from "../game/render/icons";
+import { locale, t } from "./lang";
+import type { Key } from "./strings/ko";
 import type { WorldClient } from "../net/worldClient";
 
-export const PROBLEM: Record<string, string> = {
-  max_plus: "더 강화할 수 없어요",
-  not_near: "대장장이 가까이에서 할 수 있어요",
-  not_enough_gold: "골드가 모자라요",
-  not_in_village: "상점은 마을에 있어요",
-  no_item: "가방에 없어요",
-  unavailable: "지금은 할 수 없어요",
-  too_low: `Lv${ADVANCE_LEVEL}부터 전직할 수 있어요`,
-};
+// What the server said went wrong, in the reader's language. Anything it does not know about is
+// still said, in the plainest way there is.
+export function problemText(code: string | null | undefined): string | null {
+  if (!code) return null;
+  if (code === "too_low") return t("problem.too_low_advance", { n: ADVANCE_LEVEL });
+  const key = `problem.${code}` as Key;
+  const said = t(key);
+  return said === key ? t("problem.unavailable") : said;
+}
 
-export const SLOT_LABEL: Record<Slot, string> = { weapon: "무기", armor: "갑옷" };
+export function slotLabel(slot: Slot): string {
+  return t(slot === "weapon" ? "slot.weapon" : "slot.armor");
+}
 
 interface PanelProps {
   client: WorldClient;
@@ -31,7 +35,7 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
   const [problem, setProblem] = useState<string | null>(null);
   return [problem, (run) => {
     setProblem(null);
-    void run().then((code) => setProblem(code ? PROBLEM[code] ?? "지금은 할 수 없어요" : null));
+    void run().then((code) => setProblem(problemText(code)));
   }];
 }
 
@@ -47,19 +51,19 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel bag-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>가방</h2>
+        <h2>{t("bag.title")}</h2>
         <p className="bag-gold">
-          {bag ? `${bag.gold.toLocaleString()} 골드` : "불러오는 중…"}
-          {bag && <span className="bag-power">전투력 {combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString()}</span>}
+          {bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}
+          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString(locale()) })}</span>}
         </p>
         <div className="bag-job">
           {job ? (
-            <span>전직 · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
+            <span>{t("bag.job")} · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
           ) : level < ADVANCE_LEVEL ? (
-            <span>Lv{ADVANCE_LEVEL}이 되면 전직할 수 있어요 (지금 Lv{level})</span>
+            <span>{t("bag.advanceAt", { at: ADVANCE_LEVEL, level })}</span>
           ) : (
             <>
-              <span>전직할 길을 고르세요. 한 번 고르면 바꿀 수 없어요.</span>
+              <span>{t("bag.pickPath")}</span>
               <div className="bag-job-paths">
                 {jobsOf(playerClass).map((id) => (
                   <button key={id} type="button" className="world-card" onClick={() => act(() => client.advance(id))}>
@@ -76,17 +80,17 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
             const worn = bag?.gear[slot] ?? null;
             return (
               <div key={slot} className="bag-row">
-                <span className="bag-slot">{SLOT_LABEL[slot]}</span>
+                <span className="bag-slot">{slotLabel(slot)}</span>
                 {worn && <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />}
-                <b>{worn ? gearName(worn, bag?.plus) : "없음"}</b>
+                <b>{worn ? gearName(worn, bag?.plus) : t("common.nothing")}</b>
                 <span className="bag-blurb">{worn ? itemBlurb(worn) : ""}</span>
-                {worn && <button type="button" className="text-button" onClick={() => act(() => client.unequip(slot))}>해제</button>}
+                {worn && <button type="button" className="text-button" onClick={() => act(() => client.unequip(slot))}>{t("bag.unequip")}</button>}
               </div>
             );
           })}
         </div>
         <div className="bag-list">
-          {items.length === 0 && <p className="note">가방이 비었어요</p>}
+          {items.length === 0 && <p className="note">{t("bag.empty")}</p>}
           {items.map((id) => (
             <div key={id} className="bag-row">
               <img className="bag-icon" src={iconFor(id) ?? undefined} alt="" />
@@ -94,22 +98,22 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
               <span className="bag-count">×{bag!.bag[id]}</span>
               <span className="bag-blurb">{itemBlurb(id)}</span>
               {ITEMS[id].kind === "potion" && (
-                <button type="button" className="text-button" onClick={() => act(() => client.drink(id))}>마시기</button>
+                <button type="button" className="text-button" onClick={() => act(() => client.drink(id))}>{t("bag.drink")}</button>
               )}
               {(ITEMS[id].kind === "weapon" || ITEMS[id].kind === "armor") && (
-                <button type="button" className="text-button" onClick={() => act(() => client.equip(id))}>장착</button>
+                <button type="button" className="text-button" onClick={() => act(() => client.equip(id))}>{t("bag.equip")}</button>
               )}
               {inVillage && (
                 <button type="button" className="text-button" onClick={() => act(() => client.sell(id))}>
-                  팔기 ({sellPrice(id)})
+                  {t("bag.sell", { n: sellPrice(id) })}
                 </button>
               )}
             </div>
           ))}
         </div>
         {problem && <p className="bag-problem">{problem}</p>}
-        <p className="note">Q: 물약 마시기 · I: 가방</p>
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <p className="note">{t("bag.keys")}</p>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );
@@ -122,25 +126,25 @@ export function ShopPanel({ client, bag, onClose }: PanelProps) {
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel bag-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>마을 상점</h2>
-        <p className="bag-gold">{bag ? `${bag.gold.toLocaleString()} 골드` : "불러오는 중…"}</p>
+        <h2>{t("shop.title")}</h2>
+        <p className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</p>
         <div className="bag-list">
           {SHOP_ITEMS.map((id) => (
             <div key={id} className="bag-row">
               <img className="bag-icon" src={iconFor(id) ?? undefined} alt="" />
               <b>{itemName(id)}</b>
-              <span className="bag-count">{ITEMS[id].price} 골드</span>
+              <span className="bag-count">{t("common.gold", { n: ITEMS[id].price! })}</span>
               <span className="bag-blurb">{itemBlurb(id)}</span>
-              <button type="button" className="text-button" onClick={() => buy(id, 1)}>사기</button>
+              <button type="button" className="text-button" onClick={() => buy(id, 1)}>{t("shop.buy")}</button>
               {ITEMS[id].kind === "potion" && (
-                <button type="button" className="text-button" onClick={() => buy(id, 10)}>10개</button>
+                <button type="button" className="text-button" onClick={() => buy(id, 10)}>{t("shop.buyTen")}</button>
               )}
             </div>
           ))}
         </div>
         {problem && <p className="bag-problem">{problem}</p>}
-        <p className="note">몬스터가 골드와 장비를 떨어뜨려요. 팔기는 가방에서.</p>
-        <button type="button" className="text-button" onClick={onClose}>닫기</button>
+        <p className="note">{t("shop.note")}</p>
+        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );
