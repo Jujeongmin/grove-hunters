@@ -383,6 +383,7 @@ export const en: Bundle = {
   "skills.title": "Skills",
   "skills.dragNote": "Drag a skill you have learned into a slot below.",
   "skills.learnAt": "Learned at Lv {n}",
+  "skills.fromElder": "Learn from the elder",
   "skills.inSlot": "Slot {n}",
   "skills.dragIn": "Drag into a slot",
   "skills.cooldown": "{n}s cooldown",
@@ -546,6 +547,7 @@ export const en: Bundle = {
   "quests.reportHere": "Report to the elder to be paid",
   "quests.reportInVillage": "Report to the elder in the village to be paid",
   "npc.elder.done": "\"Nothing in this forest is a match for you now. Thank you, hunter.\"",
+  "npc.elder.tutorial": "\"There you are. Take this skill, and these potions. Drag the skill onto a slot from the skill panel to use it.\"",
   "npc.elder.claim": "\"{quest} — well done! Here is what I promised.\"",
   "npc.elder.ask": "\"{goal}, if you would.\"",
 
@@ -576,4 +578,13 @@ export const en: Bundle = {
   "quests.tabDaily": "Daily",
   "quests.tabPast": "Done",
   "quests.noPast": "No quests done yet.",
+
+  "tutorial.title": "First Steps",
+  "tutorial.step0": "Talk to the elder",
+  "tutorial.step1": "Open the skill panel and drag your new skill onto slot 1",
+  "tutorial.step2": "Drag the skill slot and the potion slot down to let them auto-use",
+  "tutorial.step3": "Press the auto-battle button",
+  "tutorial.skip": "Skip",
+  "tutorial.doneTitle": "All set!",
+  "tutorial.doneHint": "See the elder's first request",
 };

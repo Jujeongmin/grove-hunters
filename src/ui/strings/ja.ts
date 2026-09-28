@@ -383,6 +383,7 @@ export const ja: Bundle = {
   "skills.title": "スキル",
   "skills.dragNote": "覚えたスキルを下の枠にドラッグしてください。",
   "skills.learnAt": "Lv{n}で習得",
+  "skills.fromElder": "村長から習う",
   "skills.inSlot": "{n}番の枠",
   "skills.dragIn": "ドラッグして枠に入れる",
   "skills.cooldown": "再使用 {n}秒",
@@ -546,6 +547,7 @@ export const ja: Bundle = {
   "quests.reportHere": "村長に報告して報酬を受け取りましょう",
   "quests.reportInVillage": "村の村長に報告して報酬を受け取りましょう",
   "npc.elder.done": "「もうこの森に君を負かすものはないよ。ありがとう、狩人さん。」",
+  "npc.elder.tutorial": "「来たか。この技を覚えて、薬も持って行きなさい。スキル画面で技をスロットにドラッグすれば使えるぞ。」",
   "npc.elder.claim": "「{quest}、よくやった！約束の報酬だ。」",
   "npc.elder.ask": "「{goal}を頼むよ。」",
 
@@ -576,4 +578,13 @@ export const ja: Bundle = {
   "quests.tabDaily": "デイリー",
   "quests.tabPast": "完了",
   "quests.noPast": "まだ完了したクエストはありません。",
+
+  "tutorial.title": "はじめの一歩",
+  "tutorial.step0": "村長に話しかけよう",
+  "tutorial.step1": "スキル画面を開き、覚えた技をスロット1にドラッグしよう",
+  "tutorial.step2": "スキルと薬のスロットを下にドラッグして自動使用をオンにしよう",
+  "tutorial.step3": "自動戦闘ボタンを押してみよう",
+  "tutorial.skip": "スキップ",
+  "tutorial.doneTitle": "準備完了！",
+  "tutorial.doneHint": "村長の最初の頼みを確かめよう",
 };

@@ -17,6 +17,9 @@ import type { BagView } from "../game/account/items";
 import { START_ZONE } from "../game/world/zones";
 import { BagPanel, ShopPanel } from "./BagPanel";
 import { QuestTracker } from "./QuestTracker";
+import { tutorialGlow } from "../game/account/tutorial";
+import { useTutorial } from "./useTutorial";
+import { TutorialDoneBanner, TutorialTracker } from "./TutorialTracker";
 import { SkillBar } from "./SkillBar";
 import { PadButtons, TouchStick, isTouchDevice } from "./TouchControls";
 import { SkillPanel } from "./SkillPanel";
@@ -186,6 +189,8 @@ function ZoneScreen({
       entry, playerClass, costume, name, owned,
       onProgress: (done, total) => setProgress(done / total),
       onTalk: (id) => {
+        // The elder's lesson in the first tutorial: the server checks you are by the elder.
+        if (id === "elder" && tutorialStep.current === 0) void client.tutorialTalk();
         setPanel(id === "merchant" ? "shop" : id === "smith" ? "smith" : "quest");
       },
       onTravel: (to) => {
@@ -218,6 +223,19 @@ function ZoneScreen({
   // Power saving (절전): a dark summary over the world, which goes on undrawn.
   const [saving, setSaving] = useState(false);
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
+  // The first tutorial: what to do next, and what lights up for it.
+  const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false);
+  const glow = tutorialGlow(tutorial.step, { menuOpen, skillsOpen: panel === "skills" });
+  // Read by the once-bound handlers (talking to the elder, J).
+  const tutorialStep = useRef(tutorial.step);
+  tutorialStep.current = tutorial.step;
+  useEffect(() => {
+    if (!tutorial.finished) return;
+    playCue("quest");
+    const timer = setTimeout(tutorial.clearFinished, QUEST_BANNER_MS);
+    return () => clearTimeout(timer);
+    // Only when it finishes: clearFinished is a new function every render.
+  }, [tutorial.finished]);
   useWakeLock();
   const open = useRef({ panel, menu, upgrade });
   open.current = { panel, menu, upgrade };
@@ -253,6 +271,10 @@ function ZoneScreen({
   // J does what tapping the quest does: go after its monsters, or (done, in the village) report it.
   const questAct = useRef(() => {});
   questAct.current = () => {
+    if (tutorialStep.current === 0) {
+      view.current?.walkToNpc("elder");
+      return;
+    }
     const quest = bag ? QUESTS[bag.quest.index] : undefined;
     if (!bag || !quest) return;
     if (!questDone(bag.quest)) view.current?.seekQuest(quest.targets);
@@ -368,13 +390,13 @@ function ZoneScreen({
           {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} />}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
             {menuOpen && menuItems.map((item) => (
-              <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}`} onClick={item.act}>
+              <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
                 {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
                 <span>{item.label}</span>
                 {keyHints && <kbd className="hud-key">{item.key}</kbd>}
               </button>
             ))}
-            <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
+            <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}${glow === "fold" ? " tutorial-glow" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
               <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
               <span>{t("common.menu")}</span>
               {keyHints && <kbd className="hud-key">M</kbd>}
@@ -418,16 +440,25 @@ function ZoneScreen({
             <PadButtons
               controls={view.current.controls} auto={hud.auto} talkTo={hud.npc?.name ?? null}
               onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()} onTalk={() => view.current?.talk()}
-              keys={keyHints}
+              keys={keyHints} glowAuto={glow === "auto"}
             />
           )}
-          <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()} />
+          <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}
+            glow={glow === "slot0" || glow === "bar" ? glow : null}
+          />
           {/* The side panels sit where the tracker is; it steps aside while one is open. */}
           {panel !== "quests" && panel !== "skills" && (
-            <QuestTracker
-              bag={bag} seeking={hud.seeking} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
-              onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.walkToNpc("elder")}
-            />
+            tutorial.step !== null ? (
+              <TutorialTracker
+                step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
+                onWalk={() => view.current?.walkToNpc("elder")} onSkip={tutorial.skip}
+              />
+            ) : (
+              <QuestTracker
+                bag={bag} seeking={hud.seeking} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
+                onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.walkToNpc("elder")}
+              />
+            )
           )}
           <ChatBox client={client} keyHints={keyHints} />
           {hud.hurt > 0 && <div className="hud-hurt" style={{ opacity: hud.hurt }} />}
@@ -456,7 +487,10 @@ function ZoneScreen({
           onProblem={onProblem} onClose={() => setPanel(null)}
         />
       )}
-      {panel === "skills" && <SkillPanel playerClass={playerClass} job={bag?.job ?? null} level={hud?.level ?? 1} onClose={() => setPanel(null)} />}
+      {panel === "skills" && <SkillPanel
+        playerClass={playerClass} job={bag?.job ?? null} level={hud?.level ?? 1} tutorial={tutorial.step} onPlaced={tutorial.placed}
+        onClose={() => setPanel(null)}
+      />}
       {panel === "quests" && (
         <QuestLog
           bag={bag} inVillage={inVillage}
@@ -467,6 +501,7 @@ function ZoneScreen({
       {finished !== null && QUESTS[finished] && (
         <QuestCompleteBanner index={finished} inVillage={inVillage} onClose={() => setFinished(null)} />
       )}
+      {tutorial.finished && <TutorialDoneBanner onClose={tutorial.clearFinished} />}
       {panel === "quest" && (
         <QuestPanel client={client} bag={bag} onSeek={(types) => view.current?.seekQuest(types)} onClose={() => setPanel(null)} />
       )}

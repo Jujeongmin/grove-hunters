@@ -392,6 +392,7 @@ export const ko = {
   "skills.title": "스킬",
   "skills.dragNote": "배운 스킬을 아래 칸으로 끌어다 놓으세요.",
   "skills.learnAt": "Lv{n}에 배움",
+  "skills.fromElder": "촌장에게 배우기",
   "skills.inSlot": "{n}번 칸",
   "skills.dragIn": "끌어서 칸에 넣기",
   "skills.cooldown": "재사용 {n}초",
@@ -555,6 +556,7 @@ export const ko = {
   "quests.reportHere": "촌장에게 보고하고 보상을 받으세요",
   "quests.reportInVillage": "마을의 촌장에게 보고하고 보상을 받으세요",
   "npc.elder.done": "\"이제 이 숲에서 자네를 당해낼 것은 없네. 고맙네, 사냥꾼.\"",
+  "npc.elder.tutorial": "\"왔구먼. 이 기술을 익히고 물약도 챙겨 가게. 스킬 창에서 기술을 칸에 끌어 두면 쓸 수 있다네.\"",
   "npc.elder.claim": "\"{quest}, 잘 해냈군! 약속한 보상일세.\"",
   "npc.elder.ask": "\"{goal}{p} 부탁하네.\"",
 
@@ -585,6 +587,15 @@ export const ko = {
   "quests.tabDaily": "일일",
   "quests.tabPast": "완료",
   "quests.noPast": "아직 마친 퀘스트가 없어요.",
+
+  "tutorial.title": "첫걸음",
+  "tutorial.step0": "촌장에게 말을 거세요",
+  "tutorial.step1": "스킬 창을 열어 받은 스킬을 1번 칸에 끌어 놓으세요",
+  "tutorial.step2": "스킬 칸과 물약 칸을 아래로 끌어 자동 사용을 켜세요",
+  "tutorial.step3": "자동 전투 버튼을 눌러 보세요",
+  "tutorial.skip": "건너뛰기",
+  "tutorial.doneTitle": "준비 끝!",
+  "tutorial.doneHint": "촌장의 첫 부탁을 확인하세요",
 } as const;
 
 export type Key = keyof typeof ko;

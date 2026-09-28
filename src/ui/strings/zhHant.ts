@@ -383,6 +383,7 @@ export const zhHant: Bundle = {
   "skills.title": "技能",
   "skills.dragNote": "把學會的技能拖到下方的格子。",
   "skills.learnAt": "Lv{n} 學會",
+  "skills.fromElder": "向村長學習",
   "skills.inSlot": "第 {n} 格",
   "skills.dragIn": "拖曳放入格子",
   "skills.cooldown": "冷卻 {n} 秒",
@@ -546,6 +547,7 @@ export const zhHant: Bundle = {
   "quests.reportHere": "向村長回報並領取報酬",
   "quests.reportInVillage": "向村裡的村長回報並領取報酬",
   "npc.elder.done": "「這座森林裡已經沒有能難倒你的了。謝謝你，獵人。」",
+  "npc.elder.tutorial": "「你來了。學會這個技能，把藥水也帶上。在技能視窗把技能拖到欄位上就能使用。」",
   "npc.elder.claim": "「{quest}，做得好！這是說好的報酬。」",
   "npc.elder.ask": "「{goal}，就拜託你了。」",
 
@@ -576,4 +578,13 @@ export const zhHant: Bundle = {
   "quests.tabDaily": "每日",
   "quests.tabPast": "已完成",
   "quests.noPast": "還沒有完成的任務。",
+
+  "tutorial.title": "第一步",
+  "tutorial.step0": "與村長交談",
+  "tutorial.step1": "打開技能視窗，把新技能拖到 1 號欄位",
+  "tutorial.step2": "把技能欄和藥水欄往下拖，開啟自動使用",
+  "tutorial.step3": "按下自動戰鬥按鈕",
+  "tutorial.skip": "跳過",
+  "tutorial.doneTitle": "準備完成！",
+  "tutorial.doneHint": "看看村長的第一個請託",
 };

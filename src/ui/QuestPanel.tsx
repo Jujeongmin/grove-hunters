@@ -39,6 +39,9 @@ export function QuestPanel({ client, bag, onSeek, onClose }: QuestPanelProps) {
         <p className="npc-name">{npcName("elder")}</p>
         {!bag ? (
           <p className="note">{t("common.loading")}</p>
+        ) : bag.tutorial !== null ? (
+          // In the first tutorial the elder teaches, rather than asks.
+          <p className="npc-line">{t("npc.elder.tutorial")}</p>
         ) : !quest ? (
           <p className="npc-line">{t("npc.elder.done")}</p>
         ) : (

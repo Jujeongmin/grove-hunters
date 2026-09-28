@@ -6,19 +6,24 @@ import { ADVANCE_LEVEL, type JobId } from "../game/combat/jobs";
 import { skillBlurb, skillName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
 import { hotbarFor, onSettings, setHotbarSlot } from "./settings";
+import { skillLearned, type TutorialStep } from "../game/account/tutorial";
 
 interface SkillPanelProps {
   playerClass: PlayerClass;
   // The advanced path, which the second and third skills come from; null before advancing.
   job: JobId | null;
   level: number;
+  // The first tutorial's step: until the elder has taught it, the first skill is held back.
+  tutorial: TutorialStep | null;
+  // A skill was dropped on the bar (the tutorial waits for this).
+  onPlaced: () => void;
   onClose: () => void;
 }
 
 // Your three skills, top right: the class's own, and the two your advanced path brings (shown as
 // waiting until you advance). The ones learned can be dragged onto a slot of the bar at the bottom
 // (the hotbar's cells carry data-slot). The panel leaves the bar in view.
-export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps) {
+export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClose }: SkillPanelProps) {
   const [bar, setBar] = useState(() => hotbarFor(playerClass));
   useEffect(() => onSettings(() => setBar(hotbarFor(playerClass))), [playerClass]);
   const [drag, setDrag] = useState<{ skill: number; x: number; y: number } | null>(null);
@@ -27,7 +32,9 @@ export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps
   const drop = (skill: number, x: number, y: number) => {
     // Looks through the panel itself, in case it hangs over the bar on a small screen.
     const cell = document.elementsFromPoint(x, y).map((el) => el.closest<HTMLElement>("[data-slot]")).find((el) => el);
-    if (cell) setHotbarSlot(playerClass, Number(cell.dataset.slot), skill);
+    if (!cell) return;
+    setHotbarSlot(playerClass, Number(cell.dataset.slot), skill);
+    onPlaced();
   };
 
   return (
@@ -37,7 +44,8 @@ export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps
         <p className="note">{t("skills.dragNote")}</p>
         {Array.from({ length: SKILL_SLOTS }, (_, i) => {
           const skill = skillAt(playerClass, job, i);
-          const learned = skill !== null && level >= skill.level;
+          const taught = skillLearned(tutorial, i);
+          const learned = skill !== null && taught && level >= skill.level;
           const slot = bar.indexOf(i);
           return (
             <div key={i} className={`skill-row${learned ? "" : " unlearned"}`}>
@@ -71,11 +79,12 @@ export function SkillPanel({ playerClass, job, level, onClose }: SkillPanelProps
                 <span className="skill-row-note">
                   {!skill
                     ? t("skills.afterAdvance", { n: ADVANCE_LEVEL })
+                    : !taught ? t("skills.fromElder")
                     : !learned ? t("skills.learnAt", { n: skill.level }) : slot >= 0 ? t("skills.inSlot", { n: slot + 1 }) : t("skills.dragIn")}
                   {skill && <>{" · "}{t("skills.cooldown", { n: skill.cooldownMs / 1000 })}</>}
                 </span>
               </div>
-              {slot >= 0 && (
+              {slot >= 0 && taught && (
                 <button type="button" className="text-button" onClick={() => setHotbarSlot(playerClass, slot, null)}>{t("skills.remove")}</button>
               )}
             </div>

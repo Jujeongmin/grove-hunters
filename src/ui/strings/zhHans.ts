@@ -383,6 +383,7 @@ export const zhHans: Bundle = {
   "skills.title": "技能",
   "skills.dragNote": "把学会的技能拖到下方的格子。",
   "skills.learnAt": "Lv{n} 学会",
+  "skills.fromElder": "向村长学习",
   "skills.inSlot": "第 {n} 格",
   "skills.dragIn": "拖曳放入格子",
   "skills.cooldown": "冷却 {n} 秒",
@@ -546,6 +547,7 @@ export const zhHans: Bundle = {
   "quests.reportHere": "向村长汇报并领取报酬",
   "quests.reportInVillage": "向村里的村长汇报并领取报酬",
   "npc.elder.done": "「这座森林里已经没有能难倒你的了。谢谢你，猎人。」",
+  "npc.elder.tutorial": "「你来了。学会这个技能，把药水也带上。在技能窗口把技能拖到栏位上就能使用。」",
   "npc.elder.claim": "「{quest}，做得好！这是说好的报酬。」",
   "npc.elder.ask": "「{goal}，就拜托你了。」",
 
@@ -576,4 +578,13 @@ export const zhHans: Bundle = {
   "quests.tabDaily": "每日",
   "quests.tabPast": "已完成",
   "quests.noPast": "还没有完成的任务。",
+
+  "tutorial.title": "第一步",
+  "tutorial.step0": "与村长交谈",
+  "tutorial.step1": "打开技能窗口，把新技能拖到 1 号栏位",
+  "tutorial.step2": "把技能栏和药水栏往下拖，开启自动使用",
+  "tutorial.step3": "按下自动战斗按钮",
+  "tutorial.skip": "跳过",
+  "tutorial.doneTitle": "准备完成！",
+  "tutorial.doneHint": "看看村长的第一个请托",
 };

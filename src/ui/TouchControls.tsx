@@ -140,7 +140,7 @@ export function PadButtons({ controls, auto, talkTo, onJump, onAuto, onTalk, key
       <PadButton id="attack" label={t("pad.attack")} keyLabel={keys ? t("pad.leftClick") : null} {...hold((on) => controls.setVirtualFiring(on))} />
       <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
       <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
-      <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={`${auto ? "on" : ""}${glowAuto ? " tutorial-glow" : ""}`} onClick={onAuto} />
+      <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={[auto && "on", glowAuto && "tutorial-glow"].filter(Boolean).join(" ")} onClick={onAuto} />
       {talkTo && <PadButton id="talk" label={t("pad.talk")} keyLabel={keys ? "E" : null} onClick={onTalk} />}
     </div>
   );
