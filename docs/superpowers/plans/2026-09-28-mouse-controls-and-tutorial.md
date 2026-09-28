@@ -675,7 +675,8 @@ describe("mouse and keys", () => {
   afterEach(() => input.dispose());
 
   it("walks only by the pad, never by WASD", () => {
-    for (const code of ["KeyW", "KeyA", "KeyS", "KeyD"]) window.dispatchEvent(event("keydown", { code, repeat: false }));
+    // Two keys, not four: W with S (or A with D) would cancel out and hide a key that still walks.
+    for (const code of ["KeyW", "KeyD"]) window.dispatchEvent(event("keydown", { code, repeat: false }));
     expect(input.moveInput()).toEqual({ forward: 0, strafe: 0 });
     input.setVirtualMove(1, -0.5);
     expect(input.moveInput()).toEqual({ forward: 1, strafe: -0.5 });

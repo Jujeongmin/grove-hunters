@@ -272,16 +272,6 @@ function ZoneScreen({
     document.addEventListener("click", release);
     return () => document.removeEventListener("click", release);
   }, []);
-  // The cursor shows whenever something on screen wants the mouse (a panel, the settings, the
-  // unfolded menu, the fallen panel, power saving) and hides again, capturing the mouse for looking
-  // about, once all of it is closed. Losing the capture otherwise (Escape, which the browser keeps)
-  // just frees the cursor; clicking back into the world captures it again and closes what was open.
-  const uiOpen = panel !== null || menu || saving || menuOpen || upgrade !== null || hud?.dead === true;
-  useEffect(() => {
-    if (touch) return;
-    if (uiOpen) document.exitPointerLock?.();
-    else view.current?.controls.lock();
-  }, [uiOpen, touch]);
   useEffect(() => {
     if (touch) return;
     const onChange = () => {
