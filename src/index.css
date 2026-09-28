@@ -370,8 +370,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
    nor down into the buttons at the bottom right on a short one. */
 .hud-quest { top: 210px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }
 /* The map: a little one in the corner while you play, and the whole zone over the game with N.
-   Both are drawn north up, so a glance means the same thing every time. The corner one sits in a
-   plain black frame; the big one on the ragged brush shape the rest of the UI uses. */
+   Both are drawn north up, so a glance means the same thing every time, and both sit on plain black. */
 .minimap { position: absolute; right: 20px; top: 62px; isolation: isolate; pointer-events: none; }
 /* A plain black frame round the corner map. */
 .minimap::before {
@@ -386,17 +385,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
   /* Sized by the stage, not the window: the sheet never hangs past the game's black bars. */
   position: relative; isolation: isolate; box-sizing: border-box;
   width: min(820px, 94%); height: 94%;
-  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 40px 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px 18px;
 }
-/* The brush artwork's very top and bottom are a ragged tail that, stretched over a panel this tall,
-   breaks off into a smudge of its own below the content. Drawing the mask a little larger than the
-   panel puts those ends outside it and leaves one even edge. */
+/* A plain black sheet, like the corner map's frame. */
 .map-sheet::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
-  background: radial-gradient(ellipse at 50% 40%, rgba(40, 26, 16, 0.97), rgba(8, 6, 5, 0.97) 70%);
-  -webkit-mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
-  mask: var(--ui-grunge-band) center / 108% 124% no-repeat;
+  background: rgba(0, 0, 0, 0.85);
 }
 .map-sheet h2 { margin: 0; flex: none; font: 800 20px var(--font-head); text-shadow: var(--shadow); }
 .map-area { flex: 1 1 auto; align-self: stretch; min-height: 0; display: grid; place-items: center; }
