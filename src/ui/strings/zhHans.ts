@@ -352,7 +352,7 @@ export const zhHans: Bundle = {
 
   "quest.allDone": "所有任务完成",
   "quest.reportHere": "点击向村长汇报",
-  "quest.reportInVillage": "请向村里的村长汇报",
+  "quest.reportInVillage": "点一下前往村里的村长",
   "quest.seeking": "前往中…",
   "quest.goFind": "点击前往",
 
@@ -552,7 +552,8 @@ export const zhHans: Bundle = {
   "npc.elder.ask": "「{goal}，就拜托你了。」",
 
   "note.notHere": "这个区域没有",
-  "note.notHereBut": "这个区域没有（{zones}）",
+  "note.questPaid": "{zone}：正式版才能前往",
+  "note.questLevel": "{zone}：Lv{n} 起可前往",
   "note.cannotWalk": "那里去不了",
   "note.gotGold": "+{n} 金币",
   "note.gotItem": "获得 {name}",

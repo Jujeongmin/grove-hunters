@@ -361,7 +361,7 @@ export const ko = {
 
   "quest.allDone": "모든 퀘스트 완료",
   "quest.reportHere": "눌러서 촌장에게 보고하기",
-  "quest.reportInVillage": "마을의 촌장에게 보고하세요",
+  "quest.reportInVillage": "눌러서 마을 촌장에게 가기",
   "quest.seeking": "찾아가는 중…",
   "quest.goFind": "눌러서 찾아가기",
 
@@ -561,7 +561,8 @@ export const ko = {
   "npc.elder.ask": "\"{goal}{p} 부탁하네.\"",
 
   "note.notHere": "이 구역에는 없어요",
-  "note.notHereBut": "이 구역에는 없어요 ({zones})",
+  "note.questPaid": "{zone}: 정식판에서 갈 수 있어요",
+  "note.questLevel": "{zone}: 레벨 {n}부터 갈 수 있어요",
   "note.cannotWalk": "그곳으로는 갈 수 없어요",
   "note.gotGold": "+{n} 골드",
   "note.gotItem": "{name} 획득",

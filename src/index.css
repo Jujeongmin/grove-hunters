@@ -324,6 +324,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-quest.clickable:hover { border-color: var(--ember); }
 .hud-quest.seeking { border-color: var(--ember); box-shadow: 0 0 12px rgba(255, 179, 90, 0.35); }
 .hud-quest .hint { font-size: 11px; color: var(--ember); }
+.hud-quest .hint .way { color: var(--ink); font-weight: 700; }
 /* The first tutorial: what to do next sits where the quest does, with a way out, and what to press
    next glows. */
 .hud-quest.tutorial > b { padding-right: 58px; }

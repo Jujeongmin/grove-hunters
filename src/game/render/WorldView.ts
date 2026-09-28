@@ -3,6 +3,7 @@ import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
 import { ITEMS } from "../account/items";
 import { levelOf } from "../account/level";
+import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { WEAPONS, type PlayerClass } from "../combat/classes";
 import { facing, inStrikeReach } from "../combat/melee";
@@ -22,7 +23,7 @@ import type { Point2 } from "../rules/levelLayout";
 import { NPCS, NPC_MODELS, npcNear, npcFacing, npcSpot, type NpcId } from "../world/npcs";
 import { NpcActor } from "./NpcActor";
 import type { Pose } from "../world/types";
-import { PORTAL_RADIUS, START_ZONE, ZONES, ZONE_IDS, portalsOf, zoneLayout, type Portal, type ZoneEntry, type ZoneId } from "../world/zones";
+import { PORTAL_RADIUS, START_ZONE, ZONES, portalsOf, zoneLayout, type Portal, type ZoneEntry, type ZoneId } from "../world/zones";
 import { playCue, preloadCues } from "../audio/sfx";
 import { costumeById, type Costume } from "./costumes";
 import { ARROW_MODEL, Effects, type ShotKind } from "./effects";
@@ -83,6 +84,8 @@ const STUCK_GIVE_UP_MS = 4000;
 const UNREACHABLE_MS = 10_000;
 // A walk to an NPC ends this close to them.
 const TALK_ARRIVE = 2.2;
+// On a quest trip, a portal is walked this far into, well inside the ring that takes you through.
+const PORTAL_ARRIVE = 0.5;
 // A route's corner counts as reached this close.
 const WAYPOINT_REACH = 1.2;
 // A heal is used on its own once health falls below this share.
@@ -142,6 +145,9 @@ export interface WorldHud {
   auto: boolean;
   // Auto-battle is hunting for a quest's monsters.
   seeking: boolean;
+  // How far is left to walk on the way you were sent (a quest's monster, the elder, a portal on the
+  // way to another zone, a spot on the map), in metres.
+  way: number | null;
   // The village NPC you are standing by, to talk to.
   npc: { id: NpcId; name: string; role: string } | null;
   // The monster you are fighting.
@@ -165,6 +171,10 @@ export interface WorldViewOptions {
   onTravel: (to: ZoneId) => void;
   // Talking to a village NPC (E, the pad's button, or arriving where you were sent).
   onTalk: (id: NpcId) => void;
+  // A quest trip carried in from the zone before, if any, and word whenever the trip changes, so
+  // the next zone's view can carry it on.
+  trip: QuestTrip | null;
+  onTrip: (trip: QuestTrip | null) => void;
 }
 
 // One zone of the open world on screen: the forest and its portals, you (over the shoulder) and the
@@ -182,7 +192,11 @@ export class WorldView {
   private readonly monsters = new Map<string, MonsterActor>();
   private readonly npcs: { id: NpcId; actor: NpcActor; at: Point2 }[] = [];
   // Where you were sent to walk (to an NPC), and whom to talk to on arrival.
-  private walkGoal: { to: Point2; talk: NpcId | null } | null = null;
+  // Where you were sent: to talk to someone at the end, or into a portal on a quest trip.
+  private walkGoal: { to: Point2; talk: NpcId | null; portal?: boolean } | null = null;
+  // The quest trip under way (see questRoute.ts), and one carried in, begun once you are in the room.
+  private trip: QuestTrip | null = null;
+  private tripToResume: QuestTrip | null;
   private readonly hudListeners = new Set<(hud: WorldHud) => void>();
   private readonly layout: LevelLayout;
   private readonly portals: Portal[];
@@ -239,6 +253,7 @@ export class WorldView {
   ) {
     this.layout = zoneLayout(options.entry.zone);
     this.portals = portalsOf(options.entry.zone);
+    this.tripToResume = options.trip;
     this.walls = solidWith(this.layout, Infinity);
     this.pose = { x: options.entry.x, z: options.entry.z, yaw: 0 };
     // As many pixels a point as the graphics quality allows (phones start at 1.5: small screens, warm chips).
@@ -323,30 +338,73 @@ export class WorldView {
   toggleAuto(): void {
     this.auto = !this.auto;
     this.questSeek = null;
+    this.walkGoal = null;
+    if (this.trip) this.setTrip(null);
     this.route = null;
     if (!this.auto) this.target = null;
   }
 
   // Goes hunting for the monsters a quest asks for: auto-battle walks to the nearest of those kinds,
-  // wherever it stands in the zone, and fights them until told otherwise.
+  // wherever it stands in the zone, and fights them until told otherwise. When they live in another
+  // field, the trip heads through the portals there first.
   seekQuest(types: readonly MonsterType[]): void {
-    if (!Object.values(this.client.state.monsters).some((m) => types.includes(m.type))) {
-      const zones = ZONE_IDS.filter((z) => ZONE_MONSTERS[z].some((t) => types.includes(t)) || types.includes(ZONE_BOSS[z]!));
-      this.notes.push({
-        text: zones.length ? t("note.notHereBut", { zones: zones.map(zoneName).join(", ") }) : t("note.notHere"),
-        at: performance.now(),
-      });
-      return;
+    this.startTrip({ kind: "hunt", types: [...types] });
+  }
+
+  // Heads for the elder in the village, from anywhere (to report a quest), and talks on arrival.
+  goToElder(): void {
+    this.startTrip({ kind: "elder" });
+  }
+
+  private startTrip(trip: QuestTrip): void {
+    const goals = trip.kind === "hunt" ? zonesWith(trip.types) : [START_ZONE];
+    const way = questWay(this.options.entry.zone, goals, (zone) => this.entryTo(zone));
+    const note = (text: string) => this.notes.push({ text, at: performance.now() });
+    this.setTrip(null);
+    if (way.kind === "nowhere") {
+      note(t("note.notHere"));
+    } else if (way.kind === "locked") {
+      note(way.why === "paid"
+        ? t("note.questPaid", { zone: zoneName(way.zone) })
+        : t("note.questLevel", { zone: zoneName(way.zone), n: ZONES[way.zone].minLevel }));
+    } else if (way.kind === "here") {
+      if (trip.kind === "elder") {
+        this.walkToNpc("elder");
+        return;
+      }
+      this.walkGoal = null;
+      this.questSeek = [...trip.types];
+      this.route = null;
+      this.target = null;
+      this.auto = true;
+    } else {
+      const portal = this.portals.find((p) => p.to === way.next);
+      if (!portal) return;
+      this.walkGoal = { to: portal, talk: null, portal: true };
+      this.auto = false;
+      this.questSeek = null;
+      this.route = null;
+      this.target = null;
+      this.setTrip(trip);
     }
-    this.questSeek = [...types];
-    this.route = null;
-    this.target = null;
-    this.auto = true;
+  }
+
+  private setTrip(trip: QuestTrip | null): void {
+    this.trip = trip;
+    this.options.onTrip(trip);
+  }
+
+  // Whether you may go into a zone, as its portal will judge it.
+  private entryTo(zone: ZoneId): Entry {
+    if (ZONES[zone].paid && !this.options.owned) return "paid";
+    if (levelOf(this.client.state.me?.xp ?? 0).level < ZONES[zone].minLevel) return "level";
+    return "open";
   }
 
   // Walks you to a village NPC and opens the talk on arrival (the quest tracker's report).
   walkToNpc(id: NpcId): void {
     if (this.options.entry.zone !== START_ZONE) return;
+    this.setTrip(null);
     this.walkGoal = { to: npcSpot(id), talk: id };
     this.auto = false;
     this.questSeek = null;
@@ -360,6 +418,7 @@ export class WorldView {
       this.notes.push({ text: t("note.cannotWalk"), at: performance.now() });
       return;
     }
+    this.setTrip(null);
     this.walkGoal = { to, talk: null };
     this.auto = false;
     this.questSeek = null;
@@ -469,6 +528,13 @@ export class WorldView {
 
     const dead = state.me?.dead === true;
     const here = state.phase === "in" && !this.travelling && !dead;
+    // A quest trip carried in from the zone before goes on once you are here (your level decides
+    // which portals it may take, so it waits for your state).
+    if (this.tripToResume && here && state.me) {
+      const trip = this.tripToResume;
+      this.tripToResume = null;
+      this.startTrip(trip);
+    }
     // Mid-swing you stand still (and turn only through the attack itself).
     const rooted = this.me?.rooted === true;
     const potion = this.input.consumePress("KeyQ");
@@ -488,8 +554,11 @@ export class WorldView {
       const speed = WALK_SPEED * (this.input.blocking ? GUARD_WALK : 1);
       const move = this.input.moveInput();
       const idle = move.forward === 0 && move.strafe === 0;
-      // Your own steps cancel a walk you were sent on.
-      if (!idle) this.walkGoal = null;
+      // Your own steps cancel a walk you were sent on, and the trip it was part of.
+      if (!idle) {
+        this.walkGoal = null;
+        if (this.trip) this.setTrip(null);
+      }
       const chase = idle && this.walkGoal ? this.walkTo(this.walkGoal) : this.auto && idle ? this.autoChase(state.monsters) : null;
       if (rooted) {
         facingYaw = chase ? chase.yaw : this.pose.yaw;
@@ -585,8 +654,9 @@ export class WorldView {
 
   // Heading for a spot you were sent to: straight when clear, by the route otherwise. On arrival the
   // walk ends (and the talk it was for opens).
-  private walkTo(goal: { to: Point2; talk: NpcId | null }): { yaw: number; walk: boolean } | null {
-    if (this.distanceTo(goal.to) <= TALK_ARRIVE) {
+  private walkTo(goal: { to: Point2; talk: NpcId | null; portal?: boolean }): { yaw: number; walk: boolean } | null {
+    // A portal is walked right into (it takes you on); a person is walked up to.
+    if (this.distanceTo(goal.to) <= (goal.portal ? PORTAL_ARRIVE : TALK_ARRIVE)) {
       this.walkGoal = null;
       this.route = null;
       if (goal.talk) this.options.onTalk(goal.talk);
@@ -651,6 +721,20 @@ export class WorldView {
       return 0;
     }
     return now - this.stuckSince.at;
+  }
+
+  // What is left of the walk you were sent on, along its route where it has one.
+  private wayLeft(): WorldHud["way"] {
+    const goal = this.walkGoal?.to ?? (this.auto && this.questSeek && this.target ? this.client.state.monsters[this.target] : undefined);
+    if (!goal) return null;
+    const points = this.route?.points ?? [];
+    let metres = 0;
+    let from: Point2 = this.pose;
+    for (const p of [...points, goal]) {
+      metres += Math.hypot(p.x - from.x, p.z - from.z);
+      from = p;
+    }
+    return metres;
   }
 
   private distanceTo(p: { x: number; z: number }): number {
@@ -798,6 +882,7 @@ export class WorldView {
   // The view hears back when a trip through a portal was refused, so you can walk again.
   travelRefused(): void {
     this.travelling = false;
+    if (this.trip) this.setTrip(null);
   }
 
   private nearestPortal(): { portal: Portal; d: number } | null {
@@ -972,7 +1057,8 @@ export class WorldView {
       xpNeed: level.need,
       gain: this.gain && now - this.gain.at < GAIN_MS ? this.gain.xp : null,
       auto: this.auto,
-      seeking: this.auto && this.questSeek !== null,
+      seeking: (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal?.talk === "elder",
+      way: this.wayLeft(),
       npc: (() => {
         const id = npcNear(this.pose.x, this.pose.z);
         const npc = id ? NPCS.find((n) => n.id === id)! : null;

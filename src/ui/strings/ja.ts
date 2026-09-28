@@ -352,7 +352,7 @@ export const ja: Bundle = {
 
   "quest.allDone": "すべてのクエスト完了",
   "quest.reportHere": "押して村長に報告",
-  "quest.reportInVillage": "村の村長に報告してください",
+  "quest.reportInVillage": "タップで村の村長のもとへ",
   "quest.seeking": "向かっています…",
   "quest.goFind": "押して向かう",
 
@@ -552,7 +552,8 @@ export const ja: Bundle = {
   "npc.elder.ask": "「{goal}を頼むよ。」",
 
   "note.notHere": "このエリアにはいません",
-  "note.notHereBut": "このエリアにはいません（{zones}）",
+  "note.questPaid": "{zone}：製品版で行けます",
+  "note.questLevel": "{zone}：Lv{n}から行けます",
   "note.cannotWalk": "そこへは行けません",
   "note.gotGold": "+{n} ゴールド",
   "note.gotItem": "{name} 獲得",

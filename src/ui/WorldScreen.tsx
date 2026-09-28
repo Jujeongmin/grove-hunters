@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { typing } from "../game/render/FpsInput";
 import { ChatBox } from "./ChatBox";
 import { SmithPanel } from "./SmithPanel";
@@ -18,6 +18,7 @@ import { START_ZONE } from "../game/world/zones";
 import { BagPanel, ShopPanel } from "./BagPanel";
 import { QuestTracker } from "./QuestTracker";
 import { tutorialGlow } from "../game/account/tutorial";
+import type { QuestTrip } from "../game/world/questRoute";
 import { useTutorial } from "./useTutorial";
 import { TutorialDoneBanner, TutorialTracker } from "./TutorialTracker";
 import { SkillBar } from "./SkillBar";
@@ -75,6 +76,8 @@ function enterProblem(error: string | null): string {
 export function WorldScreen({ client, playerClass, costume, name, owned, purchase, friends, onExit }: WorldScreenProps) {
   const [state, setState] = useState<WorldState>(client.state);
   const [problem, setProblem] = useState<{ text: string; at: number } | null>(null);
+  // A quest trip under way, kept here as you go from zone to zone (each zone has its own view).
+  const trip = useRef<QuestTrip | null>(null);
 
   useEffect(() => {
     // The screen only cares where you are and whether you are moving between zones; the others'
@@ -119,6 +122,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
       travelling={state.phase === "travelling"}
       bag={state.bag}
       problem={problem}
+      trip={trip}
       onProblem={(code) => setProblem({ text: t(TRAVEL_PROBLEM[code] ?? "problem.cannotTravel"), at: performance.now() })}
       onExit={onExit}
     />
@@ -133,6 +137,8 @@ interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   bag: BagView | null;
   travelling: boolean;
   problem: { text: string; at: number } | null;
+  // The quest trip carried from zone to zone.
+  trip: MutableRefObject<QuestTrip | null>;
   onProblem: (code: string) => void;
   onExit: () => void;
 }
@@ -143,7 +149,7 @@ const QUEST_BANNER_MS = 4500;
 const PROBLEM_MS = 3000;
 
 function ZoneScreen({
-  entry, client, playerClass, costume, name, owned, purchase, friends, travelling, bag, problem, onProblem, onExit,
+  entry, client, playerClass, costume, name, owned, purchase, friends, travelling, bag, problem, trip, onProblem, onExit,
 }: ZoneScreenProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<WorldView | null>(null);
@@ -187,6 +193,10 @@ function ZoneScreen({
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
       entry, playerClass, costume, name, owned,
+      trip: trip.current,
+      onTrip: (next) => {
+        trip.current = next;
+      },
       onProgress: (done, total) => setProgress(done / total),
       onTalk: (id) => {
         // The elder's lesson in the first tutorial: the server checks you are by the elder.
@@ -268,17 +278,17 @@ function ZoneScreen({
   // C opens the channel list, like tapping the zone's name at the top.
   const toggleRef = useRef(toggle);
   toggleRef.current = toggle;
-  // J does what tapping the quest does: go after its monsters, or (done, in the village) report it.
+  // J does what tapping the quest does: go after its monsters, or (done) report it to the elder.
   const questAct = useRef(() => {});
   questAct.current = () => {
     if (tutorialStep.current === 0) {
-      view.current?.walkToNpc("elder");
+      view.current?.goToElder();
       return;
     }
     const quest = bag ? QUESTS[bag.quest.index] : undefined;
     if (!bag || !quest) return;
     if (!questDone(bag.quest)) view.current?.seekQuest(quest.targets);
-    else if (inVillage) view.current?.walkToNpc("elder");
+    else view.current?.goToElder();
   };
   // A clicked button lets go of the focus at once, or Space (jump) and Enter (chat) would press it again.
   useEffect(() => {
@@ -451,12 +461,12 @@ function ZoneScreen({
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
-                onWalk={() => view.current?.walkToNpc("elder")} onSkip={tutorial.skip}
+                onWalk={() => view.current?.goToElder()} onSkip={tutorial.skip}
               />
             ) : (
               <QuestTracker
-                bag={bag} seeking={hud.seeking} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
-                onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.walkToNpc("elder")}
+                bag={bag} seeking={hud.seeking} way={hud.way} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
+                onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
               />
             )
           )}
@@ -494,7 +504,7 @@ function ZoneScreen({
       {panel === "quests" && (
         <QuestLog
           bag={bag} inVillage={inVillage}
-          onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.walkToNpc("elder")}
+          onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
           onClaimDaily={(id) => client.claimDaily(id)} onClose={() => setPanel(null)}
         />
       )}

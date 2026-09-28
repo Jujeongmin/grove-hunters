@@ -352,7 +352,7 @@ export const en: Bundle = {
 
   "quest.allDone": "Every quest done",
   "quest.reportHere": "Tap to report to the elder",
-  "quest.reportInVillage": "Report to the elder in the village",
+  "quest.reportInVillage": "Tap to head to the village elder",
   "quest.seeking": "On the way…",
   "quest.goFind": "Tap to go there",
 
@@ -552,7 +552,8 @@ export const en: Bundle = {
   "npc.elder.ask": "\"{goal}, if you would.\"",
 
   "note.notHere": "None of those are in this field",
-  "note.notHereBut": "None of those are here ({zones})",
+  "note.questPaid": "{zone}: open in the full game",
+  "note.questLevel": "{zone}: open from Lv {n}",
   "note.cannotWalk": "You cannot go there",
   "note.gotGold": "+{n} gold",
   "note.gotItem": "{name} picked up",
