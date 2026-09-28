@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PITCH_LIMIT, PLAYER_RADIUS, WALK_SPEED, applyLook, stepPlayer, stepAround } from "../src/game/rules/movement";
+import { PITCH_LIMIT, PLAYER_RADIUS, WALK_SPEED, applyLook, stepPlayer, stepAround, turnToward, walkYaw } from "../src/game/rules/movement";
 import { GROUNDED, stepJump, type Airborne } from "../src/game/rules/movement";
 
 const open = () => false;
@@ -112,5 +112,32 @@ describe("stepAround", () => {
     let pose = { x: 0, z: 1.05, yaw: 0 };
     for (let i = 0; i < 40; i++) pose = stepAround(pose, 0, 0.1, stone, 4);
     expect(pose.z).toBeLessThan(-1);
+  });
+});
+
+describe("facing the way you walk", () => {
+  it("reads the pad's push as a heading round the camera's", () => {
+    expect(walkYaw(0.4, { forward: 0, strafe: 0 })).toBeNull();
+    expect(walkYaw(0.4, { forward: 1, strafe: 0 })).toBeCloseTo(0.4);
+    // Right of the camera is a quarter turn clockwise (yaw goes down), and back is half a turn.
+    expect(walkYaw(0, { forward: 0, strafe: 1 })).toBeCloseTo(-Math.PI / 2);
+    expect(Math.abs(walkYaw(0, { forward: -1, strafe: 0 })!)).toBeCloseTo(Math.PI);
+  });
+
+  it("walks the way it heads", () => {
+    const input = { forward: 0.3, strafe: -0.8 };
+    const yaw = walkYaw(1.1, input)!;
+    const moved = stepPlayer({ x: 0, z: 0, yaw: 1.1 }, input, 0.1, open);
+    const ahead = stepPlayer({ x: 0, z: 0, yaw }, { forward: 1, strafe: 0 }, 0.1, open);
+    expect(Math.atan2(moved.x, moved.z)).toBeCloseTo(Math.atan2(ahead.x, ahead.z));
+  });
+
+  it("turns the short way, a share at a time", () => {
+    expect(turnToward(0, 1, 10, 5)).toBeCloseTo(1);
+    const part = turnToward(0, 1, 0.1, 5);
+    expect(part).toBeGreaterThan(0);
+    expect(part).toBeLessThan(1);
+    // From just short of a full turn to just past zero: forward across the seam, not all the way back.
+    expect(turnToward(2 * Math.PI - 0.1, 0.1, 10, 5)).toBeCloseTo(2 * Math.PI + 0.1);
   });
 });

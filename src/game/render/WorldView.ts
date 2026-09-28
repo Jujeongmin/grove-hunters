@@ -11,7 +11,8 @@ import { readJob, type JobId } from "../combat/jobs";
 import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
 import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
-  GROUNDED, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, type Airborne, type SolidTest,
+  GROUNDED, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
+  type SolidTest,
 } from "../rules/movement";
 import { gridRoute, lineClear } from "../rules/pathing";
 import { groundAt, platformBlocks } from "../rules/platforms";
@@ -70,6 +71,8 @@ const AUTO_DROP = 70;
 const AUTO_CLOSE = 0.8;
 // How quickly the camera turns to follow an auto-battle.
 const AUTO_CAMERA_RATE = 2.5;
+// How quickly you turn to face the way the pad walks you.
+const TURN_RATE = 14;
 // Heading for a quest's monsters, the route is worked out again this often.
 const ROUTE_MS = 1500;
 // Auto-battle that has moved less than STUCK_DISTANCE for this long takes a new route; for longer,
@@ -474,7 +477,8 @@ export class WorldView {
     // The auto potion works whether or not auto-battle is on, at the threshold the player set.
     const autoPotion = settings().autoPotion && !!state.me && state.me.hp <= state.me.maxHp * (settings().potionAt / 100);
     if (here && (potion || autoPotion)) this.drinkPotion();
-    let facingYaw = this.yaw;
+    // You face the way you last walked (the camera turns on its own, by dragging).
+    let facingYaw = this.pose.yaw;
     if (here) {
       this.bodies = state.others.map((o) => ({ x: o.pose.x, z: o.pose.z, r: PLAYER_BODY * 2 }));
       for (const m of Object.values(state.monsters)) {
@@ -492,14 +496,12 @@ export class WorldView {
       } else if (chase) {
         facingYaw = chase.yaw;
         // The camera swings round behind you to the fight, unless you are looking about yourself.
-        if (look.dx === 0) {
-          let turn = (chase.yaw - this.yaw) % (2 * Math.PI);
-          if (turn > Math.PI) turn -= 2 * Math.PI;
-          if (turn < -Math.PI) turn += 2 * Math.PI;
-          this.yaw += turn * (1 - Math.exp(-dt * AUTO_CAMERA_RATE));
-        }
+        if (look.dx === 0) this.yaw = turnToward(this.yaw, chase.yaw, dt, AUTO_CAMERA_RATE);
         if (chase.walk) this.pose = stepAround({ ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, speed);
       } else {
+        // The pad walks you round the camera; you turn to face the way you go.
+        const heading = walkYaw(this.yaw, move);
+        if (heading !== null) facingYaw = turnToward(this.pose.yaw, heading, dt, TURN_RATE);
         this.pose = stepPlayer({ ...this.pose, yaw: this.yaw }, move, dt, this.isSolid, speed);
       }
     }

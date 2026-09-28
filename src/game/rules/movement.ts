@@ -33,6 +33,22 @@ export function applyLook(yaw: number, pitch: number, dx: number, dy: number, se
   return { yaw: yaw - dx * sensitivity, pitch: nextPitch };
 }
 
+// The way a push on the pad walks, as a yaw in the camera's convention (the pad is laid out round
+// the camera: up is away from it), or null for no push.
+export function walkYaw(cameraYaw: number, input: MoveInput): number | null {
+  if (input.forward === 0 && input.strafe === 0) return null;
+  return cameraYaw + Math.atan2(-input.strafe, input.forward);
+}
+
+// Turns a yaw toward another the short way round, a share of what is left each moment (`rate` per
+// second), so a turn eases in rather than snapping.
+export function turnToward(from: number, to: number, dt: number, rate: number): number {
+  let turn = (to - from) % (2 * Math.PI);
+  if (turn > Math.PI) turn -= 2 * Math.PI;
+  if (turn < -Math.PI) turn += 2 * Math.PI;
+  return from + turn * (1 - Math.exp(-dt * rate));
+}
+
 function blocked(x: number, z: number, isSolid: SolidTest): boolean {
   const r = PLAYER_RADIUS;
   return isSolid(x - r, z - r) || isSolid(x + r, z - r) || isSolid(x - r, z + r) || isSolid(x + r, z + r);
