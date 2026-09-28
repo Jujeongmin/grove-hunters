@@ -30,8 +30,8 @@ export function playsFree(account: string): boolean {
 // the product's metadata. Nothing here invents a price the game never charged — set the product's
 // real price to the higher one and put it on sale to the lower one, and this shows the difference.
 //
-// The metadata is JSON on the product, both fields optional:
-//   { "listPrice": 1000, "saleEndsAt": "2026-10-31T23:59:59+09:00" }
+// The metadata is JSON on the product:
+//   { "listPrice": 1000 }
 export interface Offer {
   // What it costs now.
   price: number;
@@ -39,12 +39,10 @@ export interface Offer {
   listPrice: number | null;
   // Whole percent off, 1 to 99; null when there is no sale.
   off: number | null;
-  // When the sale ends, as a timestamp; null when the product does not say.
-  endsAt: number | null;
 }
 
-export function readOffer(price: number, metadata: unknown, now: number): Offer {
-  const plain: Offer = { price, listPrice: null, off: null, endsAt: null };
+export function readOffer(price: number, metadata: unknown): Offer {
+  const plain: Offer = { price, listPrice: null, off: null };
   if (typeof metadata !== "string" || metadata.trim() === "") return plain;
   let parsed: unknown;
   try {
@@ -53,16 +51,9 @@ export function readOffer(price: number, metadata: unknown, now: number): Offer 
     return plain;
   }
   if (!parsed || typeof parsed !== "object") return plain;
-  const m = parsed as Record<string, unknown>;
-  const endsAt = typeof m.saleEndsAt === "string" ? Date.parse(m.saleEndsAt) : NaN;
-  // A sale that has run out is over, whatever the price says.
-  if (Number.isFinite(endsAt) && endsAt <= now) return plain;
-  const listPrice = typeof m.listPrice === "number" && Number.isFinite(m.listPrice) ? Math.round(m.listPrice) : 0;
-  if (listPrice <= price) return { ...plain, endsAt: Number.isFinite(endsAt) ? endsAt : null };
-  return {
-    price,
-    listPrice,
-    off: Math.min(99, Math.max(1, Math.round((1 - price / listPrice) * 100))),
-    endsAt: Number.isFinite(endsAt) ? endsAt : null,
-  };
+  const listPrice = (parsed as Record<string, unknown>).listPrice;
+  if (typeof listPrice !== "number" || !Number.isFinite(listPrice)) return plain;
+  const whole = Math.round(listPrice);
+  if (whole <= price) return plain;
+  return { price, listPrice: whole, off: Math.min(99, Math.max(1, Math.round((1 - price / whole) * 100))) };
 }

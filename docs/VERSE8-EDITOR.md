@@ -75,14 +75,14 @@ git restore --staged public/assets
 정가 1000 VX짜리를 500 VX에 파는 할인을 열려면, 대시보드에서 `full-game` 상품에 이렇게 한다.
 
 1. 상품 가격을 **실제로 받을 값**(예: 500)으로 둔다.
-2. 상품 `metadata`에 JSON을 넣는다. 두 항목 모두 선택이다.
+2. 상품 `metadata`에 JSON을 넣는다.
 
 ```json
-{ "listPrice": 1000, "saleEndsAt": "2026-10-31T23:59:59+09:00" }
+{ "listPrice": 1000 }
 ```
 
-그러면 구매 패널에 `50% 할인 · 1̶0̶0̶0̶ ̶V̶X̶ · 10월 31일까지`가 뜨고, 가격 버튼은 500 VX가 된다.
-`listPrice`가 지금 가격보다 크지 않거나, `saleEndsAt`이 지났거나, `metadata`가 JSON이 아니면 할인 표시는 그냥
+그러면 구매 패널에 `50% 할인 · 1̶0̶0̶0̶ ̶V̶X̶`가 뜨고, 가격 버튼은 500 VX가 된다. 기간 표시는 없다(상시 할인).
+`listPrice`가 지금 가격보다 크지 않거나, 숫자가 아니거나, `metadata`가 JSON이 아니면 할인 표시는 그냥
 사라지고 가격만 남는다(`readOffer`, `tests/account/offer.test.ts`).
 
 **`listPrice`에는 실제로 받아 온 값만 적는다.** 받은 적 없는 가격을 정가처럼 보이게 하는 것은 표시광고법이

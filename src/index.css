@@ -406,29 +406,55 @@ button.hud-prompt:hover { color: #ffe0b0; }
   padding: 2px 8px; border-radius: 4px;
 }
 .upgrade-sale s { font-size: 13px; color: var(--ink-dim); }
-.upgrade-sale i { font-style: normal; font-size: 12px; color: #ffd36a; }
 .upgrade-sheet .brush-button { margin-top: 4px; min-width: 240px; }
-/* The one button that asks for money: gold instead of the dark brush the rest of the UI uses, with
-   a slow shine over it so the eye comes back to it. */
-.buy-cta { color: #2e1c06; text-shadow: 0 1px 0 rgba(255, 245, 220, 0.45); font-size: 19px; }
-.buy-cta::before { background: linear-gradient(180deg, #ffdf99, #f2ad40 55%, #c67c1b); }
+/* The one button that asks for money: gold instead of the dark brush the rest of the UI uses. A
+   sheen crosses it quickly and then rests, the way light moves over a struck coin when it turns —
+   a slow constant drag reads cheap, a short pass with a long pause reads like metal. */
+.buy-cta {
+  color: #2e1c06; text-shadow: 0 1px 0 rgba(255, 245, 220, 0.5); font-size: 19px;
+  animation: buy-glow 5s ease-in-out infinite;
+}
+.buy-cta::before {
+  background:
+    linear-gradient(180deg, #fff0c4 0%, #ffd782 18%, #f3b24a 48%, #d9892a 74%, #b96f1c 100%);
+}
 .buy-cta:hover:not(:disabled) { color: #241504; }
-.buy-cta:hover:not(:disabled)::before { background: linear-gradient(180deg, #ffecb8, #ffc25a 55%, #dd8f22); }
+.buy-cta:hover:not(:disabled)::before {
+  background:
+    linear-gradient(180deg, #fff8dd 0%, #ffe6a8 18%, #ffc45e 48%, #eb9c32 74%, #cb7f20 100%);
+}
+/* The sheen: a wide soft band with a narrow bright core, so the highlight has an edge to it. */
 .buy-cta::after {
   content: "";
   position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.6) 50%, transparent 58%);
-  background-size: 260% 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgba(255, 255, 255, 0.16) 44%,
+    rgba(255, 255, 255, 0.82) 50%,
+    rgba(255, 255, 255, 0.16) 56%,
+    transparent 64%
+  );
+  background-size: 320% 100%;
+  background-repeat: no-repeat;
   -webkit-mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
   mask: var(--ui-grunge-band) center / 100% 100% no-repeat;
-  animation: buy-shine 3.4s ease-in-out infinite;
+  animation: buy-sheen 5s cubic-bezier(0.32, 0, 0.18, 1) infinite;
 }
-@keyframes buy-shine {
-  0%, 55% { background-position: 160% 0; }
-  100% { background-position: -60% 0; }
+.buy-cta:disabled { animation: none; }
+.buy-cta:disabled::after { animation: none; opacity: 0; }
+@keyframes buy-sheen {
+  0% { background-position: 190% 0; }
+  20%, 100% { background-position: -90% 0; }
+}
+/* The gold warms as the sheen passes and cools again, instead of glowing the whole time. */
+@keyframes buy-glow {
+  0%, 100% { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)); }
+  12% { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 12px rgba(255, 196, 96, 0.6)); }
+  34% { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 5px rgba(255, 196, 96, 0.2)); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .buy-cta::after { animation: none; }
+  .buy-cta, .buy-cta::after { animation: none; }
 }
 .upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
 .upgrade-sheet .text-button:hover { opacity: 1; }

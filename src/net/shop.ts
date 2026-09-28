@@ -36,10 +36,10 @@ export function fullGamePrice(): number {
 export function fullGameOffer(): Offer {
   try {
     const item = VXShop.getItem(FULL_GAME_PRODUCT);
-    if (!item) return readOffer(FULL_GAME_PRICE_VX, null, Date.now());
-    return readOffer(item.price, item.metadata, Date.now());
+    if (!item) return readOffer(FULL_GAME_PRICE_VX, null);
+    return readOffer(item.price, item.metadata);
   } catch {
-    return readOffer(FULL_GAME_PRICE_VX, null, Date.now());
+    return readOffer(FULL_GAME_PRICE_VX, null);
   }
 }
 

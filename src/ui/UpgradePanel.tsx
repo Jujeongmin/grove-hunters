@@ -16,11 +16,6 @@ function weaponOf(c: (typeof LOCKED_CLASSES)[number]): string {
   return name.replace(CLASS_LABEL[c], "").trim() || name;
 }
 
-// The day a sale ends, in the reader's own reckoning.
-function saleEnds(at: number): string {
-  return new Date(at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-}
-
 // Why the panel opened, which decides its first line.
 export type UpgradeReason =
   | { kind: "portal"; zone: string }
@@ -93,7 +88,6 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
           <p className="upgrade-sale">
             <b>{offer.off}% 할인</b>
             <s>{offer.listPrice} VX</s>
-            {offer.endsAt !== null && <i>{saleEnds(offer.endsAt)}까지</i>}
           </p>
         )}
 
