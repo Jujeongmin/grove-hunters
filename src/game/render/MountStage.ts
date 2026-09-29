@@ -7,6 +7,7 @@ import { HatchFx, type Grandeur } from "./hatchFx";
 import { HEROES } from "./heroes";
 import { MOUNT_LOOKS } from "./mountLooks";
 import { PLAYER_HEIGHT, PlayerActor } from "./PlayerActor";
+import { QUALITY, settings } from "../../ui/settings";
 import { skinnedHeight } from "./skinned";
 
 // The stable's stage (the mounts panel): a stone pedestal under a warm light where your own hero sits
@@ -118,7 +119,8 @@ export class MountStage {
     rider: { playerClass: PlayerClass; costume: Costume },
   ) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    // No sharper than the world itself is drawn (the graphics quality: a phone's is 1.5).
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, QUALITY[settings().quality].pixelRatio));
     lights(this.scene);
     this.scene.add(this.glow);
     this.glow.position.set(0, 1.2, 1.2);

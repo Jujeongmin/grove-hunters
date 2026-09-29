@@ -10,6 +10,8 @@ const SINK_SECONDS = 0.8;
 const BAR_WIDTH = 0.9;
 // A blow pushes the model back this far, and it springs back at this rate.
 const KNOCK_DISTANCE = 0.35;
+// The most animation an out-of-view monster catches up at once (seconds): a loop needs no more.
+const MAX_CATCH_UP = 2;
 const KNOCK_RETURN = 9;
 
 // What a frame's sync saw happen to a monster, for the view's numbers and puffs.
@@ -102,7 +104,9 @@ export class MonsterActor {
     return this.bar.position.y;
   }
 
-  sync(state: MonsterState, dt: number, camera: THREE.Camera | null): MonsterChange {
+  // view: what the camera sees (last frame's); a monster outside it is neither drawn nor animated,
+  // only kept up to date, and catches its animation up when it comes back into view.
+  sync(state: MonsterState, dt: number, camera: THREE.Camera | null, view: THREE.Frustum | null = null): MonsterChange {
     const change: MonsterChange = { damage: 0, died: false, slammed: false };
     // The boss rearing up: the ring pulses; when it lets go, the view shows a shockwave.
     const slamming = state.slamming === true && state.alive;
@@ -182,7 +186,20 @@ export class MonsterActor {
       this.barFill.position.x = -(BAR_WIDTH * (1 - share)) / 2;
       if (camera) this.bar.quaternion.copy(camera.quaternion);
     }
-    this.mixer.update(dt);
+    this.bounds.center.set(p.x, this.bar.position.y / 2, p.z);
+    this.bounds.radius = Math.max(1.5, this.bar.position.y) + KNOCK_DISTANCE;
+    // Without a view the caller decides what shows (the menu's slime hides between its walks).
+    const seen = view === null || view.intersectsSphere(this.bounds);
+    if (view !== null) this.object.visible = seen;
+    this.unseen = Math.min(MAX_CATCH_UP, this.unseen + dt);
+    if (seen) {
+      this.mixer.update(this.unseen);
+      this.unseen = 0;
+    }
     return change;
   }
+
+  private readonly bounds = new THREE.Sphere();
+  // Time gone by unanimated, out of view.
+  private unseen = 0;
 }

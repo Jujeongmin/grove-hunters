@@ -1,3 +1,4 @@
+import { FrameGovernor } from "./frameGovernor";
 import * as THREE from "three";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { CLASSES, type PlayerClass } from "../combat/classes";
@@ -11,7 +12,7 @@ import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import { MonsterActor } from "./MonsterActor";
 import { PlayerActor } from "./PlayerActor";
 import { GREEN_BLOB, MONSTER_MODELS } from "./monsterLooks";
-import { settings } from "../../ui/settings";
+import { QUALITY, settings } from "../../ui/settings";
 
 const MENU_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ...MONSTER_MODELS])];
 
@@ -97,9 +98,11 @@ export class MenuScene {
   private readonly home = new THREE.Vector3();
   private frame = 0;
   private disposed = false;
+  // Fewer pixels while frames come late (see frameGovernor.ts).
+  private readonly governor = new FrameGovernor(Math.min(window.devicePixelRatio, QUALITY[settings().quality].pixelRatio));
 
   constructor(private readonly container: HTMLElement) {
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(this.governor.pixelRatio);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(this.renderer.domElement);
     this.camera.position.copy(CAMERA_HOME);
@@ -283,6 +286,11 @@ export class MenuScene {
     this.camera.lookAt(this.look);
     this.renderer.toneMappingExposure = settings().brightness;
     this.renderer.render(this.scene, this.camera);
+    const ratio = this.governor.frame(performance.now());
+    if (ratio !== null) {
+      this.renderer.setPixelRatio(ratio);
+      this.resize();
+    }
   };
 
   private moveSlime(dt: number): void {

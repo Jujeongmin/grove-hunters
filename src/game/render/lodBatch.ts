@@ -5,7 +5,9 @@ import { crossedCards, spriteMaterial, type TreeSprites } from "./treeSprites";
 // Many copies of a few models that only need to be drawn in full near the camera: trees, which turn
 // into their picture (see treeSprites.ts) further off, and ground cover, which is left out further
 // off (the fog and the grass colour hide it). One instanced mesh per model part plus one for the
-// pictures, refilled whenever the camera has moved a few metres.
+// pictures, refilled whenever the camera has moved a few metres or turned a little. Only what lies in
+// the way the camera looks is filled in (an instanced mesh is drawn whole or not at all, so the
+// trees behind you would otherwise all be drawn); what is very close is always in.
 
 // Within this distance a piece is its model; beyond it, its picture (or nothing). Set by the graphics
 // quality (see QUALITY in settings.ts).
@@ -13,6 +15,16 @@ export const LOD_NEAR = 38;
 // Refill after the camera moves this far, or this long after the last refill anyway.
 const REFILL_MOVE = 3;
 const REFILL_MS = 1000;
+// Refill after the camera turns this far (radians), but no oftener than this while it keeps turning.
+const REFILL_TURN = 0.2;
+const REFILL_MIN_MS = 90;
+// Beyond the edge of the view, this much more is filled in (radians), so a turn between refills never
+// shows a gap; and this close (metres) everything is, whichever way it lies.
+const VIEW_MARGIN = 0.45;
+const ALWAYS_WITHIN = 9;
+
+// Which way the camera looks (its yaw, three.js convention: 0 looks down -z) and half its view across.
+export interface LodView { yaw: number; halfWidth: number }
 
 interface Kind {
   pieces: StaticPiece[];
@@ -26,7 +38,7 @@ interface Kind {
 export class LodBatch {
   readonly object = new THREE.Group();
   private readonly kinds: Kind[] = [];
-  private last: { x: number; z: number; at: number } | null = null;
+  private last: { x: number; z: number; at: number; yaw: number | null } | null = null;
   private near = LOD_NEAR;
 
   // A new distance refills at the next update.
@@ -83,19 +95,34 @@ export class LodBatch {
     }
   }
 
-  // Sorts every piece into near (its model) and far (its picture, or nothing) round (x, z).
-  update(x: number, z: number, force = false): void {
+  // Sorts every piece into near (its model) and far (its picture, or nothing) round (x, z), where the
+  // camera stands; with a view, only what lies within it.
+  update(x: number, z: number, force = false, view: LodView | null = null): void {
     const now = performance.now();
     const last = this.last;
-    if (!force && last && Math.hypot(x - last.x, z - last.z) < REFILL_MOVE && now - last.at < REFILL_MS) return;
-    this.last = { x, z, at: now };
+    const turned = view !== null && last !== null && (last.yaw === null || Math.abs(angleBetween(view.yaw, last.yaw)) > REFILL_TURN);
+    if (!force && last) {
+      const moved = Math.hypot(x - last.x, z - last.z) >= REFILL_MOVE;
+      if (!moved && !turned && now - last.at < REFILL_MS) return;
+      if (now - last.at < REFILL_MIN_MS) return;
+    }
+    this.last = { x, z, at: now, yaw: view?.yaw ?? null };
+    // The direction the camera looks, and how far round from it a piece may lie and still be filled in.
+    const ahead = view ? { x: -Math.sin(view.yaw), z: -Math.cos(view.yaw) } : null;
+    const reach = view ? Math.cos(Math.min(Math.PI, view.halfWidth + VIEW_MARGIN)) : -1;
+    const inView = (w: THREE.Vector3, d: number): boolean => {
+      if (!ahead || d <= ALWAYS_WITHIN) return true;
+      return ((w.x - x) * ahead.x + (w.z - z) * ahead.z) / d >= reach;
+    };
     const m = new THREE.Matrix4();
     for (const kind of this.kinds) {
       let near = 0;
       let far = 0;
       kind.pieces.forEach((piece, i) => {
         const w = kind.where[i];
-        if (Math.hypot(w.x - x, w.z - z) <= this.near) {
+        const d = Math.hypot(w.x - x, w.z - z);
+        if (!inView(w, d)) return;
+        if (d <= this.near) {
           for (const part of kind.parts) part.mesh.setMatrixAt(near, m.multiplyMatrices(piece.matrix, part.relative));
           near++;
         } else if (kind.far) {
@@ -114,4 +141,9 @@ export class LodBatch {
       }
     }
   }
+}
+
+// The shortest turn from b to a (radians, -PI to PI).
+function angleBetween(a: number, b: number): number {
+  return Math.atan2(Math.sin(a - b), Math.cos(a - b));
 }

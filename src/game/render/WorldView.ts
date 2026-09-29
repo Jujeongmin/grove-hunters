@@ -1,3 +1,4 @@
+import { FrameGovernor } from "./frameGovernor";
 import * as THREE from "three";
 import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
@@ -296,15 +297,19 @@ export class WorldView {
     this.tripToResume = options.trip;
     this.walls = solidWith(this.layout, Infinity);
     this.pose = { x: options.entry.x, z: options.entry.z, yaw: 0 };
-    // As many pixels a point as the graphics quality allows (phones start at 1.5: small screens, warm chips).
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY[settings().quality].pixelRatio));
-    this.stopQuality = onSettings((s) => {
-      const ratio = Math.min(window.devicePixelRatio, QUALITY[s.quality].pixelRatio);
-      if (ratio !== this.renderer.getPixelRatio()) {
-        this.renderer.setPixelRatio(ratio);
-        this.resize();
-      }
+    // As many pixels a point as the graphics quality allows (phones start at 1.5: small screens, warm
+    // chips), fewer while frames come late (see frameGovernor.ts).
+    const cap = () => Math.min(window.devicePixelRatio, QUALITY[settings().quality].pixelRatio);
+    this.governor = new FrameGovernor(cap());
+    this.renderer.setPixelRatio(this.governor.pixelRatio);
+    this.stopQuality = onSettings(() => {
+      if (cap() === this.governorCap) return;
+      this.governorCap = cap();
+      this.governor.setCap(this.governorCap);
+      this.renderer.setPixelRatio(this.governor.pixelRatio);
+      this.resize();
     });
+    this.governorCap = cap();
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(this.renderer.domElement);
     this.input = new FpsInput(this.renderer.domElement);
@@ -585,9 +590,19 @@ export class WorldView {
       return;
     }
     this.step(Math.min(this.clock.getDelta(), 0.1), true);
+    const ratio = this.governor.frame(performance.now());
+    if (ratio !== null) {
+      this.renderer.setPixelRatio(ratio);
+      this.resize();
+    }
   };
 
   private powerSave = false;
+  // What the camera saw last frame: monsters outside it are skipped (see MonsterActor.sync).
+  private readonly view = new THREE.Frustum();
+  private readonly viewMatrix = new THREE.Matrix4();
+  private readonly governor: FrameGovernor;
+  private governorCap: number;
   // Trees and ground cover near you in full, further off as pictures or not at all.
   private lod: LodBatch | null = null;
   private lastSavedStep = 0;
@@ -720,8 +735,12 @@ export class WorldView {
     const cam = chaseCamera(this.pose, this.yaw, this.pitch, this.walls, SKY_CEILING);
     this.camera.position.set(cam.x, cam.y, cam.z);
     this.lod?.setNear(QUALITY[settings().quality].near);
-    this.lod?.update(this.pose.x, this.pose.z);
+    // Round the camera, and only the way it looks: half its view across, from its height and shape.
+    const halfWidth = Math.atan(Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this.camera.aspect);
+    this.lod?.update(cam.x, cam.z, false, { yaw: this.yaw, halfWidth });
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    this.camera.updateMatrixWorld();
+    this.view.setFromProjectionMatrix(this.viewMatrix.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
     this.frameDialogue(dt);
     this.emitHud();
     if (draw) this.renderer.render(this.scene, this.camera);
@@ -1179,7 +1198,7 @@ export class WorldView {
       if (!state.alive) this.skillHits.delete(id);
       // Blows come from the nearest hunter; near you, that is almost always you.
       actor.hitFrom(this.pose.x, this.pose.z);
-      const change = actor.sync(state, dt, this.camera);
+      const change = actor.sync(state, dt, this.camera, this.view);
       const at = new THREE.Vector3(actor.object.position.x, actor.height + 0.2, actor.object.position.z);
       if (change.damage > 0) {
         const skillAt = this.skillHits.get(id);
