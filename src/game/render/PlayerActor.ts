@@ -67,9 +67,22 @@ const RIDE_THIGH = 1.25;
 const RIDE_KNEE = 1.35;
 const RIDE_SPREAD = 0.7;
 
+// Getting on or off takes this long (seconds): the mount pops up (or shrinks away) in a puff while the
+// rider hops up onto it (or down), this high at the top of the hop.
+const MOUNT_SECONDS = 0.45;
+const MOUNT_HOP = 0.45;
+const PUFF_COLOR = 0xfff0c8;
+
+const easeOutBack = (k: number) => 1 + 2.2 * (k - 1) ** 3 + 1.2 * (k - 1) ** 2;
+const smooth = (k: number) => k * k * (3 - 2 * k);
+
 interface Riding {
   id: MountId;
   object: THREE.Object3D;
+  // Its full size, where the rider's body sits on it, and how far on or off it is (0 to 1).
+  scale: number;
+  seat: THREE.Vector3;
+  on: number;
   mixer: THREE.AnimationMixer;
   blender: ActionBlender;
   idle: THREE.AnimationAction;
@@ -164,7 +177,10 @@ export class PlayerActor {
   private lastSwingAt = Number.NEGATIVE_INFINITY;
   // The mount under this hero, if riding; its legs, found on first riding.
   private riding: Riding | null = null;
+  // The mount being got off, until it has shrunk away.
+  private leaving: Riding | null = null;
   private legs: Leg[] | null | undefined = undefined;
+  private standingHips: number | null = null;
 
   constructor(readonly account: string, model: PlayerModel | null) {
     this.body = model?.object ?? placeholderBody();
@@ -188,16 +204,23 @@ export class PlayerActor {
   // Up on a mount, or down (null). The mount stands under the hero, sized to it, and the hero sits on
   // its back with the legs bent over it.
   setMount(model: MountModel | null): void {
+    if (this.leaving) this.drop(this.leaving);
     if (this.riding) {
-      this.object.remove(this.riding.object);
-      this.riding.mixer.stopAllAction();
+      // Off: the hop down and the shrinking play out in sync.
+      this.leaving = this.riding;
       this.riding = null;
+      this.effects?.ring(this.object.position, 0.8, PUFF_COLOR);
     }
-    this.body.position.set(0, 0, 0);
     if (!model) return;
+    // Measured standing, once: the body is still on the ground then.
+    if (this.standingHips === null) {
+      this.body.position.set(0, 0, 0);
+      this.standingHips = this.hipsHeight();
+    }
     const look = MOUNT_LOOKS[model.id];
     const object = model.object;
-    object.scale.setScalar((PLAYER_HEIGHT * look.height) / skinnedHeight(object));
+    const scale = (PLAYER_HEIGHT * look.height) / skinnedHeight(object);
+    object.scale.setScalar(scale);
     object.traverse((o) => {
       o.frustumCulled = false;
     });
@@ -211,11 +234,37 @@ export class PlayerActor {
     const find = (name: string) => THREE.AnimationClip.findByName(model.clips, name) ?? model.clips[0];
     const idle = mixer.clipAction(find(look.idle));
     const move = mixer.clipAction(find(look.move));
-    this.riding = { id: model.id, object, mixer, idle, move, blender: new ActionBlender(idle) };
     // Sat on its back: the hips go to the seat (the hips' height over the feet read from the rig at rest).
     if (this.legs === undefined) this.legs = findLegs(this.body);
-    const seat = PLAYER_HEIGHT * look.height * look.seat + (look.hover ?? 0);
-    this.body.position.set(0, seat - this.hipsHeight(), look.forward);
+    const seatY = PLAYER_HEIGHT * look.height * look.seat + (look.hover ?? 0) - this.standingHips;
+    this.riding = {
+      id: model.id, object, scale, seat: new THREE.Vector3(0, seatY, look.forward), on: 0,
+      mixer, idle, move, blender: new ActionBlender(idle),
+    };
+    object.scale.setScalar(scale * 0.01);
+    this.effects?.ring(this.object.position, 0.8, PUFF_COLOR);
+  }
+
+  private drop(ride: Riding): void {
+    this.object.remove(ride.object);
+    ride.mixer.stopAllAction();
+    if (this.leaving === ride) this.leaving = null;
+    if (!this.riding) this.body.position.set(0, 0, 0);
+  }
+
+  // Getting on (the mount grows in, the rider hops up and sits) or off (the other way round), and the
+  // mount's own walk or stand.
+  private stepMount(ride: Riding, on: boolean, moving: boolean, dt: number): void {
+    ride.on = Math.max(0, Math.min(1, ride.on + (on ? dt : -dt) / MOUNT_SECONDS));
+    const k = ride.on;
+    ride.object.scale.setScalar(ride.scale * Math.max(0.01, on ? easeOutBack(k) : smooth(k)));
+    const hop = MOUNT_HOP * Math.sin(Math.PI * k);
+    this.body.position.set(0, ride.seat.y * smooth(k) + (k < 1 ? hop : 0), ride.seat.z * smooth(k));
+    ride.blender.fadeTo(moving ? ride.move : ride.idle);
+    ride.mixer.update(dt);
+    this.object.updateMatrixWorld(true);
+    this.sitLegs(smooth(k));
+    if (!on && k <= 0) this.drop(ride);
   }
 
   // How high the hips are over the feet, standing.
@@ -230,13 +279,13 @@ export class PlayerActor {
   }
 
   // The legs bent over the mount, after the clip has posed the rest of the body.
-  private sitLegs(): void {
-    if (!this.legs) return;
+  private sitLegs(weight: number): void {
+    if (!this.legs || weight <= 0) return;
     this.body.updateMatrixWorld(true);
     for (const leg of this.legs) {
-      turnInWorld(leg.upper, X_AXIS, -RIDE_THIGH);
-      turnInWorld(leg.upper, Z_AXIS, leg.side * RIDE_SPREAD);
-      turnInWorld(leg.lower, X_AXIS, RIDE_KNEE);
+      turnInWorld(leg.upper, X_AXIS, -RIDE_THIGH * weight);
+      turnInWorld(leg.upper, Z_AXIS, leg.side * RIDE_SPREAD * weight);
+      turnInWorld(leg.lower, X_AXIS, RIDE_KNEE * weight);
       const foot = leg.lower.localToWorld(leg.footInLower.clone());
       leg.foot.position.copy(leg.foot.parent!.worldToLocal(foot));
       leg.foot.updateMatrixWorld(true);
@@ -359,13 +408,8 @@ export class PlayerActor {
     // A rider sits still; the mount does the walking.
     else a.blender.fadeTo(this.riding ? a.idle : this.moveClip(a, dx, dz, pose.yaw));
     a.mixer.update(dt);
-    const ride = this.riding;
-    if (ride) {
-      ride.blender.fadeTo(Math.hypot(dx, dz) >= MOVING ? ride.move : ride.idle);
-      ride.mixer.update(dt);
-      this.object.updateMatrixWorld(true);
-      this.sitLegs();
-    }
+    if (this.riding) this.stepMount(this.riding, true, moving, dt);
+    else if (this.leaving) this.stepMount(this.leaving, false, moving, dt);
     this.object.visible = true;
   }
 

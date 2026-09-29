@@ -112,6 +112,11 @@ const SKILL_GAP_MS = 900;
 const SKILL_NUMBER_MS = 1500;
 // How long the red edge flash lasts after a blow.
 const HURT_FLASH_MS = 350;
+// A quest's walk puts you on your mount after this long on the move (seconds), when more than this
+// much of the way is left (metres); without a mount the server is asked again after this long (ms).
+const AUTO_MOUNT_SECONDS = 2;
+const AUTO_MOUNT_WAY = 12;
+const NO_MOUNT_RETRY_MS = 60_000;
 // How long a note of gold or a drop stays up.
 const NOTE_MS = 3000;
 // The zone's boss and the grove's guardian: marked on the map, and their health shown at the top.
@@ -258,6 +263,12 @@ export class WorldView {
   // off (a blow, a strike); and the mount models being fetched.
   private riding: MountId | null = null;
   private serverRiding: MountId | null = null;
+  // Getting on is asked of the server once at a time; how long you have been walking where a quest
+  // sent you (a couple of seconds of it gets you on); and, after the server said you have no mount,
+  // when to try again.
+  private mounting = false;
+  private sentFor = 0;
+  private noMountUntil = 0;
   private readonly mountsLoading = new Set<string>();
   // The monsters swinging at you: auto-battle fights them first.
   private readonly threats = new Threats();
@@ -478,9 +489,20 @@ export class WorldView {
       this.getOff();
       return;
     }
-    if (this.client.state.me?.dead) return;
+    this.getOn(true);
+  }
+
+  // Asks the server to put you on your mount. Asked by hand, it always asks; on its own (a quest's
+  // walk), not again for a while once the server has said you have none.
+  private getOn(byHand = false): void {
+    if (this.mounting || this.riding || this.client.state.me?.dead) return;
+    if (!byHand && performance.now() < this.noMountUntil) return;
+    this.mounting = true;
     void this.client.ride(true).then((id) => {
+      this.mounting = false;
       this.riding = id;
+      if (id) playCue("open");
+      else this.noMountUntil = performance.now() + NO_MOUNT_RETRY_MS;
     });
   }
 
@@ -488,6 +510,8 @@ export class WorldView {
   private getOff(): void {
     if (!this.riding) return;
     this.riding = null;
+    this.sentFor = 0;
+    playCue("close");
     void this.client.ride(false);
   }
 
@@ -649,6 +673,11 @@ export class WorldView {
       this.threats.watch(state.monsters, this.pose, performance.now());
       const chase = talking ? null
         : idle && this.walkGoal ? this.walkTo(this.walkGoal) : this.auto && idle ? this.autoChase(state.monsters) : null;
+      // Sent somewhere by a quest (auto-hunting its monsters, or on the way to the elder), a couple of
+      // seconds on the move gets you on your mount, if the way left is long enough to be worth it.
+      const sent = (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal !== null;
+      this.sentFor = sent && chase?.walk === true && !rooted ? this.sentFor + dt : 0;
+      if (this.sentFor >= AUTO_MOUNT_SECONDS && !this.riding && (this.wayLeft() ?? 0) > AUTO_MOUNT_WAY) this.getOn();
       if (rooted) {
         facingYaw = chase ? chase.yaw : this.pose.yaw;
       } else if (chase) {
