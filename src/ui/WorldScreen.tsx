@@ -324,19 +324,20 @@ function ZoneScreen({
   const toggle = (next: Panel) => {
     setPanel((p) => (p === next ? null : next));
   };
-  const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean }[] = [
+  // Pinned: the ones used most sit beside the menu button, always in reach; the rest fold into it.
+  const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean; pinned?: boolean }[] = [
     { id: "map", label: t("menu.map"), key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
     ...(owned ? [] : [{
       id: "upgrade", label: t("menu.upgrade"), key: "V", code: "KeyV",
-      act: () => setUpgrade({ kind: "menu" }), on: upgrade !== null,
+      act: () => setUpgrade({ kind: "menu" }), on: upgrade !== null, pinned: true,
     }]),
     { id: "ranking", label: t("menu.ranking"), key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
     { id: "quests", label: t("menu.quests"), key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
     { id: "skills", label: t("menu.skills"), key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
     { id: "grove", label: t("menu.grove"), key: "G", code: "KeyG", act: () => toggle("grove"), on: panel === "grove" },
-    { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith" },
+    { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
-    { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts" },
+    { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
       id: "menu", label: t("menu.settings"), key: "P", code: "KeyP",
@@ -344,6 +345,13 @@ function ZoneScreen({
       on: menu,
     },
   ];
+  const menuButton = (item: (typeof menuItems)[number]) => (
+    <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
+      {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
+      <span>{item.label}</span>
+      {keyHints && <kbd className="hud-key">{item.key}</kbd>}
+    </button>
+  );
   // The locked portal you are standing at, if any: the key handler below is bound once, so it reads
   // this rather than closing over the HUD.
   const lockedPortal = useRef<string | null>(null);
@@ -484,22 +492,15 @@ function ZoneScreen({
           {/* The menu sits left of the corner map and unfolds into a grid below itself, so the two
               never cover each other. */}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
-            <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}${glow === "fold" ? " tutorial-glow" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
-              <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
-              <span>{t("common.menu")}</span>
-              {keyHints && <kbd className="hud-key">M</kbd>}
-            </button>
-            {menuOpen && (
-              <div className="hud-menu-grid">
-                {menuItems.map((item) => (
-                  <button key={item.id} type="button" className={`hud-icon-button${item.on ? " on" : ""}${glow === "skills" && item.id === "skills" ? " tutorial-glow" : ""}`} onClick={item.act}>
-                    {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
-                    <span>{item.label}</span>
-                    {keyHints && <kbd className="hud-key">{item.key}</kbd>}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="hud-menu-row">
+              {menuItems.filter((item) => item.pinned).map(menuButton)}
+              <button type="button" className={`hud-icon-button${menuOpen ? " on" : ""}${glow === "fold" ? " tutorial-glow" : ""}`} onClick={() => setMenuOpen((o) => !o)}>
+                <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
+                <span>{t("common.menu")}</span>
+                {keyHints && <kbd className="hud-key">M</kbd>}
+              </button>
+            </div>
+            {menuOpen && <div className="hud-menu-grid">{menuItems.filter((item) => !item.pinned).map(menuButton)}</div>}
           </div>
           {hud.notes.length > 0 && (
             <div className="hud-notes">

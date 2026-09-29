@@ -285,7 +285,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The menu: one button at the top right (the corner map is at the top left now), unfolding into a
    grid five across under itself, which leaves the quest below it in the clear. */
 .hud-menu-buttons { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-.hud-menu-grid { display: grid; grid-template-columns: repeat(5, 58px); gap: 6px; }
+.hud-menu-row { display: flex; gap: 6px; }
+.hud-menu-row .hud-icon-button { width: 58px; }
+.hud-menu-grid { display: grid; grid-template-columns: repeat(4, 58px); gap: 6px; }
 .hud-menu-grid .hud-icon-button { padding: 4px 2px; }
 .hud-menu-grid .hud-icon-button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* What a kill paid (gold, a drop): small and see-through, so it tells without covering. */
