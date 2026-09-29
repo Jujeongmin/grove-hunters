@@ -641,6 +641,8 @@ export const zhHant: Bundle = {
   "mount.notOwned": "未擁有",
   "mount.baseNote": "完整版附贈基礎坐騎「{name}」。",
   "mount.new": "新坐騎！{tier} {name}",
+  "mount.newBadge": "新坐騎！",
+  "mount.repeatBadge": "已擁有",
   "mount.repeat": "已擁有{name} · 返還寶石 {n} 個",
   "mount.odds": "抽取機率",
   "mount.repeatNote": "抽到已擁有的坐騎時返還寶石 {n} 個。",

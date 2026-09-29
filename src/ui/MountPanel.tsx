@@ -21,7 +21,7 @@ const VERSE = import.meta.env.VITE_AGENT8_VERSE as string | undefined;
 const CONFIRM_EVERY_MS = 1500;
 const CONFIRM_FOR_MS = 30_000;
 // The egg's shaking and bursting take about this long (see MountStage).
-const HATCH_WAIT_MS = 2500;
+const HATCH_WAIT_MS = 3500;
 // Gems per VX at the smallest pack: a bigger pack's bonus is measured against it.
 const BASE_RATE = 1;
 
@@ -49,6 +49,7 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
   const [looking, setLooking] = useState<MountId>(BASE_MOUNT);
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
   const [hatched, setHatched] = useState<{ mount: MountId; repeat: boolean } | null>(null);
+  const [hatchCount, setHatchCount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [ready, setReady] = useState(false);
@@ -126,14 +127,15 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
       }
       // The egg hatches on the stage's frames; a hidden page draws none, so the answer never waits long.
       if (stage.current) {
-        await Promise.race([stage.current.hatchInto(r.mount), new Promise((done) => setTimeout(done, HATCH_WAIT_MS))]);
+        await Promise.race([stage.current.hatchInto(r.mount, (moment) => playCue(moment === "knock" ? "click" : "skill")), new Promise((done) => setTimeout(done, HATCH_WAIT_MS))]);
         stage.current?.finishHatch();
       }
       setBusy(false);
       setView(r);
       setLooking(r.mount);
       setHatched({ mount: r.mount, repeat: r.repeat });
-      playCue(r.repeat ? "enhance_fail" : "enhance_ok");
+      setHatchCount((n) => n + 1);
+      playCue(r.repeat ? "gold" : "levelup");
     });
   };
   const ride = (id: MountId) => {
@@ -172,6 +174,18 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
         <section className={`stable-stage tier-${shown ? tierKey(shown) : "base"}`}>
           <canvas ref={canvas} />
           {!ready && <p className="stable-loading">{t("common.loading")}</p>}
+          {/* The burst on screen: a flash, and for a new mount its tier and name thrown up big, with
+              turning rays behind for the rare and better. Keyed so each hatch plays it afresh. */}
+          {tab === "hatch" && hatched && (
+            <div key={hatchCount} className={`stable-burst tier-${tierKey(hatched.mount)}${hatched.repeat ? " repeat" : ""}`}>
+              <i className="stable-flash" />
+              {!hatched.repeat && tierKey(hatched.mount) !== "common" && <i className="stable-rays" />}
+              <span className="stable-banner">
+                <small>{t(hatched.repeat ? "mount.repeatBadge" : "mount.newBadge")}</small>
+                <b>{tierName(tierKey(hatched.mount))}</b>
+              </span>
+            </div>
+          )}
           {shown && (
             <div className="stable-plate">
               <span className="stable-tier">{tierName(tierKey(shown))}</span>

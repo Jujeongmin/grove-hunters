@@ -641,6 +641,8 @@ export const en: Bundle = {
   "mount.notOwned": "Not owned",
   "mount.baseNote": "The full game comes with a {name} to ride.",
   "mount.new": "New mount! {tier} {name}",
+  "mount.newBadge": "New mount!",
+  "mount.repeatBadge": "Already yours",
   "mount.repeat": "Already had the {name} · {n} gems back",
   "mount.odds": "Draw odds",
   "mount.repeatNote": "A mount you already own comes back as {n} gems.",

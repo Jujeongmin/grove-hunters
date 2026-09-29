@@ -641,6 +641,8 @@ export const zhHans: Bundle = {
   "mount.notOwned": "未拥有",
   "mount.baseNote": "完整版附赠基础坐骑「{name}」。",
   "mount.new": "新坐骑！{tier} {name}",
+  "mount.newBadge": "新坐骑！",
+  "mount.repeatBadge": "已拥有",
   "mount.repeat": "已拥有{name} · 返还宝石 {n} 个",
   "mount.odds": "抽取概率",
   "mount.repeatNote": "抽到已拥有的坐骑时返还宝石 {n} 个。",

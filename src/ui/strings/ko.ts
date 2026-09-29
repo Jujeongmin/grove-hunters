@@ -650,6 +650,8 @@ export const ko = {
   "mount.notOwned": "미보유",
   "mount.baseNote": "정식판에는 기본 탈것 {name}이 들어 있어요.",
   "mount.new": "새 탈것! {tier} {name}",
+  "mount.newBadge": "새 탈것!",
+  "mount.repeatBadge": "이미 가진 탈것",
   "mount.repeat": "이미 가진 {name} · 보석 {n}개를 돌려받았어요",
   "mount.odds": "뽑기 확률",
   "mount.repeatNote": "이미 가진 탈것이 나오면 보석 {n}개를 돌려받아요.",

@@ -641,6 +641,8 @@ export const ja: Bundle = {
   "mount.notOwned": "未所持",
   "mount.baseNote": "製品版には基本の乗り物「{name}」が付いています。",
   "mount.new": "新しい乗り物！{tier} {name}",
+  "mount.newBadge": "新しい乗り物！",
+  "mount.repeatBadge": "所持済み",
   "mount.repeat": "持っている{name} · 宝石 {n}個が戻りました",
   "mount.odds": "排出確率",
   "mount.repeatNote": "持っている乗り物が出ると宝石 {n}個が戻ります。",

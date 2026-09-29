@@ -1495,3 +1495,57 @@ button.hud-prompt:hover { color: #ffe0b0; }
 @media (prefers-reduced-motion: reduce) {
   .stable, .stable-card.tier-legendary:not(.locked), .stable-result { animation: none; }
 }
+
+/* The hatch on screen, over the stage: a flash, turning rays for the rare and better, and a banner
+   with the tier thrown up big. Only opacity and transform move, so a phone keeps its frames. */
+.stable-burst { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.stable-flash {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 58%, #fff 0, color-mix(in srgb, var(--tier) 70%, #fff) 25%, transparent 70%);
+  animation: stable-flash 0.9s ease-out forwards;
+}
+@keyframes stable-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+.stable-rays {
+  position: absolute; left: 50%; top: 58%; width: 160%; aspect-ratio: 1; margin: -80% 0 0 -80%;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--tier) 55%, transparent) 0 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 8%, transparent 60%);
+  mask: radial-gradient(circle, #000 8%, transparent 60%);
+  animation: stable-rays 3.2s ease-out forwards;
+}
+@keyframes stable-rays {
+  0% { opacity: 0; transform: rotate(0) scale(0.6); }
+  15% { opacity: 1; }
+  70% { opacity: 0.8; }
+  100% { opacity: 0; transform: rotate(70deg) scale(1.05); }
+}
+.stable-banner {
+  position: absolute; left: 50%; top: 14%; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transform: translateX(-50%); animation: stable-banner 3.2s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+}
+.stable-banner small {
+  padding: 2px 12px; border-radius: 999px; font: 400 13px var(--font-head); color: #1a120c; letter-spacing: 0.08em;
+  background: var(--tier);
+}
+.stable-banner b {
+  font: 400 44px/1 var(--font-logo); color: var(--tier); letter-spacing: 0.06em;
+  text-shadow: 0 3px 0 #0e0906, 0 0 18px color-mix(in srgb, var(--tier) 70%, transparent), 0 0 40px color-mix(in srgb, var(--tier) 45%, transparent);
+}
+.stable-burst.repeat .stable-banner b { font-size: 30px; }
+@keyframes stable-banner {
+  0% { opacity: 0; transform: translateX(-50%) scale(2.2); }
+  12% { opacity: 1; transform: translateX(-50%) scale(1); }
+  80% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1); }
+}
+/* The legendary's name shimmers gold and white. */
+.stable-burst.tier-legendary:not(.repeat) .stable-banner b {
+  background: linear-gradient(100deg, #ffcf5a 20%, #fff8e0 40%, #ffcf5a 60%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 3px 0 #0e0906) drop-shadow(0 0 14px rgba(255, 207, 90, 0.7));
+  animation: stable-shimmer 1.2s linear infinite;
+}
+@keyframes stable-shimmer { to { background-position: -250% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .stable-flash, .stable-rays { animation: none; opacity: 0; }
+  .stable-banner { animation: none; }
+}
