@@ -3,7 +3,12 @@
 // Verse8 shop's gem products). All the numbers live here.
 
 export type MountTier = "common" | "rare" | "epic" | "legendary";
-export type MountId = "deer" | "pig" | "chicken" | "penguin" | "panda" | "crab" | "yeti" | "drake" | "dragon";
+export type MountId =
+  | "deer"
+  | "pig" | "chicken" | "penguin" | "cat" | "dog" | "pigeon"
+  | "panda" | "crab" | "armabee" | "glub" | "squidle"
+  | "yeti" | "drake" | "hywirl" | "alpaking" | "queen_armabee"
+  | "elder_glub" | "alpaking_emperor" | "dragon";
 
 export interface Mount {
   model: string;
@@ -25,10 +30,21 @@ export const MOUNTS: Record<MountId, Mount> = {
   pig: { model: "mnt_pig", tier: "common", speed: TIER_SPEED.common },
   chicken: { model: "mnt_chicken", tier: "common", speed: TIER_SPEED.common },
   penguin: { model: "mnt_penguin", tier: "common", speed: TIER_SPEED.common },
+  cat: { model: "mnt_cat", tier: "common", speed: TIER_SPEED.common },
+  dog: { model: "mnt_dog", tier: "common", speed: TIER_SPEED.common },
+  pigeon: { model: "mnt_pigeon", tier: "common", speed: TIER_SPEED.common },
   panda: { model: "mnt_panda", tier: "rare", speed: TIER_SPEED.rare },
   crab: { model: "mnt_crab", tier: "rare", speed: TIER_SPEED.rare },
+  armabee: { model: "mnt_armabee", tier: "rare", speed: TIER_SPEED.rare, flies: true },
+  glub: { model: "mnt_glub", tier: "rare", speed: TIER_SPEED.rare, flies: true },
+  squidle: { model: "mnt_squidle", tier: "rare", speed: TIER_SPEED.rare, flies: true },
   yeti: { model: "mnt_yeti", tier: "epic", speed: TIER_SPEED.epic },
   drake: { model: "mnt_drake", tier: "epic", speed: TIER_SPEED.epic, flies: true },
+  hywirl: { model: "mnt_hywirl", tier: "epic", speed: TIER_SPEED.epic, flies: true },
+  alpaking: { model: "mnt_alpaking", tier: "epic", speed: TIER_SPEED.epic, flies: true },
+  queen_armabee: { model: "mnt_armabee_evolved", tier: "epic", speed: TIER_SPEED.epic, flies: true },
+  elder_glub: { model: "mnt_glub_evolved", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
+  alpaking_emperor: { model: "mnt_alpaking_evolved", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
   dragon: { model: "mnt_dragon", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
 };
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];

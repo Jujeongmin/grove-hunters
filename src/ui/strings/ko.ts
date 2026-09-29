@@ -681,6 +681,17 @@ export const ko = {
   "mount.name.crab": "게",
   "mount.name.yeti": "예티",
   "mount.name.drake": "새끼 용",
+  "mount.name.cat": "고양이",
+  "mount.name.dog": "강아지",
+  "mount.name.pigeon": "비둘기",
+  "mount.name.armabee": "갑옷벌",
+  "mount.name.glub": "글럽",
+  "mount.name.squidle": "날개오징어",
+  "mount.name.hywirl": "회오리",
+  "mount.name.alpaking": "알파킹",
+  "mount.name.queen_armabee": "여왕 갑옷벌",
+  "mount.name.elder_glub": "고대 글럽",
+  "mount.name.alpaking_emperor": "황제 알파킹",
   "mount.name.dragon": "용",
 } as const;
 

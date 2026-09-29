@@ -142,6 +142,77 @@
         "Walk"
       ]
     },
+    "mnt_alpaking": {
+      "url": "assets/models/mnt_alpaking.glb",
+      "bytes": 92180,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_alpaking_evolved": {
+      "url": "assets/models/mnt_alpaking_evolved.glb",
+      "bytes": 117140,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_armabee": {
+      "url": "assets/models/mnt_armabee.glb",
+      "bytes": 89500,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_armabee_evolved": {
+      "url": "assets/models/mnt_armabee_evolved.glb",
+      "bytes": 100776,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_cat": {
+      "url": "assets/models/mnt_cat.glb",
+      "bytes": 48828,
+      "animations": [
+        "Bite_Front",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
     "mnt_chicken": {
       "url": "assets/models/mnt_chicken.glb",
       "bytes": 63272,
@@ -190,6 +261,21 @@
         "Yes"
       ]
     },
+    "mnt_dog": {
+      "url": "assets/models/mnt_dog.glb",
+      "bytes": 41588,
+      "animations": [
+        "Bite_Front",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
     "mnt_dragon": {
       "url": "assets/models/mnt_dragon.glb",
       "bytes": 281112,
@@ -207,6 +293,48 @@
     "mnt_drake": {
       "url": "assets/models/mnt_drake.glb",
       "bytes": 120048,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_glub": {
+      "url": "assets/models/mnt_glub.glb",
+      "bytes": 91276,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_glub_evolved": {
+      "url": "assets/models/mnt_glub_evolved.glb",
+      "bytes": 107576,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_hywirl": {
+      "url": "assets/models/mnt_hywirl.glb",
+      "bytes": 179912,
       "animations": [
         "Death",
         "Fast_Flying",
@@ -263,6 +391,35 @@
         "Jump",
         "No",
         "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_pigeon": {
+      "url": "assets/models/mnt_pigeon.glb",
+      "bytes": 47996,
+      "animations": [
+        "Bite_Front",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_squidle": {
+      "url": "assets/models/mnt_squidle.glb",
+      "bytes": 223436,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
         "Yes"
       ]
     },

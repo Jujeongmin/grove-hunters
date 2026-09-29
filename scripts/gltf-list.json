@@ -155,6 +155,50 @@
     {
       "name": "mnt_drake",
       "src": "art-src/ultimate-monsters/x/Flying/glTF/Dragon.gltf"
+    },
+    {
+      "name": "mnt_cat",
+      "src": "art-src/ultimate-monsters/x/Blob/glTF/Cat.gltf"
+    },
+    {
+      "name": "mnt_dog",
+      "src": "art-src/ultimate-monsters/x/Blob/glTF/Dog.gltf"
+    },
+    {
+      "name": "mnt_pigeon",
+      "src": "art-src/ultimate-monsters/x/Blob/glTF/Pigeon.gltf"
+    },
+    {
+      "name": "mnt_glub",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Glub.gltf"
+    },
+    {
+      "name": "mnt_squidle",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Squidle.gltf"
+    },
+    {
+      "name": "mnt_hywirl",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Hywirl.gltf"
+    },
+    {
+      "name": "mnt_armabee",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Armabee.gltf"
+    },
+    {
+      "name": "mnt_alpaking",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Alpaking.gltf"
+    },
+    {
+      "name": "mnt_glub_evolved",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Glub_Evolved.gltf"
+    },
+    {
+      "name": "mnt_armabee_evolved",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Armabee_Evolved.gltf"
+    },
+    {
+      "name": "mnt_alpaking_evolved",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Alpaking_Evolved.gltf"
     }
   ]
 }
