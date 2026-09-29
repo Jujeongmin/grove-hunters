@@ -80,6 +80,22 @@ describe("monsters", () => {
     expect(bat.m.z).toBe(home.z);
   });
 
+  it("once past the leash, walk home ignoring whoever hit them, even back inside it, and are whole there", () => {
+    // Kited to the edge by an archer standing off beyond it.
+    const archer = { account: "a", x: home.x, z: home.z + LEASH + 6 };
+    const monsters = { m: rat(home.x, home.z + LEASH + 0.5, { homeX: home.x, homeZ: home.z, hp: 10, hitters: { a: 100 } }) };
+    stepMonsters(monsters, [archer], layout, 0.5, 1000);
+    expect(monsters.m.returning).toBe(true);
+    expect(monsters.m.hitters).toBeUndefined();
+    const z = monsters.m.z;
+    stepMonsters(monsters, [archer], layout, 0.5, 1500);
+    expect(monsters.m.z).toBeLessThan(z);
+    monsters.m.z = home.z + 0.2;
+    stepMonsters(monsters, [archer], layout, 0.5, 2000);
+    expect(monsters.m.returning).toBeUndefined();
+    expect(monsters.m.hp).toBe(MONSTERS.rat.hp);
+  });
+
   it("give up past the leash and go home", () => {
     const monsters = { m: rat(home.x, home.z, { homeX: home.x, homeZ: home.z - LEASH - 2, hp: 5 }) };
     stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z + 1 }], layout, 0.5, 1000);

@@ -10,7 +10,9 @@ export interface Prey { account: string; x: number; z: number }
 
 export interface MonsterHit { monsterId: string; account: string; damage: number }
 
-// A monster this far from where it started gives up the chase, walks home and heals.
+// A monster this far from where it started gives up the chase and walks home, heeding no one and
+// taking no harm on the way, and heals there. Heeding no one on the way back is what keeps it from
+// turning at the edge again and again while an archer shoots it from beyond.
 export const LEASH = 20;
 
 // One step of every monster in a room: the fallen come back when their time is up, the rest leave
@@ -36,8 +38,12 @@ export function stepMonsters(
     if (now < m.stunnedUntil) continue;
 
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
+    if (!m.returning && fromHome > LEASH) {
+      m.returning = true;
+      delete m.hitters;
+    }
     let target: { prey: Prey; d: number } | null = null;
-    if (fromHome <= LEASH) {
+    if (!m.returning) {
       // Whoever hit it is chased from any distance (an archer out of its sight included); a hunting
       // kind takes the nearest it can see too. Past the leash it gives up and goes home to heal.
       const hunts = m.summoned || spec.aggressive;
@@ -65,6 +71,7 @@ export function stepMonsters(
       // Home: whole again after a lost chase (a boss forgets its calls and its slam).
       m.hp = spec.hp;
       delete m.hitters;
+      delete m.returning;
       if (BOSSES.has(m.type)) {
         m.calls = 0;
         m.slamAt = undefined;

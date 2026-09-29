@@ -214,6 +214,46 @@ describe("hunting", () => {
     expect(await $room.getMyState()).toMatchObject({ dead: false, hp: maxHpAt(1) });
   });
 
+  test("a second arrive, a channel or going back to the menu heals nothing, and a fall comes back with you", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    await $room.updateMyState({ hp: 40, strikeReadyAt: Date.now() + 60_000 });
+    await server.arrive();
+    expect((await $room.getMyState()).hp).toBe(40);
+    const moved = await join(server, "test-a", await server.changeChannel(3), entry.roomId);
+    expect((await $room.getMyState()).hp).toBe(40);
+    expect((await $room.getMyState()).strikeReadyAt).toBeGreaterThan(Date.now());
+    await $room.updateMyState({ hp: 0, dead: true });
+    await server.leaveWorld();
+    server.connect({ account: "test-a" });
+    await join(server, "test-a", await server.enterWorld(), moved.roomId);
+    expect(await $room.getMyState()).toMatchObject({ dead: true, hp: 0 });
+  });
+
+  test("a monster walking home from a lost chase takes no harm", async (server) => {
+    await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    await only("rat", spawn.x, spawn.z - 1);
+    const { monsters } = await $room.getRoomState();
+    await $room.updateRoomState({ monsters: { ...monsters, m0: { ...monsters.m0, returning: true } } });
+    expect((await server.strike("m0")).hit).toEqual([]);
+    expect((await $room.getRoomState()).monsters.m0.hp).toBe(MONSTERS.rat.hp);
+  });
+
+  test("a kill pays no character picked in another tab since", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    await only("rat", spawn.x, spawn.z - 1.5, 1);
+    await makeCharacter(server, "test-a", "다른탭");
+    server.connect({ account: "test-a", roomId: entry.roomId });
+    expect((await server.strike("m0")).killed).toEqual(["m0"]);
+    const state = await $global.getUserState("test-a");
+    expect(state.characterMap[state.active].xp).toBe(0);
+  });
+
   test("a reported pose is held to walking pace", async (server) => {
     await toForest(server, "test-a");
     const spawn = zoneLayout("forest1").playerSpawn;

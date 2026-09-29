@@ -661,7 +661,7 @@ export class WorldView {
       this.route = null;
     }
     const wanted = (m: MonsterState, id: string) =>
-      m.alive && !this.unreachable.has(id) && (!this.questSeek || this.questSeek.includes(m.type) || this.threats.has(id));
+      m.alive && !m.returning && !this.unreachable.has(id) && (!this.questSeek || this.questSeek.includes(m.type) || this.threats.has(id));
     if (!current || !wanted(current, this.target!) || (!this.questSeek && this.distanceTo(current) > AUTO_DROP)) {
       this.target = null;
       this.route = null;

@@ -26,8 +26,9 @@ import { costumeById } from "../../src/game/render/costumes";
 import { PROTOCOL_VERSION, RuleViolation, isPose } from "../../src/game/world/types";
 import {
   CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
-  readZone, zoneLayout, type ZoneEntry, type ZoneId,
+  readWhereabouts, readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
+import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
   channelPlayers, claimName, deleteCharacter, dropRanking, findNickname, friendChannels, friendEntry, grantPurchase, markSeen,
   ownsFullGame, pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
@@ -119,11 +120,34 @@ interface Pay {
   felled: MonsterType[];
 }
 
+// Which character a room's user state is (arrive writes it): an account plays one character at a time
+// but picks another on the menu, and what one left behind must never land on the other.
+const roomCharacter = (roomState: unknown) => (roomState as { characterId?: unknown } | null)?.characterId;
+
+// Whether the character the account has in this room is still its active one (the one updateActive
+// changes). A room state from before characterId was kept counts as it.
+async function stillPlaying(account: string): Promise<boolean> {
+  const [state] = await $room.getUserStates([account], ["characterId"]);
+  const id = roomCharacter(state);
+  if (typeof id !== "string") return true;
+  return (await readProfile(account)).active?.id === id;
+}
+
+// Keeps how you are (health, a fall, cooldowns) on the character that left the room, for the next
+// room to take it in as it was (see vitals.ts). Nothing, if another character is active by now.
+async function carryVitals(account: string, roomState: unknown): Promise<void> {
+  const vitals = readVitals(roomState);
+  const id = roomCharacter(roomState);
+  if (!vitals || typeof id !== "string") return;
+  await updateActive(account, (c) => (c.id === id ? { ...c, vitals } : c));
+}
+
 // A character has fallen: it loses a little XP (never a level), and the room shows how much.
 async function fallen(account: string, roomId: string): Promise<void> {
   // The village's inn, once built, halves what a fall costs on this server.
   const here = readChannelRoom(roomId);
   const factor = here ? deathLossFactor(await villageOf(here.world)) : 1;
+  if (!(await stillPlaying(account))) return;
   let lost = 0;
   const next = await updateActive(account, (c) => {
     lost = Math.round(deathXpLoss(c.xp) * factor);
@@ -142,6 +166,8 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
   // The village's training ground, once built, adds to every hunt's XP on this server.
   const here = readChannelRoom(roomId);
   const pay = here ? { ...paid, xp: Math.round(paid.xp * huntXpFactor(await villageOf(here.world))) } : paid;
+  // Another character picked since (another tab): the hunt was not its.
+  if (!(await stillPlaying(account))) return;
   // Verse8 mints only to the caller; another hunter's gold is minted here, then handed over.
   if (pay.gold > 0) {
     await $asset.mint(GOLD, pay.gold);
@@ -466,6 +492,7 @@ export class Server {
       throw new RuleViolation("not_near");
     }
     const at = arrivalFrom(target, here.zone);
+    await carryVitals(account, mine);
     // You keep your channel: whoever you walked with is on the other side too.
     return enter(account, await playing(account), target, at.x, at.z, here.channel);
   }
@@ -479,14 +506,19 @@ export class Server {
     // The spot enter kept; a room of another zone (a stale join) starts at that zone's spawn.
     const spot = character.spot?.zone === zone ? character.spot : { zone, ...zoneLayout(zone).playerSpawn };
     const now = Date.now();
-    // Every arrival is whole: full health, nothing on cooldown.
+    // As you left your last room (a portal, a channel, a lost connection), or as this room already has
+    // you (a reload, a second arrive): only the village's respawn makes you whole.
     const { maxHp, gear } = fightStats(character);
+    const mine = await $room.getMyState();
+    const vitals = arrivalVitals(character.vitals ?? null, roomCharacter(mine) === character.id ? mine : null, maxHp);
     await $room.updateMyState({
       pose: { x: spot.x, z: spot.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+      characterId: character.id,
       look: zoneLook(character),
       savedAt: now,
-      xp: character.xp, hp: maxHp, maxHp, gear, dead: false, hitAt: 0, strikeReadyAt: 0, skillReady: {},
+      xp: character.xp, maxHp, gear, ...vitals,
     });
+    if (character.vitals) await updateActive(account, (c) => ({ ...c, vitals: null }));
     // What the grove owes: this week's and last week's stages, and finished buildings' thanks.
     const owed = await settleOnArrive(account, (await readAccountWorld(account)).id);
     if (owed.gold > 0) await $asset.mint(GOLD, owed.gold);
@@ -503,8 +535,9 @@ export class Server {
     const account = $sender.account;
     const here = readChannelRoom($sender.roomId);
     if (here) {
-      const pose = (await $room.getMyState()).pose;
-      if (isPose(pose)) await saveSpot(account, { zone: here.zone, x: pose.x, z: pose.z });
+      const mine = await $room.getMyState();
+      if (isPose(mine.pose)) await saveSpot(account, { zone: here.zone, x: mine.pose.x, z: mine.pose.z });
+      await carryVitals(account, mine);
     }
     // Back on the menu your friends no longer see you in the world (the channel is still kept for
     // coming back; see channelToEnter).
@@ -861,6 +894,8 @@ export class Server {
     const here = readChannelRoom($sender.roomId);
     const character = await playing(account);
     const home = zoneLayout(START_ZONE).playerSpawn;
+    // Whole again in the village.
+    await updateActive(account, (c) => ({ ...c, vitals: null }));
     return enter(account, character, START_ZONE, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
   }
 
@@ -884,6 +919,7 @@ export class Server {
     if (mine.dead === true || !isPose(mine.pose)) throw new RuleViolation("unavailable");
     const players = await channelPlayers(here.world, channel);
     if (!players.includes(account) && players.length >= CHANNEL_CAPACITY) throw new RuleViolation("channel_full");
+    await carryVitals(account, mine);
     return enter(account, await playing(account), here.zone, mine.pose.x, mine.pose.z, channel);
   }
 
@@ -902,11 +938,21 @@ export class Server {
   async onRoomLeave(roomId: string, account: string): Promise<void> {
     const here = readChannelRoom(roomId);
     if (!here) return;
-    const pose = (await $room.getUserState(account)).pose;
+    const left = await $room.getUserState(account);
+    const pose = left.pose;
     const { active } = await readProfile(account);
-    // Gone on through a portal: the spot already points into the next zone, and must stay there.
+    // Gone on through a portal: the spot already points into the next zone, and must stay there. Another
+    // character picked on the menu since: none of this is its.
     if (!active || active.world !== here.world || !isPose(pose) || active.spot?.zone !== here.zone) return;
+    const id = roomCharacter(left);
+    if (typeof id === "string" && id !== active.id) return;
     await saveSpot(account, { zone: here.zone, x: pose.x, z: pose.z });
+    // Gone for good from where it last was (not on to another channel, which carried its own), it
+    // comes back as it left.
+    const where = readWhereabouts((await $global.getUserState(account)).where);
+    if (!where || (where.world === here.world && where.zone === here.zone && where.channel === here.channel)) {
+      await carryVitals(account, left);
+    }
   }
 
 }

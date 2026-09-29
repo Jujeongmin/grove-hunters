@@ -123,6 +123,26 @@ describe("entering the world", () => {
   });
 });
 
+describe("a late leave", () => {
+  test("lands on the character that left, not on one picked on the menu since", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    const first = await enterAs(server, "test-a");
+    await walkTo(server, 14, 13, 1);
+    await $room.updateMyState({ hp: 7 });
+    await server.leaveWorld();
+    server.connect({ account: "test-a" });
+    await makeCharacter(server, "test-a", "비이");
+    // The platform's leave hook comes late, after the menu has moved on to the new character.
+    await server.simulateLeave(first.roomId, "test-a");
+    server.connect({ account: "test-a" });
+    const entry = await server.enterWorld();
+    expect(entry).toMatchObject({ zone: "village" });
+    expect(entry.x === 14 && entry.z === 13).toBe(false);
+    await join(server, "test-a", entry);
+    expect((await $room.getMyState()).hp).toBe((await $room.getMyState()).maxHp);
+  });
+});
+
 describe("portals", () => {
   test("take you to the next zone only while you stand at the portal", async (server) => {
     await makeCharacter(server, "test-a", "에이");

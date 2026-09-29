@@ -112,7 +112,7 @@ function readMonsters(raw: unknown): Record<string, MonsterState> {
       type, x: num(m.x), z: num(m.z), yaw: num(m.yaw), hp: num(m.hp), alive: m.alive === true,
       stunnedUntil: num(m.stunnedUntil), attackReadyAt: num(m.attackReadyAt), respawnAt: num(m.respawnAt),
       homeX: num(m.homeX), homeZ: num(m.homeZ),
-      slamming: m.slamming === true, summoned: m.summoned === true,
+      slamming: m.slamming === true, summoned: m.summoned === true, returning: m.returning === true,
     };
   }
   return out;
@@ -137,6 +137,9 @@ export class WorldClient {
   private payoutSeen: string | null | undefined = undefined;
   private payouts: Payout[] = [];
   private chatCount = 0;
+  // Bumped by every enter and leave: one overtaken by a newer one (React's development double run
+  // enters, leaves and enters again at once; a double tap on retry) lets the newer one decide.
+  private generation = 0;
 
   constructor(
     private readonly transport: MatchTransport,
@@ -160,15 +163,17 @@ export class WorldClient {
 
   // Into the world where you left it.
   async enter(): Promise<void> {
+    const mine = ++this.generation;
     this.set({ phase: "entering", error: null });
     try {
       const version = await this.transport.call<{ protocol: number }>("getServerVersion");
+      if (mine !== this.generation) return;
       if (version?.protocol !== PROTOCOL_VERSION) {
         throw new Error(`server protocol ${version?.protocol}, client protocol ${PROTOCOL_VERSION}`);
       }
       await this.moveTo(await this.transport.call<ZoneEntry>("enterWorld"));
     } catch (error) {
-      this.fail(error);
+      if (mine === this.generation) this.fail(error);
     }
   }
 
@@ -205,11 +210,15 @@ export class WorldClient {
   }
 
   async leave(): Promise<void> {
+    const mine = ++this.generation;
     this.unlisten();
     this.set({ phase: "idle", entry: null, others: [], monsters: {}, me: null });
-    // Keeps your spot from inside the room, then leaves it.
+    // Entered again at once (React's development double run): there is nothing to leave.
+    await Promise.resolve();
+    if (mine !== this.generation) return;
+    // Keeps your spot from inside the room, then leaves it (unless you have come back meanwhile).
     await this.transport.call("leaveWorld").catch(() => undefined);
-    this.transport.leaveRoom();
+    if (mine === this.generation) this.transport.leaveRoom();
   }
 
   // Says a line in your channel. Answers null once it went out, or why it was refused.

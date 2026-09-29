@@ -378,6 +378,23 @@ button.hud-prompt:hover { color: #ffe0b0; }
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
+/* While auto-battle runs: a green glow breathes round the button and a hand sweeps round the clock. */
+.pad-auto.on { animation: auto-glow 1.6s ease-in-out infinite; }
+.pad-auto.on::after {
+  content: ""; position: absolute; left: 30px; top: 13px; width: 2px; height: 12px; border-radius: 1px;
+  background: #eaffef; box-shadow: 0 0 3px rgba(0, 0, 0, 0.8); transform-origin: 50% 100%;
+  animation: auto-hand 2s linear infinite; pointer-events: none;
+}
+@keyframes auto-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(157, 255, 176, 0.45); }
+  50% { box-shadow: 0 0 16px 4px rgba(157, 255, 176, 0.85); }
+}
+@keyframes auto-hand {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pad-auto.on, .pad-auto.on::after { animation: none; }
+}
 /* The quest sits at the right, just above the pad's buttons and under the unfolded menu, so neither
    covers it. Its height is fixed rather than a share of the stage. */
 .hud-quest { top: 210px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }

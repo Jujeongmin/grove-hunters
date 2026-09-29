@@ -4,6 +4,7 @@ import { portalsOf } from "../../src/game/world/zones";
 import { LocalWorld } from "../../src/net/local/localWorld";
 import { LocalTransport } from "../../src/net/localTransport";
 import { WorldClient } from "../../src/net/worldClient";
+import type { MatchTransport } from "../../src/net/transport";
 
 // Each account gets a character named after it, ready to enter.
 async function clients(...accounts: string[]): Promise<{ world: LocalWorld; list: WorldClient[] }> {
@@ -38,6 +39,32 @@ describe("WorldClient", () => {
     expect(a.state.entry?.zone).toBe("village");
     expect(a.state.others.map((o) => o.account)).toEqual(["test-b"]);
     expect(a.state.others[0].look.name).toBe("testb");
+  });
+
+  it("ends up in the world after entering, leaving and entering again at once (React's development double run)", async () => {
+    const { world, list: [, b] } = await clients("test-a", "test-b");
+    await b.enter();
+    // The real network answers the leave's call late: after the second entry has joined the room.
+    const transport = new LocalTransport(world, "test-a");
+    const slow: MatchTransport = {
+      account: transport.account,
+      call: async <T,>(name: string, args?: unknown[]) => {
+        if (name === "leaveWorld") await new Promise((r) => setTimeout(r, 50));
+        return transport.call<T>(name, args);
+      },
+      subscribeRoomState: (id, cb) => transport.subscribeRoomState(id, cb),
+      subscribeRoomUsers: (id, cb) => transport.subscribeRoomUsers(id, cb),
+      onRoomMessage: (id, type, cb) => transport.onRoomMessage(id, type, cb),
+      subscribeMyState: (cb) => transport.subscribeMyState(cb),
+      joinRoom: (id) => transport.joinRoom(id),
+      leaveRoom: () => transport.leaveRoom(),
+    };
+    const a = new WorldClient(slow);
+    await Promise.all([a.enter(), a.leave(), a.enter()]);
+    await world.idle();
+    expect(a.state.error).toBeNull();
+    expect(a.state.phase).toBe("in");
+    expect(b.state.others.map((o) => o.account)).toEqual(["test-a"]);
   });
 
   it("follows the others as they move", async () => {

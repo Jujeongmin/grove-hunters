@@ -183,6 +183,9 @@ export interface MonsterState {
   summoned?: boolean;
   // The damage each hunter has dealt it since it was last whole, by account.
   hitters?: Record<string, number>;
+  // Gave up a chase past its leash: walks home paying no one any mind and taking no harm, and is
+  // whole again once there (see monsterAi.ts).
+  returning?: boolean;
 }
 
 // Who a fallen monster's XP, gold and drops go to: of the hunters in `present`, the one who dealt it

@@ -6,6 +6,7 @@ import { readBag, readGear, readPlus, type Bag, type Gear, type Plus } from "./i
 import { levelOf, readXp, type LevelView } from "./level";
 import { readDaily, readQuest, type DailyProgress, type QuestProgress } from "./quests";
 import { readTutorial, type TutorialStep } from "./tutorial";
+import { readVitals, type Vitals } from "./vitals";
 
 // An account holds characters on each server. One of them is active: the one the menus show and
 // the one that walks into the world. Its class and look are fixed when it is made.
@@ -37,6 +38,8 @@ export interface Character {
   // Where it is in the first tutorial (see tutorial.ts); null once done, and for characters from
   // before it.
   tutorial: TutorialStep | null;
+  // How it left its last room (see vitals.ts), until the next one takes it in; none when whole.
+  vitals?: Vitals | null;
 }
 
 // What the menus show of a character.
@@ -74,7 +77,7 @@ export function readCharacters(raw: unknown): Character[] {
     out.push({
       id: c.id, world: c.world, name: c.name, playerClass, costume: costume.id, xp: readXp(c.xp), spot: readSpot(c.spot), made,
       bag: readBag(c.bag), gear: readGear(c.gear), plus: readPlus(c.plus), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
-      tutorial: readTutorial(c.tutorial),
+      tutorial: readTutorial(c.tutorial), vitals: readVitals(c.vitals),
     });
   }
   return out.sort((a, b) => a.made - b.made);

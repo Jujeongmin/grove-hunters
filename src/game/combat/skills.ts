@@ -4,7 +4,7 @@ import { inStrikeReach } from "./melee";
 import type { Pose, Vec2 } from "../world/types";
 
 // What a skill needs to know of a monster.
-interface Target extends Vec2 { alive: boolean }
+interface Target extends Vec2 { alive: boolean; returning?: boolean }
 
 // Three skills, on keys 1, 2 and 3, each on its own cooldown. The first is the class's own, from
 // the start. The other two come with the path taken at advancement (전직, see jobs.ts): the second on
@@ -123,7 +123,7 @@ export function skillTargets(
     damage: skill.damage, intervalMs: 0, reach: skill.reach, arc: skill.arc, block: 0, ranged: false,
   };
   const hit = Object.entries(monsters)
-    .filter(([, m]) => m.alive && inStrikeReach(pose, m, reachOf, slack))
+    .filter(([, m]) => m.alive && !m.returning && inStrikeReach(pose, m, reachOf, slack))
     .sort(([, a], [, b]) => dist(pose, a) - dist(pose, b))
     .map(([id]) => id);
   return skill.maxTargets > 0 ? hit.slice(0, skill.maxTargets) : hit;

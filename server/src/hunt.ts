@@ -174,7 +174,8 @@ function land(
   const out: HitResult = { ...NOTHING, hit: [], killed: [], kills: [], items: [] };
   for (const id of ids) {
     const m = monsters[id];
-    if (!m?.alive) continue;
+    // One walking home from a lost chase takes no harm.
+    if (!m?.alive || m.returning) continue;
     out.hit.push(id);
     const dealt = Math.min(m.hp, damage);
     m.hp -= dealt;
