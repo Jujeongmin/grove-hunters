@@ -1018,17 +1018,18 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .wardrobe-panel { align-self: flex-start; max-height: calc(100% - 28px); }
 .character-select .guest-note { color: #ffcf8a; max-width: 280px; line-height: 1.5; }
 
-/* The channel chat, in the bottom left corner under the joystick; opened it grows up over the pad. */
+/* The channel chat, in the bottom left corner under the joystick. Opened it rises to the middle,
+   over the skill bar and between the pad and the attack buttons, so it covers neither. */
 .chat {
   position: absolute; left: 16px; bottom: 12px; width: 200px; max-width: calc(100vw - 32px);
   display: flex; flex-direction: column; gap: 6px; pointer-events: none;
 }
-.chat.open { width: 300px; }
+.chat.open { left: calc(50% - 24px); bottom: 112px; transform: translateX(-50%); width: 320px; }
 .chat-log {
   max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; pointer-events: auto; cursor: pointer;
   font: 500 14px var(--font-body); text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
-.chat.open .chat-log { max-height: 220px; background: rgba(14, 11, 9, 0.55); border-radius: 6px; padding: 6px 8px; cursor: default; }
+.chat.open .chat-log { max-height: 180px; background: rgba(14, 11, 9, 0.55); border-radius: 6px; padding: 6px 8px; cursor: default; }
 .chat-log p { margin: 0; overflow-wrap: anywhere; }
 .chat-log b { color: #d9c7a4; font-weight: 700; margin-right: 4px; }
 .chat-log p.mine b { color: #ffd36a; }

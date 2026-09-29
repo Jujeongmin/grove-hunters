@@ -17,7 +17,8 @@ const PROBLEM: Record<string, Key> = {
 
 // The channel chat, at the bottom left: the latest lines, and a box to say one. Enter opens it on a
 // keyboard (and sends), the chat button on a touch screen, and a tap on the lines themselves
-// anywhere; closing it (the button, Escape) also clears the lines seen so far off the screen.
+// anywhere; closing it (the button, Escape) also clears the lines seen so far off the screen. Open,
+// it stands in the middle above the skill bar, off the pad.
 export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [open, setOpen] = useState(false);
