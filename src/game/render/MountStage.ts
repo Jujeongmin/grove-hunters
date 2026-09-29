@@ -22,6 +22,12 @@ export const tierKey = (id: MountId): TierKey => MOUNTS[id].tier ?? "base";
 const SHAKE_SECONDS = 1.3;
 const BURST_SECONDS = 0.3;
 const TURN_RATE = 0.35;
+// The camera: this far back (metres) and this much above where it looks, on a wide stage; the
+// pedestal and a winged mount on it are about twice this wide.
+const CAMERA_BACK = 11.5;
+const CAMERA_RISE = 1.9;
+const LOOK_Y = 0.7;
+const STAGE_HALF_WIDTH = 2.2;
 
 interface Lone { object: THREE.Object3D; mixer: THREE.AnimationMixer; pop: number }
 
@@ -127,8 +133,7 @@ export class MountStage {
     this.rider.object.visible = false;
     this.scene.add(this.rider.object);
 
-    this.camera.position.set(0, 2.6, 11.5);
-    this.camera.lookAt(0, 0.7, 0);
+    this.aim(1);
     this.loop();
   }
 
@@ -280,6 +285,14 @@ export class MountStage {
     done();
   }
 
+  // Far enough back that the pedestal fits both ways: on a narrow, tall stage the width decides.
+  private aim(aspect: number): void {
+    const halfFov = THREE.MathUtils.degToRad(this.camera.fov / 2);
+    const back = Math.max(CAMERA_BACK, STAGE_HALF_WIDTH / (Math.tan(halfFov) * aspect));
+    this.camera.position.set(0, LOOK_Y + (back * CAMERA_RISE) / CAMERA_BACK, back);
+    this.camera.lookAt(0, LOOK_Y, 0);
+  }
+
   private resize(): void {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -289,5 +302,6 @@ export class MountStage {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+    this.aim(w / h);
   }
 }

@@ -205,11 +205,16 @@ export class PlayerActor {
   // its back with the legs bent over it.
   setMount(model: MountModel | null): void {
     if (this.leaving) this.drop(this.leaving);
-    if (this.riding) {
-      // Off: the hop down and the shrinking play out in sync.
-      this.leaving = this.riding;
+    const old = this.riding;
+    if (old) {
       this.riding = null;
       this.effects?.ring(this.object.position, 0.8, PUFF_COLOR);
+      // Off: the hop down and the shrinking play out in sync. Onto another: the old one goes at once
+      // (only one mount is ever stepped, so a leaving one under a new one would stay forever).
+      if (model) {
+        this.object.remove(old.object);
+        old.mixer.stopAllAction();
+      } else this.leaving = old;
     }
     if (!model) return;
     // Measured standing, once: the body is still on the ground then.
