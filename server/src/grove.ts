@@ -85,14 +85,21 @@ const GUARDIAN_CHANNEL = 1;
 // Every tick: once FLUSH_MS of ticks have passed, the room's kills go into the server's record (which
 // may open a site), and the first field of channel 1 calls up the guardian in a week the grove was
 // cleansed, once: the record keeps the week, so a room that forgot it does not call it again.
-// How much of each room's ticks has passed since it last flushed. Kept in memory, not in the room:
-// writing it every tick would be a room write five times a second. A restart only delays a flush.
+// When a room is due to flush is kept in the room (groveFlushAt, written once a flush): the live
+// platform runs each call apart and keeps nothing in memory between them, so a count of ticks held
+// here never got anywhere there (2026-09-29: no kill ever reached the record). The ticks' own time
+// is counted here too, which is what the test runner's simulated ticks move.
 const sinceFlush = new Map<string, number>();
 
 export async function flushRoom(world: string, zone: ZoneId, roomId: string, delta: number, now: number): Promise<void> {
   const since = (sinceFlush.get(roomId) ?? 0) + delta;
   sinceFlush.set(roomId, since);
-  if (since < FLUSH_MS) return;
+  const { groveFlushAt } = await $room.getRoomState(["groveFlushAt"]);
+  if (typeof groveFlushAt !== "number") {
+    await $room.updateRoomState({ groveFlushAt: now + FLUSH_MS }, { returnState: false });
+  }
+  const due = typeof groveFlushAt === "number" && now >= groveFlushAt;
+  if (since < FLUSH_MS && !due) return;
   sinceFlush.set(roomId, 0);
   const state = await $room.getRoomState(["groveKills"]);
   const kills = typeof state.groveKills === "number" ? state.groveKills : 0;
@@ -111,7 +118,7 @@ export async function flushRoom(world: string, zone: ZoneId, roomId: string, del
   });
   await withRoomLock(roomId, async () => {
     const latest = (await $room.getRoomState(["groveKills"])).groveKills;
-    await $room.updateRoomState({ groveKills: Math.max(0, (typeof latest === "number" ? latest : 0) - kills) });
+    await $room.updateRoomState({ groveKills: Math.max(0, (typeof latest === "number" ? latest : 0) - kills), groveFlushAt: now + FLUSH_MS });
     if (summon) {
       const monsters = ((await $room.getRoomState(["monsters"])).monsters ?? {}) as Record<string, MonsterState>;
       const at = guardianSpot();

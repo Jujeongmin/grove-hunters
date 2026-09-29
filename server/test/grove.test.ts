@@ -39,6 +39,16 @@ describe("the grove", () => {
     expect((await $room.getRoomState()).groveKills).toBe(0);
   });
 
+  test("kills reach the record on time even where the server keeps nothing between calls", async (server) => {
+    const entry = await inForest(server);
+    await killOne(server);
+    // The live platform runs each call apart: only the room remembers when the next flush is due.
+    await $room.updateRoomState({ groveFlushAt: Date.now() - 1 });
+    await server.simulateTick(entry.roomId, 200);
+    expect((await server.grove()).kills).toBe(1);
+    expect((await $room.getRoomState()).groveFlushAt).toBeGreaterThan(Date.now());
+  });
+
   test("a hunter is marked for this week's rewards", async (server) => {
     await inForest(server);
     await killOne(server);
