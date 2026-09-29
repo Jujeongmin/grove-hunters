@@ -283,6 +283,7 @@ export const en: Bundle = {
   "forge.success": "Enhanced!",
   "forge.fail": "It failed… the gear is unharmed",
   "forge.broken": "It failed… the gear broke",
+  "forge.working": "Enhancing…",
   "forge.crafted": "{name} made!",
 
   "common.retry": "Try again",

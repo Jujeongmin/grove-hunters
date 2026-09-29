@@ -1089,6 +1089,83 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .smith-note { font: 700 15px var(--font-head); margin: 8px 0; }
 .smith-note.good { color: #8fe08a; }
 .smith-note.bad { color: var(--blood); }
+/* An enhancement played out over the forge: the piece hums while a gauge fills all the way, then a
+   golden flash (success), a grey shudder (failure) or a red flash with the piece coming apart. */
+.enhance-show {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; background: rgba(3, 2, 2, 0.94); backdrop-filter: blur(4px); cursor: default;
+}
+.enhance-show.success, .enhance-show.fail, .enhance-show.broken { cursor: pointer; }
+.enhance-piece {
+  width: 110px; height: 110px; display: grid; place-items: center; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 179, 90, 0.3), transparent 70%);
+  animation: enhance-hum 0.3s ease-in-out infinite alternate;
+}
+.enhance-piece img { width: 72px; height: 72px; image-rendering: pixelated; }
+.enhance-name { font: 700 18px var(--font-head); color: var(--ink); text-shadow: var(--shadow); }
+.enhance-plus { font: 700 16px var(--font-head); color: #ffd36a; }
+.enhance-gauge {
+  width: 320px; height: 16px; margin-top: 6px; border-radius: 8px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 211, 106, 0.45);
+}
+.enhance-gauge i {
+  display: block; width: 0; height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, #c8661e, #ffb35a 60%, #ffe9b8); box-shadow: 0 0 14px rgba(255, 190, 90, 0.9);
+  animation: enhance-fill 1.8s cubic-bezier(0.35, 0.05, 0.25, 1) forwards;
+}
+.enhance-result { margin: 6px 0 0; min-height: 30px; font: 800 22px var(--font-head); color: var(--ink-dim); text-shadow: var(--shadow); }
+.enhance-close { font: 600 13px var(--font-body); color: var(--ink-dim); }
+.enhance-show:is(.success, .fail, .broken) .enhance-gauge i { width: 100%; }
+.enhance-show:is(.success, .fail, .broken) .enhance-piece { animation: none; }
+
+.enhance-show.success .enhance-piece {
+  background: radial-gradient(circle, rgba(255, 233, 160, 0.95), rgba(255, 190, 90, 0.35) 45%, transparent 72%);
+  animation: enhance-shine 0.8s ease-out;
+}
+.enhance-show.success .enhance-gauge i { background: #ffe08a; box-shadow: 0 0 22px #ffd36a; }
+.enhance-show.success .enhance-result { color: #ffe08a; text-shadow: 0 0 14px rgba(255, 200, 100, 0.9); animation: enhance-pop 0.45s ease-out; }
+
+.enhance-show.fail .enhance-piece { background: none; filter: grayscale(0.7); animation: enhance-shake 0.45s ease-in-out; }
+.enhance-show.fail .enhance-gauge i { background: #7b7466; box-shadow: none; }
+.enhance-show.fail .enhance-result { animation: enhance-pop 0.45s ease-out; }
+
+.enhance-show.broken { animation: enhance-flash 0.7s ease-out; }
+.enhance-show.broken .enhance-piece { background: radial-gradient(circle, rgba(220, 40, 30, 0.55), transparent 70%); animation: enhance-shake 0.35s ease-in-out; }
+.enhance-show.broken .enhance-piece img { animation: enhance-shatter 0.9s ease-in forwards; }
+.enhance-show.broken .enhance-gauge i { background: var(--blood); box-shadow: 0 0 18px rgba(220, 40, 30, 0.9); }
+.enhance-show.broken .enhance-result { color: var(--blood); animation: enhance-pop 0.45s ease-out; }
+
+@keyframes enhance-fill { to { width: 100%; } }
+@keyframes enhance-hum { from { transform: scale(1); } to { transform: scale(1.07); } }
+@keyframes enhance-shine {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.35); filter: brightness(2.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes enhance-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes enhance-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+@keyframes enhance-flash {
+  0% { background: rgba(160, 20, 12, 0.85); }
+  100% { background: rgba(3, 2, 2, 0.94); }
+}
+@keyframes enhance-shatter {
+  0% { transform: none; opacity: 1; filter: none; }
+  30% { transform: rotate(-12deg) scale(1.1); filter: sepia(1) saturate(4) hue-rotate(-30deg); }
+  100% { transform: rotate(28deg) scale(0.55) translateY(26px); opacity: 0.15; filter: grayscale(1) brightness(0.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .enhance-show, .enhance-show *, .enhance-gauge i { animation: none !important; }
+}
 .smith-row { flex-wrap: wrap; }
 .smith-row > b { flex: 1; }
 
@@ -1101,7 +1178,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .potion-setting-button {
   display: flex; flex-direction: column; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0;
   border-radius: 6px; border: 1px solid rgba(255, 179, 90, 0.45); background: rgba(14, 11, 9, 0.75); color: var(--ink); cursor: pointer;
-  font: 600 9px var(--font-head);
+  font: 600 10px var(--font-head);
 }
 .potion-setting-button b { font: 700 12px var(--font-head); color: #ffd36a; }
 .potion-setting-button.on, .potion-setting-button:hover { border-color: var(--ember); }

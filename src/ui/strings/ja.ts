@@ -283,6 +283,7 @@ export const ja: Bundle = {
   "forge.success": "強化成功！",
   "forge.fail": "強化失敗… 装備はそのままです",
   "forge.broken": "強化失敗… 装備が壊れました",
+  "forge.working": "強化中…",
   "forge.crafted": "{name} 製作完了！",
 
   "common.retry": "もう一度",

@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
-import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials, type EnhanceOutcome } from "../game/account/forge";
+import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials } from "../game/account/forge";
 import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
 import { problemText, slotLabel } from "./BagPanel";
 import { locale, t } from "./lang";
-import type { Key } from "./strings/ko";
 import { playCue } from "../game/audio/sfx";
+import { CHARGE_MS, EnhanceShow, OUTCOME, type Enhancing } from "./EnhanceShow";
 
-const OUTCOME: Record<EnhanceOutcome, Key> = {
-  success: "forge.success",
-  fail: "forge.fail",
-  broken: "forge.broken",
-};
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Without motion the outcome shows at once.
+const stillScreen = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const percent = (n: number) => `${Math.round(n * 100)}%`;
 
@@ -23,18 +21,28 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   const [tab, setTab] = useState<"enhance" | "craft">("enhance");
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [show, setShow] = useState<Enhancing | null>(null);
   const stones = bag?.bag.stone ?? 0;
 
+  // The attempt plays out (see EnhanceShow): the gauge fills while the server answers, and the
+  // outcome shows once both are done.
   const enhance = (slot: Slot) => {
+    const worn = bag?.gear[slot];
+    const cost = worn ? enhanceCost(worn, bag!.plus[worn] ?? 0) : null;
+    if (!worn || !cost) return;
     setBusy(true);
     setNote(null);
-    void client.enhance(slot).then((r) => {
+    setShow({ item: worn, name: itemName(worn), from: bag!.plus[worn] ?? 0, to: cost.to, outcome: null });
+    void Promise.all([client.enhance(slot), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
       setBusy(false);
       if ("outcome" in r) {
+        setShow((s) => s && { ...s, outcome: r.outcome });
         setNote({ text: t(OUTCOME[r.outcome]), tone: r.outcome === "success" ? "good" : "bad" });
         playCue(r.outcome === "success" ? "enhance_ok" : r.outcome === "broken" ? "enhance_break" : "enhance_fail");
+      } else {
+        setShow(null);
+        setNote({ text: problemText(r.problem)!, tone: "bad" });
       }
-      else setNote({ text: problemText(r.problem)!, tone: "bad" });
     });
   };
   const craft = (id: string, name: string) => {
@@ -125,6 +133,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
         {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
         <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
+      {show && <EnhanceShow show={show} onClose={() => setShow(null)} />}
     </div>
   );
 }

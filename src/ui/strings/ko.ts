@@ -292,6 +292,7 @@ export const ko = {
   "forge.success": "강화 성공!",
   "forge.fail": "강화 실패… 장비는 그대로예요",
   "forge.broken": "강화 실패… 장비가 부서졌어요",
+  "forge.working": "강화 중…",
   "forge.crafted": "{name} 제작 완료!",
 
   "common.retry": "다시 시도",

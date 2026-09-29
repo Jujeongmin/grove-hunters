@@ -283,6 +283,7 @@ export const zhHant: Bundle = {
   "forge.success": "強化成功！",
   "forge.fail": "強化失敗… 裝備沒有損傷",
   "forge.broken": "強化失敗… 裝備損毀了",
+  "forge.working": "強化中…",
   "forge.crafted": "{name} 製作完成！",
 
   "common.retry": "再試一次",

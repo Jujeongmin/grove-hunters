@@ -283,6 +283,7 @@ export const zhHans: Bundle = {
   "forge.success": "强化成功！",
   "forge.fail": "强化失败… 装备没有损伤",
   "forge.broken": "强化失败… 装备损毁了",
+  "forge.working": "强化中…",
   "forge.crafted": "{name} 制作完成！",
 
   "common.retry": "再试一次",
