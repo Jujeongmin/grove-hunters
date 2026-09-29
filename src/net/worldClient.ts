@@ -390,7 +390,10 @@ export class WorldClient {
 
   async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean }) | { problem: string }> {
     try {
-      return await this.transport.call<MountsView & { mount: MountId; repeat: boolean }>("pullMount");
+      const pulled = await this.transport.call<MountsView & { mount: MountId; repeat: boolean }>("pullMount");
+      // A new mount may be the picked one now, and the picked one adds to 전투력.
+      void this.refreshBag();
+      return pulled;
     } catch (error) {
       return { problem: errorCode(error) };
     }
@@ -398,7 +401,9 @@ export class WorldClient {
 
   async selectMount(id: MountId): Promise<MountsView | { problem: string }> {
     try {
-      return await this.transport.call<MountsView>("selectMount", [id]);
+      const view = await this.transport.call<MountsView>("selectMount", [id]);
+      void this.refreshBag();
+      return view;
     } catch (error) {
       return { problem: errorCode(error) };
     }

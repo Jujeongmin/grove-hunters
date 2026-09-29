@@ -52,7 +52,7 @@ describe("ranking", () => {
     const detail = await server.getRankDetail(view.board[0].id);
     const active = (await readProfile("test-a")).active!;
     expect(detail).toMatchObject({
-      nickname: "궁수왕", playerClass: "ranger", level: levelOf(900).level, xp: 900, rank: 1, power: combatPower(active),
+      nickname: "궁수왕", playerClass: "ranger", level: levelOf(900).level, xp: 900, rank: 1, power: combatPower({ ...active, mount: "deer" }),
       gear: active.gear,
     });
     // The server sends the server's id; the screen turns it into a name in the reader's language.

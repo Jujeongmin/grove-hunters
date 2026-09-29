@@ -502,7 +502,11 @@ export class WorldView {
       this.mounting = false;
       this.riding = id;
       if (id) playCue("open");
-      else this.noMountUntil = performance.now() + NO_MOUNT_RETRY_MS;
+      else {
+        this.noMountUntil = performance.now() + NO_MOUNT_RETRY_MS;
+        // Asked by hand: say why nothing happened.
+        if (byHand) this.notes.push({ text: t("mount.none"), at: performance.now() });
+      }
     });
   }
 
@@ -532,6 +536,11 @@ export class WorldView {
       return;
     }
     actor.setMount({ id, object: library.instance(model), clips: library.get(model).animations });
+  }
+
+  // The models, for the mounts panel's stage.
+  get models(): ModelLibrary | null {
+    return this.library;
   }
 
   tapJump(): void {

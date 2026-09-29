@@ -3,7 +3,7 @@ import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { REVIVE_HP_SHARE, deathXpLoss, levelCost, levelOf, reviveCost } from "../../src/game/account/level";
-import { enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
+import { STEED, enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
 
 // Into the first hunting field, through the village portal, as the client does it.
 async function toForest(server: any, account: string, playerClass = "warrior"): Promise<any> {
@@ -75,10 +75,10 @@ describe("hunting", () => {
     // Left alone it does nothing; once hit it bites back.
     await only("rat", spawn.x, spawn.z - 1);
     await server.simulateTick(entry.roomId, 200);
-    expect((await $room.getMyState()).hp).toBe(maxHpAt(1));
+    expect((await $room.getMyState()).hp).toBe(maxHpAt(1) + STEED.hp);
     await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
     await server.simulateTick(entry.roomId, 200);
-    const full = maxHpAt(1);
+    const full = maxHpAt(1) + STEED.hp;
     const bare = full - (await $room.getMyState()).hp;
     expect(bare).toBe(MONSTERS.rat.damage);
 
@@ -127,11 +127,12 @@ describe("hunting", () => {
     expect(await errorOf(server.strike("nobody"))).toContain("no_monster");
 
     // Two blows' worth of health.
-    const hp = WEAPONS.warrior.damage * 2 - 5;
+    const blow = Math.round(WEAPONS.warrior.damage * (1 + STEED.power));
+    const hp = blow * 2 - 5;
     await only("rat", spawn.x, spawn.z - 1.5, hp);
     const first = await server.strike("m0");
     expect(first.hit).toEqual(["m0"]);
-    expect((await $room.getRoomState()).monsters.m0.hp).toBe(hp - WEAPONS.warrior.damage);
+    expect((await $room.getRoomState()).monsters.m0.hp).toBe(hp - blow);
     expect(await errorOf(server.strike("m0"))).toContain("too_fast");
 
     await $room.updateMyState({ strikeReadyAt: 0 });
@@ -195,7 +196,7 @@ describe("hunting", () => {
     await $room.updateRoomState({ monsters: { a: at(0, -1.5), b: at(0, 1.5), c: at(9, 0) } });
     const used = await server.useSkill();
     expect([...used.hit].sort()).toEqual(["a", "b"]);
-    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - CLASS_SKILLS.warrior.damage);
+    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - Math.round(CLASS_SKILLS.warrior.damage * (1 + STEED.power)));
     expect(await errorOf(server.useSkill())).toContain("too_fast");
   });
 
@@ -241,7 +242,7 @@ describe("hunting", () => {
     const home = await server.respawn();
     expect(home.zone).toBe("village");
     await join(server, "test-a", home, entry.roomId);
-    expect(await $room.getMyState()).toMatchObject({ dead: false, hp: maxHpAt(1) });
+    expect(await $room.getMyState()).toMatchObject({ dead: false, hp: maxHpAt(1) + STEED.hp });
   });
 
   test("a second arrive, a channel or going back to the menu heals nothing, and a fall comes back with you", async (server) => {

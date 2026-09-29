@@ -127,10 +127,20 @@ interface Pay {
 // is no longer yours).
 interface MountsView { gems: number; owned: MountId[]; selected: MountId | null }
 async function mountsView(account: string): Promise<MountsView> {
+  const { owned, selected } = await accountMounts(account);
+  return { gems: await readGems(account), owned, selected };
+}
+
+async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null }> {
   const state = await $global.getUserState(account);
   const owned = ownedMounts(state.mounts, await ownsFullGame(account));
   const picked = readMountId(state.mount);
-  return { gems: await readGems(account), owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null };
+  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null };
+}
+
+// A character with its account's picked mount, which adds to its every fight (see mounts.ts).
+async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null }> {
+  return { ...character, mount: (await accountMounts(account)).selected };
 }
 
 // Lag between two potions sent a second apart can bring them closer; this much of the gap is held.
@@ -195,8 +205,8 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
   }));
   if (pay.xp > 0) await writeRanking(account, next);
   const levelled = levelOf(next.xp).level > levelOf(next.xp - pay.xp).level;
+  const stats = fightStats(await mounted(account, next));
   await withRoomLock(roomId, async () => {
-    const stats = fightStats(next);
     await $room.updateUserState(
       account,
       {
@@ -248,6 +258,7 @@ async function bagView(character: Character): Promise<BagView> {
   return {
     gold: await $asset.get(GOLD), bag: character.bag, gear: character.gear, plus: character.plus, job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
+    mount: (await accountMounts($sender.account)).selected,
   };
 }
 
@@ -256,15 +267,21 @@ async function bagView(character: Character): Promise<BagView> {
 async function refreshFighter(character: Character): Promise<void> {
   const roomId = $sender.roomId;
   if (!roomId || !readChannelRoom(roomId)) return;
+  const stats = fightStats(await mounted($sender.account, character));
   await withRoomLock(roomId, async () => {
     const mine = await $room.getMyState();
-    const stats = fightStats(character);
     const hp = Math.min(typeof mine.hp === "number" ? mine.hp : stats.maxHp, stats.maxHp);
     await $room.updateMyState(
       { maxHp: stats.maxHp, hp, gear: stats.gear, look: zoneLook(character), xp: character.xp },
       { returnState: false },
     );
   });
+}
+
+// After the picked mount changed: the room carries the health and power it adds.
+async function refreshMounted(account: string): Promise<void> {
+  const character = await playing(account).catch(() => null);
+  if (character) await refreshFighter(character);
 }
 
 // How many of something to buy or sell: a whole number from 1 to a full stack.
@@ -399,7 +416,7 @@ export class Server {
       return character ? { ...row, playerClass: character.playerClass, job: character.job } : row;
     }));
     return {
-      xp, level: levelOf(xp), rank: active ? rankOf(board, active.id) : null, board, power: active ? combatPower(active) : 0,
+      xp, level: levelOf(xp), rank: active ? rankOf(board, active.id) : null, board, power: active ? combatPower(await mounted(account, active)) : 0,
     };
   }
 
@@ -414,7 +431,7 @@ export class Server {
     if (!character) throw new RuleViolation("unavailable");
     return {
       id, nickname: character.name, level: levelOf(character.xp).level, xp: character.xp,
-      playerClass: character.playerClass, job: character.job, power: combatPower(character), gear: character.gear, plus: character.plus,
+      playerClass: character.playerClass, job: character.job, power: combatPower(await mounted(row.account, character)), gear: character.gear, plus: character.plus,
       world: readWorld(character.world)?.id ?? character.world, rank: rankOf(board, id),
     };
   }
@@ -470,7 +487,7 @@ export class Server {
   // One draw for PULL_COST gems: a mount to keep, or, if already owned, DUPLICATE_REFUND gems back.
   async pullMount(): Promise<MountsView & { mount: MountId; repeat: boolean }> {
     const account = $sender.account;
-    return $lock(`mounts:${account}`, async () => {
+    const pulled = await $lock(`mounts:${account}`, async () => {
       await changeGems(account, -PULL_COST);
       const mount = rollMount(Math.random);
       const state = await $global.getUserState(account);
@@ -480,6 +497,9 @@ export class Server {
       else await $global.updateUserState(account, { mounts: [...drawn, mount] });
       return { ...(await mountsView(account)), mount, repeat };
     });
+    // A first mount is picked on its own, and makes you stronger.
+    if (!pulled.repeat) await refreshMounted(account);
+    return pulled;
   }
 
   // The mount you ride from now on (any you own).
@@ -489,6 +509,7 @@ export class Server {
     const view = await mountsView(account);
     if (!mount || !view.owned.includes(mount)) throw new RuleViolation("no_mount");
     await $global.updateUserState(account, { mount });
+    await refreshMounted(account);
     return { ...view, selected: mount };
   }
 
@@ -582,7 +603,7 @@ export class Server {
     const now = Date.now();
     // As you left your last room (a portal, a channel, a lost connection), or as this room already has
     // you (a reload, a second arrive): only the village's respawn makes you whole.
-    const { maxHp, gear } = fightStats(character);
+    const { maxHp, gear } = fightStats(await mounted(account, character));
     const mine = await $room.getMyState();
     const vitals = arrivalVitals(character.vitals ?? null, roomCharacter(mine) === character.id ? mine : null, maxHp);
     await $room.updateMyState({

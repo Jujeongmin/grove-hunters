@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MOUNTS, MOUNT_IDS, PULL_COST, gemsFor, ownedMounts,
-  readMountId, rollMount, tierOf,
+  mountBonus, readMountId, rollMount, tierOf,
 } from "../../src/game/account/mounts";
+import { combatPowerAt } from "../../src/game/combat/power";
 
 describe("mounts", () => {
-  it("run faster the rarer they are, the full game's own at 1.5", () => {
-    expect(MOUNTS[BASE_MOUNT].speed).toBe(1.5);
-    const speed = { common: 1.5, rare: 1.6, epic: 1.7, legendary: 1.8 } as const;
+  it("run faster the rarer they are, the full game's own at 1.2", () => {
+    expect(MOUNTS[BASE_MOUNT].speed).toBe(1.2);
+    const speed = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6 } as const;
     for (const id of MOUNT_IDS) if (id !== BASE_MOUNT) expect(MOUNTS[id].speed).toBe(speed[tierOf(id)!]);
+  });
+
+  it("the picked mount adds to 전투력, more the rarer it is; none adds nothing", () => {
+    expect(mountBonus(null)).toEqual({ power: 0, hp: 0 });
+    const order = [BASE_MOUNT, "pig", "panda", "yeti", "dragon"] as const;
+    const power = order.map((id) => combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, {}, id));
+    expect(power[0]).toBeGreaterThan(combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, {}, null));
+    for (let i = 1; i < power.length; i++) expect(power[i]).toBeGreaterThan(power[i - 1]);
   });
 
   it("the draw's odds add up to all of it, and are what the screen shows", () => {

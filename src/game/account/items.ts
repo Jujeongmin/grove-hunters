@@ -1,3 +1,4 @@
+import type { MountId } from "./mounts";
 import type { JobId } from "../combat/jobs";
 import type { TutorialStep } from "./tutorial";
 import { RuleViolation } from "../world/types";
@@ -178,6 +179,8 @@ export interface BagView {
   daily: DailyProgress;
   // The first tutorial's step; null once done (see tutorial.ts).
   tutorial: TutorialStep | null;
+  // The account's picked mount (it adds to every fight, ridden or not; see mounts.ts).
+  mount: MountId | null;
 }
 
 export function sellPrice(id: ItemId): number {

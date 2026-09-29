@@ -1,4 +1,5 @@
-import { BASE_MOUNT, DUPLICATE_REFUND, PULL_COST } from "../../src/game/account/mounts";
+import { BASE_MOUNT, DUPLICATE_REFUND, PULL_COST, mountBonus } from "../../src/game/account/mounts";
+import { maxHpAt } from "../../src/game/world/monsters";
 import { enterAs, errorOf, makeCharacter } from "./helpers";
 
 const BUYER = "0x2222222222222222222222222222222222222222";
@@ -47,5 +48,19 @@ describe("the mount draw", () => {
     expect((await server.ride(true)).riding).toBe(BASE_MOUNT);
     expect((await $room.getMyState()).riding).toBe(BASE_MOUNT);
     expect((await server.ride(false)).riding).toBeNull();
+  });
+
+  test("the picked mount makes you stronger at once, ridden or not", async (server) => {
+    await makeCharacter(server, "test-a", "기수");
+    await enterAs(server, "test-a");
+    expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus(BASE_MOUNT).hp);
+    await server.$onItemPurchased({ account: "test-a", purchaseId: "g-3", productId: "gems-100", quantity: 1 });
+    server.connect({ account: "test-a" });
+    expect(await drawing(0.999, () => server.pullMount())).toMatchObject({ mount: "dragon", repeat: false });
+    const before = (await server.getBag()).mount;
+    expect(before).toBe(BASE_MOUNT);
+    await server.selectMount("dragon");
+    expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus("dragon").hp);
+    expect((await server.getBag()).mount).toBe("dragon");
   });
 });

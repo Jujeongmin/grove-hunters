@@ -2,7 +2,7 @@ import { ITEMS, sellPrice } from "../../src/game/account/items";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
-import { enterAs, errorOf, join, makeCharacter, toNpc, walkTo } from "./helpers";
+import { STEED, enterAs, errorOf, join, makeCharacter, toNpc, walkTo } from "./helpers";
 
 // A character standing in the village, by the merchant.
 async function inVillage(server: any, account = "test-a"): Promise<any> {
@@ -23,7 +23,7 @@ describe("bag and gold", () => {
     await inVillage(server);
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
-      gold: 0, bag: { potion_small: 5 }, gear: { weapon: null, armor: null }, plus: {}, job: null, quest: { index: 0, count: 0 }, tutorial: null,
+      gold: 0, bag: { potion_small: 5 }, gear: { weapon: null, armor: null }, plus: {}, job: null, quest: { index: 0, count: 0 }, tutorial: null, mount: "deer",
     });
     expect(daily.counts).toEqual({});
     expect(daily.claimed).toEqual([]);
@@ -90,14 +90,14 @@ describe("bag and gold", () => {
     expect(worn.gear).toEqual({ weapon: "weapon_1", armor: "armor_1" });
     expect(worn.bag.weapon_1).toBeUndefined();
     const mine = await $room.getMyState();
-    expect(mine.maxHp).toBe(maxHpAt(1) + ITEMS.armor_1.hp);
-    expect(mine.gear.power).toBe(ITEMS.weapon_1.power);
+    expect(mine.maxHp).toBe(maxHpAt(1) + ITEMS.armor_1.hp + STEED.hp);
+    expect(mine.gear.power).toBeCloseTo(ITEMS.weapon_1.power + STEED.power);
     expect(await errorOf(server.equipItem("potion_small"))).toContain("unavailable");
 
     const off = await server.unequipItem("weapon");
     expect(off.gear.weapon).toBeNull();
     expect(off.bag.weapon_1).toBe(1);
-    expect((await $room.getMyState()).gear.power).toBe(0);
+    expect((await $room.getMyState()).gear.power).toBeCloseTo(STEED.power);
   });
 
   test("a sharper weapon lands a bigger blow", async (server) => {
@@ -117,7 +117,7 @@ describe("bag and gold", () => {
       },
     });
     await server.strike("m0");
-    const expected = Math.round(WEAPONS.warrior.damage * (1 + ITEMS.weapon_2.power));
+    const expected = Math.round(WEAPONS.warrior.damage * (1 + ITEMS.weapon_2.power + STEED.power));
     expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - expected);
   });
 
@@ -135,7 +135,7 @@ describe("bag and gold", () => {
       await server.drinkPotion("potion_small");
     }
     await $room.updateMyState({ potionReadyAt: 0 });
-    expect((await $room.getMyState()).hp).toBe(maxHpAt(1));
+    expect((await $room.getMyState()).hp).toBe(maxHpAt(1) + STEED.hp);
     expect(await errorOf(server.drinkPotion("potion_small"))).toContain("no_item");
   });
 });

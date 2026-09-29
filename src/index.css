@@ -406,8 +406,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
-/* Getting on and off a mount: above auto-battle, lit while riding. */
-.pad-ride { right: 170px; bottom: 150px; border-color: rgba(255, 211, 106, 0.55); }
+/* Getting on and off a mount: left of jump on the bottom row (above auto-battle it went under the
+   quest tracker on shorter stages), lit while riding. */
+.pad-ride { right: 176px; bottom: 2px; border-color: rgba(255, 211, 106, 0.55); }
 .pad-ride.on { background: rgba(255, 211, 106, 0.3); border-color: #ffd36a; color: #fff4d6; }
 /* While auto-battle runs: a green glow breathes round the button and a hand sweeps round the clock. */
 .pad-auto.on { animation: auto-glow 1.6s ease-in-out infinite; }
@@ -1282,37 +1283,215 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .delete-confirm { color: var(--blood); }
 .delete-confirm:disabled { opacity: 0.35; }
 
-/* Mounts: the ones you own (tap to ride), the draw with its odds in full, and gems for VX. */
-.mount-panel { width: 620px; max-height: calc(100% - 24px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-.mount-panel h2 { margin: 0; }
-.mount-panel .note { margin: 0; font-size: 12px; }
-.mount-head { display: flex; align-items: center; justify-content: space-between; }
-.mount-gems { display: flex; align-items: center; gap: 4px; font: 700 16px var(--font-head); color: #bfe8ff; }
-.mount-gems img, .mount-pack img { width: 22px; height: 22px; image-rendering: pixelated; }
-.mount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.mount-card {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; cursor: pointer; color: inherit; text-align: left;
-  border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.05);
+/* The stable (mounts): a screen of its own, a barn at night. Dark boards, a beam across the top with
+   the tabs hung from it like stall tags, and on the left a lantern-lit pedestal where your hero sits
+   on the mount you look at. Every tier has its colour (--tier), carried by the pedestal's glow, the
+   name plaque, the cards and the odds. */
+.stable {
+  --tier: #e8c98a;
+  --wood: #1c140e;
+  --wood-light: #2b1f15;
+  --straw: #d9b86a;
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 22%, transparent 70%, rgba(0, 0, 0, 0.7)),
+    repeating-linear-gradient(90deg, var(--wood) 0 58px, #150f0a 58px 60px, var(--wood-light) 60px 62px, var(--wood) 62px 118px, #120c08 118px 120px);
+  animation: stable-in 0.25s ease-out;
 }
-.mount-card b { font: 700 14px var(--font-head); }
-.mount-card span { font-size: 11px; color: var(--ink-dim); }
-.mount-card em { font-style: normal; font-size: 11px; color: var(--ember); }
-.mount-card.locked { opacity: 0.45; cursor: default; }
-.mount-card.picked { border-color: #ffd36a; background: rgba(255, 211, 106, 0.14); }
-/* The tiers' colours: basic and common plain, rare blue, epic purple, legendary gold. */
-.tier-rare b, .mount-odds .tier-rare th, .mount-result.tier-rare { color: #7fc4ff; }
-.tier-epic b, .mount-odds .tier-epic th, .mount-result.tier-epic { color: #d59bff; }
-.tier-legendary b, .mount-odds .tier-legendary th, .mount-result.tier-legendary { color: #ffd36a; }
-.mount-card.tier-legendary:not(.locked) { box-shadow: 0 0 10px rgba(255, 211, 106, 0.35); }
-.mount-draw { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
-.mount-draw-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.mount-result { font: 700 14px var(--font-head); animation: enhance-pop 0.45s ease-out; }
-.mount-odds { width: 100%; border-collapse: collapse; font-size: 12px; }
-.mount-odds caption { text-align: left; font: 700 13px var(--font-head); padding-bottom: 2px; }
-.mount-odds th { text-align: left; white-space: nowrap; padding: 2px 10px 2px 0; font-weight: 700; }
-.mount-odds td { color: var(--ink-dim); padding: 2px 0; }
-.mount-shop { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
-.mount-packs { display: flex; gap: 6px; }
-.mount-pack { flex: 1; flex-direction: column; gap: 2px; padding: 8px; }
-.mount-pack b { font: 700 13px var(--font-head); }
-.mount-pack span { font-size: 12px; color: var(--ember); }
+@keyframes stable-in { from { opacity: 0; } }
+.stable .tier-base { --tier: #e8c98a; }
+.stable .tier-common { --tier: #d8d0bf; }
+.stable .tier-rare { --tier: #7fc4ff; }
+.stable .tier-epic { --tier: #d59bff; }
+.stable .tier-legendary { --tier: #ffd36a; }
+
+/* The beam. */
+.stable-bar {
+  position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 18px; height: 50px; padding: 0 12px 0 20px; flex: none;
+  background: linear-gradient(180deg, #3a2a1c, #2a1d13 60%, #1a120c);
+  border-bottom: 3px solid #0e0906; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
+}
+.stable-title {
+  margin: 0 0 9px; font: 400 24px var(--font-logo); color: var(--straw); letter-spacing: 0.08em;
+  text-shadow: 0 2px 0 #0e0906, 0 0 14px rgba(255, 190, 90, 0.35);
+}
+/* The tags hang from the beam; the one you are on hangs lower and catches the light. */
+.stable-tabs { display: flex; gap: 6px; align-self: stretch; align-items: flex-end; margin-bottom: -14px; }
+.stable-tab {
+  position: relative; padding: 7px 16px 8px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
+  border: 1px solid #0e0906; border-radius: 3px 3px 10px 10px; background: linear-gradient(180deg, #4a3624, #36271a);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); transform: translateY(-8px); transition: transform 0.15s, color 0.15s;
+}
+.stable-tab::before {
+  content: ""; position: absolute; left: 50%; top: -9px; width: 2px; height: 9px; margin-left: -1px; background: #6b5238;
+}
+.stable-tab:hover { color: var(--ink); }
+.stable-tab.on {
+  color: #1a120c; transform: translateY(0);
+  background: linear-gradient(180deg, #f3d99a, var(--straw)); border-color: #7a5a2a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 200, 110, 0.35);
+}
+.stable-tab:focus-visible, .stable-card:focus-visible, .stable-pack:focus-visible, .stable-hatch:focus-visible, .stable-close:focus-visible {
+  outline: 2px solid var(--straw); outline-offset: 2px;
+}
+.stable-gems {
+  margin: 0 0 11px auto; display: flex; align-items: center; gap: 6px; padding: 3px 12px 3px 6px;
+  font: 400 17px var(--font-head); color: #cfefff; border-radius: 999px;
+  background: rgba(8, 20, 30, 0.7); border: 1px solid rgba(127, 196, 255, 0.4);
+}
+.stable-gems img { width: 22px; height: 22px; image-rendering: pixelated; }
+.stable-close {
+  margin: 0 0 9px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--ink);
+  font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
+}
+.stable-close:hover { border-color: var(--straw); }
+
+.stable-body { flex: 1; min-height: 0; display: flex; }
+
+/* The pedestal, under a lantern whose light takes the tier's colour. */
+.stable-stage {
+  position: relative; flex: 1; min-width: 0;
+  background: radial-gradient(ellipse 55% 60% at 50% 62%, color-mix(in srgb, var(--tier) 22%, transparent), transparent 70%);
+}
+.stable-stage::before {
+  content: ""; position: absolute; left: 50%; top: 0; width: 60%; height: 80%; transform: translateX(-50%); pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tier) 14%, transparent), transparent);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  filter: blur(8px);
+}
+.stable-stage canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.stable-loading {
+  position: absolute; inset: 0; display: grid; place-items: center; margin: 0;
+  font: 400 15px var(--font-head); color: var(--ink-dim); text-shadow: var(--shadow);
+}
+/* The plaque: carved wood, hung under the mount, the name in the tier's colour. */
+.stable-plate {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 14px; row-gap: 2px;
+  min-width: 240px; padding: 8px 18px 10px; border-radius: 6px;
+  background: linear-gradient(180deg, #3d2c1d, #281c12); border: 1px solid #0e0906;
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.15), 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(0, 0, 0, 0.25);
+}
+.stable-plate::before, .stable-plate::after {
+  content: ""; position: absolute; top: 7px; width: 6px; height: 6px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c9a86a, #5a4122);
+}
+.stable-plate::before { left: 7px; }
+.stable-plate::after { right: 7px; }
+.stable-tier {
+  grid-column: 1 / -1; justify-self: center; font: 400 11px var(--font-head); letter-spacing: 0.3em; color: var(--tier); opacity: 0.85;
+}
+.stable-name {
+  grid-column: 1 / -1; justify-self: center; font: 400 26px/1.1 var(--font-logo); color: var(--tier);
+  text-shadow: 0 2px 0 #0e0906, 0 0 16px color-mix(in srgb, var(--tier) 45%, transparent);
+}
+.stable-speed { display: flex; align-items: center; gap: 8px; font: 400 13px var(--font-head); color: var(--ink); white-space: nowrap; }
+/* A pip for each tenth over walking pace. */
+.stable-pips {
+  display: block; height: 8px; width: calc(var(--pips) * 9px);
+  background: repeating-linear-gradient(90deg, var(--tier) 0 6px, transparent 6px 9px);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--tier) 60%, transparent));
+}
+.stable-speed { grid-row: 3; grid-column: 1; }
+.stable-plate > :is(.brush-button, .stable-riding, .stable-locked) { grid-row: 3 / span 2; grid-column: 2; }
+.stable-stats { grid-row: 4; grid-column: 1; font: 400 12px var(--font-head); color: #ffb35a; white-space: nowrap; }
+.stable-plate .brush-button.small { justify-self: end; min-width: 0; padding: 8px 18px; font-size: 14px; }
+.stable-riding, .stable-locked { justify-self: end; font: 400 13px var(--font-head); white-space: nowrap; }
+.stable-riding { color: #8fe08a; }
+.stable-riding::before { content: "● "; }
+.stable-locked { color: var(--ink-dim); }
+
+/* The right side: a darker stall, so the words read. */
+.stable-side {
+  width: 44%; max-width: 440px; margin: 12px 12px 12px 0; padding: 14px 16px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+  background: rgba(10, 7, 5, 0.86); border: 1px solid rgba(217, 184, 106, 0.22); border-radius: 8px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+.stable-hint, .stable-lede { margin: 0; font-size: 12px; line-height: 1.55; color: var(--ink-dim); text-wrap: balance; }
+.stable-lede { font-size: 13px; color: var(--ink); }
+
+/* Stall doors: the mount's portrait on dark wood, a strip of its tier's colour at the foot. */
+.stable-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stable-card {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 8px;
+  cursor: pointer; color: var(--ink); border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--tier) 18%, transparent), transparent 70%),
+    linear-gradient(180deg, #2a1e14, #1a120c);
+  box-shadow: inset 0 -3px 0 var(--tier);
+  transition: transform 0.12s, border-color 0.12s;
+}
+.stable-card:hover { transform: translateY(-2px); }
+.stable-card > img:first-child { width: 100%; aspect-ratio: 1; object-fit: contain; }
+.stable-card-blank { width: 100%; aspect-ratio: 1; }
+.stable-card b { font: 400 13px var(--font-head); }
+.stable-card.locked > img:first-child { filter: brightness(0.12) saturate(0); }
+.stable-card.locked b { color: var(--ink-dim); }
+.stable-lock {
+  position: absolute; top: 38%; left: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%);
+  image-rendering: pixelated; opacity: 0.85;
+}
+.stable-card.looking { border-color: var(--tier); box-shadow: inset 0 -3px 0 var(--tier), 0 0 12px color-mix(in srgb, var(--tier) 45%, transparent); }
+.stable-card.riding::after {
+  content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+  background: #8fe08a; box-shadow: 0 0 6px #8fe08a;
+}
+.stable-card.tier-legendary:not(.locked) { animation: stable-shine 2.4s ease-in-out infinite; }
+@keyframes stable-shine { 50% { box-shadow: inset 0 -3px 0 var(--tier), 0 0 14px rgba(255, 211, 106, 0.5); } }
+
+/* The hatch button: warm, big, the gem price under the word. */
+.stable-hatch {
+  align-self: center; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 200px; padding: 10px 30px 8px;
+  cursor: pointer; color: #1a120c; border: 1px solid #7a5a2a; border-radius: 40px;
+  background: linear-gradient(180deg, #ffe7a8, #e0b25a 60%, #b8862f);
+  box-shadow: 0 4px 0 #6b4b1e, 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 22px rgba(255, 200, 110, 0.3);
+}
+.stable-hatch span { font: 400 20px var(--font-logo); letter-spacing: 0.06em; }
+.stable-hatch small { display: flex; align-items: center; gap: 4px; font: 400 14px var(--font-head); }
+.stable-hatch small img { width: 18px; height: 18px; image-rendering: pixelated; }
+.stable-hatch:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #6b4b1e, 0 4px 10px rgba(0, 0, 0, 0.5); }
+.stable-hatch:disabled { cursor: default; filter: grayscale(0.7) brightness(0.6); }
+.stable-result {
+  margin: 0; text-align: center; font: 400 16px var(--font-head); color: var(--tier);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--tier) 50%, transparent); animation: enhance-pop 0.45s ease-out;
+}
+.stable-more { align-self: center; font-size: 13px; color: var(--ember); }
+
+.stable-odds { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid rgba(217, 184, 106, 0.18); }
+.stable-odds > b { font: 400 13px var(--font-head); color: var(--straw); letter-spacing: 0.05em; }
+.stable-odd { display: grid; gap: 2px; }
+.stable-odd-head { display: flex; justify-content: space-between; font: 400 13px var(--font-head); color: var(--tier); }
+.stable-odd-head em { font-style: normal; }
+.stable-odd i { display: block; height: 4px; border-radius: 2px; background: var(--tier); opacity: 0.8; }
+.stable-odd-list { font-size: 11px; color: var(--ink-dim); }
+.stable-odds small { font-size: 11px; color: var(--ink-dim); }
+
+/* Gem packs: the gem art in a pool of blue light, the bonus on a red ribbon, the price on gold. */
+.stable-packs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stable-pack {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px;
+  cursor: pointer; color: var(--ink); border-radius: 8px; overflow: hidden;
+  border: 1px solid rgba(127, 196, 255, 0.3);
+  background: radial-gradient(circle at 50% 38%, rgba(127, 196, 255, 0.22), transparent 62%), linear-gradient(180deg, #1c2430, #10141b);
+  transition: transform 0.12s, border-color 0.12s;
+}
+.stable-pack:hover:not(:disabled) { transform: translateY(-2px); border-color: #bfe8ff; }
+.stable-pack:disabled { cursor: default; opacity: 0.6; }
+/* The art has its own dark ground: lighten lets only the gems and their glow show on the card. */
+.stable-pack img { width: 76%; aspect-ratio: 1; object-fit: contain; image-rendering: pixelated; mix-blend-mode: lighten; }
+.stable-pack b { font: 400 14px var(--font-head); color: #cfefff; }
+.stable-price {
+  margin-top: 4px; padding: 3px 12px; border-radius: 999px; font: 400 13px var(--font-head); color: #1a120c;
+  background: linear-gradient(180deg, #ffe7a8, #e0b25a);
+}
+.stable-bonus {
+  position: absolute; top: 14px; right: -34px; width: 116px; transform: rotate(35deg); text-align: center;
+  font: 400 10px/18px var(--font-head); color: #fff; background: #c0392b; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.stable .smith-note { margin: 0; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stable, .stable-card.tier-legendary:not(.locked), .stable-result { animation: none; }
+}

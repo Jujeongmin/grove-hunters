@@ -68,7 +68,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
         <header className="bag-head">
           <h2>{t("bag.title")}</h2>
           <span className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</span>
-          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString(locale()) })}</span>}
+          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus, bag.mount).toLocaleString(locale()) })}</span>}
         </header>
         <div className="bag-job">
           {job ? (

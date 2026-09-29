@@ -5,7 +5,7 @@ import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
-import { enterAs, errorOf, giveXp, join, makeCharacter, toNpc, walkTo } from "./helpers";
+import { STEED, enterAs, errorOf, giveXp, join, makeCharacter, toNpc, walkTo } from "./helpers";
 
 // XP that puts a character at the start of a level (see account/level.ts).
 function xpFor(level: number): number {
@@ -75,7 +75,7 @@ describe("advancement", () => {
     const mine = await $room.getMyState();
     // The room carries the path's id, not its name: every client says it in its own language.
     expect(mine.look.job).toBe("guardian");
-    expect(mine.maxHp).toBe(maxHpAt(ADVANCE_LEVEL) + JOBS.guardian.hp);
+    expect(mine.maxHp).toBe(maxHpAt(ADVANCE_LEVEL) + JOBS.guardian.hp + STEED.hp);
     expect(await errorOf(server.advance("berserker"))).toContain("unavailable");
   });
 
@@ -86,7 +86,7 @@ describe("advancement", () => {
     await $room.updateMyState({ strikeReadyAt: 0 });
     await server.strike("m0");
     const base = WEAPONS.warrior.damage * (1 + 29 * 0.06);
-    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - Math.round(base * (1 + JOBS.berserker.power)));
+    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - Math.round(base * (1 + JOBS.berserker.power + STEED.power)));
   });
 });
 

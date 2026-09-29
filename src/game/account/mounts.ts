@@ -18,10 +18,10 @@ export interface Mount {
 // The full game's own mount.
 export const BASE_MOUNT: MountId = "deer";
 
-const TIER_SPEED: Record<MountTier, number> = { common: 1.5, rare: 1.6, epic: 1.7, legendary: 1.8 };
+const TIER_SPEED: Record<MountTier, number> = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6 };
 
 export const MOUNTS: Record<MountId, Mount> = {
-  deer: { model: "mnt_deer", tier: null, speed: 1.5 },
+  deer: { model: "mnt_deer", tier: null, speed: 1.2 },
   pig: { model: "mnt_pig", tier: "common", speed: TIER_SPEED.common },
   chicken: { model: "mnt_chicken", tier: "common", speed: TIER_SPEED.common },
   penguin: { model: "mnt_penguin", tier: "common", speed: TIER_SPEED.common },
@@ -32,6 +32,20 @@ export const MOUNTS: Record<MountId, Mount> = {
   dragon: { model: "mnt_dragon", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
 };
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
+
+// The mount you have picked makes you stronger whether you ride it or not: a share more damage and
+// more health, more the rarer it is (the full game's own counts as below common).
+export interface MountBonus { power: number; hp: number }
+const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
+  base: { power: 0.1, hp: 30 },
+  common: { power: 0.15, hp: 45 },
+  rare: { power: 0.2, hp: 60 },
+  epic: { power: 0.25, hp: 80 },
+  legendary: { power: 0.3, hp: 100 },
+};
+export function mountBonus(id: MountId | null | undefined): MountBonus {
+  return id ? TIER_BONUS[MOUNTS[id].tier ?? "base"] : { power: 0, hp: 0 };
+}
 
 // The draw: a tier by these odds (shown to the player as they are, as Korean law requires of paid
 // draws), then one of that tier's mounts, each as likely as the others.
