@@ -463,7 +463,6 @@ function ZoneScreen({
             <div className="hud-vitals">
               <div className="hud-vitals-row">
                 <b>Lv {hud.level}</b>
-                <span>{Math.ceil(hud.hp)} / {hud.maxHp}</span>
                 <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
                 {bag && (
                   <span className="hud-power" title={t("rank.power")}>
@@ -471,7 +470,10 @@ function ZoneScreen({
                   </span>
                 )}
               </div>
-              <div className="hud-bar hp"><i style={{ width: `${Math.round((hud.hp / hud.maxHp) * 100)}%` }} /></div>
+              <div className="hud-bar hp">
+                <i style={{ width: `${Math.round((hud.hp / hud.maxHp) * 100)}%` }} />
+                <span className="hud-bar-text">{Math.ceil(hud.hp)} / {hud.maxHp}</span>
+              </div>
               <div className="hud-bar xp"><i style={{ width: `${Math.round((hud.xpInto / hud.xpNeed) * 100)}%` }} /></div>
             </div>
             {/* Under the vitals in the same column, so a taller vitals box pushes it down, never under. */}

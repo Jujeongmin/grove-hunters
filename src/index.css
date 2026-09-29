@@ -174,14 +174,20 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: rgba(14, 11, 9, 0.8); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
   pointer-events: none;
 }
-.hud-vitals-row { display: flex; align-items: baseline; gap: 10px; font: 600 13px var(--font-head); }
+/* One line, whatever the numbers: level, XP and power (health is written on its bar). */
+.hud-vitals-row { display: flex; align-items: baseline; gap: 10px; font: 600 13px var(--font-head); white-space: nowrap; overflow: hidden; }
 .hud-vitals-row b { font-size: 15px; color: var(--ember); }
 .hud-vitals-row span { font-variant-numeric: tabular-nums; color: var(--ink-dim); }
 .hud-xp { font-size: 11px; color: #ffd36a; }
-.hud-power { font-size: 11px; color: #ffb35a; }
+.hud-power { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 11px; color: #ffb35a; }
 .hud-bar { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .hud-bar i { position: absolute; left: 0; top: 0; bottom: 0; transition: width 0.15s; }
+.hud-vitals .hud-bar.hp { height: 13px; border-radius: 5px; }
 .hud-bar.hp i { background: linear-gradient(#ff7a5c, #d8392b); }
+.hud-bar-text {
+  position: absolute; inset: 0; display: grid; place-items: center; font: 700 10px/1 var(--font-head);
+  color: #fff; text-shadow: 0 0 2px #000, 0 1px 1px #000; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 .hud-bar.xp { height: 4px; }
 .hud-bar.xp i { background: #ffd36a; }
 .hud-target {
