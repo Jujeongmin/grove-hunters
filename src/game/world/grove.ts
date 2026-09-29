@@ -237,6 +237,14 @@ export interface GroveView {
   revealsBosses: boolean;
 }
 
+// On coming into the world while the haze still stands (before stage 2), a new player is told why
+// once a week: the percent of the week's goal hunted so far, or null when there is nothing to say.
+// `seenWeek` is the week it was last told in.
+export function hazeHint(view: GroveView | null, seenWeek: string | null, week: string): number | null {
+  if (!view || view.stage >= 2 || seenWeek === week) return null;
+  return Math.floor((view.kills / view.goal) * 100);
+}
+
 export function groveView(record: GroveRecord, village: VillageRecord, now: number): GroveView {
   const current = record.week === weekOf(now) ? record : { ...record, kills: 0, paid: 0 as Stage };
   const going = underWay(village);

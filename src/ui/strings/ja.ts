@@ -599,6 +599,7 @@ export const ja: Bundle = {
   "grove.stage.1": "30% 花が咲き 200G",
   "grove.stage.2": "60% 空が晴れ、建設地が開く",
   "grove.stage.3": "100% 浄化の守護者、500G",
+  "grove.hazeHint": "モンスターを倒すと森が浄化されます。\n60%で霧が晴れます（今週 {n}%）",
   "grove.village": "村の復興",
   "grove.building.herbalist": "薬草屋",
   "grove.building.training": "訓練所",

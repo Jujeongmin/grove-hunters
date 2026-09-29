@@ -608,6 +608,7 @@ export const ko = {
   "grove.stage.1": "30% 꽃이 피고 골드 200",
   "grove.stage.2": "60% 하늘이 맑아지고 건물 터가 열림",
   "grove.stage.3": "100% 정화의 수호자, 골드 500",
+  "grove.hazeHint": "몬스터를 잡으면 숲이 정화돼요.\n60%가 되면 안개가 걷혀요 (이번 주 {n}%)",
   "grove.village": "마을 복구",
   "grove.building.herbalist": "약초상",
   "grove.building.training": "훈련소",

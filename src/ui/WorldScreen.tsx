@@ -30,7 +30,7 @@ import { iconFor } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { DonatePanel } from "./DonatePanel";
-import type { GroveView } from "../game/world/grove";
+import { hazeHint, weekOf, type GroveView } from "../game/world/grove";
 import type { NpcId } from "../game/world/npcs";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
@@ -152,6 +152,8 @@ interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
 const QUEST_BANNER_MS = 4500;
 // How often the grove is read again while you play.
 const GROVE_REFRESH_MS = 60_000;
+// How long the haze's hint stays up unless tapped.
+const HAZE_HINT_MS = 12_000;
 // How long a refused portal's message stays up.
 const PROBLEM_MS = 3000;
 
@@ -218,6 +220,36 @@ function ZoneScreen({
   }, [client]);
   // The world shows the grove too (the sites, the flowers, the haze), once it is drawn.
   useEffect(() => view.current?.setGrove(grove), [grove, ready]);
+  // Once a week while the haze stands, a line on coming in says why and how far the week has got
+  // (a new player would not know); a tap opens the grove.
+  const [haze, setHaze] = useState<number | null>(null);
+  const hazeTold = useRef(false);
+  useEffect(() => {
+    if (!ready || !grove || hazeTold.current) return;
+    hazeTold.current = true;
+    const key = `groveHunters.hazeShown.${client.account}`;
+    const week = weekOf(Date.now());
+    let seen: string | null = null;
+    try {
+      seen = window.localStorage.getItem(key);
+    } catch {
+      // A browser that will not keep it tells you again next time.
+    }
+    const n = hazeHint(grove, seen, week);
+    if (n === null) return;
+    try {
+      window.localStorage.setItem(key, week);
+    } catch {
+      // As above.
+    }
+    setHaze(n);
+  }, [ready, grove, client]);
+  const hazeUp = haze !== null;
+  useEffect(() => {
+    if (!hazeUp) return;
+    const timer = setTimeout(() => setHaze(null), HAZE_HINT_MS);
+    return () => clearTimeout(timer);
+  }, [hazeUp]);
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
@@ -469,6 +501,17 @@ function ZoneScreen({
             <div className="hud-notes">
               {hud.notes.map((text, i) => <span key={i} className="band">{text}</span>)}
             </div>
+          )}
+          {haze !== null && (
+            <button
+              type="button" className="hud-haze band"
+              onClick={() => {
+                setHaze(null);
+                setPanel("grove");
+              }}
+            >
+              {t("grove.hazeHint", { n: haze })}
+            </button>
           )}
           {keyHints && hud.npc && !hud.portal && (
             <div className="hud-prompt band">{t("world.talk", { name: hud.npc.name, role: hud.npc.role })}</div>

@@ -599,6 +599,7 @@ export const en: Bundle = {
   "grove.stage.1": "30% Flowers bloom, 200 gold",
   "grove.stage.2": "60% Clear skies, a site opens",
   "grove.stage.3": "100% The Guardian, 500 gold",
+  "grove.hazeHint": "Hunting purifies the grove.\nAt 60% the haze lifts (this week {n}%)",
   "grove.village": "Village Rebuilding",
   "grove.building.herbalist": "Herbalist",
   "grove.building.training": "Training Ground",

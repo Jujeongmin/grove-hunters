@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  BUILDINGS, PURIFY_GOAL, addKills, allBuilt, completionRewards, deathLossFactor, donation, giveTo, groveView,
+  BUILDINGS, PURIFY_GOAL, addKills, hazeHint, allBuilt, completionRewards, deathLossFactor, donation, giveTo, groveView,
   huntXpFactor, markHunted, openSite, potionPriceFactor, readGrove, readUserGrove, readVillage, settle, stageOf,
   underWay, weekEndsAt, weekOf, type GroveRecord, type VillageRecord,
 } from "../../src/game/world/grove";
@@ -126,5 +126,21 @@ describe("each hunter's share", () => {
     expect(view.buildings.map((b) => b.state)).toEqual(["building", "closed", "closed", "closed"]);
     // A new week that has not been added to yet reads as nothing.
     expect(groveView(record, empty(), MONDAY_KST + 8 * 86_400_000)).toMatchObject({ kills: 0, stage: 0 });
+  });
+});
+
+describe("the haze's hint", () => {
+  const week = weekOf(MONDAY_KST);
+  const at = (kills: number) => groveView({ week, kills, paid: 0, lastWeek: null }, empty(), MONDAY_KST);
+
+  it("tells how far the week has got while the haze stands, once a week", () => {
+    expect(hazeHint(at(PURIFY_GOAL * 0.459), null, week)).toBe(45);
+    expect(hazeHint(at(0), "W1", week)).toBe(0);
+    expect(hazeHint(at(0), week, week)).toBeNull();
+  });
+
+  it("says nothing once the sky has cleared, or before the grove is read", () => {
+    expect(hazeHint(at(PURIFY_GOAL * 0.6), null, week)).toBeNull();
+    expect(hazeHint(null, null, week)).toBeNull();
   });
 });

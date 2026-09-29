@@ -599,6 +599,7 @@ export const zhHant: Bundle = {
   "grove.stage.1": "30% 花開，金幣 200",
   "grove.stage.2": "60% 天空放晴，開放建地",
   "grove.stage.3": "100% 淨化守護者，金幣 500",
+  "grove.hazeHint": "擊敗怪物可淨化森林，\n達到60%時霧氣散去（本週 {n}%）",
   "grove.village": "村莊重建",
   "grove.building.herbalist": "藥草鋪",
   "grove.building.training": "訓練場",

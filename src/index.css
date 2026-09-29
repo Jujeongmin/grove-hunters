@@ -148,6 +148,13 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 /* The same prompt at a locked portal, which opens what the portal asks for. */
 button.hud-prompt { border: 0; background: none; color: var(--ember); cursor: pointer; pointer-events: auto; }
 button.hud-prompt:hover { color: #ffe0b0; }
+/* Why the grove is hazy, once a week on coming in, top centre under the target's bar; a tap opens the
+   grove. Narrow enough to pass between the vitals and the unfolded menu. */
+.hud-haze {
+  position: absolute; left: calc(50% - 20px); top: 64px; transform: translateX(-50%); width: max-content; max-width: 320px;
+  text-align: center; white-space: pre-line; line-height: 1.45; cursor: pointer; pointer-events: auto;
+  border: 0; background: none; color: #ffe08a; font: 600 14px var(--font-head);
+}
 .hud-error { position: absolute; left: 50%; top: 74%; transform: translateX(-50%); color: var(--ember); font: 600 14px var(--font-head); white-space: nowrap; pointer-events: none; }
 
 .pain {
