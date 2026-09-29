@@ -64,13 +64,17 @@ const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v
 const readStage = (v: unknown): Stage => (v === 1 || v === 2 || v === 3 ? v : 0);
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 
-export interface GroveRecord { week: string; kills: number; paid: Stage; lastWeek: { week: string; paid: Stage } | null }
+// `guardian` is the week the guardian was last called up: once a week for the whole server.
+export interface GroveRecord { week: string; kills: number; paid: Stage; lastWeek: { week: string; paid: Stage } | null; guardian?: string }
 
 export function readGrove(raw: unknown): GroveRecord {
   const r = isObject(raw) ? raw : {};
   if (typeof r.week !== "string") return { week: "", kills: 0, paid: 0, lastWeek: null };
   const last = isObject(r.lastWeek) && typeof r.lastWeek.week === "string" ? { week: r.lastWeek.week, paid: readStage(r.lastWeek.paid) } : null;
-  return { week: r.week, kills: count(r.kills), paid: readStage(r.paid), lastWeek: last };
+  return {
+    week: r.week, kills: count(r.kills), paid: readStage(r.paid), lastWeek: last,
+    ...(typeof r.guardian === "string" ? { guardian: r.guardian } : {}),
+  };
 }
 
 // A room's kills added to the record: a new week starts from nothing (keeping the last one's stage

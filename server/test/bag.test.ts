@@ -69,6 +69,17 @@ describe("bag and gold", () => {
     expect(await errorOf(server.buyItem("potion_small"))).toContain("not_in_village");
   });
 
+  test("a buy that would stack past 99 is refused before the gold is taken", async (server) => {
+    await inVillage(server);
+    await toNpc(server, "merchant");
+    await $asset.mint("gold", 10_000);
+    await server.buyItem("potion_small", 90);
+    expect((await server.buyItem("potion_small", 4)).bag.potion_small).toBe(99);
+    const before = await $asset.get("gold");
+    expect(await errorOf(server.buyItem("potion_small", 1))).toContain("bag_full");
+    expect(await $asset.get("gold")).toBe(before);
+  });
+
   test("worn gear hits harder and holds more health; taking it off puts it back in the bag", async (server) => {
     await inVillage(server);
     await $asset.mint("gold", 1000);

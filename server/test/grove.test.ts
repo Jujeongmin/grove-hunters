@@ -66,6 +66,23 @@ describe("the grove", () => {
     const monsters = (await $room.getRoomState()).monsters;
     expect(Object.values(monsters).some((m: any) => m.type === "grove_guardian" && m.alive)).toBe(true);
   });
+
+  test("the guardian comes once a week for the whole server, on channel 1 only", async (server) => {
+    const entry = await inForest(server);
+    expect(entry.channel).toBe(1);
+    await $room.updateRoomState({ groveKills: PURIFY_GOAL });
+    await server.simulateTick(entry.roomId, 10_000);
+    const guardians = async () => Object.values((await $room.getRoomState()).monsters ?? {}).filter((m: any) => m.type === "grove_guardian");
+    expect(await guardians()).toHaveLength(1);
+    // The room forgets it (the platform reset it): still none again this week.
+    await $room.updateRoomState({ monsters: {}, guardianWeek: null });
+    await server.simulateTick(entry.roomId, 10_000);
+    expect(await guardians()).toHaveLength(0);
+    // Another channel's first field never has one.
+    const moved = await join(server, "test-a", await server.changeChannel(2), entry.roomId);
+    await server.simulateTick(moved.roomId, 10_000);
+    expect(await guardians()).toHaveLength(0);
+  });
 });
 
 async function inVillage(server: any, account = "test-a"): Promise<any> {

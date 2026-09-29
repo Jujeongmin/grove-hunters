@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
 import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
-import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
+import { ADVANCE_LEVEL, jobsOf, type JobId } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName, pathSkillName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
@@ -49,6 +49,8 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
 }) {
   const [problem, act] = useAction();
   const [picked, setPicked] = useState<{ gear: Slot } | { item: ItemId } | null>(null);
+  // A path tapped, waiting for a yes: the choice is for good, so one tap never makes it.
+  const [path, setPath] = useState<JobId | null>(null);
   const items = ITEM_IDS.filter((id) => (bag?.bag[id] ?? 0) > 0);
   const job = bag?.job ?? null;
   // What the right side tells about: the worn piece or the carried item picked, while it is still there.
@@ -76,9 +78,24 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
           ) : (
             <>
               <span>{t("bag.pickPath")}</span>
+              {path && (
+                <div className="bag-job-confirm">
+                  <span>{t("bag.confirmPath", { name: jobName(path) })}</span>
+                  <button
+                    type="button" className="brush-button small"
+                    onClick={() => {
+                      setPath(null);
+                      act(() => client.advance(path));
+                    }}
+                  >
+                    {t("bag.advanceGo")}
+                  </button>
+                  <button type="button" className="text-button" onClick={() => setPath(null)}>{t("common.cancel")}</button>
+                </div>
+              )}
               <div className="bag-job-paths">
                 {jobsOf(playerClass).map((id) => (
-                  <button key={id} type="button" className="world-card" onClick={() => act(() => client.advance(id))}>
+                  <button key={id} type="button" className={`world-card${path === id ? " picked" : ""}`} onClick={() => setPath(id)}>
                     <b>{jobName(id)}</b>
                     <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)}</span>
                     <span>{jobBlurb(id)}</span>

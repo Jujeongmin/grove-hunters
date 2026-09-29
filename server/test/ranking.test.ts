@@ -4,7 +4,7 @@ import { errorOf, giveXp, makeCharacter } from "./helpers";
 
 // The board is written when a character's XP changes; hunting will do that (phase 2). Here the
 // store writes it directly.
-import { readProfile, writeRanking } from "../src/store";
+import { readProfile, readRanking, writeRanking } from "../src/store";
 
 describe("ranking", () => {
   test("a fresh account sees an empty board", async (server) => {
@@ -26,6 +26,17 @@ describe("ranking", () => {
     const view = await server.getRanking();
     expect(view.board.map((r: any) => r.nickname)).toEqual(["앞선자", "뒤선자"]);
     expect(view.rank).toBe(2);
+  });
+
+  test("reads the best of a board longer than it reads, whatever order the rows were written in", async () => {
+    for (let i = 0; i < 120; i++) {
+      await $global.addCollectionItem("ranking", {
+        id: `c-${i}`, account: `test-${i}`, nickname: `줄${i}`, xp: 10 + i, level: 1, playerClass: "warrior", job: null,
+      });
+    }
+    const board = await readRanking();
+    expect(board[0].nickname).toBe("줄119");
+    expect(board.every((r, i) => i === 0 || board[i - 1].xp >= r.xp)).toBe(true);
   });
 
   test("each line carries the class, and a line opens the character in full", async (server) => {

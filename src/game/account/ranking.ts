@@ -34,6 +34,8 @@ export function rankRows(rows: readonly RankRow[]): RankRow[] {
       id, account, nickname, xp, level, playerClass: readClass(playerClass) ?? undefined, job: readJob(job),
     }))
     .sort((a, b) => b.xp - a.xp || a.id.localeCompare(b.id))
+    // Two first writes at once can leave a character two rows: the best one stands.
+    .filter((row, i, all) => all.findIndex((other) => other.id === row.id) === i)
     .slice(0, RANKING_SIZE);
 }
 

@@ -29,7 +29,6 @@ export const ja: Bundle = {
   "settings.defaults": "初期設定",
   "settings.exit": "メニューに戻る",
 
-  "keys.move": "移動",
   "keys.jump": "ジャンプ",
   "keys.click": "左クリック / 右クリック",
   "keys.attackGuard": "攻撃 / ガード",
@@ -248,6 +247,7 @@ export const ja: Bundle = {
   "problem.not_enough_gold": "ゴールドが足りません",
   "problem.not_in_village": "ショップは村にあります",
   "problem.no_item": "カバンにありません",
+  "problem.bag_full": "カバンにもう入りません(1枠99個まで)",
   "problem.too_low_advance": "Lv{n}から転職できます",
 
   "slot.weapon": "武器",
@@ -258,6 +258,8 @@ export const ja: Bundle = {
   "bag.job": "転職",
   "bag.advanceAt": "Lv{at}になると転職できます（現在 Lv{level}）",
   "bag.pickPath": "転職する道を選んでください。一度選ぶと変えられません。",
+  "bag.confirmPath": "{name}に転職しますか？あとから変えられません。",
+  "bag.advanceGo": "転職する",
   "bag.unequip": "外す",
   "bag.empty": "カバンは空です",
   "bag.pickHint": "アイテムを押すと、ここに説明と使い方が出ます。",
@@ -600,7 +602,7 @@ export const ja: Bundle = {
   "grove.daysLeft": "残り{n}日",
   "grove.stage.1": "30% 花が咲き 200G",
   "grove.stage.2": "60% 空が晴れ、建設地が開く",
-  "grove.stage.3": "100% 浄化の守護者、500G",
+  "grove.stage.3": "100% 浄化の守護者(ch.1)、500G",
   "grove.hazeHint": "モンスターを倒すと森が浄化されます。\n60%で霧が晴れます（今週 {n}%）",
   "grove.village": "村の復興",
   "grove.building.herbalist": "薬草屋",

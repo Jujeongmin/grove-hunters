@@ -29,7 +29,6 @@ export const en: Bundle = {
   "settings.defaults": "Defaults",
   "settings.exit": "Back to the menu",
 
-  "keys.move": "Move",
   "keys.jump": "Jump",
   "keys.click": "Left / right click",
   "keys.attackGuard": "Attack / guard",
@@ -248,6 +247,7 @@ export const en: Bundle = {
   "problem.not_enough_gold": "Not enough gold",
   "problem.not_in_village": "The shop is in the village",
   "problem.no_item": "It is not in your bag",
+  "problem.bag_full": "Your bag can't hold more (99 per stack)",
   "problem.too_low_advance": "Advancement opens at Lv {n}",
 
   "slot.weapon": "Weapon",
@@ -258,6 +258,8 @@ export const en: Bundle = {
   "bag.job": "Path",
   "bag.advanceAt": "You may advance at Lv {at} (you are Lv {level})",
   "bag.pickPath": "Choose a path. Once chosen it cannot be changed.",
+  "bag.confirmPath": "Advance as {name}? It can't be changed later.",
+  "bag.advanceGo": "Advance",
   "bag.unequip": "Take off",
   "bag.empty": "Your bag is empty",
   "bag.pickHint": "Pick an item to see what it is and what to do with it.",
@@ -600,7 +602,7 @@ export const en: Bundle = {
   "grove.daysLeft": "{n} days left",
   "grove.stage.1": "30% Flowers bloom, 200 gold",
   "grove.stage.2": "60% Clear skies, a site opens",
-  "grove.stage.3": "100% The Guardian, 500 gold",
+  "grove.stage.3": "100% The Guardian (ch. 1), 500 gold",
   "grove.hazeHint": "Hunting purifies the grove.\nAt 60% the haze lifts (this week {n}%)",
   "grove.village": "Village Rebuilding",
   "grove.building.herbalist": "Herbalist",

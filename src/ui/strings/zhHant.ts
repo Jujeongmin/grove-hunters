@@ -29,7 +29,6 @@ export const zhHant: Bundle = {
   "settings.defaults": "預設值",
   "settings.exit": "回到選單",
 
-  "keys.move": "移動",
   "keys.jump": "跳躍",
   "keys.click": "左鍵 / 右鍵",
   "keys.attackGuard": "攻擊 / 格擋",
@@ -248,6 +247,7 @@ export const zhHant: Bundle = {
   "problem.not_enough_gold": "金幣不足",
   "problem.not_in_village": "商店在村子裡",
   "problem.no_item": "背包裡沒有",
+  "problem.bag_full": "背包放不下了（每格最多 99 個）",
   "problem.too_low_advance": "Lv{n} 起可以轉職",
 
   "slot.weapon": "武器",
@@ -258,6 +258,8 @@ export const zhHant: Bundle = {
   "bag.job": "轉職",
   "bag.advanceAt": "到 Lv{at} 就能轉職（目前 Lv{level}）",
   "bag.pickPath": "請選擇轉職的道路。一旦選定就不能更改。",
+  "bag.confirmPath": "確定轉職為{name}嗎？之後無法更改。",
+  "bag.advanceGo": "轉職",
   "bag.unequip": "卸下",
   "bag.empty": "背包是空的",
   "bag.pickHint": "點選物品，這裡會顯示說明與用法。",
@@ -600,7 +602,7 @@ export const zhHant: Bundle = {
   "grove.daysLeft": "剩 {n} 天",
   "grove.stage.1": "30% 花開，金幣 200",
   "grove.stage.2": "60% 天空放晴，開放建地",
-  "grove.stage.3": "100% 淨化守護者，金幣 500",
+  "grove.stage.3": "100% 淨化守護者（頻道 1），金幣 500",
   "grove.hazeHint": "擊敗怪物可淨化森林，\n達到60%時霧氣散去（本週 {n}%）",
   "grove.village": "村莊重建",
   "grove.building.herbalist": "藥草鋪",

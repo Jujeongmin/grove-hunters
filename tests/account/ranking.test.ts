@@ -9,6 +9,11 @@ describe("rankRows", () => {
     expect(ranked.map((r) => r.account)).toEqual(["a", "b", "c"]);
   });
 
+  it("lists a character once, at its best, even if two writes at once left it two rows", () => {
+    const ranked = rankRows([row("a", 40), row("b", 30), row("a", 45)]);
+    expect(ranked.map((r) => [r.account, r.xp])).toEqual([["a", 45], ["b", 30]]);
+  });
+
   it("keeps only the top of the board", () => {
     const many = Array.from({ length: RANKING_SIZE + 10 }, (_, i) => row(`p${i}`, i));
     const ranked = rankRows(many);

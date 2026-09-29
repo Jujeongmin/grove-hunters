@@ -5,7 +5,7 @@ import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
 } from "../../src/game/account/level";
 import {
-  GOLD, ITEMS, MAX_STACK, NO_GEAR, addItem, equip, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
+  GOLD, ITEMS, MAX_STACK, NO_GEAR, addItem, equip, fitsInBag, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
 } from "../../src/game/account/items";
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
@@ -673,7 +673,7 @@ export class Server {
     const listed = ITEMS[item].price;
     if (listed === null) throw new RuleViolation("unavailable");
     const account = $sender.account;
-    await playing(account);
+    if (!fitsInBag((await playing(account)).bag, item, n)) throw new RuleViolation("bag_full");
     // The village's herbalist, once built, sells potions cheaper on this server.
     const price = ITEMS[item].kind === "potion"
       ? Math.round(listed * potionPriceFactor(await villageOf((await readAccountWorld(account)).id)))
@@ -682,7 +682,10 @@ export class Server {
     if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost);
     try {
-      return bagView(await updateActive(account, (c) => ({ ...c, bag: addItem(c.bag, item, n) })));
+      return bagView(await updateActive(account, (c) => {
+        if (!fitsInBag(c.bag, item, n)) throw new RuleViolation("bag_full");
+        return { ...c, bag: addItem(c.bag, item, n) };
+      }));
     } catch (error) {
       await $asset.mint(GOLD, cost);
       throw error;
@@ -750,12 +753,14 @@ export class Server {
     const account = $sender.account;
     const current = await playing(account);
     if (!hasMaterials(current.bag, recipe)) throw new RuleViolation("no_item");
+    if (!fitsInBag(current.bag, recipe.makes, recipe.n)) throw new RuleViolation("bag_full");
     if (!(await $asset.has(GOLD, recipe.gold))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, recipe.gold);
     try {
       return bagView(await updateActive(account, (c) => {
         let bag = c.bag;
         for (const need of recipe.needs) bag = addItem(bag, need.item, -need.n);
+        if (!fitsInBag(bag, recipe.makes, recipe.n)) throw new RuleViolation("bag_full");
         return { ...c, bag: addItem(bag, recipe.makes, recipe.n) };
       }));
     } catch (error) {

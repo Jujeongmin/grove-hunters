@@ -565,6 +565,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-quest .brush-button.small { margin-top: 4px; padding: 8px 16px; font-size: 13px; }
 .bag-job { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px; }
 .bag-job-paths { display: flex; gap: 8px; }
+/* The yes a path waits for. */
+.bag-job-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #ffd36a; font-weight: 700; }
+.bag-job-paths .world-card.picked { border-color: var(--ember); background: rgba(60, 38, 18, 0.85); }
 .bag-job-paths .world-card { flex: 1; flex-direction: column; align-items: flex-start; gap: 2px; }
 /* The bag and the shop. */
 .bag-panel { width: min(560px, 92%); max-height: 86%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 14px 20px; }

@@ -32,7 +32,6 @@ export const ko = {
   "settings.defaults": "기본값",
   "settings.exit": "메뉴로 나가기",
 
-  "keys.move": "이동",
   "keys.jump": "점프",
   "keys.click": "좌클릭 / 우클릭",
   "keys.attackGuard": "공격 / 막기",
@@ -257,6 +256,7 @@ export const ko = {
   "problem.not_enough_gold": "골드가 모자라요",
   "problem.not_in_village": "상점은 마을에 있어요",
   "problem.no_item": "가방에 없어요",
+  "problem.bag_full": "가방에 더 못 넣어요 (한 칸에 99개까지)",
   "problem.too_low_advance": "Lv{n}부터 전직할 수 있어요",
 
   "slot.weapon": "무기",
@@ -267,6 +267,8 @@ export const ko = {
   "bag.job": "전직",
   "bag.advanceAt": "Lv{at}이 되면 전직할 수 있어요 (지금 Lv{level})",
   "bag.pickPath": "전직할 길을 고르세요. 한 번 고르면 바꿀 수 없어요.",
+  "bag.confirmPath": "{name}의 길로 전직할까요? 한 번 고르면 바꿀 수 없어요.",
+  "bag.advanceGo": "전직하기",
   "bag.unequip": "해제",
   "bag.empty": "가방이 비었어요",
   "bag.pickHint": "아이템을 누르면 여기에 설명과 쓰는 법이 나와요.",
@@ -609,7 +611,7 @@ export const ko = {
   "grove.daysLeft": "{n}일 남음",
   "grove.stage.1": "30% 꽃이 피고 골드 200",
   "grove.stage.2": "60% 하늘이 맑아지고 건물 터가 열림",
-  "grove.stage.3": "100% 정화의 수호자, 골드 500",
+  "grove.stage.3": "100% 정화의 수호자(채널 1), 골드 500",
   "grove.hazeHint": "몬스터를 잡으면 숲이 정화돼요.\n60%가 되면 안개가 걷혀요 (이번 주 {n}%)",
   "grove.village": "마을 복구",
   "grove.building.herbalist": "약초상",

@@ -43,9 +43,10 @@ export async function writeRanking(account: string, character: Character): Promi
   else await $global.addCollectionItem(RANKING_COLLECTION, { ...row });
 }
 
-// The board, best first.
+// The board, best first. The store sorts before it cuts, or a board longer than RANKING_READ would
+// be read from wherever the store happened to start.
 export async function readRanking(): Promise<RankRow[]> {
-  const items = await $global.getCollectionItems(RANKING_COLLECTION, { limit: RANKING_READ });
+  const items = await $global.getCollectionItems(RANKING_COLLECTION, { orderBy: [{ field: "xp", direction: "desc" }], limit: RANKING_READ });
   return rankRows(items as unknown as RankRow[]);
 }
 

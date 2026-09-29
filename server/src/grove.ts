@@ -7,7 +7,7 @@ import {
   type GroveRecord, type GroveView, type VillageRecord,
 } from "../../src/game/world/grove";
 import { GROVE_GUARDIAN_ZONE, MONSTERS, type MonsterState } from "../../src/game/world/monsters";
-import { zoneLayout, type ZoneId } from "../../src/game/world/zones";
+import { readChannelRoom, zoneLayout, type ZoneId } from "../../src/game/world/zones";
 import { withRoomLock } from "./hunt";
 
 // A server's grove and village records (one item each in these collections), and the room side of
@@ -78,8 +78,13 @@ export async function markHunter(account: string, world: string, now: number): P
   if (next) await $global.updateUserState(account, { grove: { ...(all ?? {}), [world]: next } });
 }
 
+// The guardian comes to this channel's first field only: one for the whole server, where everyone
+// knows to look.
+const GUARDIAN_CHANNEL = 1;
+
 // Every tick: once FLUSH_MS of ticks have passed, the room's kills go into the server's record (which
-// may open a site), and the first field calls up the guardian in a week the grove was cleansed.
+// may open a site), and the first field of channel 1 calls up the guardian in a week the grove was
+// cleansed, once: the record keeps the week, so a room that forgot it does not call it again.
 // How much of each room's ticks has passed since it last flushed. Kept in memory, not in the room:
 // writing it every tick would be a room write five times a second. A restart only delays a flush.
 const sinceFlush = new Map<string, number>();
@@ -89,29 +94,32 @@ export async function flushRoom(world: string, zone: ZoneId, roomId: string, del
   sinceFlush.set(roomId, since);
   if (since < FLUSH_MS) return;
   sinceFlush.set(roomId, 0);
-  const state = await $room.getRoomState(["groveKills", "guardianWeek"]);
+  const state = await $room.getRoomState(["groveKills"]);
   const kills = typeof state.groveKills === "number" ? state.groveKills : 0;
-  const record = await withGroveLock(world, async () => {
+  const callsGuardian = zone === GROVE_GUARDIAN_ZONE && readChannelRoom(roomId)?.channel === GUARDIAN_CHANNEL;
+  const summon = await withGroveLock(world, async () => {
     const { id, record } = await readGroveRecord(world);
     const added = addKills(record, kills, now);
-    if (kills > 0 || added.record.week !== record.week) await writeItem(GROVE_COLLECTION, world, id, added.record);
+    const guardian = callsGuardian && added.record.paid >= 3 && added.record.guardian !== added.record.week;
+    const next = guardian ? { ...added.record, guardian: added.record.week } : added.record;
+    if (kills > 0 || next.week !== record.week || guardian) await writeItem(GROVE_COLLECTION, world, id, next);
     if (added.opened) {
       const { id: villageId, village } = await readVillageRecord(world);
       await writeVillageRecord(world, villageId, openSite(village));
     }
-    return added.record;
+    return guardian;
   });
   await withRoomLock(roomId, async () => {
     const latest = (await $room.getRoomState(["groveKills"])).groveKills;
     await $room.updateRoomState({ groveKills: Math.max(0, (typeof latest === "number" ? latest : 0) - kills) });
-    if (zone === GROVE_GUARDIAN_ZONE && record.paid >= 3 && state.guardianWeek !== record.week) {
+    if (summon) {
       const monsters = ((await $room.getRoomState(["monsters"])).monsters ?? {}) as Record<string, MonsterState>;
       const at = guardianSpot();
       monsters.guardian = {
         type: "grove_guardian", x: at.x, z: at.z, yaw: 0, hp: MONSTERS.grove_guardian.hp, alive: true, stunnedUntil: 0,
         attackReadyAt: 0, respawnAt: 0, homeX: at.x, homeZ: at.z,
       };
-      await $room.updateRoomState({ monsters, guardianWeek: record.week });
+      await $room.updateRoomState({ monsters });
     }
   });
 }

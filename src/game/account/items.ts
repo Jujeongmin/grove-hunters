@@ -117,6 +117,11 @@ export function readGear(raw: unknown): Gear {
   return { weapon: worn("weapon"), armor: worn("armor") };
 }
 
+// Whether n more of an item still fit its stack. What is bought or made must; loot past it is lost.
+export function fitsInBag(bag: Bag, id: ItemId, n: number): boolean {
+  return (bag[id] ?? 0) + n <= MAX_STACK;
+}
+
 // The bag with n more of an item (never past MAX_STACK), or n fewer; fewer than it has is refused.
 export function addItem(bag: Bag, id: ItemId, n: number): Bag {
   const have = bag[id] ?? 0;
