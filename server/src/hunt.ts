@@ -139,7 +139,8 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   const regen = now >= (typeof state.regenAt === "number" ? state.regenAt : 0);
   for (const [account, f] of fighters) {
     if (hurt.has(account)) {
-      await $room.updateUserState(account, { hp: f.hp, dead: f.dead, hitAt: f.hitAt }, { returnState: false });
+      // A blow takes a rider off the mount.
+      await $room.updateUserState(account, { hp: f.hp, dead: f.dead, hitAt: f.hitAt, riding: null }, { returnState: false });
     } else if (regen && !f.dead && f.hp < f.maxHp && now - f.hitAt >= CALM_MS) {
       const hp = Math.min(f.maxHp, f.hp + Math.ceil(f.maxHp * REGEN_SHARE));
       await $room.updateUserState(account, { hp }, { returnState: false });
@@ -226,7 +227,8 @@ export async function strike(zone: ZoneId, account: string, monsterId: unknown, 
   if (!m.alive) throw new RuleViolation("monster_dead");
   const weapon = WEAPONS[f.playerClass];
   if (!inStrikeReach(f.pose, m, weapon, true)) throw new RuleViolation("out_of_range");
-  await $room.updateMyState({ strikeReadyAt: now + weapon.intervalMs * COOLDOWN_GRACE }, { returnState: false });
+  // Striking takes a rider off the mount.
+  await $room.updateMyState({ strikeReadyAt: now + weapon.intervalMs * COOLDOWN_GRACE, riding: null }, { returnState: false });
   const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power), 0, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;
@@ -246,7 +248,8 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
   const readyAt = ready[slot];
   if (typeof readyAt === "number" && now < readyAt) throw new RuleViolation("too_fast");
   await $room.updateMyState(
-    { skillReady: { ...ready, [slot]: now + skill.cooldownMs * COOLDOWN_GRACE } },
+    // A skill takes a rider off the mount too.
+    { skillReady: { ...ready, [slot]: now + skill.cooldownMs * COOLDOWN_GRACE }, riding: null },
     { returnState: false },
   );
   if (skill.heal > 0) {

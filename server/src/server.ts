@@ -30,7 +30,10 @@ import {
 } from "../../src/game/world/zones";
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
-  channelPlayers, claimName, deleteCharacter, dropRanking, findNickname, friendChannels, friendEntry, grantPurchase, markSeen,
+  DUPLICATE_REFUND, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, rollMount, type MountId,
+} from "../../src/game/account/mounts";
+import {
+  channelPlayers, claimName, deleteCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, grantPurchase, readGems, markSeen,
   ownsFullGame, pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
@@ -118,6 +121,16 @@ interface Pay {
   gold: number;
   items: ItemId[];
   felled: MonsterType[];
+}
+
+// Your gems, the mounts you own and the one you ride (the first you own if none was picked, or it
+// is no longer yours).
+interface MountsView { gems: number; owned: MountId[]; selected: MountId | null }
+async function mountsView(account: string): Promise<MountsView> {
+  const state = await $global.getUserState(account);
+  const owned = ownedMounts(state.mounts, await ownsFullGame(account));
+  const picked = readMountId(state.mount);
+  return { gems: await readGems(account), owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null };
 }
 
 // Lag between two potions sent a second apart can bring them closer; this much of the gap is held.
@@ -442,9 +455,60 @@ export class Server {
   async $onItemPurchased(raw: unknown): Promise<{ success: boolean; code: string }> {
     const event = readPurchaseEvent(raw);
     if (!event) return { success: false, code: "invalid_event" };
-    if (event.productId !== FULL_GAME_PRODUCT) return { success: false, code: "unknown_product" };
-    const granted = await $lock(`purchase:${event.purchaseId}`, () => grantPurchase(event));
+    const gems = gemsFor(event.productId, event.quantity);
+    if (event.productId !== FULL_GAME_PRODUCT && gems === null) return { success: false, code: "unknown_product" };
+    const granted = await $lock(`purchase:${event.purchaseId}`, () =>
+      gems === null ? grantPurchase(event) : grantGems(event, gems));
     return { success: true, code: granted ? "granted" : "already_granted" };
+  }
+
+  // Your gems and mounts: what you own (drawn, and the full game's own), and the one you ride.
+  async getMounts(): Promise<MountsView> {
+    return mountsView($sender.account);
+  }
+
+  // One draw for PULL_COST gems: a mount to keep, or, if already owned, DUPLICATE_REFUND gems back.
+  async pullMount(): Promise<MountsView & { mount: MountId; repeat: boolean }> {
+    const account = $sender.account;
+    return $lock(`mounts:${account}`, async () => {
+      await changeGems(account, -PULL_COST);
+      const mount = rollMount(Math.random);
+      const state = await $global.getUserState(account);
+      const drawn = ownedMounts(state.mounts, false);
+      const repeat = drawn.includes(mount);
+      if (repeat) await changeGems(account, DUPLICATE_REFUND);
+      else await $global.updateUserState(account, { mounts: [...drawn, mount] });
+      return { ...(await mountsView(account)), mount, repeat };
+    });
+  }
+
+  // The mount you ride from now on (any you own).
+  async selectMount(id: unknown): Promise<MountsView> {
+    const account = $sender.account;
+    const mount = readMountId(id);
+    const view = await mountsView(account);
+    if (!mount || !view.owned.includes(mount)) throw new RuleViolation("no_mount");
+    await $global.updateUserState(account, { mount });
+    return { ...view, selected: mount };
+  }
+
+  // On your mount, or off it. Striking, a skill or a blow takes you off (see hunt.ts).
+  async ride(on: unknown): Promise<{ riding: MountId | null }> {
+    const { roomId } = currentChannel();
+    const account = $sender.account;
+    if (on !== true) {
+      await $room.updateMyState({ riding: null }, { returnState: false });
+      return { riding: null };
+    }
+    const view = await mountsView(account);
+    const mount = view.selected;
+    if (!mount) throw new RuleViolation("no_mount");
+    return withRoomLock(roomId, async () => {
+      const mine = await $room.getMyState();
+      if (mine.dead === true || !isPose(mine.pose)) throw new RuleViolation("unavailable");
+      await $room.updateMyState({ riding: mount }, { returnState: false });
+      return { riding: mount };
+    });
   }
 
   // The server you play on, picked each time you start.
@@ -524,6 +588,8 @@ export class Server {
     await $room.updateMyState({
       pose: { x: spot.x, z: spot.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
       characterId: character.id,
+      // Every room is come into on foot.
+      riding: null,
       look: zoneLook(character),
       savedAt: now,
       xp: character.xp, maxHp, gear, ...vitals,
@@ -567,7 +633,9 @@ export class Server {
     if (mine.dead === true) return;
     const at: unknown = (mine.pose as { at?: unknown }).at;
     const last = typeof at === "number" ? { x: mine.pose.x, z: mine.pose.z, at } : null;
-    const saved = await writeZonePose(zone, raw, now, last);
+    // A rider may go as fast as the mount runs.
+    const mount = readMountId(mine.riding);
+    const saved = await writeZonePose(zone, raw, now, last, mount ? MOUNTS[mount].speed : 1);
     const savedAt = mine.savedAt;
     if (now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {
       await saveSpot($sender.account, { zone, x: saved.x, z: saved.z });

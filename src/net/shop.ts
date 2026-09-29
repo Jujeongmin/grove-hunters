@@ -44,14 +44,38 @@ export function fullGameOffer(): Offer {
 }
 
 export function buyFullGame(verseId: string): void {
+  buyProduct(verseId, FULL_GAME_PRODUCT);
+}
+
+// Opens Verse8's dialog for one of our products (the full game, a gem pack).
+export function buyProduct(verseId: string, productId: string): void {
   if (inEditorPreview() && window.parent !== window) {
     window.parent.postMessage(
-      { type: "OPEN_VX_SHOP_DIALOG", payload: { verseId, productId: FULL_GAME_PRODUCT, stage: "PREVIEW" } },
+      { type: "OPEN_VX_SHOP_DIALOG", payload: { verseId, productId, stage: "PREVIEW" } },
       "*",
     );
     return;
   }
-  VXShop.buyItem(FULL_GAME_PRODUCT);
+  VXShop.buyItem(productId);
+}
+
+// What a product costs in VX, as the shop lists it; null when the shop does not know it (outside
+// Verse8, or a product not yet registered in the dashboard).
+export function productPrice(productId: string): number | null {
+  try {
+    return VXShop.getItem(productId)?.price ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Called when the dialog for any product closes: which, and whether it was bought.
+export function onAnyShopClosed(listener: (productId: string, purchased: boolean) => void): () => void {
+  try {
+    return VXShop.onClose((payload) => listener(payload.productId, payload.purchased));
+  } catch {
+    return () => undefined;
+  }
 }
 
 // Called with true when the player went through with the purchase, false when they closed it.

@@ -8,6 +8,8 @@ import type { JobId } from "../combat/jobs";
 import type { Effects } from "./effects";
 import { createLabel, setLabel } from "./labels";
 import { ActionBlender, clipByName, skinnedHeight } from "./skinned";
+import type { MountId } from "../account/mounts";
+import { MOUNT_LOOKS } from "./mountLooks";
 
 // The heroes stand a little shorter than a person; the camera and reach are set around this.
 export const PLAYER_HEIGHT = 1.45;
@@ -53,6 +55,71 @@ interface Animated {
   blender: ActionBlender;
 }
 
+// A mount's model, for a rider (see setMount).
+export interface MountModel {
+  id: MountId;
+  object: THREE.Object3D;
+  clips: THREE.AnimationClip[];
+}
+
+// How a rider sits (radians): thighs forward, knees bent back down, legs apart over the mount's back.
+const RIDE_THIGH = 1.25;
+const RIDE_KNEE = 1.35;
+const RIDE_SPREAD = 0.7;
+
+interface Riding {
+  id: MountId;
+  object: THREE.Object3D;
+  mixer: THREE.AnimationMixer;
+  blender: ActionBlender;
+  idle: THREE.AnimationAction;
+  move: THREE.AnimationAction;
+}
+
+// A leg's bones, and where its foot sits in the lower leg's frame at rest: the rig keeps its feet
+// under the root (IK style), so a bent leg carries its foot along by hand.
+interface Leg {
+  upper: THREE.Bone;
+  lower: THREE.Bone;
+  foot: THREE.Bone;
+  footInLower: THREE.Vector3;
+  side: 1 | -1;
+}
+
+const X_AXIS = new THREE.Vector3(1, 0, 0);
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+
+// Turns a bone by `angle` about a world axis (its parent's world frame read now).
+function turnInWorld(bone: THREE.Bone, axis: THREE.Vector3, angle: number): void {
+  const parent = bone.parent!.getWorldQuaternion(new THREE.Quaternion());
+  const turn = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+  bone.quaternion.premultiply(parent.clone().invert().multiply(turn).multiply(parent));
+  bone.updateMatrixWorld(true);
+}
+
+// The legs of a hero's rig (Quaternius RPG pack: UpperLeg.L, LowerLeg.L, Foot.L; three drops the dots),
+// with each foot's place in its lower leg's frame taken from the bind pose. Null for another rig.
+function findLegs(body: THREE.Object3D): Leg[] | null {
+  let skeleton: THREE.Skeleton | null = null;
+  body.traverse((o) => {
+    const mesh = o as THREE.SkinnedMesh;
+    if (!skeleton && mesh.isSkinnedMesh) skeleton = mesh.skeleton;
+  });
+  if (!skeleton) return null;
+  const { bones, boneInverses } = skeleton as THREE.Skeleton;
+  const bind = (bone: THREE.Bone) => boneInverses[bones.indexOf(bone)].clone().invert();
+  const legs: Leg[] = [];
+  for (const [s, side] of [["L", 1], ["R", -1]] as const) {
+    const upper = bones.find((b) => b.name === `UpperLeg${s}`);
+    const lower = bones.find((b) => b.name === `LowerLeg${s}`);
+    const foot = bones.find((b) => b.name === `Foot${s}`);
+    if (!upper || !lower || !foot) return null;
+    const footInLower = new THREE.Vector3().setFromMatrixPosition(bind(lower).invert().multiply(bind(foot)));
+    legs.push({ upper, lower, foot, footInLower, side });
+  }
+  return legs;
+}
+
 // Stand-in body for tests and for a model that failed to load.
 export function placeholderBody(): THREE.Object3D {
   const root = new THREE.Group();
@@ -95,6 +162,9 @@ export class PlayerActor {
   // When the last swing began (seconds of play), so a pause starts the combo over.
   private clock = 0;
   private lastSwingAt = Number.NEGATIVE_INFINITY;
+  // The mount under this hero, if riding; its legs, found on first riding.
+  private riding: Riding | null = null;
+  private legs: Leg[] | null | undefined = undefined;
 
   constructor(readonly account: string, model: PlayerModel | null) {
     this.body = model?.object ?? placeholderBody();
@@ -108,6 +178,69 @@ export class PlayerActor {
       o.frustumCulled = false;
     });
     this.object.visible = false;
+  }
+
+  // Which mount this hero rides (null: on foot).
+  get mountId(): MountId | null {
+    return this.riding?.id ?? null;
+  }
+
+  // Up on a mount, or down (null). The mount stands under the hero, sized to it, and the hero sits on
+  // its back with the legs bent over it.
+  setMount(model: MountModel | null): void {
+    if (this.riding) {
+      this.object.remove(this.riding.object);
+      this.riding.mixer.stopAllAction();
+      this.riding = null;
+    }
+    this.body.position.set(0, 0, 0);
+    if (!model) return;
+    const look = MOUNT_LOOKS[model.id];
+    const object = model.object;
+    object.scale.setScalar((PLAYER_HEIGHT * look.height) / skinnedHeight(object));
+    object.traverse((o) => {
+      o.frustumCulled = false;
+    });
+    this.object.add(object);
+    // Its lowest point on the ground (or at its hover): not every model stands on its origin.
+    object.position.set(0, 0, 0);
+    this.object.updateMatrixWorld(true);
+    const bottom = new THREE.Box3().setFromObject(object).min.y - this.object.getWorldPosition(new THREE.Vector3()).y;
+    object.position.y = (look.hover ?? 0) - bottom;
+    const mixer = new THREE.AnimationMixer(object);
+    const find = (name: string) => THREE.AnimationClip.findByName(model.clips, name) ?? model.clips[0];
+    const idle = mixer.clipAction(find(look.idle));
+    const move = mixer.clipAction(find(look.move));
+    this.riding = { id: model.id, object, mixer, idle, move, blender: new ActionBlender(idle) };
+    // Sat on its back: the hips go to the seat (the hips' height over the feet read from the rig at rest).
+    if (this.legs === undefined) this.legs = findLegs(this.body);
+    const seat = PLAYER_HEIGHT * look.height * look.seat + (look.hover ?? 0);
+    this.body.position.set(0, seat - this.hipsHeight(), look.forward);
+  }
+
+  // How high the hips are over the feet, standing.
+  private hipsHeight(): number {
+    let hips: THREE.Object3D | null = null;
+    this.body.traverse((o) => {
+      if (!hips && o.name === "Hips") hips = o;
+    });
+    if (!hips) return PLAYER_HEIGHT * 0.38;
+    this.object.updateMatrixWorld(true);
+    return (hips as THREE.Object3D).getWorldPosition(new THREE.Vector3()).y - this.object.getWorldPosition(new THREE.Vector3()).y;
+  }
+
+  // The legs bent over the mount, after the clip has posed the rest of the body.
+  private sitLegs(): void {
+    if (!this.legs) return;
+    this.body.updateMatrixWorld(true);
+    for (const leg of this.legs) {
+      turnInWorld(leg.upper, X_AXIS, -RIDE_THIGH);
+      turnInWorld(leg.upper, Z_AXIS, leg.side * RIDE_SPREAD);
+      turnInWorld(leg.lower, X_AXIS, RIDE_KNEE);
+      const foot = leg.lower.localToWorld(leg.footInLower.clone());
+      leg.foot.position.copy(leg.foot.parent!.worldToLocal(foot));
+      leg.foot.updateMatrixWorld(true);
+    }
   }
 
   // Whether an attack or skill still holds this hero in place.
@@ -223,8 +356,16 @@ export class PlayerActor {
     else if (this.swingLeft > 0) {
       // The swing plays through.
     } else if (pose.block) a.blender.fadeTo(a.guard, 0.08);
-    else a.blender.fadeTo(this.moveClip(a, dx, dz, pose.yaw));
+    // A rider sits still; the mount does the walking.
+    else a.blender.fadeTo(this.riding ? a.idle : this.moveClip(a, dx, dz, pose.yaw));
     a.mixer.update(dt);
+    const ride = this.riding;
+    if (ride) {
+      ride.blender.fadeTo(Math.hypot(dx, dz) >= MOVING ? ride.move : ride.idle);
+      ride.mixer.update(dt);
+      this.object.updateMatrixWorld(true);
+      this.sitLegs();
+    }
     this.object.visible = true;
   }
 

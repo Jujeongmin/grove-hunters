@@ -54,16 +54,53 @@ export async function ownsFullGame(account: string): Promise<boolean> {
   return playsFree(account) || (await $global.getUserState(account)).ownsFullGame === true;
 }
 
-// Records a purchase once per receipt and unlocks the game. False when the receipt was seen before.
-export async function grantPurchase(event: PurchaseEvent): Promise<boolean> {
+// Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought;
+// should it fail, the receipt is taken back so the platform's retry grants it then.
+async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promise<boolean> {
   const seen = await $global.getCollectionItems(PURCHASES_COLLECTION, {
     filters: [{ field: "purchaseId", operator: "==", value: event.purchaseId }],
     limit: 1,
   });
   if (seen.length > 0) return false;
-  await $global.addCollectionItem(PURCHASES_COLLECTION, { ...event, at: Date.now() });
-  await $global.updateUserState(event.account, { ownsFullGame: true });
+  const kept = await $global.addCollectionItem(PURCHASES_COLLECTION, { ...event, at: Date.now() });
+  try {
+    await grant();
+  } catch (error) {
+    const id = (kept as { __id?: string } | undefined)?.__id;
+    if (id) await $global.deleteCollectionItem(PURCHASES_COLLECTION, id);
+    throw error;
+  }
   return true;
+}
+
+// Unlocks the game, once per receipt.
+export function grantPurchase(event: PurchaseEvent): Promise<boolean> {
+  return onceper(event, async () => {
+    await $global.updateUserState(event.account, { ownsFullGame: true });
+  });
+}
+
+// Gems onto the buyer's account, once per receipt.
+export function grantGems(event: PurchaseEvent, gems: number): Promise<boolean> {
+  return onceper(event, async () => {
+    await changeGems(event.account, gems);
+  });
+}
+
+// An account's gems (kept in its global user state; see mounts.ts).
+export async function readGems(account: string): Promise<number> {
+  const gems = (await $global.getUserState(account)).gems;
+  return typeof gems === "number" && Number.isInteger(gems) && gems > 0 ? gems : 0;
+}
+
+// Adds (or, negative, takes) gems under the account's gem lock; taking more than there are is refused.
+export function changeGems(account: string, delta: number): Promise<number> {
+  return $lock(`gems:${account}`, async () => {
+    const next = (await readGems(account)) + delta;
+    if (next < 0) throw new RuleViolation("not_enough_gems");
+    await $global.updateUserState(account, { gems: next });
+    return next;
+  });
 }
 
 // An account's characters and the active one. Reading never writes: accounts from before characters
@@ -308,13 +345,13 @@ const STEP_SLACK = 1;
 // the last pose than walking allows, and no higher than what is underfoot plus a jump. Returns where
 // it put them.
 export async function writeZonePose(
-  zone: ZoneId, pose: Pose, now: number, last: { x: number; z: number; at: number } | null,
+  zone: ZoneId, pose: Pose, now: number, last: { x: number; z: number; at: number } | null, speed = 1,
 ): Promise<{ x: number; z: number }> {
   const layout = zoneLayout(zone);
   let x = Math.min(Math.max(pose.x, 0), layout.cols * layout.tileSize);
   let z = Math.min(Math.max(pose.z, 0), layout.rows * layout.tileSize);
   if (last) {
-    const most = (WALK_SPEED * STEP_ALLOWANCE * Math.max(0, now - last.at)) / 1000 + STEP_SLACK;
+    const most = (WALK_SPEED * speed * STEP_ALLOWANCE * Math.max(0, now - last.at)) / 1000 + STEP_SLACK;
     const d = Math.hypot(x - last.x, z - last.z);
     if (d > most) {
       x = last.x + ((x - last.x) * most) / d;

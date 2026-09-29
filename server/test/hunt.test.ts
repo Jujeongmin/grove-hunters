@@ -284,6 +284,29 @@ describe("hunting", () => {
     expect(state.characterMap[state.active].xp).toBe(0);
   });
 
+  test("a rider gets off on striking or on being hit, and rides faster than a walker walks", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    await server.selectMount("deer");
+    await server.ride(true);
+    // Half a second on: a walker's pose may move 4 m at most (pace, allowance and slack), a rider's more.
+    const at = Date.now();
+    await $room.updateMyState({ pose: { ...(await $room.getMyState()).pose, at: at - 500 } });
+    await server.reportPose({ x: spawn.x, z: spawn.z - 6, yaw: 0 });
+    const walked = spawn.z - (await $room.getMyState()).pose.z;
+    expect(walked).toBeGreaterThan(4.5);
+    await standAt(server, spawn.x, spawn.z);
+    await only("rat", spawn.x, spawn.z - 1.5, 1);
+    await server.strike("m0");
+    expect((await $room.getMyState()).riding).toBeNull();
+
+    await server.ride(true);
+    await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
+    await server.simulateTick(entry.roomId, 200);
+    expect((await $room.getMyState()).riding).toBeNull();
+  });
+
   test("a reported pose is held to walking pace", async (server) => {
     await toForest(server, "test-a");
     const spawn = zoneLayout("forest1").playerSpawn;

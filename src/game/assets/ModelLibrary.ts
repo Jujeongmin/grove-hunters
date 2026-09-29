@@ -34,6 +34,10 @@ export class ModelLibrary {
     );
   }
 
+  has(name: string): boolean {
+    return this.loaded.has(name);
+  }
+
   get(name: string): LoadedModel {
     const model = this.loaded.get(name);
     if (!model) throw new Error(`model not preloaded: ${name}`);

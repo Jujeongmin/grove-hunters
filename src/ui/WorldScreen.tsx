@@ -29,6 +29,7 @@ import { RankingPanel } from "./RankingPanel";
 import { iconFor } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
+import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
 import { hazeHint, weekOf, type GroveView } from "../game/world/grove";
 import type { NpcId } from "../game/world/npcs";
@@ -135,7 +136,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -335,6 +336,7 @@ function ZoneScreen({
     { id: "grove", label: t("menu.grove"), key: "G", code: "KeyG", act: () => toggle("grove"), on: panel === "grove" },
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith" },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
+    { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts" },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
       id: "menu", label: t("menu.settings"), key: "P", code: "KeyP",
@@ -549,6 +551,7 @@ function ZoneScreen({
               controls={view.current.controls} auto={hud.auto}
               onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()}
               keys={keyHints} glowAuto={glow === "auto"}
+              riding={hud.riding !== null} onRide={() => view.current?.toggleRide()}
             />
           )}
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}
@@ -598,6 +601,7 @@ function ZoneScreen({
           }}
         />
       )}
+      {panel === "mounts" && <MountPanel client={client} owned={owned} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (
         <DonatePanel

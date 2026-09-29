@@ -11,6 +11,7 @@ import type { ZoneEntry, ZoneId, ZoneLook } from "../game/world/zones";
 import { errorCode } from "./errors";
 import type { EnhanceOutcome } from "../game/account/forge";
 import { readChat, type ChatMessage } from "../game/world/chat";
+import { readMountId, type MountId } from "../game/account/mounts";
 import type { MatchTransport } from "./transport";
 
 export type WorldPhase = "idle" | "entering" | "in" | "travelling" | "error";
@@ -20,6 +21,15 @@ export interface OtherPlayer {
   account: string;
   pose: Pose;
   look: ZoneLook;
+  // The mount they are on, if any.
+  riding: MountId | null;
+}
+
+// Your gems and mounts, as the server keeps them (see mounts.ts).
+export interface MountsView {
+  gems: number;
+  owned: MountId[];
+  selected: MountId | null;
 }
 
 // You in a fight, as the server keeps it.
@@ -30,6 +40,8 @@ export interface Vitals {
   xp: number;
   // XP lost to the last fall (0 when none).
   lostXp: number;
+  // The mount you are on, as the server has it (a blow or a strike takes you off).
+  riding: MountId | null;
 }
 
 export interface WorldState {
@@ -120,7 +132,7 @@ function readMonsters(raw: unknown): Record<string, MonsterState> {
 
 function readVitals(user: Record<string, unknown>): Vitals | null {
   if (typeof user.hp !== "number" || typeof user.maxHp !== "number") return null;
-  return { hp: user.hp, maxHp: user.maxHp, dead: user.dead === true, xp: num(user.xp), lostXp: num(user.lostXp) };
+  return { hp: user.hp, maxHp: user.maxHp, dead: user.dead === true, xp: num(user.xp), lostXp: num(user.lostXp), riding: readMountId(user.riding) };
 }
 
 // Your place in the open world: which zone and channel you are in, who else is there and where,
@@ -370,6 +382,34 @@ export class WorldClient {
     }
   }
 
+  // Mounts: your gems and mounts (from the menus too), a draw, picking the one to ride, and getting
+  // on or off. Null or a problem code when refused.
+  async mounts(): Promise<MountsView | null> {
+    return this.transport.call<MountsView>("getMounts").catch(() => null);
+  }
+
+  async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean }) | { problem: string }> {
+    try {
+      return await this.transport.call<MountsView & { mount: MountId; repeat: boolean }>("pullMount");
+    } catch (error) {
+      return { problem: errorCode(error) };
+    }
+  }
+
+  async selectMount(id: MountId): Promise<MountsView | { problem: string }> {
+    try {
+      return await this.transport.call<MountsView>("selectMount", [id]);
+    } catch (error) {
+      return { problem: errorCode(error) };
+    }
+  }
+
+  async ride(on: boolean): Promise<MountId | null> {
+    if (this.current.phase !== "in") return null;
+    const r = await this.transport.call<{ riding: MountId | null }>("ride", [on]).catch(() => null);
+    return r?.riding ?? null;
+  }
+
   // The smith: enhancing what is worn in a slot (the outcome, or why it was refused) and making things.
   async enhance(slot: Slot): Promise<{ outcome: EnhanceOutcome } | { problem: string }> {
     if (this.current.phase !== "in") return { problem: "unavailable" };
@@ -487,7 +527,7 @@ export class WorldClient {
       if (!look || !isPose(user.pose)) continue;
       const p = user.pose;
       others.push({
-        account, look,
+        account, look, riding: readMountId(user.riding),
         pose: {
           x: p.x, z: p.z, yaw: p.yaw, y: readJumpY(p.y), block: p.block === true, swing: readSwing(p.swing), skill: readSwing(p.skill),
           slot: readSlot(p.slot) ?? 0,

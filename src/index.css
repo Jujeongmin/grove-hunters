@@ -406,6 +406,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }
 .pad-auto.on { background: rgba(157, 255, 176, 0.35); border-color: #9dffb0; color: #eaffef; }
+/* Getting on and off a mount: above auto-battle, lit while riding. */
+.pad-ride { right: 170px; bottom: 150px; border-color: rgba(255, 211, 106, 0.55); }
+.pad-ride.on { background: rgba(255, 211, 106, 0.3); border-color: #ffd36a; color: #fff4d6; }
 /* While auto-battle runs: a green glow breathes round the button and a hand sweeps round the clock. */
 .pad-auto.on { animation: auto-glow 1.6s ease-in-out infinite; }
 .pad-auto.on::after {
@@ -1278,3 +1281,38 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .delete-actions { display: flex; justify-content: flex-end; gap: 16px; }
 .delete-confirm { color: var(--blood); }
 .delete-confirm:disabled { opacity: 0.35; }
+
+/* Mounts: the ones you own (tap to ride), the draw with its odds in full, and gems for VX. */
+.mount-panel { width: 620px; max-height: calc(100% - 24px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.mount-panel h2 { margin: 0; }
+.mount-panel .note { margin: 0; font-size: 12px; }
+.mount-head { display: flex; align-items: center; justify-content: space-between; }
+.mount-gems { display: flex; align-items: center; gap: 4px; font: 700 16px var(--font-head); color: #bfe8ff; }
+.mount-gems img, .mount-pack img { width: 22px; height: 22px; image-rendering: pixelated; }
+.mount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mount-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; cursor: pointer; color: inherit; text-align: left;
+  border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.05);
+}
+.mount-card b { font: 700 14px var(--font-head); }
+.mount-card span { font-size: 11px; color: var(--ink-dim); }
+.mount-card em { font-style: normal; font-size: 11px; color: var(--ember); }
+.mount-card.locked { opacity: 0.45; cursor: default; }
+.mount-card.picked { border-color: #ffd36a; background: rgba(255, 211, 106, 0.14); }
+/* The tiers' colours: basic and common plain, rare blue, epic purple, legendary gold. */
+.tier-rare b, .mount-odds .tier-rare th, .mount-result.tier-rare { color: #7fc4ff; }
+.tier-epic b, .mount-odds .tier-epic th, .mount-result.tier-epic { color: #d59bff; }
+.tier-legendary b, .mount-odds .tier-legendary th, .mount-result.tier-legendary { color: #ffd36a; }
+.mount-card.tier-legendary:not(.locked) { box-shadow: 0 0 10px rgba(255, 211, 106, 0.35); }
+.mount-draw { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.mount-draw-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mount-result { font: 700 14px var(--font-head); animation: enhance-pop 0.45s ease-out; }
+.mount-odds { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mount-odds caption { text-align: left; font: 700 13px var(--font-head); padding-bottom: 2px; }
+.mount-odds th { text-align: left; white-space: nowrap; padding: 2px 10px 2px 0; font-weight: 700; }
+.mount-odds td { color: var(--ink-dim); padding: 2px 0; }
+.mount-shop { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.mount-packs { display: flex; gap: 6px; }
+.mount-pack { flex: 1; flex-direction: column; gap: 2px; padding: 8px; }
+.mount-pack b { font: 700 13px var(--font-head); }
+.mount-pack span { font-size: 12px; color: var(--ember); }

@@ -108,6 +108,9 @@ interface PadButtonsProps {
   keys: boolean;
   // The tutorial's pointer at the auto-battle button.
   glowAuto?: boolean;
+  // On a mount, and the button that gets you on or off.
+  riding: boolean;
+  onRide: () => void;
 }
 
 // One round, see-through button: its picture (496 RPG icons pack), its name, and its key.
@@ -125,7 +128,7 @@ function PadButton({ id, label, keyLabel, className = "", ...rest }: {
 
 // The round buttons at the bottom right, on every device: a big attack button (held for a flurry)
 // with guard, jump and auto-battle round it. People are talked to by clicking (or tapping) them.
-export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto }: PadButtonsProps) {
+export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto, riding, onRide }: PadButtonsProps) {
   useEffect(() => () => {
     controls.setVirtualFiring(false);
     controls.setVirtualBlocking(false);
@@ -146,6 +149,7 @@ export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto }: P
       <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
       <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
       <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={[auto && "on", glowAuto && "tutorial-glow"].filter(Boolean).join(" ")} onClick={onAuto} />
+      <PadButton id="ride" label={riding ? t("pad.dismount") : t("pad.ride")} keyLabel={keys ? "T" : null} className={riding ? "on" : ""} onClick={onRide} />
     </div>
   );
 }

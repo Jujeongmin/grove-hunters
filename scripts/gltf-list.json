@@ -119,6 +119,42 @@
     {
       "name": "npc_smith",
       "src": "art-src/ultimate-characters/x/glTF/Viking_Male.gltf"
+    },
+    {
+      "name": "mnt_deer",
+      "src": "art-src/ultimate-monsters/x/glTF/Deer.gltf"
+    },
+    {
+      "name": "mnt_pig",
+      "src": "art-src/ultimate-monsters/x/glTF/Pig.gltf"
+    },
+    {
+      "name": "mnt_chicken",
+      "src": "art-src/ultimate-monsters/x/glTF/Chicken.gltf"
+    },
+    {
+      "name": "mnt_penguin",
+      "src": "art-src/ultimate-monsters/x/glTF/Penguin.gltf"
+    },
+    {
+      "name": "mnt_panda",
+      "src": "art-src/ultimate-monsters/x/glTF/Panda.gltf"
+    },
+    {
+      "name": "mnt_crab",
+      "src": "art-src/ultimate-monsters/x/glTF/Crab.gltf"
+    },
+    {
+      "name": "mnt_yeti",
+      "src": "art-src/ultimate-monsters/x/glTF/Yeti.gltf"
+    },
+    {
+      "name": "mnt_dragon",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Dragon_Evolved.gltf"
+    },
+    {
+      "name": "mnt_drake",
+      "src": "art-src/ultimate-monsters/x/Flying/glTF/Dragon.gltf"
     }
   ]
 }

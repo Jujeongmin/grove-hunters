@@ -142,6 +142,146 @@
         "Walk"
       ]
     },
+    "mnt_chicken": {
+      "url": "assets/models/mnt_chicken.glb",
+      "bytes": 63272,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_crab": {
+      "url": "assets/models/mnt_crab.glb",
+      "bytes": 77696,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_deer": {
+      "url": "assets/models/mnt_deer.glb",
+      "bytes": 61276,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_dragon": {
+      "url": "assets/models/mnt_dragon.glb",
+      "bytes": 281112,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_drake": {
+      "url": "assets/models/mnt_drake.glb",
+      "bytes": 120048,
+      "animations": [
+        "Death",
+        "Fast_Flying",
+        "Flying_Idle",
+        "Headbutt",
+        "HitReact",
+        "No",
+        "Punch",
+        "Yes"
+      ]
+    },
+    "mnt_panda": {
+      "url": "assets/models/mnt_panda.glb",
+      "bytes": 77820,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_penguin": {
+      "url": "assets/models/mnt_penguin.glb",
+      "bytes": 62224,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_pig": {
+      "url": "assets/models/mnt_pig.glb",
+      "bytes": 58728,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
+    "mnt_yeti": {
+      "url": "assets/models/mnt_yeti.glb",
+      "bytes": 73596,
+      "animations": [
+        "Bite_Front",
+        "Bite_InPlace",
+        "Dance",
+        "Death",
+        "HitRecieve",
+        "Idle",
+        "Jump",
+        "No",
+        "Walk",
+        "Yes"
+      ]
+    },
     "mon_bat": {
       "url": "assets/models/mon_bat.glb",
       "bytes": 71260,

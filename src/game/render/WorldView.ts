@@ -26,6 +26,7 @@ import {
   BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
 } from "../world/monsters";
 import { Threats } from "../world/threats";
+import { MOUNTS, type MountId } from "../account/mounts";
 import type { Point2 } from "../rules/levelLayout";
 import { NPCS, NPC_MODELS, npcNear, npcFacing, npcSpot, type NpcId } from "../world/npcs";
 import { NpcActor } from "./NpcActor";
@@ -153,6 +154,8 @@ export interface WorldHud {
   xpInto: number;
   xpNeed: number;
   auto: boolean;
+  // The mount you are on, if any.
+  riding: MountId | null;
   // Auto-battle is hunting for a quest's monsters.
   seeking: boolean;
   // How far is left to walk on the way you were sent (a quest's monster, the elder, a portal on the
@@ -251,6 +254,11 @@ export class WorldView {
   // Where auto-battle last made headway, and the monsters it gave up on (until when).
   private stuckSince: { x: number; z: number; at: number } | null = null;
   private readonly unreachable = new Map<string, number>();
+  // The mount you are on: yours at once when you get on or off, the server's word when it takes you
+  // off (a blow, a strike); and the mount models being fetched.
+  private riding: MountId | null = null;
+  private serverRiding: MountId | null = null;
+  private readonly mountsLoading = new Set<string>();
   // The monsters swinging at you: auto-battle fights them first.
   private readonly threats = new Threats();
   private notes: { text: string; at: number }[] = [];
@@ -464,6 +472,44 @@ export class WorldView {
     this.input.press("KeyQ");
   }
 
+  // On your mount (the one picked in the mounts panel), or off it (T, or the pad's button).
+  toggleRide(): void {
+    if (this.riding) {
+      this.getOff();
+      return;
+    }
+    if (this.client.state.me?.dead) return;
+    void this.client.ride(true).then((id) => {
+      this.riding = id;
+    });
+  }
+
+  // Attacking takes you off your mount (the server does the same on its side).
+  private getOff(): void {
+    if (!this.riding) return;
+    this.riding = null;
+    void this.client.ride(false);
+  }
+
+  // Puts an actor on its mount (or off), once the mount's model has come.
+  private applyMount(actor: PlayerActor, id: MountId | null): void {
+    if (actor.mountId === id) return;
+    if (!id) {
+      actor.setMount(null);
+      return;
+    }
+    const library = this.library!;
+    const model = MOUNTS[id].model;
+    if (!library.has(model)) {
+      if (!this.mountsLoading.has(model)) {
+        this.mountsLoading.add(model);
+        void library.preload([model]).catch(() => this.mountsLoading.delete(model));
+      }
+      return;
+    }
+    actor.setMount({ id, object: library.instance(model), clips: library.get(model).animations });
+  }
+
   tapJump(): void {
     this.input.press("Space");
   }
@@ -575,6 +621,12 @@ export class WorldView {
     // Talking, you stand still and the pad and the buttons wait.
     const talking = this.dialogue !== null;
     if (this.input.consumePress("KeyR")) this.toggleAuto();
+    if (this.input.consumePress("KeyT")) this.toggleRide();
+    const serverRiding = state.me?.riding ?? null;
+    if (serverRiding !== this.serverRiding) {
+      this.serverRiding = serverRiding;
+      this.riding = serverRiding;
+    }
     // The auto potion works whether or not auto-battle is on, at the threshold the player set.
     const autoPotion = settings().autoPotion && !!state.me && state.me.hp <= state.me.maxHp * (settings().potionAt / 100);
     if (here && (potion || autoPotion)) this.drinkPotion();
@@ -586,7 +638,7 @@ export class WorldView {
         if (m.alive) this.bodies.push({ x: m.x, z: m.z, r: PLAYER_BODY + MONSTERS[m.type].body });
       }
       for (const npc of this.npcs) this.bodies.push({ x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 });
-      const speed = WALK_SPEED * (this.input.blocking ? GUARD_WALK : 1);
+      const speed = WALK_SPEED * (this.input.blocking ? GUARD_WALK : 1) * (this.riding ? MOUNTS[this.riding].speed : 1);
       const move = talking ? { forward: 0, strafe: 0 } : this.input.moveInput();
       const idle = move.forward === 0 && move.strafe === 0;
       // Your own steps cancel a walk you were sent on, and the trip it was part of.
@@ -893,6 +945,7 @@ export class WorldView {
       if (target) yaw = this.yawTo(monsters[target]);
       this.lastAttackAt = now;
       this.swings += 1;
+      this.getOff();
       const shot = HEROES[c].shot;
       playCue(shot ?? "swing");
       if (target) void this.client.strike(target, yaw);
@@ -925,6 +978,7 @@ export class WorldView {
     const target = this.aim(monsters, yaw);
     if (target && skill.damage > 0) yaw = this.yawTo(monsters[target]);
     this.lastSkillAt[index] = now;
+    this.getOff();
     this.lastSlot = index;
     this.skills += 1;
     playCue("skill");
@@ -1019,7 +1073,10 @@ export class WorldView {
   private syncActors(others: OtherPlayer[], dt: number, dead: boolean): void {
     if (!this.library) return;
     // The camera sits behind you, so your own body is drawn from your local pose.
-    if (this.me) this.me.path = this.path;
+    if (this.me) {
+      this.me.path = this.path;
+      this.applyMount(this.me, dead ? null : this.riding);
+    }
     this.me?.sync(this.pose, dead ? "dead" : "active", dt);
     const bag = this.client.state.bag;
     const npcState = bag ? { quest: bag.quest, tutorial: bag.tutorial } : null;
@@ -1048,6 +1105,7 @@ export class WorldView {
       }
       entry.actor.label(settings().showNames ? `Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}` : "");
       entry.actor.path = readJob(other.look.job);
+      this.applyMount(entry.actor, other.riding);
       entry.actor.sync(other.pose, "active", dt);
       entry.actor.fadeLabel(this.camera.position.distanceTo(entry.actor.object.position));
     }
@@ -1175,6 +1233,7 @@ export class WorldView {
       xpInto: level.into,
       xpNeed: level.need,
       auto: this.auto,
+      riding: this.riding,
       seeking: (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal?.talk === "elder",
       way: this.wayLeft(),
       bosses: this.groveView?.revealsBosses

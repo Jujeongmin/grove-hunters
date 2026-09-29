@@ -23,6 +23,9 @@ export const ICON_IDS = [
   "marker_quest", "marker_report",
   // The grove panel's menu button (PixelLab).
   "ui_grove",
+  // Mounts: the pad's ride button, the mounts panel's menu button, and gems (the pack's paw, open chest
+  // and diamond).
+  "pad_ride", "ui_mounts", "ui_gem",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {
