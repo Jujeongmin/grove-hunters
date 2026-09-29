@@ -565,8 +565,8 @@ export class Server {
     if (!isPose(mine.pose)) throw new RuleViolation("unavailable");
     // The fallen stay where they fell.
     if (mine.dead === true) return;
-    const at: unknown = mine.pose?.at;
-    const last = isPose(mine.pose) && typeof at === "number" ? { x: mine.pose.x, z: mine.pose.z, at } : null;
+    const at: unknown = (mine.pose as { at?: unknown }).at;
+    const last = typeof at === "number" ? { x: mine.pose.x, z: mine.pose.z, at } : null;
     const saved = await writeZonePose(zone, raw, now, last);
     const savedAt = mine.savedAt;
     if (now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {

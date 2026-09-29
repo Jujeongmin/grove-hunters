@@ -13,7 +13,8 @@ async function atTheForge(server: any, stones = 20, gold = 5000): Promise<void> 
 }
 
 // Every roll of the server comes out as `value` while `run` runs.
-async function rolling<T>(value: number, run: () => Promise<T>): Promise<T> {
+// What the server answers is untyped here, as everywhere in these tests.
+async function rolling(value: number, run: () => Promise<unknown>): Promise<any> {
   const real = Math.random;
   Math.random = () => value;
   try {
