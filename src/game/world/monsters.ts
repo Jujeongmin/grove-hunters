@@ -203,6 +203,13 @@ function fresh(type: MonsterType, x: number, z: number): MonsterState {
   return { type, x, z, yaw: 0, hp: MONSTERS[type].hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: x, homeZ: z };
 }
 
+// Kinds that stand in little groups: more of them round each of their spots, this far off it (inside
+// its four-metre cell, so on open ground). The first field's slimes are what its first quest asks
+// fifteen of.
+const CLUSTER: Partial<Record<MonsterType, readonly (readonly [number, number])[]>> = {
+  green_blob: [[-1.3, 1.1], [1.3, 1.1]],
+};
+
 // The monsters a zone starts with, keyed by id.
 export function spawnMonsters(zone: ZoneId): Record<string, MonsterState> {
   const layout = zoneLayout(zone);
@@ -210,7 +217,11 @@ export function spawnMonsters(zone: ZoneId): Record<string, MonsterState> {
   const out: Record<string, MonsterState> = {};
   if (kinds.length > 0) {
     layout.zombieSpawns.forEach((p, i) => {
-      out[`m${i}`] = fresh(kinds[i % kinds.length], p.x, p.z);
+      const type = kinds[i % kinds.length];
+      out[`m${i}`] = fresh(type, p.x, p.z);
+      (CLUSTER[type] ?? []).forEach(([dx, dz], k) => {
+        out[`m${i}-${k + 1}`] = fresh(type, p.x + dx, p.z + dz);
+      });
     });
   }
   const boss = ZONE_BOSS[zone];

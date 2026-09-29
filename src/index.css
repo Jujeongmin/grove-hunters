@@ -179,7 +179,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-vitals-row span { font-variant-numeric: tabular-nums; color: var(--ink-dim); }
 .hud-xp { font-size: 11px; color: #ffd36a; }
 .hud-power { font-size: 11px; color: #ffb35a; }
-.hud-gain { margin-left: auto; font-style: normal; color: #ffe08a; }
 .hud-bar { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
 .hud-bar i { position: absolute; left: 0; top: 0; bottom: 0; transition: width 0.15s; }
 .hud-bar.hp i { background: linear-gradient(#ff7a5c, #d8392b); }
@@ -191,7 +190,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
   font: 600 14px var(--font-head); pointer-events: none;
 }
 .hud-target .hud-bar { width: 100%; }
-.hud-target b.aggressive { color: #ff8a7a; }
 /* The menu's icon buttons, top right. */
 .hud-icon-button {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; cursor: pointer;
@@ -386,7 +384,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The map: a little one at the top left under the vitals while you play, and the whole zone over the
    game with N. Both are drawn north up, so a glance means the same thing every time, and both sit on
    plain black. */
-.minimap { position: absolute; left: 16px; top: 120px; isolation: isolate; pointer-events: none; }
+.minimap { position: relative; align-self: flex-start; margin-top: 6px; isolation: isolate; pointer-events: none; }
 /* A plain black frame round the corner map. */
 .minimap::before {
   content: "";

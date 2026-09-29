@@ -25,6 +25,7 @@ import { chaseCamera } from "../rules/chaseCamera";
 import {
   BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
 } from "../world/monsters";
+import { Threats } from "../world/threats";
 import type { Point2 } from "../rules/levelLayout";
 import { NPCS, NPC_MODELS, npcNear, npcFacing, npcSpot, type NpcId } from "../world/npcs";
 import { NpcActor } from "./NpcActor";
@@ -110,9 +111,10 @@ const SKILL_GAP_MS = 900;
 const SKILL_NUMBER_MS = 1500;
 // How long the red edge flash lasts after a blow.
 const HURT_FLASH_MS = 350;
-// How long a "+XP" note, and a note of gold or a drop, stays up.
-const GAIN_MS = 1500;
+// How long a note of gold or a drop stays up.
 const NOTE_MS = 3000;
+// The zone's boss and the grove's guardian: marked on the map, and their health shown at the top.
+const isBoss = (type: MonsterType) => type === "grove_guardian" || Object.values(ZONE_BOSS).includes(type);
 // In a hidden tab the game steps this often (ms), and no step covers more than this (s).
 const BACKGROUND_STEP_MS = 200;
 // A monster falling further off than this makes no sound.
@@ -152,8 +154,6 @@ export interface WorldHud {
   level: number;
   xpInto: number;
   xpNeed: number;
-  // XP just earned, shown for a moment.
-  gain: number | null;
   auto: boolean;
   // Auto-battle is hunting for a quest's monsters.
   seeking: boolean;
@@ -165,8 +165,8 @@ export interface WorldHud {
   // The village NPC you are standing by, to talk to.
   npc: { id: NpcId; name: string; role: string } | null;
   // The monster you are fighting.
-  // An aggressive kind's name shows red: it comes for you unprovoked.
-  target: { name: string; hp: number; maxHp: number; aggressive: boolean } | null;
+  // The boss you fight, for the bar at the top (other monsters carry their bar over their heads).
+  target: { name: string; hp: number; maxHp: number } | null;
   // How strongly the screen's edge flashes red (0 to 1), just after a blow.
   hurt: number;
   // Potions in the bag (Q drinks one), and what the last kills paid.
@@ -253,7 +253,8 @@ export class WorldView {
   // Where auto-battle last made headway, and the monsters it gave up on (until when).
   private stuckSince: { x: number; z: number; at: number } | null = null;
   private readonly unreachable = new Map<string, number>();
-  private gain: { xp: number; at: number } | null = null;
+  // The monsters swinging at you: auto-battle fights them first.
+  private readonly threats = new Threats();
   private notes: { text: string; at: number }[] = [];
   private lastPotionAt = Number.NEGATIVE_INFINITY;
   // Your health last frame, to show what a blow took; the monsters your last skill hit, whose next
@@ -595,6 +596,7 @@ export class WorldView {
         this.walkGoal = null;
         if (this.trip) this.setTrip(null);
       }
+      this.threats.watch(state.monsters, this.pose, performance.now());
       const chase = talking ? null
         : idle && this.walkGoal ? this.walkTo(this.walkGoal) : this.auto && idle ? this.autoChase(state.monsters) : null;
       if (rooted) {
@@ -651,8 +653,15 @@ export class WorldView {
       this.target = null;
       this.route = null;
     }
+    // Something hitting you comes first, whatever the quest asks for (unless the one it is on is
+    // hitting you too); once it falls the hunt goes back to the quest's kinds.
+    const hitter = this.threats.nearest(monsters, this.pose);
+    if (hitter && hitter !== this.target && !(this.target && this.threats.has(this.target)) && !this.unreachable.has(hitter)) {
+      this.target = hitter;
+      this.route = null;
+    }
     const wanted = (m: MonsterState, id: string) =>
-      m.alive && !this.unreachable.has(id) && (!this.questSeek || this.questSeek.includes(m.type));
+      m.alive && !this.unreachable.has(id) && (!this.questSeek || this.questSeek.includes(m.type) || this.threats.has(id));
     if (!current || !wanted(current, this.target!) || (!this.questSeek && this.distanceTo(current) > AUTO_DROP)) {
       this.target = null;
       this.route = null;
@@ -954,10 +963,6 @@ export class WorldView {
   // counts toward your quest, which pays nothing here).
   private gained(result: Payout): void {
     const now = performance.now();
-    if (result.xp > 0) {
-      const recent = this.gain && now - this.gain.at < GAIN_MS ? this.gain.xp : 0;
-      this.gain = { xp: recent + result.xp, at: now };
-    }
     if (result.gold > 0 || result.items.length > 0) playCue("gold");
     if (result.gold > 0) this.notes.push({ text: t("note.gotGold", { n: result.gold }), at: now });
     for (const id of result.items) this.notes.push({ text: t("note.gotItem", { name: id in ITEMS ? itemName(id) : id }), at: now });
@@ -1171,13 +1176,12 @@ export class WorldView {
       level: level.level,
       xpInto: level.into,
       xpNeed: level.need,
-      gain: this.gain && now - this.gain.at < GAIN_MS ? this.gain.xp : null,
       auto: this.auto,
       seeking: (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal?.talk === "elder",
       way: this.wayLeft(),
       bosses: this.groveView?.revealsBosses
         ? Object.values(this.client.state.monsters)
-          .filter((m) => m.alive && (m.type === "grove_guardian" || Object.values(ZONE_BOSS).includes(m.type)))
+          .filter((m) => m.alive && isBoss(m.type))
           .map((m) => ({ x: m.x, z: m.z }))
         : [],
       npc: (() => {
@@ -1185,7 +1189,9 @@ export class WorldView {
         const npc = id ? NPCS.find((n) => n.id === id)! : null;
         return npc ? { id: npc.id, name: npcName(npc.id), role: npcRole(npc.id) } : null;
       })(),
-      target: fighting?.alive ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp, aggressive: !!MONSTERS[fighting.type].aggressive } : null,
+      target: fighting?.alive && isBoss(fighting.type)
+        ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp }
+        : null,
       potions: (this.client.state.bag?.bag.potion_small ?? 0) + (this.client.state.bag?.bag.potion_big ?? 0),
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),
       notes: this.notes.map((n) => n.text),

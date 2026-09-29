@@ -1,4 +1,4 @@
-import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
+import { MONSTERS, maxHpAt, spawnMonsters } from "../../src/game/world/monsters";
 import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
@@ -14,13 +14,18 @@ async function toForest(server: any, account: string, playerClass = "warrior"): 
   return join(server, account, await server.travel("forest1"), village.roomId);
 }
 
-// Puts one monster of `type` at (x, z) and nothing else in the room. Monsters leave players be until
-// hit: `angryAt` is an account it has already been hit by, and so goes for.
+// Puts one monster of `type` at (x, z) and no other living one in the first field (the rest lie felled
+// for good, or the room would stand them back up). Monsters leave players be until hit: `angryAt` is
+// an account it has already been hit by, and so goes for.
 async function only(
   type: string, x: number, z: number, hp = MONSTERS[type as keyof typeof MONSTERS].hp, angryAt: string | null = null,
 ): Promise<void> {
+  const felled = Object.fromEntries(
+    Object.entries(spawnMonsters("forest1")).map(([id, m]) => [id, { ...m, alive: false, respawnAt: Number.MAX_SAFE_INTEGER }]),
+  );
   await $room.updateRoomState({
     monsters: {
+      ...felled,
       m0: {
         type, x, z, yaw: 0, hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: x, homeZ: z,
         ...(angryAt ? { hitters: { [angryAt]: 1 } } : {}),
@@ -40,9 +45,17 @@ describe("hunting", () => {
     const entry = await toForest(server, "test-a");
     await server.simulateTick(entry.roomId, 200);
     const { monsters } = await $room.getRoomState();
-    const count = zoneLayout("forest1").zombieSpawns.length;
-    expect(Object.keys(monsters).length).toBe(count);
+    expect(Object.keys(monsters).length).toBe(Object.keys(spawnMonsters("forest1")).length);
     expect(Object.values(monsters).every((m: any) => m.alive && m.hp > 0)).toBe(true);
+  });
+
+  test("a room kept from before the field gained monsters gets the new ones", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const { m0 } = spawnMonsters("forest1");
+    await $room.updateRoomState({ monsters: { m0 } });
+    await server.simulateTick(entry.roomId, 200);
+    const { monsters } = await $room.getRoomState();
+    expect(Object.keys(monsters).length).toBe(Object.keys(spawnMonsters("forest1")).length);
   });
 
   test("you arrive whole, with health that grows with your level", async (server) => {

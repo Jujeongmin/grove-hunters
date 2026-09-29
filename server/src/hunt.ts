@@ -70,7 +70,8 @@ function readFighter(state: Record<string, any>): Fighter {
   };
 }
 
-// The room's monsters, spawned the first time anyone asks.
+// The room's monsters, spawned the first time anyone asks. A room kept from before a zone gained
+// monsters (more slimes, say) gets the new ones too.
 async function readMonsters(zone: ZoneId): Promise<Record<string, MonsterState>> {
   const stored = (await $room.getRoomState(["monsters"])).monsters;
   if (!stored || typeof stored !== "object") return spawnMonsters(zone);
@@ -78,7 +79,8 @@ async function readMonsters(zone: ZoneId): Promise<Record<string, MonsterState>>
   for (const [id, m] of Object.entries(stored as Record<string, MonsterState>)) {
     if (m && readMonsterType(m.type)) out[id] = m;
   }
-  return Object.keys(out).length > 0 ? out : spawnMonsters(zone);
+  for (const [id, m] of Object.entries(spawnMonsters(zone))) if (!(id in out)) out[id] = m;
+  return out;
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;

@@ -470,13 +470,13 @@ function ZoneScreen({
                     {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.plus).toLocaleString()}
                   </span>
                 )}
-                {hud.gain !== null && <em className="hud-gain">+{hud.gain} XP</em>}
               </div>
               <div className="hud-bar hp"><i style={{ width: `${Math.round((hud.hp / hud.maxHp) * 100)}%` }} /></div>
               <div className="hud-bar xp"><i style={{ width: `${Math.round((hud.xpInto / hud.xpNeed) * 100)}%` }} /></div>
             </div>
+            {/* Under the vitals in the same column, so a taller vitals box pushes it down, never under. */}
+            {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
           </div>
-          {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
           {/* The menu sits left of the corner map and unfolds into a grid below itself, so the two
               never cover each other. */}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
@@ -538,7 +538,7 @@ function ZoneScreen({
           {hud.blocking && <div className="hud-shield band">{t("world.blocking")}</div>}
           {hud.target && (
             <div className="hud-target band">
-              <b className={hud.target.aggressive ? "aggressive" : undefined}>{hud.target.name}</b>
+              <b>{hud.target.name}</b>
               <div className="hud-bar hp"><i style={{ width: `${Math.round((hud.target.hp / hud.target.maxHp) * 100)}%` }} /></div>
             </div>
           )}

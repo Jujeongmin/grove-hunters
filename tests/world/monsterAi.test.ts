@@ -20,6 +20,15 @@ describe("monsters", () => {
     expect(spawnMonsters("village")).toEqual({});
   });
 
+  it("the first field has slimes in threes, on open ground, for the first quest's fifteen", () => {
+    const monsters = Object.values(spawnMonsters("forest1"));
+    const slimes = monsters.filter((m) => m.type === "green_blob");
+    expect(slimes.length).toBeGreaterThanOrEqual(18);
+    expect(slimes.length).toBe(monsters.filter((m) => m.type === "rat").length * 3);
+    const { solid, tileSize } = layout;
+    for (const m of slimes) expect(solid[Math.floor(m.z / tileSize)]?.[Math.floor(m.x / tileSize)], `${m.x},${m.z}`).toBeFalsy();
+  });
+
   it("leave players be, however close, until hit", () => {
     const monsters = { m: rat(home.x, home.z - 1.2) };
     const hits = [0, 500, 1000, 1500].flatMap((t) => stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z }], layout, 0.5, 1000 + t));
