@@ -90,8 +90,9 @@ describe("LocalTransport", () => {
     await a.joinRoom(roomId);
     await a.call("arrive");
     aMinuteLater();
-    await a.call("reportPose", [{ x: 1, z: 2, yaw: 0 }]);
-    expect(users.at(-1)).toMatchObject([{ account: "test-a", pose: { x: 1, z: 2, yaw: 0 } }]);
+    // Open ground by the village's spawn (the server keeps poses out of the forest).
+    await a.call("reportPose", [{ x: 59, z: 55, yaw: 0 }]);
+    expect(users.at(-1)).toMatchObject([{ account: "test-a", pose: { x: 59, z: 55, yaw: 0 } }]);
     expect(states.at(-1)).toMatchObject({ roomId, $users: ["test-a"] });
   });
 

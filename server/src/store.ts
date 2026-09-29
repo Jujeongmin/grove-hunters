@@ -321,6 +321,11 @@ export async function writeZonePose(
       z = last.z + ((z - last.z) * most) / d;
     }
   }
+  // Never into the forest or a house: the client walks round them, a modified one would not.
+  if (last && solidAt(layout, x, z)) {
+    x = last.x;
+    z = last.z;
+  }
   const y = Math.min(readJumpY(pose.y), maxFeetY(layout.platforms, x, z));
   await $room.updateMyState(
     {

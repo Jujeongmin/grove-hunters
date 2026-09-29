@@ -127,7 +127,14 @@ describe("bag and gold", () => {
     const after = await server.drinkPotion("potion_small");
     expect(after.bag.potion_small).toBe(4);
     expect((await $room.getMyState()).hp).toBe(10 + ITEMS.potion_small.heal);
-    for (let i = 0; i < 4; i++) await server.drinkPotion("potion_small");
+    // No faster than one a second, whatever the client sends.
+    expect(await errorOf(server.drinkPotion("potion_small"))).toContain("too_fast");
+    expect((await server.getBag()).bag.potion_small).toBe(4);
+    for (let i = 0; i < 4; i++) {
+      await $room.updateMyState({ potionReadyAt: 0 });
+      await server.drinkPotion("potion_small");
+    }
+    await $room.updateMyState({ potionReadyAt: 0 });
     expect((await $room.getMyState()).hp).toBe(maxHpAt(1));
     expect(await errorOf(server.drinkPotion("potion_small"))).toContain("no_item");
   });

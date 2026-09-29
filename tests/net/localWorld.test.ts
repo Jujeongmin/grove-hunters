@@ -54,10 +54,11 @@ describe("LocalWorld", () => {
     const events: WorldEvent[] = [];
     world.subscribe((e) => events.push(e));
     aMinuteLater();
-    await world.call(PLAYERS[2], roomId, "reportPose", [{ x: 5, z: 6, yaw: 3 }]);
+    // Open ground by the village's spawn (the server keeps poses out of the forest).
+    await world.call(PLAYERS[2], roomId, "reportPose", [{ x: 57, z: 53, yaw: 3 }]);
     const users = events.find((e) => e.kind === "roomUsers") as Extract<WorldEvent, { kind: "roomUsers" }>;
     const mine = users.users.find((u) => u.account === PLAYERS[2])!;
-    expect([mine.pose.x, mine.pose.z, mine.pose.yaw]).toEqual([5, 6, 3]);
+    expect([mine.pose.x, mine.pose.z, mine.pose.yaw]).toEqual([57, 53, 3]);
   });
 
   it("passes rule errors through and refuses unknown or hook functions", async () => {

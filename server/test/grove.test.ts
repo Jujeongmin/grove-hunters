@@ -122,6 +122,18 @@ describe("the grove's rewards and the village", () => {
     expect((await server.getBag()).gold).toBe(30_000 - BUILDINGS[0].gold);
   });
 
+  test("gifts sent at once are each paid for: the village never gets more than was taken", async (server) => {
+    const entry = await inVillage(server);
+    const world = entry.roomId.split("-")[1];
+    await openFirstSite(world, weekOf(Date.now()));
+    await $asset.mint("gold", 5_000);
+    await toNpc(server, "elder");
+    const tries = await Promise.allSettled([1, 2, 3].map(() => server.donate({}, 5_000)));
+    expect(tries.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect((await server.getBag()).gold).toBe(0);
+    expect((await server.grove()).buildings[0].given.gold).toBe(5_000);
+  });
+
   test("a finished building pays its givers on coming in, and its perk applies at once", async (server) => {
     const entry = await inVillage(server);
     // The server the room belongs to (rpg-<world>-<zone>-<channel>).

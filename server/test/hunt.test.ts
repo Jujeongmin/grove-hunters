@@ -82,10 +82,40 @@ describe("hunting", () => {
     const bare = full - (await $room.getMyState()).hp;
     expect(bare).toBe(MONSTERS.rat.damage);
 
-    await only("rat", spawn.x, spawn.z - 1);
+    await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
     await $room.updateMyState({ hp: full, pose: { ...(await $room.getMyState()).pose, block: true } });
     await server.simulateTick(entry.roomId, 200);
-    expect(full - (await $room.getMyState()).hp).toBeLessThan(bare);
+    const guarded = full - (await $room.getMyState()).hp;
+    expect(guarded).toBeGreaterThan(0);
+    expect(guarded).toBeLessThan(bare);
+
+    // Mid-swing (the weapon not ready again yet) the guard does nothing: no striking behind it.
+    await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
+    await $room.updateMyState({ hp: full, strikeReadyAt: Date.now() + 60_000 });
+    await server.simulateTick(entry.roomId, 200);
+    expect(full - (await $room.getMyState()).hp).toBe(bare);
+  });
+
+  test("a reported step into the forest is not taken", async (server) => {
+    await toForest(server, "test-a");
+    const layout = zoneLayout("forest1");
+    // An open cell with forest right beside it.
+    let open: { x: number; z: number } | null = null;
+    let wall: { x: number; z: number } | null = null;
+    for (let r = 1; r < layout.rows - 1 && !open; r++) {
+      for (let c = 1; c < layout.cols - 1 && !open; c++) {
+        if (!layout.solid[r][c] && layout.solid[r][c + 1]) {
+          open = { x: (c + 0.5) * layout.tileSize, z: (r + 0.5) * layout.tileSize };
+          wall = { x: (c + 1.5) * layout.tileSize, z: open.z };
+        }
+      }
+    }
+    await walkTo(server, open!.x, open!.z);
+    // Time enough to walk there: only the forest stands in the way.
+    await walkTo(server, wall!.x, wall!.z);
+    const pose = (await $room.getMyState()).pose;
+    expect(pose.x).toBe(open!.x);
+    expect(pose.z).toBe(open!.z);
   });
 
   test("your blow lands only in reach, not faster than your weapon, and a kill pays XP", async (server) => {

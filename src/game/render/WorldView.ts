@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
-import { ITEMS } from "../account/items";
+import { ITEMS, POTION_GAP_MS } from "../account/items";
 import { levelOf } from "../account/level";
 import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
 import { npcMarker, type NpcMarker } from "../world/dialogue";
@@ -120,8 +120,6 @@ const BACKGROUND_STEP_MS = 200;
 // A monster falling further off than this makes no sound.
 const DIE_HEARD = 18;
 const BACKGROUND_MAX_DT = 0.25;
-// Potions go down no faster than this.
-const POTION_GAP_MS = 1000;
 
 // How far a house model is turned for its door to face each way (it is built facing +z, south).
 

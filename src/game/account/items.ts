@@ -66,6 +66,8 @@ export const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
 export const SHOP_ITEMS = ITEM_IDS.filter((id) => ITEMS[id].price !== null);
 // No stack grows past this.
 export const MAX_STACK = 99;
+// Potions go down no faster than this (the server holds the client to it, with a little grace).
+export const POTION_GAP_MS = 1000;
 
 export function readItemId(value: unknown): ItemId | null {
   return typeof value === "string" && value in ITEMS ? (value as ItemId) : null;

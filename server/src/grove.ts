@@ -149,15 +149,21 @@ export async function settleOnArrive(account: string, world: string): Promise<{ 
 }
 
 // A gift to the building under way. Takes no more than it needs; a finished building leaves each
-// giver's reward on their account. Answers what was taken and the village after.
+// giver's reward on their account. Answers what was taken and the village after. All under the
+// grove's lock: the giver's gold and bag are read there, and paid (`pay`, which throws if they
+// cannot be) before the village is credited, so gifts sent at once cannot be credited more than
+// was taken.
 export async function giveToVillage(
-  account: string, world: string, character: Character, offer: Offer, gold: number,
+  account: string, world: string, offer: Offer,
+  load: () => Promise<{ character: Character; gold: number }>, pay: (take: Offer) => Promise<void>,
 ): Promise<{ take: Offer; village: VillageRecord }> {
   return withGroveLock(world, async () => {
+    const { character, gold } = await load();
     const { id, village } = await readVillageRecord(world);
     const gift = donation(village, offer, character.bag, gold);
     if (!gift) throw new RuleViolation(underWay(village) ? "nothing" : "no_building");
     const next = giveTo(village, gift.building.id, gift.take, gift.points, account, character.name);
+    await pay(gift.take);
     await writeVillageRecord(world, id, next);
     if (next.buildings[gift.building.id].done) {
       for (const [giver, reward] of Object.entries(completionRewards(next.buildings[gift.building.id]))) {

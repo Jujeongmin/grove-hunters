@@ -5,7 +5,7 @@ import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
 } from "../../src/game/account/level";
 import {
-  GOLD, ITEMS, MAX_STACK, NO_GEAR, addItem, equip, fitsInBag, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
+  GOLD, ITEMS, MAX_STACK, NO_GEAR, POTION_GAP_MS, addItem, equip, fitsInBag, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
 } from "../../src/game/account/items";
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
@@ -119,6 +119,9 @@ interface Pay {
   items: ItemId[];
   felled: MonsterType[];
 }
+
+// Lag between two potions sent a second apart can bring them closer; this much of the gap is held.
+const POTION_GRACE = 0.8;
 
 // Which character a room's user state is (arrive writes it): an account plays one character at a time
 // but picks another on the menu, and what one left behind must never land on the other.
@@ -501,9 +504,16 @@ export class Server {
   // its spot for everyone in the room to see.
   async arrive(): Promise<{ x: number; z: number; grove: { gold: number; xp: number } | null }> {
     const account = $sender.account;
-    const { zone } = currentChannel();
+    const { roomId, zone } = currentChannel();
     const character = await playing(account);
-    // The spot enter kept; a room of another zone (a stale join) starts at that zone's spawn.
+    // Only into the room enter sent you to (it checked the zone's price, its level and the channel's
+    // room): a client can join any room, but arriving in another one takes you nowhere.
+    const here = readChannelRoom(roomId)!;
+    const where = readWhereabouts((await $global.getUserState(account)).where);
+    if (!where || where.world !== here.world || where.zone !== here.zone || where.channel !== here.channel) {
+      throw new RuleViolation("unavailable");
+    }
+    // The spot enter kept (the zone's spawn, should it be of another zone).
     const spot = character.spot?.zone === zone ? character.spot : { zone, ...zoneLayout(zone).playerSpawn };
     const now = Date.now();
     // As you left your last room (a portal, a channel, a lost connection), or as this room already has
@@ -551,6 +561,8 @@ export class Server {
     const { zone } = currentChannel();
     const now = Date.now();
     const mine = await $room.getMyState();
+    // Not arrived here (see arrive): nowhere to walk from.
+    if (!isPose(mine.pose)) throw new RuleViolation("unavailable");
     // The fallen stay where they fell.
     if (mine.dead === true) return;
     const at: unknown = mine.pose?.at;
@@ -604,7 +616,7 @@ export class Server {
     await requireNpc("elder");
     const account = $sender.account;
     const world = (await readAccountWorld(account)).id;
-    const character = await playing(account);
+    await playing(account);
     const items: Partial<Record<ItemId, number>> = {};
     if (rawItems && typeof rawItems === "object") {
       for (const [id, n] of Object.entries(rawItems as Record<string, unknown>)) {
@@ -613,15 +625,19 @@ export class Server {
       }
     }
     const offered = typeof rawGold === "number" && Number.isInteger(rawGold) && rawGold > 0 ? rawGold : 0;
-    const held = await $asset.get(GOLD);
-    const { take } = await giveToVillage(account, world, character, { items, gold: offered }, held);
-    if (take.gold > 0) await $asset.burn(GOLD, take.gold);
-    try {
-      await updateActive(account, (c) => ({ ...c, bag: takeFromBag(c.bag, take) }));
-    } catch (error) {
-      if (take.gold > 0) await $asset.mint(GOLD, take.gold);
-      throw error;
-    }
+    await giveToVillage(
+      account, world, { items, gold: offered },
+      async () => ({ character: await playing(account), gold: await $asset.get(GOLD) }),
+      async (take) => {
+        if (take.gold > 0) await $asset.burn(GOLD, take.gold);
+        try {
+          await updateActive(account, (c) => ({ ...c, bag: takeFromBag(c.bag, take) }));
+        } catch (error) {
+          if (take.gold > 0) await $asset.mint(GOLD, take.gold);
+          throw error;
+        }
+      },
+    );
     return viewOf(world, Date.now());
   }
 
@@ -655,7 +671,17 @@ export class Server {
     if (ITEMS[item].kind !== "potion") throw new RuleViolation("unavailable");
     const account = $sender.account;
     const { roomId } = currentChannel();
-    if ((await $room.getMyState()).dead === true) throw new RuleViolation("unavailable");
+    const now = Date.now();
+    // One at a time, as the client drinks them: under the room's lock, so a burst sent at once is
+    // held to the pace too.
+    const ready = await withRoomLock(roomId, async () => {
+      const mine = await $room.getMyState();
+      if (mine.dead === true) throw new RuleViolation("unavailable");
+      if (typeof mine.potionReadyAt === "number" && now < mine.potionReadyAt) return false;
+      await $room.updateMyState({ potionReadyAt: now + POTION_GAP_MS * POTION_GRACE }, { returnState: false });
+      return true;
+    });
+    if (!ready) throw new RuleViolation("too_fast");
     const next = await updateActive(account, (c) => ({ ...c, bag: addItem(c.bag, item, -1) }));
     await withRoomLock(roomId, async () => {
       const mine = await $room.getMyState();

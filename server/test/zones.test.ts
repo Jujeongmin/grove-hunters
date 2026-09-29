@@ -123,6 +123,18 @@ describe("entering the world", () => {
   });
 });
 
+describe("a room the server did not send you to", () => {
+  test("takes you nowhere: no arriving, no walking, however you joined it", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    await enterAs(server, "test-a");
+    const boss = channelRoomId("w1", "boss", 1);
+    await server.simulateJoin(boss, "test-a");
+    server.connect({ account: "test-a", roomId: boss });
+    expect(await errorOf(server.arrive())).toContain("unavailable");
+    expect(await errorOf(server.reportPose({ x: 10, z: 10, yaw: 0 }))).toContain("unavailable");
+  });
+});
+
 describe("a late leave", () => {
   test("lands on the character that left, not on one picked on the menu since", async (server) => {
     await makeCharacter(server, "test-a", "에이");

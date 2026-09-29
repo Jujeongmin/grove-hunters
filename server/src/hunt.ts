@@ -106,9 +106,12 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   if (accounts.length === 0) return [];
   const monsters = await readMonsters(zone);
   const users: (Record<string, any> & { account: string })[] = await $room.getUserStates(
-    accounts, ["pose", "look", "hp", "maxHp", "dead", "hitAt", "safeUntil"],
+    accounts, ["pose", "look", "hp", "maxHp", "dead", "hitAt", "safeUntil", "strikeReadyAt"],
   );
-  const fighters = new Map(users.map((u) => [u.account, { ...readFighter(u), hitAt: typeof u.hitAt === "number" ? u.hitAt : 0 }]));
+  const fighters = new Map(users.map((u) => [u.account, {
+    ...readFighter(u), hitAt: typeof u.hitAt === "number" ? u.hitAt : 0,
+    strikeReadyAt: typeof u.strikeReadyAt === "number" ? u.strikeReadyAt : 0,
+  }]));
   const prey: Prey[] = [];
   // Just stood up where they fell: the monsters leave them be for a moment.
   const safe = new Set(users.filter((u) => typeof u.safeUntil === "number" && now < u.safeUntil).map((u) => u.account));
@@ -121,7 +124,10 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
     const f = fighters.get(hit.account);
     const m = monsters[hit.monsterId];
     if (!f || f.dead || !m) continue;
-    const guarded = f.pose?.block === true && facing(f.pose, m, BLOCK_ARC);
+    // A raised guard facing the monster takes part of the blow, but not mid-swing: striking from
+    // behind a guard is not a thing (the client never does it; a modified one gains nothing).
+    const midSwing = typeof f.strikeReadyAt === "number" && now < f.strikeReadyAt;
+    const guarded = f.pose?.block === true && !midSwing && facing(f.pose, m, BLOCK_ARC);
     const shield = guarded ? 1 - WEAPONS[f.playerClass].block : 1;
     const damage = Math.max(1, Math.round(hit.damage * shield * (1 - f.gear.guard)));
     f.hp = Math.max(0, f.hp - damage);
