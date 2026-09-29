@@ -55,6 +55,22 @@ describe("monsters", () => {
     expect(monsters.m.hp).toBe(MONSTERS.rat.hp - 30);
   });
 
+  it("but wasps and bats, and their deep-forest kin, go for anyone who comes near", () => {
+    expect(["wasp", "bat", "hornet", "vampire_bat"].every((t) => MONSTERS[t as keyof typeof MONSTERS].aggressive)).toBe(true);
+    expect(MONSTERS.rat.aggressive).toBeFalsy();
+    const bat = { m: rat(home.x, home.z - 5, { type: "bat", hp: MONSTERS.bat.hp }) };
+    const prey = [{ account: "a", x: home.x, z: home.z }];
+    let hits: ReturnType<typeof stepMonsters> = [];
+    for (let t = 0; t < 20 && hits.length === 0; t++) hits = stepMonsters(bat, prey, layout, 0.5, 1000 + t * 500);
+    expect(hits).toEqual([{ monsterId: "m", account: "a", damage: MONSTERS.bat.damage }]);
+  });
+
+  it("an aggressive one leaves be whoever keeps past its sight", () => {
+    const bat = { m: rat(home.x, home.z, { type: "bat", hp: MONSTERS.bat.hp }) };
+    stepMonsters(bat, [{ account: "a", x: home.x, z: home.z + MONSTERS.bat.aggro + 1 }], layout, 0.5, 1000);
+    expect(bat.m.z).toBe(home.z);
+  });
+
   it("give up past the leash and go home", () => {
     const monsters = { m: rat(home.x, home.z, { homeX: home.x, homeZ: home.z - LEASH - 2, hp: 5 }) };
     stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z + 1 }], layout, 0.5, 1000);

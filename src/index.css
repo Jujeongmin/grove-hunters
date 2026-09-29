@@ -191,6 +191,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   font: 600 14px var(--font-head); pointer-events: none;
 }
 .hud-target .hud-bar { width: 100%; }
+.hud-target b.aggressive { color: #ff8a7a; }
 /* The menu's icon buttons, top right. */
 .hud-icon-button {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px; cursor: pointer;

@@ -165,7 +165,8 @@ export interface WorldHud {
   // The village NPC you are standing by, to talk to.
   npc: { id: NpcId; name: string; role: string } | null;
   // The monster you are fighting.
-  target: { name: string; hp: number; maxHp: number } | null;
+  // An aggressive kind's name shows red: it comes for you unprovoked.
+  target: { name: string; hp: number; maxHp: number; aggressive: boolean } | null;
   // How strongly the screen's edge flashes red (0 to 1), just after a blow.
   hurt: number;
   // Potions in the bag (Q drinks one), and what the last kills paid.
@@ -1184,7 +1185,7 @@ export class WorldView {
         const npc = id ? NPCS.find((n) => n.id === id)! : null;
         return npc ? { id: npc.id, name: npcName(npc.id), role: npcRole(npc.id) } : null;
       })(),
-      target: fighting?.alive ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp } : null,
+      target: fighting?.alive ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp, aggressive: !!MONSTERS[fighting.type].aggressive } : null,
       potions: (this.client.state.bag?.bag.potion_small ?? 0) + (this.client.state.bag?.bag.potion_big ?? 0),
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),
       notes: this.notes.map((n) => n.text),

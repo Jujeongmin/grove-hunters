@@ -538,7 +538,7 @@ function ZoneScreen({
           {hud.blocking && <div className="hud-shield band">{t("world.blocking")}</div>}
           {hud.target && (
             <div className="hud-target band">
-              <b>{hud.target.name}</b>
+              <b className={hud.target.aggressive ? "aggressive" : undefined}>{hud.target.name}</b>
               <div className="hud-bar hp"><i style={{ width: `${Math.round((hud.target.hp / hud.target.maxHp) * 100)}%` }} /></div>
             </div>
           )}
