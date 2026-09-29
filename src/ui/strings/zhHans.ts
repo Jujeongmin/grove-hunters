@@ -554,7 +554,7 @@ export const zhHans: Bundle = {
   "dialogue.shop": "查看商店",
   "dialogue.forge": "打开铁匠铺",
   "npc.elder.done": "「这座森林里已经没有能难倒你的了。谢谢你，猎人。」",
-  "npc.elder.tutorial": "「你来了。学会这个技能，把药水也带上。在技能窗口把技能拖到栏位上就能使用。」",
+  "npc.elder.tutorial": "「你来了。学会这个技能，把药水也带上。打开技能窗口看看学到的技能，放在下方栏位里就能马上使用。」",
   "npc.elder.claim": "「{quest}，做得好！这是说好的报酬。」",
   "npc.elder.ask": "「{goal}，就拜托你了。」",
 

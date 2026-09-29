@@ -554,7 +554,7 @@ export const en: Bundle = {
   "dialogue.shop": "Browse the shop",
   "dialogue.forge": "Open the forge",
   "npc.elder.done": "\"Nothing in this forest is a match for you now. Thank you, hunter.\"",
-  "npc.elder.tutorial": "\"There you are. Take this skill, and these potions. Drag the skill onto a slot from the skill panel to use it.\"",
+  "npc.elder.tutorial": "\"There you are. Take this skill, and these potions. Open the skill panel to see it: on a slot below, it is ready to use.\"",
   "npc.elder.claim": "\"{quest} — well done! Here is what I promised.\"",
   "npc.elder.ask": "\"{goal}, if you would.\"",
 

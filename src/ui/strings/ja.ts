@@ -554,7 +554,7 @@ export const ja: Bundle = {
   "dialogue.shop": "店を見る",
   "dialogue.forge": "鍛冶場を開く",
   "npc.elder.done": "「もうこの森に君を負かすものはないよ。ありがとう、狩人さん。」",
-  "npc.elder.tutorial": "「来たか。この技を覚えて、薬も持って行きなさい。スキル画面で技をスロットにドラッグすれば使えるぞ。」",
+  "npc.elder.tutorial": "「来たか。この技を覚えて、薬も持って行きなさい。スキル画面で覚えた技を確かめるといい。下のスロットにあればすぐ使えるぞ。」",
   "npc.elder.claim": "「{quest}、よくやった！約束の報酬だ。」",
   "npc.elder.ask": "「{goal}を頼むよ。」",
 

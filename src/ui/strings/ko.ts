@@ -563,7 +563,7 @@ export const ko = {
   "dialogue.shop": "상점 보기",
   "dialogue.forge": "대장간 열기",
   "npc.elder.done": "\"이제 이 숲에서 자네를 당해낼 것은 없네. 고맙네, 사냥꾼.\"",
-  "npc.elder.tutorial": "\"왔구먼. 이 기술을 익히고 물약도 챙겨 가게. 스킬 창에서 기술을 칸에 끌어 두면 쓸 수 있다네.\"",
+  "npc.elder.tutorial": "\"왔구먼. 이 기술을 익히고 물약도 챙겨 가게. 스킬 창을 열어 익힌 기술을 확인해 보게. 아래 칸에 올려 두면 바로 쓸 수 있다네.\"",
   "npc.elder.claim": "\"{quest}, 잘 해냈군! 약속한 보상일세.\"",
   "npc.elder.ask": "\"{goal}{p} 부탁하네.\"",
 
