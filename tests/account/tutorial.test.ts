@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  TUTORIAL, readTutorial, skillLearned, tutorialGlow, tutorialStepDone, type TutorialSeen,
+  TUTORIAL, readTutorial, skillLearned, tutorialGlow, tutorialStepDone, tutorialStepText, type TutorialSeen,
 } from "../../src/game/account/tutorial";
 
-const NOTHING: TutorialSeen = { placedSkill: false, autoSkill: false, autoPotion: false, autoBattle: false };
+const NOTHING: TutorialSeen = { placedSkill: false, sawSkillOnBar: false, autoSkill: false, autoPotion: false, autoBattle: false };
 
 describe("the first tutorial", () => {
   it("reads a saved step, and anything else as finished", () => {
@@ -25,9 +25,11 @@ describe("the first tutorial", () => {
 
   it("moves each step on by what the player did", () => {
     // The elder's step is the server's to move on.
-    expect(tutorialStepDone(TUTORIAL.talk, { placedSkill: true, autoSkill: true, autoPotion: true, autoBattle: true })).toBe(false);
+    expect(tutorialStepDone(TUTORIAL.talk, { placedSkill: true, sawSkillOnBar: true, autoSkill: true, autoPotion: true, autoBattle: true })).toBe(false);
     expect(tutorialStepDone(TUTORIAL.register, NOTHING)).toBe(false);
     expect(tutorialStepDone(TUTORIAL.register, { ...NOTHING, placedSkill: true })).toBe(true);
+    // The bar already holds it (a new character's default): opening the skill panel to see it is enough.
+    expect(tutorialStepDone(TUTORIAL.register, { ...NOTHING, sawSkillOnBar: true })).toBe(true);
     expect(tutorialStepDone(TUTORIAL.auto, { ...NOTHING, autoSkill: true })).toBe(false);
     expect(tutorialStepDone(TUTORIAL.auto, { ...NOTHING, autoPotion: true })).toBe(false);
     expect(tutorialStepDone(TUTORIAL.auto, { ...NOTHING, autoSkill: true, autoPotion: true })).toBe(true);
@@ -44,5 +46,11 @@ describe("the first tutorial", () => {
     expect(tutorialGlow(TUTORIAL.register, { menuOpen: true, skillsOpen: true })).toBe("slot0");
     expect(tutorialGlow(TUTORIAL.auto, closed)).toBe("bar");
     expect(tutorialGlow(TUTORIAL.battle, closed)).toBe("auto");
+  });
+
+  it("asks for the drag only while the bar lacks the skill", () => {
+    expect(tutorialStepText(TUTORIAL.register, false)).toBe("tutorial.step1");
+    expect(tutorialStepText(TUTORIAL.register, true)).toBe("tutorial.step1Placed");
+    expect(tutorialStepText(TUTORIAL.auto, true)).toBe("tutorial.step2");
   });
 });

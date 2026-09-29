@@ -1,8 +1,10 @@
 import { t, type Key } from "./lang";
-import type { TutorialGlow, TutorialStep } from "../game/account/tutorial";
+import { tutorialStepText, type TutorialGlow, type TutorialStep } from "../game/account/tutorial";
 
 interface TutorialTrackerProps {
   step: TutorialStep;
+  // The bar holds the first skill already: the step asks for a look, not a drag.
+  skillOnBar: boolean;
   glow: TutorialGlow;
   // J does what tapping it does (none on a touch screen).
   keyLabel: string | null;
@@ -13,7 +15,7 @@ interface TutorialTrackerProps {
 
 // The first tutorial's next thing to do, where the quest usually sits. It never stands in the way:
 // the rest of the game works meanwhile.
-export function TutorialTracker({ step, glow, keyLabel, onWalk, way }: TutorialTrackerProps) {
+export function TutorialTracker({ step, skillOnBar, glow, keyLabel, onWalk, way }: TutorialTrackerProps) {
   const walks = step === 0;
   return (
     <div
@@ -22,7 +24,7 @@ export function TutorialTracker({ step, glow, keyLabel, onWalk, way }: TutorialT
       onClick={walks ? onWalk : undefined}
     >
       <b>{t("tutorial.title")}</b>
-      <span>{t(`tutorial.step${step}` as Key)}{walks && way !== null && <b className="way"> {Math.max(1, Math.round(way))}m</b>}</span>
+      <span>{t(tutorialStepText(step, skillOnBar) as Key)}{walks && way !== null && <b className="way"> {Math.max(1, Math.round(way))}m</b>}</span>
       {walks && keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
     </div>
   );

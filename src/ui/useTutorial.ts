@@ -14,9 +14,15 @@ function autoFlags(playerClass: PlayerClass): { skill: boolean; potion: boolean 
 
 // The first tutorial on the screen: watches the bar, the auto-use settings and auto-battle, and tells
 // the server when a step is done (the elder's step the server moves on itself).
-export function useTutorial(client: WorldClient, bag: BagView | null, playerClass: PlayerClass, autoBattle: boolean) {
+export function useTutorial(client: WorldClient, bag: BagView | null, playerClass: PlayerClass, autoBattle: boolean, skillsOpen: boolean) {
   const step = bag ? bag.tutorial : null;
   const [placedSkill, setPlacedSkill] = useState(false);
+  const [sawSkillOnBar, setSawSkillOnBar] = useState(false);
+  // The bar holds the first skill already (it starts there): then the step only asks for a look.
+  const skillOnBar = hotbarFor(playerClass).includes(0);
+  useEffect(() => {
+    if (step === TUTORIAL.register && skillsOpen && skillOnBar) setSawSkillOnBar(true);
+  }, [step, skillsOpen, skillOnBar]);
   const [auto, setAuto] = useState(() => autoFlags(playerClass));
   const [finished, setFinished] = useState(false);
   useEffect(() => onSettings(() => setAuto(autoFlags(playerClass))), [playerClass]);
@@ -41,7 +47,7 @@ export function useTutorial(client: WorldClient, bag: BagView | null, playerClas
     // Read afresh, not from the state: coming into the auto-use step, the effect above has just
     // turned auto-use off, and the state still holds what it was a moment ago.
     const now = autoFlags(playerClass);
-    const seen = { placedSkill, autoSkill: now.skill, autoPotion: now.potion, autoBattle };
+    const seen = { placedSkill, sawSkillOnBar, autoSkill: now.skill, autoPotion: now.potion, autoBattle };
     if (!tutorialStepDone(step, seen)) return;
     sent.current = step;
     const call = step === TUTORIAL.battle ? client.tutorialFinish() : client.tutorialStep(step);
@@ -49,11 +55,11 @@ export function useTutorial(client: WorldClient, bag: BagView | null, playerClas
       if (code) sent.current = null;
       else if (step === TUTORIAL.battle) setFinished(true);
     });
-  }, [step, placedSkill, auto, autoBattle, client, playerClass]);
+  }, [step, placedSkill, sawSkillOnBar, auto, autoBattle, client, playerClass]);
 
   const placed = useCallback(() => {
     if (step === TUTORIAL.register) setPlacedSkill(true);
   }, [step]);
 
-  return { step, placed, finished, clearFinished: () => setFinished(false) };
+  return { step, skillOnBar, placed, finished, clearFinished: () => setFinished(false) };
 }

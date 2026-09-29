@@ -587,6 +587,7 @@ export const ja: Bundle = {
   "tutorial.title": "はじめの一歩",
   "tutorial.step0": "村長に話しかけよう",
   "tutorial.step1": "スキル画面を開き、覚えた技をスロット1にドラッグしよう",
+  "tutorial.step1Placed": "スキル画面を開き、覚えた技を確かめよう。スロット1にもう入っている",
   "tutorial.step2": "スキルと薬のスロットを下にドラッグして自動使用をオンにしよう",
   "tutorial.step3": "自動戦闘ボタンを押してみよう",
   "tutorial.doneTitle": "準備完了！",

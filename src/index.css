@@ -1048,6 +1048,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
   display: flex; flex-direction: column; gap: 6px; pointer-events: none;
 }
 .chat.open { left: calc(50% - 24px); bottom: 112px; transform: translateX(-50%); width: 320px; }
+/* Closed, its lines sit under the pad: a thumb on the stick moves you rather than opening the chat,
+   and a tap on the lines beside it still opens it. */
+.chat:not(.open) { z-index: -1; }
 .chat-log {
   max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; pointer-events: auto; cursor: pointer;
   font: 500 14px var(--font-body); text-shadow: 0 1px 2px #000, 0 0 4px #000;

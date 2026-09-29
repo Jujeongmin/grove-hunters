@@ -22,8 +22,10 @@ export function skillLearned(step: TutorialStep | null, index: number): boolean 
 
 // What the screen has seen the player do.
 export interface TutorialSeen {
-  // Dropped a skill onto the bar from the skill panel, during the step that asks for it.
+  // Dropped a skill onto the bar from the skill panel, during the step that asks for it; or opened
+  // the panel while the bar already held it (a new character's bar starts with it).
   placedSkill: boolean;
+  sawSkillOnBar: boolean;
   // Auto-battle may use the slot holding the first skill, and the potion.
   autoSkill: boolean;
   autoPotion: boolean;
@@ -34,10 +36,16 @@ export function tutorialStepDone(step: TutorialStep, seen: TutorialSeen): boolea
   switch (step) {
     // Talking to the elder is checked (and paid) by the server, which moves this step on itself.
     case TUTORIAL.talk: return false;
-    case TUTORIAL.register: return seen.placedSkill;
+    case TUTORIAL.register: return seen.placedSkill || seen.sawSkillOnBar;
     case TUTORIAL.auto: return seen.autoSkill && seen.autoPotion;
     case TUTORIAL.battle: return seen.autoBattle;
   }
+}
+
+// What the tracker asks for: the drag only while the bar lacks the first skill; with it there
+// already, a look at the skill panel.
+export function tutorialStepText(step: TutorialStep, skillOnBar: boolean): string {
+  return step === TUTORIAL.register && skillOnBar ? "tutorial.step1Placed" : `tutorial.step${step}`;
 }
 
 // What lights up for the step: the tracker (tapping it walks to the elder), the folded menu, the

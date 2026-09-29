@@ -587,6 +587,7 @@ export const zhHans: Bundle = {
   "tutorial.title": "第一步",
   "tutorial.step0": "与村长交谈",
   "tutorial.step1": "打开技能窗口，把新技能拖到 1 号栏位",
+  "tutorial.step1Placed": "打开技能窗口看看新技能，它已经在 1 号栏位了",
   "tutorial.step2": "把技能栏和药水栏往下拖，开启自动使用",
   "tutorial.step3": "按下自动战斗按钮",
   "tutorial.doneTitle": "准备完成！",

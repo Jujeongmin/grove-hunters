@@ -298,7 +298,7 @@ function ZoneScreen({
   const [saving, setSaving] = useState(false);
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
   // The first tutorial: what to do next, and what lights up for it.
-  const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false);
+  const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false, panel === "skills");
   const glow = tutorialGlow(tutorial.step, { menuOpen, skillsOpen: panel === "skills" });
   // Read by the once-bound handlers (talking to the elder, J).
   const tutorialStep = useRef(tutorial.step);
@@ -556,7 +556,7 @@ function ZoneScreen({
           {panel !== "quests" && panel !== "skills" && (
             tutorial.step !== null ? (
               <TutorialTracker
-                step={tutorial.step} glow={glow} keyLabel={keyHints ? "J" : null}
+                step={tutorial.step} skillOnBar={tutorial.skillOnBar} glow={glow} keyLabel={keyHints ? "J" : null}
                 onWalk={() => view.current?.goToElder()} way={hud.seeking ? hud.way : null}
               />
             ) : (
