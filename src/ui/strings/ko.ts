@@ -341,6 +341,8 @@ export const ko = {
 
   "common.loading": "불러오는 중…",
   "common.gold": "{n} 골드",
+  "wallet.gold": "골드 (누르면 가방)",
+  "wallet.gems": "보석 (누르면 탈것·보석 상점)",
   "common.nothing": "없음",
   "problem.unavailable": "지금은 할 수 없어요",
   "problem.max_plus": "더 강화할 수 없어요",

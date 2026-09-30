@@ -296,7 +296,8 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
 
 async function bagView(character: Character): Promise<BagView> {
   return {
-    gold: await $asset.get(GOLD), bag: character.bag, bagTrade: character.bagTrade, pieces: character.pieces, gear: character.gear,
+    gold: await $asset.get(GOLD), gems: await readGems($sender.account),
+    bag: character.bag, bagTrade: character.bagTrade, pieces: character.pieces, gear: character.gear,
     job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
     ...(await (async () => {

@@ -332,6 +332,8 @@ export const zhHans: Bundle = {
 
   "common.loading": "加载中…",
   "common.gold": "{n} 金币",
+  "wallet.gold": "金币（点击打开背包）",
+  "wallet.gems": "宝石（点击打开坐骑・宝石商店）",
   "common.nothing": "无",
   "problem.unavailable": "当前无法进行",
   "problem.max_plus": "已无法继续强化",

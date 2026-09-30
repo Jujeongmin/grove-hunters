@@ -33,6 +33,8 @@ describe("mail", () => {
     expect(after.find((m: { id: string }) => m.id === id)).toBeUndefined();
     expect(await $asset.get(GOLD)).toBe(gold + 50);
     expect((await server.getMounts()).gems).toBe(7);
+    // The HUD reads them off the bag.
+    expect((await server.getBag()).gems).toBe(7);
     expect((await server.getBag()).bag.potion_big).toBe(3);
     // Taken already: a second call finds nothing, and pays nothing.
     expect(await errorOf(server.claimMail(id))).toContain("no_mail");

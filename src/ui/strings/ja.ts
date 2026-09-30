@@ -332,6 +332,8 @@ export const ja: Bundle = {
 
   "common.loading": "読み込み中…",
   "common.gold": "{n} ゴールド",
+  "wallet.gold": "ゴールド（押すとバッグ）",
+  "wallet.gems": "宝石（押すと乗り物・宝石ショップ）",
   "common.nothing": "なし",
   "problem.unavailable": "今はできません",
   "problem.max_plus": "これ以上は強化できません",

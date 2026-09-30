@@ -1,4 +1,4 @@
-"""Draws the menu icons for the news, mail, market and guild buttons as 34x34 pixel art in the look of
+"""Draws the menu icons for the news, mail, market and guild buttons, and the HUD's gold, as 34x34 pixel art in the look of
 the 496 RPG icons pack the other menu icons come from (a dark outline, a lit left side, a shaded
 right). Drawn here rather than taken from the pack, which has no bell, envelope, scales or banner in
 that style. Writes public/assets/ui/icons/ui_<name>.png (kept on develop only, like every game asset).
@@ -142,8 +142,29 @@ def banner():
     return outlined(img)
 
 
+def coins():
+    """Gold, as a small stack of coins with one standing in front (the HUD's wallet)."""
+    img, d = canvas()
+    light, base, dark = GOLD
+    # The stack behind: three coins seen edge on.
+    for y in (22, 18, 14):
+        d.ellipse((3, y, 19, y + 7), fill=base)
+        d.arc((3, y, 19, y + 7), 20, 160, fill=dark)
+        d.arc((3, y, 19, y + 7), 200, 300, fill=light)
+    # The coin in front, face on, with its rim and a mark in the middle.
+    d.ellipse((12, 8, 31, 27), fill=base)
+    d.ellipse((15, 11, 28, 24), outline=dark, width=1)
+    d.arc((12, 8, 31, 27), 120, 250, fill=light)
+    d.arc((12, 8, 31, 27), 300, 60, fill=dark)
+    d.rectangle((20, 14, 22, 21), fill=dark)
+    d.point((20, 14), fill=light)
+    # A shine.
+    d.line((16, 13, 17, 12), fill=(255, 250, 220, 255))
+    return outlined(img)
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, draw in {"news": bell, "mail": envelope, "market": scales, "guild": banner}.items():
+    for name, draw in {"news": bell, "mail": envelope, "market": scales, "guild": banner, "gold": coins}.items():
         draw().save(OUT / f"ui_{name}.png")
         print(f"ui_{name}.png")

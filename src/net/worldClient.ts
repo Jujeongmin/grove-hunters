@@ -423,6 +423,14 @@ export class WorldClient {
     if (bag) this.set({ bag });
   }
 
+  // Gems the server just told of (the stable, the market) go on the HUD's wallet at once.
+  private noteGems<T>(answer: T): T {
+    const gems = (answer as { gems?: unknown } | null)?.gems;
+    const bag = this.current.bag;
+    if (typeof gems === "number" && bag && bag.gems !== gems) this.set({ bag: { ...bag, gems } });
+    return answer;
+  }
+
   // The bag and the shop. Each answers null when done, or why it was refused.
   equip(uid: string): Promise<string | null> {
     return this.bagCall("equipItem", [uid]);
@@ -582,12 +590,12 @@ export class WorldClient {
 
   // The market: a page of listings, your own, putting something up (the bag is read again), buying
   // and taking down. Each answers what the server did, or the problem.
-  market(filter: Partial<MarketFilter>): Promise<MarketPage | { problem: string }> {
-    return this.tryCall<MarketPage>("market", [filter]);
+  async market(filter: Partial<MarketFilter>): Promise<MarketPage | { problem: string }> {
+    return this.noteGems(await this.tryCall<MarketPage>("market", [filter]));
   }
 
-  myListings(): Promise<{ listings: ListingView[]; gems: number } | { problem: string }> {
-    return this.tryCall("myListings", []);
+  async myListings(): Promise<{ listings: ListingView[]; gems: number } | { problem: string }> {
+    return this.noteGems(await this.tryCall<{ listings: ListingView[]; gems: number }>("myListings", []));
   }
 
   async sellOnMarket(what: { uid: string } | { item: ItemId; n: number }, price: number): Promise<{ listings: ListingView[] } | { problem: string }> {
@@ -596,8 +604,8 @@ export class WorldClient {
     return r;
   }
 
-  buyListing(id: string): Promise<{ gems: number } | { problem: string }> {
-    return this.tryCall("buyFromMarket", [id]);
+  async buyListing(id: string): Promise<{ gems: number } | { problem: string }> {
+    return this.noteGems(await this.tryCall<{ gems: number }>("buyFromMarket", [id]));
   }
 
   cancelListing(id: string): Promise<{ listings: ListingView[] } | { problem: string }> {
@@ -616,12 +624,12 @@ export class WorldClient {
   // Mounts: your gems and mounts (from the menus too), a draw, picking the one to ride, and getting
   // on or off. Null or a problem code when refused.
   async mounts(): Promise<MountsView | null> {
-    return this.transport.call<MountsView>("getMounts").catch(() => null);
+    return this.noteGems(await this.transport.call<MountsView>("getMounts").catch(() => null));
   }
 
   async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean; star: number | null }) | { problem: string }> {
     try {
-      const pulled = await this.transport.call<MountsView & { mount: MountId; repeat: boolean; star: number | null }>("pullMount");
+      const pulled = this.noteGems(await this.transport.call<MountsView & { mount: MountId; repeat: boolean; star: number | null }>("pullMount"));
       // A new mount may be the picked one now, and the picked one adds to 전투력.
       void this.refreshBag();
       return pulled;

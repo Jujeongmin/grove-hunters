@@ -43,7 +43,7 @@ import type { NpcId } from "../game/world/npcs";
 import { MapPanel, MinimapCorner } from "./Minimap";
 import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
 import type { Offer } from "../game/account/purchase";
-import { t } from "./lang";
+import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
 import { QUESTS, questDone } from "../game/account/quests";
@@ -566,6 +566,20 @@ function ZoneScreen({
                 {!menuOpen && menuItems.some((item) => !item.pinned && item.dot) && <i className="hud-dot" />}
               </button>
             </div>
+            {/* The wallet, always in view under the pinned buttons (the unfolded menu goes below it):
+                gold opens the bag, gems the stable where they are bought and spent. */}
+            {bag && (
+              <div className="hud-wallet">
+                <button type="button" onClick={() => toggle("bag")} title={t("wallet.gold")}>
+                  <img src={iconFor("ui_gold") ?? undefined} alt="" draggable={false} />
+                  <b>{bag.gold.toLocaleString(locale())}</b>
+                </button>
+                <button type="button" className="gems" onClick={() => toggle("mounts")} title={t("wallet.gems")}>
+                  <img src={iconFor("ui_gem") ?? undefined} alt="" draggable={false} />
+                  <b>{bag.gems.toLocaleString(locale())}</b>
+                </button>
+              </div>
+            )}
             {menuOpen && <div className="hud-menu-grid">{menuItems.filter((item) => !item.pinned).map(menuButton)}</div>}
           </div>
           {hud.notes.length > 0 && (
@@ -624,8 +638,9 @@ function ZoneScreen({
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}
             glow={glow === "slot0" || glow === "bar" ? glow : null}
           />
-          {/* The side panels sit where the tracker is; it steps aside while one is open. */}
-          {panel !== "quests" && panel !== "skills" && (
+          {/* The side panels sit where the tracker is; it steps aside while one is open, and while the
+              unfolded menu reaches down over it (the tutorial's stays, to say what to press). */}
+          {panel !== "quests" && panel !== "skills" && (tutorial.step !== null || !menuOpen) && (
             tutorial.step !== null ? (
               <TutorialTracker
                 step={tutorial.step} skillOnBar={tutorial.skillOnBar} glow={glow} keyLabel={keyHints ? "J" : null}

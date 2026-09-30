@@ -293,8 +293,17 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-menu-grid .hud-icon-button { padding: 4px 2px; }
 .hud-menu-grid .hud-icon-button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* What a kill paid (gold, a drop): small and see-through, so it tells without covering. */
+/* Gold and gems, right under the pinned menu buttons. */
+.hud-wallet { display: flex; gap: 4px; pointer-events: auto; }
+.hud-wallet button {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 4px; cursor: pointer;
+  background: rgba(14, 11, 9, 0.8); border: 1px solid rgba(255, 211, 106, 0.35); border-radius: 999px;
+  font: 700 12px var(--font-head); color: #ffe08a; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.hud-wallet button.gems { color: #bff0ff; border-color: rgba(127, 196, 255, 0.4); }
+.hud-wallet img { width: 18px; height: 18px; image-rendering: pixelated; }
 .hud-notes {
-  position: absolute; right: 16px; top: 64px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  position: absolute; right: 16px; top: 92px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
   font: 600 12px var(--font-head); color: #ffe08a; pointer-events: none; opacity: 0.8;
 }
 .hud-notes .band { padding: 2px 10px; }

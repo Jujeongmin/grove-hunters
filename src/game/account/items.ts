@@ -151,10 +151,11 @@ export function gearStats(gear: Gear): GearStats {
   return out;
 }
 
-// A character's things as the bag screen shows them, with the account's gold: its bag and gear, its
-// advanced class (전직) and where it is in the quests.
+// A character's things as the bag screen shows them, with the account's gold and gems (both always on
+// the HUD): its bag and gear, its advanced class (전직) and where it is in the quests.
 export interface BagView {
   gold: number;
+  gems: number;
   // Potions and materials that stay with the character, and materials that may go to the market.
   bag: Bag;
   bagTrade: Bag;

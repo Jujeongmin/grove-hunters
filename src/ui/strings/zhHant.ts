@@ -332,6 +332,8 @@ export const zhHant: Bundle = {
 
   "common.loading": "載入中…",
   "common.gold": "{n} 金幣",
+  "wallet.gold": "金幣（點擊開啟背包）",
+  "wallet.gems": "寶石（點擊開啟坐騎・寶石商店）",
   "common.nothing": "無",
   "problem.unavailable": "現在無法進行",
   "problem.max_plus": "已無法再強化",

@@ -332,6 +332,8 @@ export const en: Bundle = {
 
   "common.loading": "Loading…",
   "common.gold": "{n} gold",
+  "wallet.gold": "Gold (tap for the bag)",
+  "wallet.gems": "Gems (tap for mounts and the gem shop)",
   "common.nothing": "None",
   "problem.unavailable": "That cannot be done right now",
   "problem.max_plus": "It cannot be enhanced any further",
