@@ -82,8 +82,10 @@ describe("zones", () => {
       for (const p of [...layout.portals, ...layout.zombieSpawns, ...(layout.bossSpawn ? [layout.bossSpawn] : [])]) {
         expect(seen.has(cell(p))).toBe(true);
       }
-      expect(layout.cols * t).toBeGreaterThanOrEqual(120);
+      // The guild's arena is a small ring on purpose; the rest are wide open country.
+      if (id !== "arena") expect(layout.cols * t).toBeGreaterThanOrEqual(120);
     }
+    expect(zoneLayout("arena").bossSpawn).not.toBeNull();
     expect(zoneLayout("forest1").zombieSpawns.length).toBeGreaterThanOrEqual(20);
     expect(zoneLayout("boss").bossSpawn).not.toBeNull();
   });
@@ -118,7 +120,9 @@ describe("zones", () => {
 
   it("keeps the village and the first field free", () => {
     expect(START_ZONE).toBe("village");
-    expect(ZONE_IDS.filter((z) => !ZONES[z].paid)).toEqual(["village", "forest1"]);
+    // (The guild's arena is reached only from the guild, never by a portal: nothing to buy.)
+    expect(ZONE_IDS.filter((z) => !ZONES[z].paid)).toEqual(["village", "forest1", "arena"]);
+    expect(ZONES.arena.portals).toEqual([]);
   });
 
   it("names channel rooms and reads them back", () => {

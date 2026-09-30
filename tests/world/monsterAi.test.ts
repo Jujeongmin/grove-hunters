@@ -171,3 +171,49 @@ describe("the deep forest", () => {
     }
   });
 });
+
+describe("a guild boss", () => {
+  const arena = zoneLayout("arena");
+  const at = arena.bossSpawn!;
+  const yeti = (extra: Partial<MonsterState> = {}): MonsterState => ({
+    type: "guild_yeti", x: at.x, z: at.z, yaw: 0, hp: 500_000, maxHp: 600_000, alive: true, stunnedUntil: 0,
+    attackReadyAt: 0, respawnAt: 0, homeX: at.x, homeZ: at.z, ...extra,
+  });
+
+  it("waits, then casts a pattern and stands until its marks land, then casts another", () => {
+    const monsters: Record<string, MonsterState> = { boss: yeti() };
+    const prey = [{ account: "a", x: at.x, z: at.z + 6 }];
+    const marks: Telegraph[] = [];
+    // Pattern 1 (index from 0.5 of [0, 1, 2]) is falling ice.
+    stepMonsters(monsters, prey, arena, 0.2, 0, marks, () => 0.5);
+    expect(marks).toEqual([]);
+    stepMonsters(monsters, prey, arena, 0.2, 3000, marks, () => 0.5);
+    expect(marks.length).toBe(7);
+    const castUntil = monsters.boss.castUntil!;
+    expect(castUntil).toBe(Math.max(...marks.map((t) => t.hitAt)));
+    const where = { x: monsters.boss.x, z: monsters.boss.z };
+    stepMonsters(monsters, prey, arena, 0.5, castUntil - 10, marks, () => 0.5);
+    expect({ x: monsters.boss.x, z: monsters.boss.z }).toEqual(where);
+    stepMonsters(monsters, prey, arena, 0.2, monsters.boss.nextPatternAt!, marks, () => 0.5);
+    // Never the same one twice: not falling ice again.
+    expect(monsters.boss.lastPattern).not.toBe(1);
+  });
+
+  it("the yeti charges down its lane as the lane lands", () => {
+    const monsters: Record<string, MonsterState> = { boss: yeti({ nextPatternAt: 0, lastPattern: 2 }) };
+    const prey = [{ account: "a", x: at.x, z: at.z + 6 }];
+    const marks: Telegraph[] = [];
+    stepMonsters(monsters, prey, arena, 0.2, 0, marks, () => 0);
+    expect(marks[0].shape.kind).toBe("line");
+    const chargeAt = monsters.boss.chargeAt!;
+    stepMonsters(monsters, prey, arena, 0.2, chargeAt, marks, () => 0);
+    expect(monsters.boss.z).toBeGreaterThan(at.z + 10);
+    expect(monsters.boss.chargeAt).toBeUndefined();
+  });
+
+  it("the glub calls its brood", () => {
+    const monsters: Record<string, MonsterState> = { boss: { ...yeti({ nextPatternAt: 0, lastPattern: 2 }), type: "guild_glub" } };
+    stepMonsters(monsters, [{ account: "a", x: at.x, z: at.z + 6 }], arena, 0.2, 0, [], () => 0);
+    expect(Object.values(monsters).filter((m) => m.type === "glub_brood").length).toBe(4);
+  });
+});

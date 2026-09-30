@@ -35,6 +35,7 @@ export function trackFor(zone: ZoneId | null): Track {
     case "forest3":
       return "deep";
     case "boss":
+    case "arena":
       return "boss";
   }
 }

@@ -5,7 +5,8 @@ import { BUILDINGS } from "./grove";
 // The open world: a village, two forest fields and the boss's clearing, joined by portals (O cells).
 // A server runs as channels (see CHANNEL_CAPACITY), each zone of a channel one Verse8 room. The
 // village and the first field are free; the rest open with the full game.
-export type ZoneId = "village" | "forest1" | "forest2" | "forest3" | "boss";
+// The arena is where a guild fights its boss (see guildBoss.ts): no portal leads there, only the guild.
+export type ZoneId = "village" | "forest1" | "forest2" | "forest3" | "boss" | "arena";
 
 // One way out of a zone: the edge it stands on, how far along that edge, and the zone it leads to.
 export interface ZonePortal {
@@ -90,6 +91,13 @@ export const ZONES: Record<ZoneId, Zone> = {
     map: fieldMap({
       cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: BOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
+    }),
+  },
+  arena: {
+    id: "arena", paid: false, minLevel: 10, portals: [],
+    map: fieldMap({
+      cols: 18, rows: 18, seed: 83, spawn: [9, 14], portals: [],
+      monsters: 0, boss: [9, 7], groves: 0, edge: 3, props: "",
     }),
   },
 };

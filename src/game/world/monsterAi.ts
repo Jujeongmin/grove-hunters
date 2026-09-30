@@ -3,8 +3,12 @@ import { solidWith, type LevelLayout } from "../rules/levelLayout";
 import { MAX_STEP_SECONDS, stepAround, type SolidTest } from "../rules/movement";
 import { BOSS_MOVES, MONSTERS, ZONE_BOSS, respawned, type MonsterState } from "./monsters";
 import type { Telegraph } from "./telegraphs";
+import { BROOD_COUNT, GUILD_BOSSES, RAGE_BELOW, castPattern, nextPattern, patternGap, type GuildBossType } from "./guildBoss";
 
 const BOSSES = new Set(Object.values(ZONE_BOSS));
+const GUILD_BOSS_TYPES = new Set<string>(GUILD_BOSSES);
+// A guild boss waits this long after the fight starts before its first pattern.
+const FIRST_PATTERN_MS = 3_000;
 
 // A player as the monsters see them.
 export interface Prey { account: string; x: number; z: number }
@@ -22,7 +26,7 @@ export const LEASH = 20;
 // A boss's marked attacks go into `telegraphs` (the room's), which land later (see telegraphs.ts).
 export function stepMonsters(
   monsters: Record<string, MonsterState>, prey: readonly Prey[], layout: LevelLayout, dt: number, now: number,
-  telegraphs: Telegraph[] = [],
+  telegraphs: Telegraph[] = [], random: () => number = Math.random,
 ): MonsterHit[] {
   const hits: MonsterHit[] = [];
   const walls: SolidTest = solidWith(layout, 0);
@@ -38,10 +42,12 @@ export function stepMonsters(
     // kinds, and the boss's brood called up mid-fight, go for any hunter in sight as well.
     const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
     if (BOSSES.has(m.type) && provoked.length > 0 && stepBoss(id, m, monsters, prey, now, telegraphs)) continue;
+    if (GUILD_BOSS_TYPES.has(m.type) && stepGuildBoss(id, m, monsters, prey, now, telegraphs, random)) continue;
     if (now < m.stunnedUntil) continue;
 
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
-    if (!m.returning && fromHome > LEASH) {
+    // A guild boss never gives up (its health is the guild's: going home would heal it).
+    if (!m.returning && fromHome > LEASH && !GUILD_BOSS_TYPES.has(m.type)) {
       m.returning = true;
       delete m.hitters;
     }
@@ -148,4 +154,50 @@ function stepBoss(
     m.attackReadyAt = now + spec.attackMs;
   }
   return m.slamming === true;
+}
+
+// A guild boss's own moves (see guildBoss.ts), before its ordinary chase and bite: a pattern every
+// few seconds, standing still while its marks are down; the yeti's charge; the glub's brood. Returns
+// true while it is busy with them (it neither moves nor bites then).
+function stepGuildBoss(
+  id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], now: number, telegraphs: Telegraph[],
+  random: () => number,
+): boolean {
+  if (prey.length === 0) return true;
+  if (m.chargeAt !== undefined && now >= m.chargeAt) {
+    // The charge: it is at the lane's end the moment the lane lands.
+    m.x = m.chargeX ?? m.x;
+    m.z = m.chargeZ ?? m.z;
+    delete m.chargeAt;
+    delete m.chargeX;
+    delete m.chargeZ;
+  }
+  if (m.castUntil !== undefined && now < m.castUntil) return true;
+  if (m.nextPatternAt === undefined) m.nextPatternAt = now + FIRST_PATTERN_MS;
+  if (now < m.nextPatternAt) return false;
+  const rage = m.hp < (m.maxHp ?? MONSTERS[m.type].hp) * RAGE_BELOW;
+  const index = nextPattern(m.lastPattern ?? null, random);
+  const cast = castPattern(m.type as GuildBossType, index, m, prey, now, rage, random, `${id}-${now}`);
+  telegraphs.push(...cast.telegraphs);
+  if (cast.chargeTo) {
+    m.chargeAt = cast.chargeTo.at;
+    m.chargeX = cast.chargeTo.x;
+    m.chargeZ = cast.chargeTo.z;
+  }
+  for (let i = 0; i < (cast.summon ?? 0); i++) {
+    const a = (i / BROOD_COUNT) * Math.PI * 2;
+    const x = m.x + Math.cos(a) * 3;
+    const z = m.z + Math.sin(a) * 3;
+    monsters[`${id}-brood-${now}-${i}`] = {
+      type: "glub_brood", x, z, yaw: 0, hp: MONSTERS.glub_brood.hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0,
+      homeX: x, homeZ: z, summoned: true,
+    };
+  }
+  const lands = Math.max(now, ...cast.telegraphs.map((t) => t.hitAt));
+  m.castUntil = lands;
+  m.lastPattern = index;
+  m.nextPatternAt = lands + patternGap(rage, random);
+  // Casting is its swing: the client plays its attack.
+  m.attackReadyAt = now + MONSTERS[m.type].attackMs;
+  return true;
 }

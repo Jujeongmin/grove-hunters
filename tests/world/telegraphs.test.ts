@@ -72,6 +72,17 @@ describe("telegraphs", () => {
     expect(resolveTelegraphs(tick.left, in1, 4000).left).toEqual([]);
   });
 
+  it("marks cast together strike a player once where they overlap", () => {
+    const mark = (id: string, group?: string): Telegraph => ({
+      id, shape: { kind: "circle", x: 0, z: 0, r: 3 }, startAt: 0, hitAt: 10, share: 0.3, ...(group ? { group } : {}),
+    });
+    const here = [{ account: "a", x: 0, z: 0, maxHp: 100 }];
+    expect(resolveTelegraphs([mark("1", "g"), mark("2", "g"), mark("3", "g")], here, 10).hits).toEqual([{ account: "a", damage: 30 }]);
+    // Different casts still add up.
+    expect(resolveTelegraphs([mark("1", "g"), mark("2", "h")], here, 10).hits.length).toBe(2);
+    expect(resolveTelegraphs([mark("1"), mark("2")], here, 10).hits.length).toBe(2);
+  });
+
   it("reads back only whole marks", () => {
     const good = { id: "a", shape: { kind: "line", x: 1, z: 2, yaw: 0, length: 5, width: 2 }, startAt: 0, hitAt: 5, share: 0.4 };
     expect(readTelegraphs([good, { id: "b", shape: { kind: "star", x: 0, z: 0 }, startAt: 0, hitAt: 1 }, null])).toEqual([good]);

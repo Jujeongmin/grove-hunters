@@ -14,6 +14,7 @@ import { readChat, type ChatMessage } from "../game/world/chat";
 import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
 import { readTelegraphs, type Telegraph } from "../game/world/telegraphs";
+import type { GuildBossType } from "../game/world/guildBoss";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
@@ -23,6 +24,21 @@ import type { MatchTransport } from "./transport";
 export type GuildCall =
   | "createGuild" | "applyGuild" | "cancelApplication" | "answerApplication" | "leaveGuild" | "kickMember"
   | "setGuildRole" | "passGuildMaster" | "setGuildNotice" | "disbandGuild";
+
+// The guild boss tab (see server guildBoss): the week's boss and progress, the rooms' head counts,
+// and when the week ends.
+export interface GuildBossView {
+  week: number;
+  boss: GuildBossType;
+  max: number;
+  damage: number;
+  stage: number;
+  enteredToday: boolean;
+  ranking: { name: string; damage: number; mine: boolean }[];
+  myDamage: number;
+  rooms: number[];
+  endsAt: number;
+}
 
 // One page of the market, and your gems.
 export interface MarketPage { listings: ListingView[]; page: number; pages: number; gems: number }
@@ -55,6 +71,9 @@ export interface Vitals {
   lostXp: number;
   // The mount you are on, as the server has it (a blow or a strike takes you off).
   riding: MountId | null;
+  // In a guild boss room: when your three minutes end (server ms), and whether they have.
+  arenaUntil: number | null;
+  timeUp: boolean;
 }
 
 export interface WorldState {
@@ -65,6 +84,8 @@ export interface WorldState {
   monsters: Record<string, MonsterState>;
   // The marks of the room's telegraphed attacks (see telegraphs.ts).
   telegraphs: Telegraph[];
+  // In a guild boss room: the boss's full health for the week (its hp is what is left of it).
+  arenaMax: number | null;
   me: Vitals | null;
   // Your gold, bag and gear; null until the server has said.
   bag: BagView | null;
@@ -150,14 +171,17 @@ function readMonsters(raw: unknown): Record<string, MonsterState> {
 
 function readVitals(user: Record<string, unknown>): Vitals | null {
   if (typeof user.hp !== "number" || typeof user.maxHp !== "number") return null;
-  return { hp: user.hp, maxHp: user.maxHp, dead: user.dead === true, xp: num(user.xp), lostXp: num(user.lostXp), riding: readMountId(user.riding) };
+  return {
+    hp: user.hp, maxHp: user.maxHp, dead: user.dead === true, xp: num(user.xp), lostXp: num(user.lostXp), riding: readMountId(user.riding),
+    arenaUntil: typeof user.arenaUntil === "number" ? user.arenaUntil : null, timeUp: user.timeUp === true,
+  };
 }
 
 // Your place in the open world: which zone and channel you are in, who else is there and where,
 // and your own pose going out to them.
 export class WorldClient {
   private current: WorldState = {
-    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false,
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false,
   };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
@@ -467,8 +491,38 @@ export class WorldClient {
     return this.tryCall("findGuilds", [query]);
   }
 
-  async guildBadge(): Promise<number> {
-    return (await this.transport.call<{ applicants: number }>("guildBadge").catch(() => null))?.applicants ?? 0;
+  // What the guild button's dot needs: applications waiting, and a boss to fight today.
+  async guildBadge(): Promise<{ applicants: number; bossReady: boolean }> {
+    return (await this.transport.call<{ applicants: number; bossReady: boolean }>("guildBadge").catch(() => null)) ?? { applicants: 0, bossReady: false };
+  }
+
+  // The guild boss: this week's boss and the guild's progress (the boss tab), going into one of the
+  // guild's boss rooms, and back out to where you stood. Null once there, or the problem.
+  guildBoss(): Promise<GuildBossView | { problem: string }> {
+    return this.tryCall("guildBoss", []);
+  }
+
+  async enterArena(n: number): Promise<string | null> {
+    if (this.current.phase !== "in") return "unavailable";
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(await this.transport.call<ZoneEntry>("enterArena", [n]));
+      return null;
+    } catch (error) {
+      this.set({ phase: "in" });
+      return errorCode(error);
+    }
+  }
+
+  async leaveArena(): Promise<string | null> {
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(await this.transport.call<ZoneEntry>("leaveArena"));
+      return null;
+    } catch (error) {
+      this.set({ phase: "in" });
+      return errorCode(error);
+    }
   }
 
   guildCall(name: GuildCall, args: unknown[] = []): Promise<GuildView | { problem: string }> {
@@ -656,7 +710,7 @@ export class WorldClient {
     this.users = [];
     this.lastPose = null;
     this.payoutSeen = undefined;
-    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], me: null, error: null });
+    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, error: null });
     void this.refreshBag();
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
@@ -666,6 +720,8 @@ export class WorldClient {
         if (monsters !== undefined) this.set({ monsters: readMonsters(monsters) });
         const telegraphs = (state as { telegraphs?: unknown }).telegraphs;
         if (telegraphs !== undefined) this.set({ telegraphs: readTelegraphs(telegraphs) });
+        const arena = (state as { arena?: { max?: unknown } }).arena;
+        if (arena && typeof arena.max === "number" && arena.max !== this.current.arenaMax) this.set({ arenaMax: arena.max });
         this.refreshOthers();
       }),
       this.transport.onRoomMessage(entry.roomId, "chat", (message) => this.heard(message)),

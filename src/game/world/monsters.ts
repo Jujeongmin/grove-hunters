@@ -8,7 +8,8 @@ export type MonsterType =
   | "green_blob" | "mushnub" | "rat" | "frog"
   | "spider" | "snake" | "wasp" | "goleling" | "bat"
   | "dire_spider" | "venom_snake" | "hornet" | "vampire_bat" | "stone_golem"
-  | "mushnub_guard" | "mushroom_king" | "grove_guardian";
+  | "mushnub_guard" | "mushroom_king" | "grove_guardian"
+  | "guild_dragon" | "guild_yeti" | "guild_glub" | "glub_brood";
 
 export interface MonsterSpec {
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
@@ -111,6 +112,24 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
     respawnMs: 8 * 86_400_000, gold: [500, 800],
     drops: [{ item: "potion_big", chance: 1 }, { item: "potion_big", chance: 1 }, { item: "potion_big", chance: 1 }, { item: "spore", chance: 1 }],
   },
+  // The guild bosses (see guildBoss.ts): their health is the guild's for the week (the room keeps it,
+  // not this table), their marked patterns do most of the harm, and they pay nothing on the spot.
+  guild_dragon: {
+    ...common, level: 30, hp: 1_000_000, damage: 45, range: 3.4, attackMs: 1800, speed: 2.0, aggro: 60, aggressive: true, body: 1.4,
+    xp: 0, respawnMs: 8 * 86_400_000, gold: [0, 0], drops: [],
+  },
+  guild_yeti: {
+    ...common, level: 30, hp: 1_000_000, damage: 45, range: 3.0, attackMs: 1500, speed: 2.6, aggro: 60, aggressive: true, body: 1.3,
+    xp: 0, respawnMs: 8 * 86_400_000, gold: [0, 0], drops: [],
+  },
+  guild_glub: {
+    ...common, level: 30, hp: 1_000_000, damage: 45, range: 3.6, attackMs: 2000, speed: 1.6, aggro: 60, aggressive: true, body: 1.6,
+    xp: 0, respawnMs: 8 * 86_400_000, gold: [0, 0], drops: [],
+  },
+  // The elder glub's brood: gone once felled, like the Mushroom King's.
+  glub_brood: {
+    ...common, level: 25, hp: 1500, damage: 20, speed: 2.4, aggro: 60, aggressive: true, xp: 30, gold: [0, 0], drops: [],
+  },
   mushroom_king: {
     level: 32, hp: 30000, damage: 90, range: 2.8, attackMs: 1800, speed: 1.6, aggro: 22, body: 1.0, xp: 6000,
     respawnMs: 300_000, gold: [800, 1200],
@@ -140,6 +159,7 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   forest2: ["spider", "snake", "wasp", "goleling", "bat"],
   forest3: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"],
   boss: [],
+  arena: [],
 };
 export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king" };
 // Where the grove's guardian comes (see grove.ts).
@@ -182,6 +202,15 @@ export interface MonsterState {
   calls?: number;
   // Called by the boss: gone for good once felled.
   summoned?: boolean;
+  // A guild boss (see guildBoss.ts): its full health for the week, when it casts its next pattern,
+  // which it cast last, until when it stands casting, and a charge under way (where to, and when).
+  maxHp?: number;
+  nextPatternAt?: number;
+  lastPattern?: number;
+  castUntil?: number;
+  chargeAt?: number;
+  chargeX?: number;
+  chargeZ?: number;
   // The damage each hunter has dealt it since it was last whole, by account.
   hitters?: Record<string, number>;
   // Gave up a chase past its leash: walks home paying no one any mind and taking no harm, and is

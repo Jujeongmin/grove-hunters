@@ -15,6 +15,12 @@ import { NEWS, readNewsId } from "../../src/game/news";
 import { mailFits, receiveMail, type Mail } from "../../src/game/account/mail";
 import { openMailbox, takeMail } from "./mail";
 import {
+  ARENA_LEVEL, ARENA_MS, ARENA_ROOMS, ARENA_SEATS, arenaRoomId, currentWeek, readArenaRoom,
+} from "../../src/game/world/guildBoss";
+import { bossView, enterWeek, findWeek, type BossView } from "./guildBoss";
+import { noteArenaDamage, tickArena } from "./arena";
+import { weekEndsAt } from "../../src/game/world/grove";
+import {
   GUILD_COST, REJOIN_MS, canAnswer, mayJoin, parseGuildName, rankedMembers, readNotice,
   type Guild, type GuildListing, type GuildView,
 } from "../../src/game/account/guild";
@@ -246,9 +252,10 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
 // dealt it the most damage; everyone here who hit it at all counts it toward their quest. Answers with what the caller itself was paid.
 async function reward(caller: string, roomId: string, result: HitResult): Promise<HitResult> {
   if (result.kills.length === 0) return result;
-  // Every kill cleanses the server's grove (added to its record every few seconds; see grove.ts).
+  // Every kill cleanses the server's grove (added to its record every few seconds; see grove.ts); a
+  // guild's boss rooms belong to no server's grove.
   const here = readChannelRoom(roomId);
-  await countGroveKills(roomId, result.kills.length);
+  if (here) await countGroveKills(roomId, result.kills.length);
   const present = new Set<string>((await $room.getRoomState([])).$users);
   present.add(caller);
   const pays = new Map<string, Pay>();
@@ -330,6 +337,29 @@ async function requireNpc(id: NpcId): Promise<void> {
   if (!isPose(pose) || Math.hypot(pose.x - spot.x, pose.z - spot.z) > TALK_RANGE + TALK_SLACK) throw new RuleViolation("not_near");
 }
 
+// Where the caller is fighting: a channel's room, or one of its guild's boss rooms (see arena.ts).
+type Place = { kind: "channel"; roomId: string; zone: ZoneId } | { kind: "arena"; roomId: string; zone: ZoneId; guildId: string; n: number };
+
+function currentPlace(): Place {
+  const roomId = $sender.roomId;
+  const arena = readArenaRoom(roomId);
+  if (arena && roomId) return { kind: "arena", roomId, zone: "arena", ...arena };
+  return { kind: "channel", ...currentChannel() };
+}
+
+// In a boss room: whether your three minutes are still running (the room keeps when they end).
+async function arenaOpen(): Promise<void> {
+  const mine = await $room.getMyState();
+  if (typeof mine.arenaUntil !== "number" || Date.now() >= mine.arenaUntil || mine.timeUp === true) throw new RuleViolation("arena_over");
+}
+
+// Your blow or skill in a boss room: what it took off the boss waits for the room's next sync.
+async function noteBossDamage(place: Place, result: HitResult): Promise<void> {
+  if (place.kind !== "arena" || !result.dealt.boss) return;
+  const character = await playing($sender.account);
+  await noteArenaDamage(place.roomId, character.id, $sender.account, character.name, result.dealt.boss);
+}
+
 // The caller's channel room, from inside it.
 function currentChannel(): { roomId: string; zone: ZoneId } {
   const roomId = $sender.roomId;
@@ -368,6 +398,23 @@ async function guildView(account: string, character: Character): Promise<GuildVi
     } : null,
     role, applied, waitUntil: character.guildLeftAt + REJOIN_MS,
   };
+}
+
+// Standing in a boss room, whole, for as long as your pass (enterArena) says.
+async function arriveInArena(account: string): Promise<{ x: number; z: number; grove: null }> {
+  const roomId = $sender.roomId;
+  const pass = (await $global.getUserState(account)).arena as { roomId?: unknown; until?: unknown } | undefined;
+  const now = Date.now();
+  if (!pass || pass.roomId !== roomId || typeof pass.until !== "number" || now >= pass.until) throw new RuleViolation("arena_over");
+  const character = await playing(account);
+  const at = zoneLayout("arena").playerSpawn;
+  const { maxHp, gear } = fightStats(await mounted(account, character));
+  await $room.updateMyState({
+    pose: { x: at.x, z: at.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+    characterId: character.id, riding: null, look: zoneLook(character), savedAt: now,
+    xp: character.xp, maxHp, gear, hp: maxHp, dead: false, arenaUntil: pass.until, timeUp: false,
+  });
+  return { x: at.x, z: at.z, grove: null };
 }
 
 // A listing as the market's screen shows it: whose it is by name only, and whether it is yours.
@@ -537,12 +584,73 @@ export class Server {
   }
 
   // What the menu's guild button needs, cheaply: applications waiting (for those who answer them).
-  async guildBadge(): Promise<{ applicants: number }> {
+  async guildBadge(): Promise<{ applicants: number; bossReady: boolean }> {
     const account = $sender.account;
     const character = await playing(account);
     const guild = await guildOf(account, character);
     const role = guild?.members.find((m) => m.characterId === character.id)?.role ?? null;
-    return { applicants: guild && canAnswer(role) ? guild.applicants.length : 0 };
+    let bossReady = false;
+    if (guild && levelOf(character.xp).level >= ARENA_LEVEL) {
+      const now = Date.now();
+      const view = bossView(await findWeek(guild.id, currentWeek(now)), guild, character.id, currentWeek(now), now);
+      bossReady = !view.enteredToday && view.damage < view.max;
+    }
+    return { applicants: guild && canAnswer(role) ? guild.applicants.length : 0, bossReady };
+  }
+
+  // The boss tab: this week's boss and the guild's progress on it, and how full each boss room is.
+  async guildBoss(): Promise<BossView & { rooms: number[]; endsAt: number }> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    const now = Date.now();
+    const week = currentWeek(now);
+    const view = bossView(await findWeek(guild.id, week), guild, character.id, week, now);
+    const rooms = await Promise.all(Array.from({ length: ARENA_ROOMS }, (_, i) => $global.getRoomUserAccounts(arenaRoomId(guild.id, i + 1))));
+    return { ...view, rooms: rooms.map((r) => r.length), endsAt: weekEndsAt(now) };
+  }
+
+  // Into one of your guild's boss rooms (1 to ARENA_ROOMS) for your three minutes of the day, from
+  // wherever you stand in the world. The client joins the room and calls arrive.
+  async enterArena(rawN: unknown): Promise<ZoneEntry & { until: number }> {
+    const n = typeof rawN === "number" && Number.isInteger(rawN) && rawN >= 1 && rawN <= ARENA_ROOMS ? rawN : null;
+    if (n === null) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    const here = readChannelRoom($sender.roomId);
+    if (!here) throw new RuleViolation("unavailable");
+    const mine = await $room.getMyState();
+    if (mine.dead === true) throw new RuleViolation("unavailable");
+    const character = await playing(account);
+    if (levelOf(character.xp).level < ARENA_LEVEL) throw new RuleViolation("too_low");
+    const { guild } = await myGuild(account, character);
+    const roomId = arenaRoomId(guild.id, n);
+    if ((await $global.getRoomUserAccounts(roomId)).filter((a: string) => a !== account).length >= ARENA_SEATS) {
+      throw new RuleViolation("room_full");
+    }
+    const now = Date.now();
+    await enterWeek(guild, character.id, account, character.name, currentWeek(now), now);
+    // As you are in the field is how you come back to it.
+    await carryVitals(account, mine);
+    const until = now + ARENA_MS;
+    await $global.updateUserState(account, { arena: { roomId, until, channel: here.channel } });
+    const at = zoneLayout("arena").playerSpawn;
+    return { roomId, zone: "arena", channel: n, x: at.x, z: at.z, until };
+  }
+
+  // Out of the boss room, back to where you stood in the field before, on the same channel.
+  async leaveArena(): Promise<ZoneEntry> {
+    const account = $sender.account;
+    const pass = (await $global.getUserState(account)).arena as { channel?: unknown } | undefined;
+    await $global.updateUserState(account, { arena: null });
+    const character = await playing(account);
+    const spot = returnSpot(character.spot);
+    const channel = readChannel(pass?.channel) ?? await channelToEnter(account, character);
+    const owned = await ownsFullGame(account);
+    if (spot && spot.zone !== "arena" && (!ZONES[spot.zone].paid || owned) && levelOf(character.xp).level >= ZONES[spot.zone].minLevel) {
+      return enter(account, character, spot.zone, spot.x, spot.z, channel);
+    }
+    const home = zoneLayout(START_ZONE).playerSpawn;
+    return enter(account, character, START_ZONE, home.x, home.z, channel);
   }
 
   // Guilds to join: the one named `query`, or those with the fewest members.
@@ -960,6 +1068,7 @@ export class Server {
   // its spot for everyone in the room to see.
   async arrive(): Promise<{ x: number; z: number; grove: { gold: number; xp: number } | null }> {
     const account = $sender.account;
+    if (currentPlace().kind === "arena") return arriveInArena(account);
     const { roomId, zone } = currentChannel();
     const character = await playing(account);
     // Only into the room enter sent you to (it checked the zone's price, its level and the channel's
@@ -1016,7 +1125,8 @@ export class Server {
   // every SAVE_SPOT_MS so you come back to the same spot.
   async reportPose(raw: unknown): Promise<void> {
     if (!isPose(raw)) throw new RuleViolation("unavailable");
-    const { zone } = currentChannel();
+    const place = currentPlace();
+    const { zone } = place;
     const now = Date.now();
     const mine = await $room.getMyState();
     // Not arrived here (see arrive): nowhere to walk from.
@@ -1029,7 +1139,8 @@ export class Server {
     const mount = readMountId(mine.riding);
     const saved = await writeZonePose(zone, raw, now, last, mount ? MOUNTS[mount].speed : 1);
     const savedAt = mine.savedAt;
-    if (now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {
+    // A boss room is never where you come back to.
+    if (place.kind === "channel" && now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {
       await saveSpot($sender.account, { zone, x: saved.x, z: saved.z });
       await $room.updateMyState({ savedAt: now }, { returnState: false });
     }
@@ -1054,16 +1165,20 @@ export class Server {
 
   // Your attack on a monster, facing yaw; the server checks reach, facing and your weapon's pace.
   async strike(monsterId: unknown, yaw?: unknown): Promise<HitResult> {
-    const { roomId, zone } = currentChannel();
-    const result = await withRoomLock(roomId, () => strike(zone, $sender.account, monsterId, yaw, Date.now()));
-    return reward($sender.account, roomId, result);
+    const place = currentPlace();
+    if (place.kind === "arena") await arenaOpen();
+    const result = await withRoomLock(place.roomId, () => strike(place.zone, $sender.account, monsterId, yaw, Date.now()));
+    await noteBossDamage(place, result);
+    return reward($sender.account, place.roomId, result);
   }
 
   // Your class's skill, no sooner than its cooldown allows.
   async useSkill(slot?: unknown, yaw?: unknown): Promise<HitResult> {
-    const { roomId, zone } = currentChannel();
-    const result = await withRoomLock(roomId, () => useSkill(zone, $sender.account, slot, yaw, Date.now()));
-    return reward($sender.account, roomId, result);
+    const place = currentPlace();
+    if (place.kind === "arena") await arenaOpen();
+    const result = await withRoomLock(place.roomId, () => useSkill(place.zone, $sender.account, slot, yaw, Date.now()));
+    await noteBossDamage(place, result);
+    return reward($sender.account, place.roomId, result);
   }
 
   // The server's grove this week and its village (the grove panel, and how the world looks).
@@ -1130,7 +1245,7 @@ export class Server {
     const item = readItem(id);
     if (ITEMS[item].kind !== "potion") throw new RuleViolation("unavailable");
     const account = $sender.account;
-    const { roomId } = currentChannel();
+    const { roomId } = currentPlace();
     const now = Date.now();
     // One at a time, as the client drinks them: under the room's lock, so a burst sent at once is
     // held to the pace too.
@@ -1423,6 +1538,11 @@ export class Server {
   // Every room tick (Verse8 runs it about every 200 ms): the monsters of a hunting zone move and fight.
   // Whoever falls loses a little XP (see deathXpLoss); the room shows them how much.
   async $roomTick(delta: number, roomId: string): Promise<void> {
+    // A guild's boss room: its own tick, and no one loses anything for falling there.
+    if (readArenaRoom(roomId)) {
+      await tickArena(roomId, currentWeek(Date.now()), delta, Date.now());
+      return;
+    }
     const here = readChannelRoom(roomId);
     if (!here || !hasMonsters(here.zone)) return;
     const fell = await withRoomLock(roomId, () => tickRoom(here.zone, delta, Date.now()));

@@ -9,5 +9,7 @@ export function devLocalTransport(): MatchTransport | null {
   if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("local")) return null;
   const world = new LocalWorld(new Server());
   world.startTicking();
+  // For trying things by hand from the console (a level, some gold, a guild): the page's own world.
+  (window as unknown as { __localWorld?: LocalWorld }).__localWorld = world;
   return new LocalTransport(world, "test-local");
 }

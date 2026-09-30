@@ -17,6 +17,67 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-guild-boss",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "길드 보스가 나타났어요",
+        lines: [
+          "길드 패널의 '보스' 탭에서 길드 전용 보스방(방마다 최대 6명)에 들어가요. 서버와 채널이 달라도 같은 방에서 함께 싸울 수 있어요.",
+          "보스 체력은 길드 전체가 한 주 동안 함께 깎아요. 한 사람은 하루 한 번, 3분씩 (Lv10 이상).",
+          "매주 고대 드래곤 → 설산 예티 → 장로 글럽이 번갈아 나와요.",
+          "바닥에 빨간 표시가 뜨면 곧 공격이 떨어져요. 막기로는 못 막으니 표시 밖으로 피하세요! 보라색 장판은 서 있으면 계속 아파요.",
+          "25·50·75%와 처치 때 그 주에 참여한 길드원 모두에게 우편 보상. 처치하면 거래 가능 장비를 받아요 (기여 1~3위는 최상급).",
+          "버섯왕의 내리찍기도 같은 바닥 표시로 바뀌었어요.",
+        ],
+      },
+      en: {
+        title: "Guild bosses are here",
+        lines: [
+          "From the 'Boss' tab of the guild panel, go into your guild's own boss rooms (up to 6 each). Guildmates on other servers and channels fight in the same room.",
+          "The whole guild wears the boss down over the week. Each character goes in once a day for 3 minutes (Lv10+).",
+          "Ancient Dragon, Snowpeak Yeti and Elder Glub take turns week by week.",
+          "Red marks on the ground mean a blow is about to land. Blocking does not help: step out! Purple pools keep hurting while you stand in them.",
+          "At 25, 50 and 75% and when it falls, everyone who fought that week gets mail. Slaying it brings tradable gear (the best for the top 3).",
+          "The Mushroom King's slam now shows the same ground mark.",
+        ],
+      },
+      ja: {
+        title: "ギルドボスが現れました",
+        lines: [
+          "ギルドパネルの「ボス」タブから、ギルド専用のボス部屋（1部屋最大6人）に入れます。サーバーやチャンネルが違っても同じ部屋で一緒に戦えます。",
+          "ボスの体力はギルド全体で1週間かけて削ります。1人1日1回、3分ずつ（Lv10以上）。",
+          "毎週、古代ドラゴン → 雪山イエティ → 長老グラブが交代で現れます。",
+          "地面に赤い印が出たらまもなく攻撃が来ます。防御では防げないので印の外へ避けましょう！紫の沼は立っている間ずっとダメージを受けます。",
+          "25・50・75%と撃破時に、その週の参加者全員へ郵便で報酬。撃破すると取引可能な装備がもらえます（貢献1〜3位は最上級）。",
+          "キノコ王の叩きつけも同じ地面の印になりました。",
+        ],
+      },
+      "zh-Hant": {
+        title: "公會首領登場",
+        lines: [
+          "從公會面板的「首領」分頁進入公會專屬首領房（每房最多6人）。不同伺服器、頻道的成員也能在同一房間並肩作戰。",
+          "首領體力由整個公會一週內共同削減。每個角色每天一次，每次3分鐘（Lv10以上）。",
+          "每週輪流出現遠古巨龍 → 雪山雪怪 → 長老咕嚕。",
+          "地面出現紅色標示代表攻擊即將落下，防禦擋不住，請移出標示範圍！紫色地面站在上面會持續受傷。",
+          "達到25、50、75%與擊敗時，當週參與的成員全員以郵件獲得獎勵。擊敗可獲得可交易裝備（貢獻前3名為最高級）。",
+          "蘑菇王的重擊也改為相同的地面標示。",
+        ],
+      },
+      "zh-Hans": {
+        title: "公会首领登场",
+        lines: [
+          "从公会面板的“首领”标签进入公会专属首领房（每房最多6人）。不同服务器、频道的成员也能在同一房间并肩作战。",
+          "首领体力由整个公会一周内共同削减。每个角色每天一次，每次3分钟（Lv10以上）。",
+          "每周轮流出现远古巨龙 → 雪山雪怪 → 长老咕噜。",
+          "地面出现红色标示代表攻击即将落下，防御挡不住，请移出标示范围！紫色地面站在上面会持续受伤。",
+          "达到25、50、75%与击败时，当周参与的成员全员以邮件获得奖励。击败可获得可交易装备（贡献前3名为最高级）。",
+          "蘑菇王的重击也改为相同的地面标示。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-guild",
     date: "2026-09-30",
     text: {

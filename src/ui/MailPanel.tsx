@@ -3,7 +3,7 @@ import { daysLeft, giftById, marketThing, type Mail } from "../game/account/mail
 import { marketFee } from "../game/account/market";
 import { iconFor } from "../game/render/icons";
 import { problemText } from "./BagPanel";
-import { lang, t } from "./lang";
+import { lang, t, type Key } from "./lang";
 import { gearName, itemName } from "./names";
 import type { WorldClient } from "../net/worldClient";
 
@@ -18,6 +18,14 @@ interface MailPanelProps {
 function words(mail: Mail): { title: string; body: string | null } {
   const gift = mail.kind === "gift" ? giftById(mail.params.gift) : null;
   if (gift) return gift.text[lang()];
+  if (mail.kind === "guild_boss") {
+    const stage = typeof mail.params.stage === "number" ? mail.params.stage : 1;
+    const boss = t(`boss.${String(mail.params.boss)}` as Key);
+    return {
+      title: t("mail.guildBoss", { stage }),
+      body: stage >= 4 ? t("mail.guildBossSlain", { boss }) : t("mail.guildBossBody", { boss, pct: stage * 25 }),
+    };
+  }
   const thing = marketThing(mail);
   if (mail.kind === "gift" || !thing) return { title: t("mail.gift"), body: null };
   const item = thing.n > 1 ? `${itemName(thing.id)} ×${thing.n}` : gearName({ id: thing.id, plus: thing.plus });

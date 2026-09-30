@@ -33,6 +33,7 @@ import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
 import { MarketPanel } from "./MarketPanel";
 import { GuildPanel } from "./GuildPanel";
+import { ArenaHud } from "./ArenaHud";
 import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
@@ -335,14 +336,17 @@ function ZoneScreen({
   // counted on coming in and every minute.
   const [mailWaiting, setMailWaiting] = useState(0);
   const [applicants, setApplicants] = useState(0);
+  const [bossReady, setBossReady] = useState(false);
   useEffect(() => {
     let live = true;
     const count = () => {
       void client.mailCount().then((n) => {
         if (live) setMailWaiting(n);
       });
-      void client.guildBadge().then((n) => {
-        if (live) setApplicants(n);
+      void client.guildBadge().then((b) => {
+        if (!live) return;
+        setApplicants(b.applicants);
+        setBossReady(b.bossReady);
       });
     };
     count();
@@ -393,7 +397,7 @@ function ZoneScreen({
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
-    { id: "guild", label: t("menu.guild"), key: "Z", code: "KeyZ", act: () => toggle("guild"), on: panel === "guild", dot: applicants > 0 },
+    { id: "guild", label: t("menu.guild"), key: "Z", code: "KeyZ", act: () => toggle("guild"), on: panel === "guild", dot: applicants > 0 || bossReady },
     { id: "market", label: t("menu.market"), key: "X", code: "KeyX", act: () => toggle("market"), on: panel === "market" },
     { id: "mail", label: t("menu.mail"), key: "F", code: "KeyF", act: () => toggle("mail"), on: panel === "mail", dot: mailWaiting > 0 },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
@@ -640,7 +644,8 @@ function ZoneScreen({
               client={client} hud={hud} bag={bag} onWake={() => setSaving(false)}
             />
           )}
-          {hud.dead && (
+          {entry.zone === "arena" && <ArenaHud client={client} />}
+          {hud.dead && entry.zone !== "arena" && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} travelling={travelling} />
           )}
         </>

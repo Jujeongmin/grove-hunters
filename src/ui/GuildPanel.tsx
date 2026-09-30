@@ -5,7 +5,8 @@ import {
 } from "../game/account/guild";
 import { readClass } from "../game/combat/classes";
 import { readZone } from "../game/world/zones";
-import type { GuildCall, WorldClient } from "../net/worldClient";
+import type { GuildBossView, GuildCall, WorldClient } from "../net/worldClient";
+import { ARENA_SEATS } from "../game/world/guildBoss";
 import { problemText } from "./BagPanel";
 import { locale, t, type Key } from "./lang";
 import { className, jobLabel, serverName, zoneName } from "./names";
@@ -28,6 +29,7 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
   const [asking, setAsking] = useState<Asking | null>(null);
+  const [tab, setTab] = useState<"members" | "boss">("members");
   useEffect(() => {
     let live = true;
     void client.guild().then((r) => {
@@ -63,7 +65,17 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
         <h2>{view?.guild ? view.guild.name : t("guild.title")}</h2>
         {!view && <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>}
         {view && !view.guild && <NoGuild client={client} view={view} busy={busy} act={act} />}
-        {view?.guild && <InGuild view={view} busy={busy} act={act} ask={ask} />}
+        {view?.guild && (
+          <div className="smith-tabs">
+            {(["members", "boss"] as const).map((id) => (
+              <button key={id} type="button" className={`text-button${tab === id ? " on" : ""}`} onClick={() => setTab(id)}>
+                {t(id === "boss" ? "guild.tab.boss" : "guild.tab.members")}
+              </button>
+            ))}
+          </div>
+        )}
+        {view?.guild && tab === "members" && <InGuild view={view} busy={busy} act={act} ask={ask} />}
+        {view?.guild && tab === "boss" && <BossTab client={client} onEntered={onClose} />}
         {asking && (
           <div className="market-confirm">
             <p>{asking.text}</p>
@@ -82,6 +94,11 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
 
 type Act = (name: GuildCall, args?: unknown[]) => Promise<void>;
 
+// A moment as the guild screen says it: the day and the hour, no seconds ("10월 5일 (월) 오전 12시").
+function shortTime(ms: number): string {
+  return new Date(ms).toLocaleString(locale(), { month: "short", day: "numeric", weekday: "short", hour: "numeric" });
+}
+
 function NoGuild({ client, view, busy, act }: { client: WorldClient; view: GuildView; busy: boolean; act: Act }) {
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<GuildListing[] | null>(null);
@@ -99,7 +116,7 @@ function NoGuild({ client, view, busy, act }: { client: WorldClient; view: Guild
   return (
     <div className="guild-body">
       <p className="note">{t("guild.rules")}</p>
-      {waiting && <p className="note guild-wait">{t("guild.wait", { time: new Date(view.waitUntil).toLocaleString(locale()) })}</p>}
+      {waiting && <p className="note guild-wait">{t("guild.wait", { time: shortTime(view.waitUntil) })}</p>}
       <h3>{t("guild.find")}</h3>
       <form
         className="guild-row-form"
@@ -265,6 +282,84 @@ function MemberActions({ member, role, busy, act, ask }: {
   return (
     <div className="guild-actions">
       {buttons.map((b) => <button key={b.label} type="button" className="text-button" disabled={busy} onClick={b.run}>{b.label}</button>)}
+    </div>
+  );
+}
+
+// The guild boss this week: how far the guild has got, whether you can go in today, the boss rooms
+// and how full they are, and who has done the most.
+function BossTab({ client, onEntered }: { client: WorldClient; onEntered: () => void }) {
+  const [boss, setBoss] = useState<GuildBossView | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    void client.guildBoss().then((r) => {
+      if (!live) return;
+      if ("problem" in r) setFailed(true);
+      else setBoss(r);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client]);
+  if (!boss) return <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>;
+  const left = Math.max(0, boss.max - boss.damage);
+  const down = left <= 0;
+  const enter = async (n: number) => {
+    setBusy(true);
+    setProblem(null);
+    const code = await client.enterArena(n);
+    setBusy(false);
+    if (code) setProblem(problemText(code));
+    else onEntered();
+  };
+  return (
+    <div className="guild-body boss-tab">
+      <div className="boss-head">
+        <span className="note">{t("boss.week")}</span>
+        <b>{t(`boss.${boss.boss}` as Key)}</b>
+        <span className="note">{t("boss.endsAt", { time: shortTime(boss.endsAt) })}</span>
+      </div>
+      <div className="boss-gauge">
+        <i style={{ width: `${(left / boss.max) * 100}%` }} />
+        {[0.25, 0.5, 0.75].map((s) => <b key={s} style={{ left: `${(1 - s) * 100}%` }} />)}
+      </div>
+      <p className="note">{down ? t("boss.down") : t("boss.left", { n: Math.ceil((left / boss.max) * 100) })}</p>
+      {!down && <p className={`note${boss.enteredToday ? "" : " boss-ready"}`}>{boss.enteredToday ? t("boss.today") : t("boss.ready")}</p>}
+      {!down && (
+        <ul className="boss-rooms">
+          {boss.rooms.map((n, i) => (
+            <li key={i}>
+              <b>{t("boss.room", { n: i + 1 })}</b>
+              <span className="note">{t("boss.seats", { n, max: ARENA_SEATS })}</span>
+              <button
+                type="button" className="text-button" disabled={busy || boss.enteredToday || n >= ARENA_SEATS}
+                onClick={() => void enter(i + 1)}
+              >
+                {t("boss.enter")}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {problem && <p className="smith-note bad">{problem}</p>}
+      <h3>{t("boss.ranking")}</h3>
+      {boss.ranking.length === 0 ? (
+        <p className="note">{t("boss.noRanking")}</p>
+      ) : (
+        <ol className="boss-ranking">
+          {boss.ranking.map((r, i) => (
+            <li key={i} className={r.mine ? "mine" : ""}>
+              <span>{i + 1}. {r.name}</span>
+              <span>{r.damage.toLocaleString(locale())}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="note">{t("boss.mine", { n: boss.myDamage.toLocaleString(locale()) })}</p>
+      <p className="note">{t("boss.stages")}</p>
     </div>
   );
 }

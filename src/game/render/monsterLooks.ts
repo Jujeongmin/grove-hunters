@@ -15,6 +15,9 @@ const animal = (model: string, height: number, clips: Partial<MonsterLook["clips
   look: { height, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death", ...clips } },
 });
 
+// The flying mounts' takes.
+const FLYER: MonsterLook["clips"] = { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" };
+
 const MUSHROOM_KING: MonsterLook = { height: 2.8, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Weapon", death: "Death" } };
 
 export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
@@ -50,6 +53,12 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   mushroom_king: { model: "mon_mushroom_king", look: MUSHROOM_KING },
   // The grove's guardian: the Mushroom King's model, smaller and green with the forest.
   grove_guardian: { model: "mon_mushroom_king", look: { ...MUSHROOM_KING, height: 2.8 * 0.7, tint: 0x9dffb0 } },
+  // The guild bosses: the legendary mounts' models, grown huge and darkened so no one takes them for a
+  // mount (see guildBoss.ts).
+  guild_dragon: { model: "mnt_dragon", look: { height: 5.2, tint: 0x9a4a44, clips: FLYER } },
+  guild_yeti: { model: "mnt_yeti", look: { height: 4.4, tint: 0xa8c4e8, clips: { idle: "Idle", walk: "Walk", attack: "Bite_Front", death: "Death" } } },
+  guild_glub: { model: "mnt_glub_evolved", look: { height: 4.8, tint: 0x8a70c0, clips: FLYER } },
+  glub_brood: { model: "mnt_glub", look: { height: 1.3, tint: 0x9a80d0, clips: FLYER } },
 };
 
 export const GREEN_BLOB = MONSTER_SKINS.green_blob;

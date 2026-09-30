@@ -43,6 +43,7 @@ import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import type { LodBatch } from "./lodBatch";
 import { TelegraphLayer } from "./telegraphMarks";
+import { GUILD_BOSSES } from "../world/guildBoss";
 import type { Telegraph } from "../world/telegraphs";
 import { MonsterActor } from "./MonsterActor";
 import { MONSTER_SKINS } from "./monsterLooks";
@@ -139,6 +140,8 @@ function zoneMonsterModels(zone: ZoneId): string[] {
   // A boss brings its brood; the first field may be visited by the grove's guardian.
   if (boss) types.push(boss, BOSS_MOVES.summonType);
   if (zone === GROVE_GUARDIAN_ZONE) types.push("grove_guardian");
+  // A guild's arena may hold any of the week's bosses, and the glub's brood.
+  if (zone === "arena") types.push(...GUILD_BOSSES, "glub_brood");
   return [...new Set(types.map((t) => MONSTER_SKINS[t].model))];
 }
 
@@ -1208,6 +1211,9 @@ export class WorldView {
       let actor = this.monsters.get(id);
       if (!actor) {
         const skin = MONSTER_SKINS[state.type];
+        // A kind this zone did not load (a server ahead of this client): not drawn, rather than the
+        // whole view stopping on it.
+        if (!library.has(skin.model)) continue;
         actor = new MonsterActor(id, library.instance(skin.model), library.get(skin.model).animations, skin.look, MONSTERS[state.type].hp);
         this.monsters.set(id, actor);
         this.scene.add(actor.object);

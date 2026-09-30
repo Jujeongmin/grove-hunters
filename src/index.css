@@ -562,22 +562,22 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 /* What each update brought, newest first. */
 .news-panel { width: min(520px, 94%); gap: 8px; }
-.news-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 60vh; overflow-y: auto; }
+.news-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .news-list > li { border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
 .news-list > li.open { background: rgba(255, 179, 90, 0.1); }
 .news-head {
   display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 10px; cursor: pointer; text-align: left;
   background: none; border: 0; color: var(--ink); font: 600 14px var(--font-head);
 }
-.news-date { flex: none; font-size: 11px; color: var(--ink-dim); }
+.news-date { flex: none; font-size: 12px; color: var(--ink-dim); }
 .news-lines { margin: 0; padding: 0 12px 10px 28px; font-size: 13px; line-height: 1.5; }
 .news-lines li + li { margin-top: 3px; }
 /* The mailbox: each letter a card with what it carries and a button to take it. */
 .mail-panel { width: min(520px, 94%); gap: 8px; }
-.mail-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 56vh; overflow-y: auto; }
+.mail-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .mail-list > li { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
 .mail-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; }
-.mail-head .note { font-size: 11px; color: var(--ink-dim); }
+.mail-head .note { font-size: 12px; color: var(--ink-dim); }
 .mail-body { margin: 0; font-size: 12px; line-height: 1.45; color: var(--ink-dim); }
 .mail-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .mail-things { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 12px; color: #ffe08a; }
@@ -586,6 +586,16 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .mail-row .brush-button.small { flex: none; padding: 6px 14px; font-size: 13px; }
 .mail-actions { display: flex; justify-content: center; align-items: center; gap: 12px; }
 .mail-panel .note.bad { margin: 0; text-align: center; color: #ff8a7a; font-size: 12px; }
+/* The news, mail, market and guild panels keep to the smallest stage (800x450): a column never
+   taller than the stage, a compact title, and only what is inside scrolls (the lists, never the
+   buttons under them). */
+.news-panel, .mail-panel, .market-panel, .guild-panel {
+  display: flex; flex-direction: column; min-height: 0; max-height: calc(100% - 20px); padding: 14px 18px; box-sizing: border-box;
+}
+.news-panel > *, .mail-panel > *, .market-panel > *, .guild-panel > * { flex-shrink: 0; }
+.news-panel h2, .mail-panel h2, .market-panel h2, .guild-panel h2 { margin: 0; font-size: 20px; }
+.news-panel > .news-list, .mail-panel > .mail-list, .market-panel > .market-tab, .guild-panel > .guild-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.market-tab .market-list { overflow: visible; }
 /* A letter's tradable goods glow blue, as in the bag. */
 .mail-thing.trade { color: #7fe0ff; }
 /* The market: shelves and filters on top, a list of listings, and a form for putting things up. */
@@ -594,7 +604,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .market-head h2 { margin: 0; }
 .market-gems { display: inline-flex; align-items: center; gap: 3px; font: 700 13px var(--font-head); color: #bff0ff; font-variant-numeric: tabular-nums; }
 .market-gems img { width: 18px; height: 18px; image-rendering: pixelated; }
-.market-tab { display: flex; flex-direction: column; gap: 8px; min-height: 180px; }
+.market-tab { display: flex; flex-direction: column; gap: 8px; }
 .market-tab > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }
 .market-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .market-chip {
@@ -606,11 +616,11 @@ button.hud-prompt:hover { color: #ffe0b0; }
   padding: 4px 6px; border-radius: 6px; font: 600 12px var(--font-body); color: var(--ink);
   background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 179, 90, 0.35);
 }
-.market-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; max-height: 44vh; overflow-y: auto; }
+.market-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .market-list li { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
 .market-what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
 .market-what b, .market-what .note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.market-what .note, .market-price .note, .market-list > li > .note { font-size: 11px; color: var(--ink-dim); }
+.market-what .note, .market-price .note, .market-list > li > .note { font-size: 12px; color: var(--ink-dim); }
 .market-price { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
 .market-list .brush-button.small { flex: none; padding: 6px 14px; font-size: 13px; }
 .market-pager { display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 12px; }
@@ -620,15 +630,15 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .market-confirm p { margin: 0; }
 .market-confirm div { display: flex; gap: 10px; align-items: center; }
-.market-offers { max-height: 30vh; overflow-y: auto; }
+.market-offers { flex: none; max-height: 92px; overflow-y: auto; }
 .market-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; }
 .market-form label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-dim); }
 .market-form input { width: 90px; }
 .market-form .brush-button.small { padding: 6px 16px; font-size: 13px; }
-.market-note { margin: 0; font-size: 11px; color: var(--ink-dim); text-align: center; }
+.market-note { margin: 0; font-size: 12px; color: var(--ink-dim); text-align: center; }
 /* Guilds: finding and founding one, or your guild's notice, members and applications. */
 .guild-panel { width: min(560px, 96%); gap: 8px; }
-.guild-body { display: flex; flex-direction: column; gap: 6px; max-height: 64vh; overflow-y: auto; }
+.guild-body { display: flex; flex-direction: column; gap: 6px; }
 .guild-body h3 { margin: 4px 0 0; font: 700 14px var(--font-head); }
 .guild-body > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }
 .guild-wait { color: #ffb08a !important; }
@@ -641,18 +651,41 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .guild-row-form .brush-button.small { padding: 6px 16px; font-size: 13px; }
 .guild-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .guild-list > li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
-.guild-list > li > .note { font-size: 11px; color: var(--ink-dim); }
+.guild-list > li > .note { font-size: 12px; color: var(--ink-dim); }
 .guild-what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
-.guild-what .note { font-size: 11px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guild-what .note { font-size: 12px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .guild-member { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0; background: none; border: 0; color: var(--ink); text-align: left; cursor: pointer; }
 .guild-members li.online .presence { background: #7fd36a; box-shadow: 0 0 6px rgba(127, 211, 106, 0.7); }
-.guild-role { margin-left: 4px; padding: 0 5px; border-radius: 4px; font: 600 10px var(--font-head); color: var(--ink-dim); background: rgba(255, 255, 255, 0.08); }
+.guild-role { margin-left: 4px; padding: 0 5px; border-radius: 4px; font: 600 11px var(--font-head); color: var(--ink-dim); background: rgba(255, 255, 255, 0.08); }
 .guild-role.master { color: #1a120b; background: #ffd36a; }
 .guild-role.vice { color: #1a120b; background: #bff0ff; }
 .guild-actions { flex-basis: 100%; display: flex; gap: 10px; justify-content: flex-end; }
 .guild-notice { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border-radius: 6px; background: rgba(255, 179, 90, 0.08); font-size: 13px; }
 .guild-notice > span { flex: 1; }
 .guild-foot { display: flex; justify-content: flex-end; }
+/* The guild boss: its tab in the guild panel, and in its room the shared health bar and the clock. */
+.boss-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.boss-head b { font: 700 18px var(--font-head); color: #ffd36a; }
+.boss-gauge, .arena-bar { position: relative; height: 14px; border-radius: 7px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.boss-gauge i, .arena-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b8322a, #ff7a3a); }
+.boss-gauge b, .arena-bar b { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0, 0, 0, 0.55); }
+.boss-ready { color: #9dffb0 !important; }
+.boss-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.boss-rooms li { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); font-size: 12px; }
+.boss-ranking { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+.boss-ranking li { display: flex; justify-content: space-between; padding: 3px 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.04); }
+.boss-ranking li.mine { color: #ffd36a; }
+.arena-hud {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(280px, 34%); display: flex; flex-direction: column;
+  gap: 4px; pointer-events: none; text-shadow: var(--shadow);
+}
+.arena-top { display: flex; justify-content: space-between; align-items: baseline; font: 700 15px var(--font-head); color: #ffd36a; }
+.arena-clock { font: 700 18px var(--font-head); color: var(--ink); font-variant-numeric: tabular-nums; }
+.arena-bar { height: 16px; }
+.arena-bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 12px var(--font-head); color: #fff; }
+.arena-hint { margin: 0; text-align: center; font-size: 12px; color: #ffb08a; }
+.arena-leave { align-self: center; pointer-events: auto; font-size: 12px; }
+.arena-end { width: min(360px, 90%); gap: 10px; text-align: center; align-items: center; }
 /* The grove this week and the village it is rebuilding, in one screen. */
 .grove-panel { width: min(520px, 94%); gap: 8px; }
 .grove-gauge { height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }

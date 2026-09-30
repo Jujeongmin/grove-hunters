@@ -180,12 +180,14 @@ export interface HitResult {
   hit: string[];
   killed: string[];
   kills: Kill[];
+  // What it took off each monster it hit (the guild boss's rooms add it to the guild's week).
+  dealt: Record<string, number>;
   xp: number;
   gold: number;
   items: string[];
 }
 
-export const NOTHING: HitResult = { hit: [], killed: [], kills: [], xp: 0, gold: 0, items: [] };
+export const NOTHING: HitResult = { hit: [], killed: [], kills: [], dealt: {}, xp: 0, gold: 0, items: [] };
 
 // `account` hits the monsters for damage (and a stun); what it takes off each is written down
 // against its name.
@@ -194,7 +196,7 @@ function land(
   monsters: Record<string, MonsterState>, ids: string[], damage: number, stunMs: number, now: number, account: string,
   hunters: number,
 ): HitResult {
-  const out: HitResult = { ...NOTHING, hit: [], killed: [], kills: [], items: [] };
+  const out: HitResult = { ...NOTHING, hit: [], killed: [], kills: [], dealt: {}, items: [] };
   for (const id of ids) {
     const m = monsters[id];
     // One walking home from a lost chase takes no harm.
@@ -202,6 +204,7 @@ function land(
     out.hit.push(id);
     const dealt = Math.min(m.hp, damage);
     m.hp -= dealt;
+    out.dealt[id] = (out.dealt[id] ?? 0) + dealt;
     m.hitters = { ...m.hitters, [account]: (m.hitters?.[account] ?? 0) + dealt };
     if (stunMs > 0) m.stunnedUntil = Math.max(m.stunnedUntil, now + stunMs);
     if (m.hp <= 0) {
@@ -283,7 +286,7 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
   }
   const monsters = await readMonsters(zone);
   const targets = skillTargets(f.pose, monsters, skill, true);
-  if (targets.length === 0) return { ...NOTHING };
+  if (targets.length === 0) return { ...NOTHING, dealt: {} };
   const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power), skill.stunMs, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;

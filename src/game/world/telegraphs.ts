@@ -28,6 +28,8 @@ export interface Telegraph {
   damage?: number;
   // Once landed, it stays on the ground until `until`, taking tickShare of health a second.
   pool?: { until: number; tickShare: number; nextAt: number };
+  // Marks cast together (one pattern): where several overlap, a player is struck by one of them only.
+  group?: string;
 }
 
 // The way yaw faces, as the rest of the game has it (a yaw of 0 looks toward -z).
@@ -83,6 +85,15 @@ export function resolveTelegraphs(
 ): { hits: TelegraphHit[]; left: Telegraph[] } {
   const hits: TelegraphHit[] = [];
   const left: Telegraph[] = [];
+  // Who a group's marks have already struck this tick (by group, then account).
+  const struck = new Set<string>();
+  const once = (t: Telegraph, account: string) => {
+    if (!t.group) return true;
+    const key = `${t.group}|${account}`;
+    if (struck.has(key)) return false;
+    struck.add(key);
+    return true;
+  };
   for (const t of telegraphs) {
     if (now < t.hitAt) {
       left.push(t);
@@ -90,13 +101,13 @@ export function resolveTelegraphs(
     }
     const landing = !t.pool || t.pool.nextAt === t.hitAt;
     if (landing) {
-      for (const p of targets) if (inShape(t.shape, p.x, p.z)) hits.push({ account: p.account, damage: damageOf(t, p.maxHp) });
+      for (const p of targets) if (inShape(t.shape, p.x, p.z) && once(t, p.account)) hits.push({ account: p.account, damage: damageOf(t, p.maxHp) });
     }
     if (!t.pool) continue;
     let nextAt = landing ? t.hitAt + POOL_TICK_MS : t.pool.nextAt;
     if (!landing && now >= nextAt) {
       for (const p of targets) {
-        if (inShape(t.shape, p.x, p.z)) hits.push({ account: p.account, damage: damageOf(t, p.maxHp, t.pool.tickShare) });
+        if (inShape(t.shape, p.x, p.z) && once(t, p.account)) hits.push({ account: p.account, damage: damageOf(t, p.maxHp, t.pool.tickShare) });
       }
       nextAt += POOL_TICK_MS;
     }
@@ -129,7 +140,7 @@ export function readTelegraphs(raw: unknown): Telegraph[] {
     if (!t || !shape || typeof t.id !== "string" || !num(t.startAt) || !num(t.hitAt)) continue;
     const p = t.pool as Record<string, unknown> | undefined;
     out.push({
-      id: t.id, shape, startAt: t.startAt, hitAt: t.hitAt,
+      id: t.id, shape, startAt: t.startAt, hitAt: t.hitAt, ...(typeof t.group === "string" ? { group: t.group } : {}),
       ...(num(t.share) ? { share: t.share } : {}), ...(num(t.damage) ? { damage: t.damage } : {}),
       ...(p && num(p.until) && num(p.tickShare) && num(p.nextAt) ? { pool: { until: p.until, tickShare: p.tickShare, nextAt: p.nextAt } } : {}),
     });

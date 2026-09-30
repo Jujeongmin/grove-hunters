@@ -43,7 +43,7 @@ const KOREA_MS = 9 * 3_600_000;
 const FIRST_MONDAY_MS = 4 * DAY_MS;
 
 // Weeks run from Monday midnight in Korea: the week's number since 1970, as the records keep it.
-function weekIndex(now: number): number {
+export function weekIndex(now: number): number {
   return Math.floor((now + KOREA_MS - FIRST_MONDAY_MS) / (7 * DAY_MS));
 }
 
