@@ -8,6 +8,7 @@ import {
   GOLD, ITEMS, MAX_STACK, NO_GEAR, POTION_GAP_MS, addItem, equip, fitsInBag, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
 } from "../../src/game/account/items";
 import { readControls, type Controls } from "../../src/game/account/controls";
+import { NEWS, readNewsId } from "../../src/game/news";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
 import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
@@ -323,6 +324,22 @@ export class Server {
 
   async getAccount(): Promise<AccountView> {
     return accountView($sender.account);
+  }
+
+  // The newest update notice this account has read (see news.ts); null before the first.
+  async getNewsSeen(): Promise<{ seen: string | null }> {
+    return { seen: readNewsId((await $global.getUserState($sender.account)).newsSeen) };
+  }
+
+  // Marks the news read up to `id`. An older one than the id kept (a late call) changes nothing.
+  async markNewsSeen(raw: unknown): Promise<{ seen: string }> {
+    const id = readNewsId(raw);
+    if (!id) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    const kept = readNewsId((await $global.getUserState(account)).newsSeen);
+    if (kept && NEWS.findIndex((n) => n.id === kept) <= NEWS.findIndex((n) => n.id === id)) return { seen: kept };
+    await $global.updateUserState(account, { newsSeen: id });
+    return { seen: id };
   }
 
   // How you set up the bar (skills in slots, what auto-battle may use), kept on the account so it

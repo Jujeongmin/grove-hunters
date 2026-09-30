@@ -7,9 +7,10 @@ import { ja } from "./strings/ja";
 import { zhHant } from "./strings/zhHant";
 import { zhHans } from "./strings/zhHans";
 
-// The languages the game is written in. Korean is the one it was written in; the rest are checked
-// against it at compile time (see strings/ko.ts), so none of them can quietly fall behind.
-export type Lang = "ko" | "en" | "ja" | "zh-Hant" | "zh-Hans";
+// The languages the game is written in (langs.ts). Korean is the one it was written in; the rest are
+// checked against it at compile time (see strings/ko.ts), so none of them can quietly fall behind.
+import type { Lang } from "../game/langs";
+export type { Lang };
 
 // Each language named in itself, which is how a reader finds their own in a list.
 export const LANGS: { id: Lang; name: string }[] = [
