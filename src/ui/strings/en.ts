@@ -323,6 +323,8 @@ export const en: Bundle = {
   "menu.forge": "Forge",
   "menu.bag": "Bag",
   "menu.sleep": "Power save",
+  "menu.news": "News",
+  "news.title": "Update news",
   "menu.settings": "Settings",
 
   "death.fallen": "You fell",

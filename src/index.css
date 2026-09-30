@@ -555,6 +555,23 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
 .upgrade-sheet .text-button:hover { opacity: 1; }
 /* Talking to a village NPC. */
+/* Something new behind a menu button: a small red dot in its top-left corner. */
+.hud-dot {
+  position: absolute; top: -3px; left: -3px; width: 9px; height: 9px; border-radius: 50%;
+  background: #ff4d3d; box-shadow: 0 0 0 2px #1a1412, 0 0 6px rgba(255, 77, 61, 0.8); pointer-events: none;
+}
+/* What each update brought, newest first. */
+.news-panel { width: min(520px, 94%); gap: 8px; }
+.news-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 60vh; overflow-y: auto; }
+.news-list > li { border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
+.news-list > li.open { background: rgba(255, 179, 90, 0.1); }
+.news-head {
+  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 10px; cursor: pointer; text-align: left;
+  background: none; border: 0; color: var(--ink); font: 600 14px var(--font-head);
+}
+.news-date { flex: none; font-size: 11px; color: var(--ink-dim); }
+.news-lines { margin: 0; padding: 0 12px 10px 28px; font-size: 13px; line-height: 1.5; }
+.news-lines li + li { margin-top: 3px; }
 /* The grove this week and the village it is rebuilding, in one screen. */
 .grove-panel { width: min(520px, 94%); gap: 8px; }
 .grove-gauge { height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }

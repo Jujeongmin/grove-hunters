@@ -169,6 +169,16 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/icons/marker_quest.png`, `marker_report.png` | 촌장 머리 위 !(들을 이야기)와 ?(보고할 퀘스트) | 2026-09-28, 32x32, 강제 팔레트 없이 생성 |
 | `public/assets/ui/icons/ui_grove.png` | 메뉴의 숲(정화·마을 복구) 버튼, 새싹 | 2026-09-28, 32x32 |
 
+메뉴의 소식·우편·거래소·길드 버튼 아이콘은 `scripts/menu-icons.py`가 직접 그린다(외부 에셋 없음, 이 저장소의 것).
+위 팩의 모양(어두운 테두리, 왼쪽이 밝고 오른쪽이 어두운 명암)에 맞췄다.
+
+| 파일 | 쓰임 | 비고 |
+|---|---|---|
+| `public/assets/ui/icons/ui_news.png` | 소식 버튼, 종 | 2026-09-30, 34x34 |
+| `public/assets/ui/icons/ui_mail.png` | 우편 버튼, 봉투 | 2026-09-30, 34x34 |
+| `public/assets/ui/icons/ui_market.png` | 거래소 버튼, 저울 | 2026-09-30, 34x34 |
+| `public/assets/ui/icons/ui_guild.png` | 길드 버튼, 깃발 | 2026-09-30, 34x34 |
+
 나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
 물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.
 

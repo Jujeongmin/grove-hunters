@@ -332,6 +332,8 @@ export const ko = {
   "menu.forge": "대장간",
   "menu.bag": "가방",
   "menu.sleep": "절전",
+  "menu.news": "소식",
+  "news.title": "업데이트 소식",
   "menu.settings": "설정",
 
   "death.fallen": "쓰러졌어요",

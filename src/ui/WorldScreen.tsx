@@ -29,6 +29,8 @@ import { RankingPanel } from "./RankingPanel";
 import { iconFor } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
+import { NewsPanel } from "./NewsPanel";
+import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
 import { hazeHint, weekOf, type GroveView } from "../game/world/grove";
@@ -136,7 +138,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -312,6 +314,30 @@ function ZoneScreen({
     // Only when it finishes: clearFinished is a new function every render.
   }, [tutorial.finished]);
   useWakeLock();
+  // Update notices not yet read (a dot on the menu), which open by themselves once a visit when there
+  // are any, but never over the first tutorial.
+  const [newsUnread, setNewsUnread] = useState(0);
+  useEffect(() => {
+    let live = true;
+    void client.newsSeen().then((seen) => {
+      if (live) setNewsUnread(unseenNews(seen));
+    });
+    return () => {
+      live = false;
+    };
+  }, [client]);
+  const tutorialOver = bag !== null && bag.tutorial === null;
+  useEffect(() => {
+    if (!ready || !tutorialOver || newsUnread === 0 || client.newsShown) return;
+    client.newsShown = true;
+    setPanel((p) => p ?? "news");
+  }, [ready, tutorialOver, newsUnread, client]);
+  useEffect(() => {
+    if (panel !== "news") return;
+    client.newsShown = true;
+    client.markNewsRead();
+    setNewsUnread(0);
+  }, [panel, client]);
   const open = useRef({ panel, menu, upgrade, talkingTo });
   open.current = { panel, menu, upgrade, talkingTo };
   // A talk ends: the camera goes back over your shoulder and the HUD returns.
@@ -325,7 +351,10 @@ function ZoneScreen({
     setPanel((p) => (p === next ? null : next));
   };
   // Pinned: the ones used most sit beside the menu button, always in reach; the rest fold into it.
-  const menuItems: readonly { id: string; label: string; key: string; code: string; act: () => void; on: boolean; pinned?: boolean }[] = [
+  // dot: something new waits behind it.
+  const menuItems: readonly {
+    id: string; label: string; key: string; code: string; act: () => void; on: boolean; pinned?: boolean; dot?: boolean;
+  }[] = [
     { id: "map", label: t("menu.map"), key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
     ...(owned ? [] : [{
       id: "upgrade", label: t("menu.upgrade"), key: "V", code: "KeyV",
@@ -338,6 +367,7 @@ function ZoneScreen({
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
+    { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
       id: "menu", label: t("menu.settings"), key: "P", code: "KeyP",
@@ -350,6 +380,7 @@ function ZoneScreen({
       {iconFor(`ui_${item.id}`) && <img src={iconFor(`ui_${item.id}`)!} alt="" draggable={false} />}
       <span>{item.label}</span>
       {keyHints && <kbd className="hud-key">{item.key}</kbd>}
+      {item.dot && <i className="hud-dot" />}
     </button>
   );
   // The locked portal you are standing at, if any: the key handler below is bound once, so it reads
@@ -498,6 +529,7 @@ function ZoneScreen({
                 <img src={iconFor("ui_more") ?? undefined} alt="" draggable={false} />
                 <span>{t("common.menu")}</span>
                 {keyHints && <kbd className="hud-key">M</kbd>}
+                {!menuOpen && menuItems.some((item) => !item.pinned && item.dot) && <i className="hud-dot" />}
               </button>
             </div>
             {menuOpen && <div className="hud-menu-grid">{menuItems.filter((item) => !item.pinned).map(menuButton)}</div>}
@@ -608,6 +640,7 @@ function ZoneScreen({
           onClose={() => setPanel(null)}
         />
       )}
+      {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (
         <DonatePanel

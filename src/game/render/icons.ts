@@ -26,6 +26,8 @@ export const ICON_IDS = [
   // Mounts: the pad's ride button, the mounts panel's menu button, and gems (the pack's paw, open chest
   // and diamond).
   "pad_ride", "ui_mounts", "ui_gem",
+  // News, mail, the market and guilds (drawn by scripts/menu-icons.py).
+  "ui_news", "ui_mail", "ui_market", "ui_guild",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

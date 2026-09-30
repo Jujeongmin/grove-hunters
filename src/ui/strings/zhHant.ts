@@ -323,6 +323,8 @@ export const zhHant: Bundle = {
   "menu.forge": "鐵匠鋪",
   "menu.bag": "背包",
   "menu.sleep": "省電",
+  "menu.news": "公告",
+  "news.title": "更新公告",
   "menu.settings": "設定",
 
   "death.fallen": "你倒下了",

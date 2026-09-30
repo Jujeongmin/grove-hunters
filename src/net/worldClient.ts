@@ -12,6 +12,7 @@ import { errorCode } from "./errors";
 import type { EnhanceOutcome } from "../game/account/forge";
 import { readChat, type ChatMessage } from "../game/world/chat";
 import { readMountId, type MountId } from "../game/account/mounts";
+import { NEWS } from "../game/news";
 import type { MatchTransport } from "./transport";
 
 export type WorldPhase = "idle" | "entering" | "in" | "travelling" | "error";
@@ -149,6 +150,9 @@ export class WorldClient {
   private payoutSeen: string | null | undefined = undefined;
   private payouts: Payout[] = [];
   private chatCount = 0;
+  private seenNews: string | null | undefined = undefined;
+  // Whether the news has opened by itself yet this visit (once, not once per zone).
+  newsShown = false;
   // Bumped by every enter and leave: one overtaken by a newer one (React's development double run
   // enters, leaves and enters again at once; a double tap on retry) lets the newer one decide.
   private generation = 0;
@@ -309,6 +313,21 @@ export class WorldClient {
 
   tutorialFinish(): Promise<string | null> {
     return this.bagCall("tutorialFinish", []);
+  }
+
+  // The newest update notice this account has read (see news.ts): asked once, then kept here.
+  async newsSeen(): Promise<string | null> {
+    if (this.seenNews === undefined) {
+      this.seenNews = (await this.transport.call<{ seen: string | null }>("getNewsSeen").catch(() => null))?.seen ?? null;
+    }
+    return this.seenNews;
+  }
+
+  // All the news read: kept at once, and told to the server without waiting (should that fail, the
+  // news only opens again next time).
+  markNewsRead(): void {
+    this.seenNews = NEWS[0].id;
+    void this.transport.call("markNewsSeen", [NEWS[0].id], { needResponse: false });
   }
 
   // The server's grove and village (null when it could not be read).

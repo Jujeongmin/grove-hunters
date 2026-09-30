@@ -323,6 +323,8 @@ export const ja: Bundle = {
   "menu.forge": "鍛冶屋",
   "menu.bag": "カバン",
   "menu.sleep": "省電力",
+  "menu.news": "お知らせ",
+  "news.title": "アップデートのお知らせ",
   "menu.settings": "設定",
 
   "death.fallen": "倒れました",
