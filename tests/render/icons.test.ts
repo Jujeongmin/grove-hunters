@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ICON_IDS, iconFor, skillIconId } from "../../src/game/render/icons";
+import { ICON_IDS, iconFor, itemPicture, setIconClass, skillIconId } from "../../src/game/render/icons";
 import { CLASSES } from "../../src/game/combat/classes";
 import { SKILL_SLOTS } from "../../src/game/combat/skills";
 import { JOBS, type JobId } from "../../src/game/combat/jobs";
@@ -29,5 +29,21 @@ describe("icons", () => {
       if (here) expect(existsSync(`public/assets/ui/items/${id}.png`), id).toBe(true);
     }
     if (here) for (const id of ICON_IDS) expect(existsSync(`public/assets/ui/icons/${id}.png`), id).toBe(true);
+  });
+
+  it("draw a weapon as the looker's class wields it, and everything else the same for all", async () => {
+    expect(itemPicture("weapon_3", "warrior")).toBe("weapon_3");
+    expect(itemPicture("weapon_3", "ranger")).toBe("weapon_3_bow");
+    expect(itemPicture("weapon_7", "monk")).toBe("weapon_7_fist");
+    expect(itemPicture("armor_3", "ranger")).toBe("armor_3");
+    expect(itemPicture("weapon_3", null)).toBe("weapon_3");
+    setIconClass("wizard");
+    expect(iconFor("weapon_2")).toMatch(/items\/weapon_2_staff\.png$/);
+    setIconClass(null);
+    const { existsSync } = await import("node:fs");
+    if (!existsSync("public/assets/ui/items")) return;
+    for (const c of CLASSES) {
+      for (const id of ITEM_IDS) expect(existsSync(`public/assets/ui/items/${itemPicture(id, c)}.png`), `${c} ${id}`).toBe(true);
+    }
   });
 });

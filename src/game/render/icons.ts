@@ -1,5 +1,6 @@
-import { ITEMS } from "../account/items";
+import { ITEMS, slotOf } from "../account/items";
 import { publicUrl } from "../assets/publicUrl";
+import type { PlayerClass } from "../combat/classes";
 
 // Icons are pictures from the 496 RPG icons pack (Henrique Lazarini, CC0): items one file each under
 // assets/ui/items, everything else (skills, menu and pad buttons) under assets/ui/icons. The skills of
@@ -40,9 +41,29 @@ const ICON_FILES: Record<string, string> = {
   pad_attack: "pad_attack.png", pad_block: "pad_block.png", pad_jump: "pad_jump.png", pad_auto: "pad_auto.png",
 };
 
+// A weapon is one item for every class (the same stats, the same name, traded as one), but it is
+// drawn as the looker's own class wields it: a sword for a warrior, a bow for a ranger, and so on.
+// The screen sets whose eyes these are (setIconClass) when the world opens; the sword stands for
+// everyone before that. Pictures: <weapon id>_<kind>.png, drawn by scripts/weapon-icons.py.
+export type WeaponKind = "sword" | "bow" | "staff" | "holy" | "dagger" | "fist";
+export const WEAPON_KINDS: Record<PlayerClass, WeaponKind> = {
+  warrior: "sword", ranger: "bow", wizard: "staff", cleric: "holy", rogue: "dagger", monk: "fist",
+};
+let looker: PlayerClass | null = null;
+
+export function setIconClass(playerClass: PlayerClass | null): void {
+  looker = playerClass;
+}
+
+// The file an item's picture comes from, for a class (or the sword's for none).
+export function itemPicture(id: string, playerClass: PlayerClass | null): string {
+  const kind = playerClass ? WEAPON_KINDS[playerClass] : "sword";
+  return slotOf(id as keyof typeof ITEMS) === "weapon" && kind !== "sword" ? `${id}_${kind}` : id;
+}
+
 // The icon for a skill (see skillIconId), a menu or pad button, or an item (by id), as an image URL.
 export function iconFor(id: string): string | null {
-  if (id in ITEMS) return publicUrl(`assets/ui/items/${id}.png`);
+  if (id in ITEMS) return publicUrl(`assets/ui/items/${itemPicture(id, looker)}.png`);
   if (ICON_FILES[id]) return publicUrl(`assets/ui/icons/${ICON_FILES[id]}`);
   if (ICON_IDS.includes(id)) return publicUrl(`assets/ui/icons/${id}.png`);
   return null;

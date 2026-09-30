@@ -26,7 +26,7 @@ import { SkillBar } from "./SkillBar";
 import { PadButtons, TouchStick, isTouchDevice } from "./TouchControls";
 import { SkillPanel } from "./SkillPanel";
 import { RankingPanel } from "./RankingPanel";
-import { iconFor } from "../game/render/icons";
+import { iconFor, setIconClass } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
@@ -87,6 +87,8 @@ function enterProblem(error: string | null): string {
 // The world: enters on mount, shows the zone you are in (one WorldView per zone and channel), and
 // takes you through portals.
 export function WorldScreen({ client, playerClass, costume, name, owned, purchase, friends, onExit }: WorldScreenProps) {
+  // Weapons are drawn as this character's class wields them, in every panel below (see icons.ts).
+  setIconClass(playerClass);
   const [state, setState] = useState<WorldState>(client.state);
   const [problem, setProblem] = useState<{ text: string; at: number } | null>(null);
   // A quest trip under way, kept here as you go from zone to zone (each zone has its own view).
