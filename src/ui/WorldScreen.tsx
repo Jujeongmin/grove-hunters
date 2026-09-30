@@ -30,6 +30,7 @@ import { iconFor } from "../game/render/icons";
 import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
+import { MailPanel } from "./MailPanel";
 import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
@@ -138,7 +139,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -155,6 +156,8 @@ interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
 const QUEST_BANNER_MS = 4500;
 // How often the grove is read again while you play.
 const GROVE_REFRESH_MS = 60_000;
+// How often the mailbox is counted again while you play.
+const MAIL_REFRESH_MS = 60_000;
 // How long the haze's hint stays up unless tapped.
 const HAZE_HINT_MS = 12_000;
 // How long a refused portal's message stays up.
@@ -326,6 +329,20 @@ function ZoneScreen({
       live = false;
     };
   }, [client]);
+  // Letters waiting in the mailbox (a dot on the menu), counted on coming in and every minute.
+  const [mailWaiting, setMailWaiting] = useState(0);
+  useEffect(() => {
+    let live = true;
+    const count = () => void client.mailCount().then((n) => {
+      if (live) setMailWaiting(n);
+    });
+    count();
+    const timer = setInterval(count, MAIL_REFRESH_MS);
+    return () => {
+      live = false;
+      clearInterval(timer);
+    };
+  }, [client]);
   const tutorialOver = bag !== null && bag.tutorial === null;
   useEffect(() => {
     if (!ready || !tutorialOver || newsUnread === 0 || client.newsShown) return;
@@ -367,6 +384,7 @@ function ZoneScreen({
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
+    { id: "mail", label: t("menu.mail"), key: "F", code: "KeyF", act: () => toggle("mail"), on: panel === "mail", dot: mailWaiting > 0 },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
@@ -641,6 +659,7 @@ function ZoneScreen({
         />
       )}
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
+      {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (
         <DonatePanel

@@ -9,6 +9,8 @@ import {
 } from "../../src/game/account/items";
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { NEWS, readNewsId } from "../../src/game/news";
+import { mailFits, type Mail } from "../../src/game/account/mail";
+import { openMailbox, takeMail } from "./mail";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
 import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
@@ -314,6 +316,27 @@ function currentChannel(): { roomId: string; zone: ZoneId } {
   return { roomId, zone: here.zone };
 }
 
+// One letter out of the mailbox and into your hands. Items need a character to carry them (and room in its bag); gold and
+// gems go to the account.
+async function claimLetter(account: string, id: string): Promise<void> {
+  await takeMail(
+    account, id, Date.now(),
+    async (mail) => {
+      if (mail.items.length > 0 && !mailFits((await playing(account)).bag, mail)) throw new RuleViolation("bag_full");
+    },
+    async (mail) => {
+      if (mail.items.length > 0) {
+        await updateActive(account, (c) => {
+          if (!mailFits(c.bag, mail)) throw new RuleViolation("bag_full");
+          return { ...c, bag: mail.items.reduce((bag, item) => addItem(bag, item.id, item.n), c.bag) };
+        });
+      }
+      if (mail.gems > 0) await changeGems(account, mail.gems);
+      if (mail.gold > 0) await $asset.mint(GOLD, mail.gold);
+    },
+  );
+}
+
 export class Server {
   // An empty-looking room (nobody calling in) still ticks once a second, so monsters keep moving.
   static $roomTickIdleMs = 1_000;
@@ -340,6 +363,42 @@ export class Server {
     if (kept && NEWS.findIndex((n) => n.id === kept) <= NEWS.findIndex((n) => n.id === id)) return { seen: kept };
     await $global.updateUserState(account, { newsSeen: id });
     return { seen: id };
+  }
+
+  // Your mailbox, newest first (gifts due are delivered on reading it).
+  async getMail(): Promise<{ mail: Mail[] }> {
+    return { mail: await openMailbox($sender.account, Date.now()) };
+  }
+
+  // How many letters wait (the menu's dot).
+  async mailCount(): Promise<{ count: number }> {
+    return { count: (await openMailbox($sender.account, Date.now())).length };
+  }
+
+  // Takes one letter: its gold and gems onto the account, its items into the character you play.
+  async claimMail(rawId: unknown): Promise<{ mail: Mail[] }> {
+    const account = $sender.account;
+    await claimLetter(account, requireText(rawId));
+    return { mail: await openMailbox(account, Date.now()) };
+  }
+
+  // Takes every letter that can be taken, oldest first; says how many were left and why.
+  async claimAllMail(): Promise<{ mail: Mail[]; claimed: number; left: number; problem: string | null }> {
+    const account = $sender.account;
+    let claimed = 0;
+    let left = 0;
+    let problem: string | null = null;
+    for (const mail of [...(await openMailbox(account, Date.now()))].reverse()) {
+      try {
+        await claimLetter(account, mail.id);
+        claimed++;
+      } catch (error) {
+        if (!(error instanceof RuleViolation)) throw error;
+        left++;
+        problem ??= error.message;
+      }
+    }
+    return { mail: await openMailbox(account, Date.now()), claimed, left, problem };
   }
 
   // How you set up the bar (skills in slots, what auto-battle may use), kept on the account so it

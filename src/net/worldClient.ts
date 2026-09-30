@@ -13,6 +13,7 @@ import type { EnhanceOutcome } from "../game/account/forge";
 import { readChat, type ChatMessage } from "../game/world/chat";
 import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
+import type { Mail } from "../game/account/mail";
 import type { MatchTransport } from "./transport";
 
 export type WorldPhase = "idle" | "entering" | "in" | "travelling" | "error";
@@ -398,6 +399,36 @@ export class WorldClient {
       return null;
     } catch (error) {
       return errorCode(error);
+    }
+  }
+
+  // The mailbox: its letters, newest first (null when it cannot be read), how many wait, and taking
+  // them (what they carry lands in the bag, which is read again).
+  async mailbox(): Promise<Mail[] | null> {
+    return (await this.transport.call<{ mail: Mail[] }>("getMail").catch(() => null))?.mail ?? null;
+  }
+
+  async mailCount(): Promise<number> {
+    return (await this.transport.call<{ count: number }>("mailCount").catch(() => null))?.count ?? 0;
+  }
+
+  async claimMail(id: string): Promise<{ mail: Mail[] } | { problem: string }> {
+    try {
+      const taken = await this.transport.call<{ mail: Mail[] }>("claimMail", [id]);
+      void this.refreshBag();
+      return taken;
+    } catch (error) {
+      return { problem: errorCode(error) };
+    }
+  }
+
+  async claimAllMail(): Promise<{ mail: Mail[]; left: number; problem: string | null } | { problem: string }> {
+    try {
+      const taken = await this.transport.call<{ mail: Mail[]; left: number; problem: string | null }>("claimAllMail");
+      void this.refreshBag();
+      return taken;
+    } catch (error) {
+      return { problem: errorCode(error) };
     }
   }
 

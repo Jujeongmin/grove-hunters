@@ -17,6 +17,57 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-mail",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "우편함이 열렸어요",
+        lines: [
+          "메뉴의 '우편'에서 게임이 보낸 선물을 받을 수 있어요. 받을 우편이 있으면 빨간 점이 떠요.",
+          "우편함은 계정에 하나라서 어느 서버, 어느 캐릭터로 들어와도 같아요. 아이템은 받은 캐릭터의 가방으로 들어가요.",
+          "우편은 30일 동안 보관돼요.",
+          "오픈 기념으로 큰 물약 10개를 보냈어요 (10월 13일까지 접속하면 받아요).",
+        ],
+      },
+      en: {
+        title: "The mailbox is open",
+        lines: [
+          "Gifts from the game wait under 'Mail' in the menu; a red dot shows when there is something to take.",
+          "There is one mailbox per account, the same on every server and character. Items go into the bag of the character that takes them.",
+          "Letters are kept for 30 days.",
+          "To mark the opening, 10 large potions are waiting for everyone who comes in by October 13.",
+        ],
+      },
+      ja: {
+        title: "郵便箱がオープンしました",
+        lines: [
+          "メニューの「郵便」でゲームからのプレゼントを受け取れます。受け取るものがあると赤い点が出ます。",
+          "郵便箱はアカウントに一つで、どのサーバー・キャラクターでも同じです。アイテムは受け取ったキャラクターのかばんに入ります。",
+          "郵便は30日間保管されます。",
+          "オープン記念に大きなポーションを10個お送りします（10月13日までに入ると受け取れます）。",
+        ],
+      },
+      "zh-Hant": {
+        title: "郵箱開放了",
+        lines: [
+          "可以在選單的「郵件」領取遊戲送來的禮物，有可領取的郵件時會出現紅點。",
+          "每個帳號只有一個郵箱，任何伺服器、任何角色進來都一樣。道具會放進領取角色的背包。",
+          "郵件保存30天。",
+          "為紀念開放，10月13日前登入即可領取大藥水10個。",
+        ],
+      },
+      "zh-Hans": {
+        title: "邮箱开放了",
+        lines: [
+          "可以在菜单的“邮件”领取游戏送来的礼物，有可领取的邮件时会出现红点。",
+          "每个账号只有一个邮箱，任何服务器、任何角色进来都一样。道具会放进领取角色的背包。",
+          "邮件保存30天。",
+          "为纪念开放，10月13日前登录即可领取大药水10个。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-news",
     date: "2026-09-30",
     text: {
