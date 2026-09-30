@@ -23,8 +23,9 @@ const PROBLEM: Record<string, Key> = {
 // The chat, at the bottom left: the channel's lines and your guild's (marked), and a box to say one
 // in either (tabs, once you are in a guild). Enter opens it on a
 // keyboard (and sends), the chat button on a touch screen, and a tap on the lines themselves
-// anywhere; closing it (the button, Escape) also clears the lines seen so far off the screen. Open,
-// it stands in the middle above the skill bar, off the pad.
+// anywhere; closing it (the button, Escape, or the focus leaving the box, as when a phone's keyboard is
+// put away) also clears the lines seen so far off the screen, and keeps what was typed for next time.
+// Open, it stands in the middle above the skill bar, off the pad.
 export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
@@ -122,6 +123,8 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
           {(["channel", "guild"] as const).map((m) => (
             <button
               key={m} type="button" className={`chat-tab${mode === m ? " on" : ""}`}
+              // Kept off the focus, so the box stays open (see onBlur below).
+              onPointerDown={(e) => e.preventDefault()}
               onClick={() => {
                 setMode(m);
                 setProblem(null);
@@ -163,8 +166,10 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
                 close();
               }
             }}
+            onBlur={() => close()}
           />
-          <button type="button" className="chat-close" onClick={() => close()}>{t("common.close")}</button>
+          {/* Pressing it must not take the focus first, or the box would close before the tap lands. */}
+          <button type="button" className="chat-close" onPointerDown={(e) => e.preventDefault()} onClick={() => close()}>{t("common.close")}</button>
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (

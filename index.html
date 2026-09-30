@@ -32,6 +32,12 @@
         overflow: hidden;
       }
 
+      /* While a phone's keyboard is up the stage keeps its size, held to the top (see
+         src/ui/useKeyboardFreeze.ts). */
+      html.typing body {
+        align-items: flex-start;
+      }
+
       .menu-stage {
         position: absolute;
         inset: 0;
@@ -77,6 +83,8 @@
         var lastHeight = -1;
 
         function reportGameSize(force) {
+          // A phone's keyboard is up and the stage is held at its size: not the game's own size.
+          if (document.documentElement.classList.contains("typing")) return;
           var height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
           var width = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
           // The shell resizes the frame from this, which resizes us again; report only real changes.

@@ -13,6 +13,7 @@ import { WorldScreen } from "./ui/WorldScreen";
 import { useAccount } from "./ui/useAccount";
 import { useFriends } from "./ui/useFriends";
 import { usePurchase } from "./ui/usePurchase";
+import { useKeyboardFreeze } from "./ui/useKeyboardFreeze";
 import { useUiScale } from "./ui/useUiScale";
 import { t, useLang } from "./ui/lang";
 
@@ -24,6 +25,7 @@ export default function App() {
   const [returning, setReturning] = useState(false);
   const { server, connected, joinRoom, leaveRoom } = useGameServer();
   useUiScale();
+  useKeyboardFreeze();
   // Read so the whole tree says itself again when the language changes.
   useLang();
   const transport = useMemo(
