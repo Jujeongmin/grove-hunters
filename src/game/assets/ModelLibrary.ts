@@ -11,16 +11,27 @@ interface ManifestEntry { url: string; bytes: number; animations: string[] }
 interface ModelManifest { models: Record<string, ManifestEntry> }
 export interface LoadedModel { scene: THREE.Group; animations: THREE.AnimationClip[] }
 
+// One library for the whole visit: a model fetched once (in any zone, or for the stable) stays for
+// the next zone rather than being fetched and parsed again. A failed manifest is asked for again.
+let shared: Promise<ModelLibrary> | null = null;
+
 export class ModelLibrary {
   private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   private readonly loaded = new Map<string, LoadedModel>();
+  private readonly coming = new Map<string, Promise<LoadedModel>>();
 
   private constructor(private readonly manifest: ModelManifest) {}
 
-  static async load(): Promise<ModelLibrary> {
-    const res = await fetch(publicUrl("assets/models/manifest.json"));
-    if (!res.ok) throw new Error(`model manifest: HTTP ${res.status}`);
-    return new ModelLibrary((await res.json()) as ModelManifest);
+  static load(): Promise<ModelLibrary> {
+    shared ??= (async () => {
+      const res = await fetch(publicUrl("assets/models/manifest.json"));
+      if (!res.ok) throw new Error(`model manifest: HTTP ${res.status}`);
+      return new ModelLibrary((await res.json()) as ModelManifest);
+    })().catch((error: unknown) => {
+      shared = null;
+      throw error;
+    });
+    return shared;
   }
 
   async preload(names: string[], onProgress?: (done: number, total: number) => void): Promise<void> {
@@ -28,7 +39,15 @@ export class ModelLibrary {
     onProgress?.(0, names.length);
     await Promise.all(
       names.map(async (name) => {
-        if (!this.loaded.has(name)) this.loaded.set(name, await this.fetchModel(name));
+        if (!this.loaded.has(name)) {
+          // Two asking for one model at once (a zone and the stable's warm-up) share the one fetch.
+          let coming = this.coming.get(name);
+          if (!coming) {
+            coming = this.fetchModel(name).finally(() => this.coming.delete(name));
+            this.coming.set(name, coming);
+          }
+          this.loaded.set(name, await coming);
+        }
         onProgress?.(++done, names.length);
       }),
     );

@@ -69,6 +69,9 @@ function paintPortal(object: THREE.Object3D): THREE.Object3D {
   });
   return object;
 }
+// Every mount's model, warmed up this long after the world starts (see start).
+const STABLE_MODELS = [...new Set(Object.values(MOUNTS).map((m) => m.model))];
+const STABLE_WARM_MS = 2500;
 export const WORLD_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ARROW_MODEL, PORTAL_MODEL])];
 
 // Outdoors nothing roofs the camera in; this only keeps it from flying off.
@@ -356,6 +359,11 @@ export class WorldView {
     preloadCues();
     this.frame = requestAnimationFrame(this.tick);
     this.startBackgroundSteps();
+    // The stable's models, fetched once the world is up and drawing, so opening it later is quick
+    // (the library keeps them for every zone after).
+    setTimeout(() => {
+      if (!this.disposed) void library.preload(STABLE_MODELS).catch(() => undefined);
+    }, STABLE_WARM_MS);
   }
 
   // For checking the game from the browser console in development.
