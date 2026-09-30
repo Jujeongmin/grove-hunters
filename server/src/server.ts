@@ -583,9 +583,9 @@ export class Server {
   }
 
   // Buys a listing for its price in gems; what was bought comes by mail.
-  async buyFromMarket(rawId: unknown): Promise<{ gems: number }> {
+  async buyFromMarket(rawId: unknown, rawCount?: unknown): Promise<{ gems: number }> {
     const account = $sender.account;
-    await buyListing(account, requireText(rawId), Date.now());
+    await buyListing(account, requireText(rawId), rawCount, Date.now());
     return { gems: await readGems(account) };
   }
 

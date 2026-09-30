@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  MAX_LISTINGS, MIN_BUNDLE_PRICE, MIN_GEAR_PRICE, marketFee, sellerGets, shelfOf, type ListingView, type Shelf,
+  MAX_LISTINGS, MAX_PRICE, MIN_GEAR_PRICE, MIN_MATERIAL_PRICE, costOf, marketFee, sellerGets, shelfOf, type ListingView, type Shelf,
 } from "../game/account/market";
-import { ITEM_IDS, slotOf, type BagView, type GearPiece, type ItemId } from "../game/account/items";
+import { ITEM_IDS, MAX_STACK, slotOf, type BagView, type GearPiece, type ItemId } from "../game/account/items";
 import { iconFor } from "../game/render/icons";
 import type { MarketPage, WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
@@ -13,9 +13,63 @@ type Tab = "buy" | "sell" | "mine";
 const SHELVES: readonly Shelf[] = ["weapon", "armor", "material"];
 const MIN_PLUS = [0, 3, 5, 7, 9];
 
-// What a listing is called: gear with its +, a bundle with its count.
-function listingName(l: Pick<ListingView, "item" | "piece" | "n">): string {
-  return l.piece ? gearName(l.piece) : `${itemName(l.item)} ×${l.n}`;
+// What a listing is called: gear with its +, a heap of material with how many are left (or `n`).
+function listingName(l: Pick<ListingView, "item" | "piece" | "n">, n = l.n): string {
+  return l.piece ? gearName(l.piece) : `${itemName(l.item)} ×${n}`;
+}
+
+// Held down, an arrow steps again after this long, then this often.
+const HOLD_MS = 380;
+const REPEAT_MS = 70;
+
+// A number set with arrows instead of typing: one step for the single arrows, `big` for the double,
+// kept within [min, max]. Held down, an arrow keeps stepping.
+function Stepper({ value, min, max, big, onChange }: { value: number; min: number; max: number; big: number; onChange: (n: number) => void }) {
+  const latest = useRef(value);
+  latest.current = value;
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stop = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => stop, []);
+  const step = (by: number) => {
+    const next = Math.max(min, Math.min(max, latest.current + by));
+    latest.current = next;
+    onChange(next);
+    return next;
+  };
+  const arrow = (label: string, by: number, disabled: boolean) => (
+    <button
+      type="button" className="stepper-arrow" disabled={disabled}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        stop();
+        step(by);
+        const again = () => {
+          const next = step(by);
+          timer.current = next === min || next === max ? null : setTimeout(again, REPEAT_MS);
+        };
+        timer.current = setTimeout(again, HOLD_MS);
+      }}
+      onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
+      // Enter or Space on a keyboard clicks with no pointer: one step.
+      onClick={(e) => {
+        if (e.detail === 0) step(by);
+      }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className="stepper">
+      {arrow("«", -big, value <= min)}
+      {arrow("‹", -1, value <= min)}
+      <b>{value.toLocaleString(locale())}</b>
+      {arrow("›", 1, value >= max)}
+      {arrow("»", big, value >= max)}
+    </div>
+  );
 }
 
 function timeLeft(until: number, now: number): string {
@@ -88,6 +142,8 @@ function BuyTab({ client, onGems, say, problem }: TabProps & { onGems: (n: numbe
   const [found, setFound] = useState<MarketPage | null>(null);
   const [failed, setFailed] = useState(false);
   const [asking, setAsking] = useState<ListingView | null>(null);
+  // How many of the listing asked about to take.
+  const [taking, setTaking] = useState(1);
   const [busy, setBusy] = useState(false);
   const [again, setAgain] = useState(0);
   useEffect(() => {
@@ -109,9 +165,9 @@ function BuyTab({ client, onGems, say, problem }: TabProps & { onGems: (n: numbe
   const kinds = ITEM_IDS.filter((id) => shelfOf(id) === shelf);
   const now = Date.now();
 
-  const buy = async (listing: ListingView) => {
+  const buy = async (listing: ListingView, count: number) => {
     setBusy(true);
-    const r = await client.buyListing(listing.id);
+    const r = await client.buyListing(listing.id, count);
     setBusy(false);
     setAsking(null);
     if ("problem" in r) problem(r.problem);
@@ -173,12 +229,20 @@ function BuyTab({ client, onGems, say, problem }: TabProps & { onGems: (n: numbe
               </span>
               <span className="market-price">
                 <Gems n={l.price} />
-                {l.n > 1 && <span className="note">{t("market.perOne", { n: (l.price / l.n).toLocaleString(locale(), { maximumFractionDigits: 2 }) })}</span>}
+                {!l.piece && <span className="note">{t("market.each")}</span>}
               </span>
               {l.mine ? (
                 <span className="note">{t("market.mineTag")}</span>
               ) : (
-                <button type="button" className="brush-button small" disabled={busy} onClick={() => setAsking(l)}>{t("market.buyGo")}</button>
+                <button
+                  type="button" className="brush-button small" disabled={busy}
+                  onClick={() => {
+                    setTaking(1);
+                    setAsking(l);
+                  }}
+                >
+                  {t("market.buyGo")}
+                </button>
               )}
             </li>
           ))}
@@ -193,9 +257,18 @@ function BuyTab({ client, onGems, say, problem }: TabProps & { onGems: (n: numbe
       )}
       {asking && (
         <div className="market-confirm">
-          <p>{t("market.confirm", { name: listingName(asking), price: asking.price.toLocaleString(locale()) })}</p>
+          {!asking.piece && (
+            <>
+              <span className="note">{t("market.howMany", { n: asking.n })}</span>
+              <div className="market-step-row">
+                <Stepper value={taking} min={1} max={asking.n} big={10} onChange={setTaking} />
+                <button type="button" className="text-button" onClick={() => setTaking(asking.n)}>{t("market.max")}</button>
+              </div>
+            </>
+          )}
+          <p>{t("market.confirm", { name: listingName(asking, taking), price: costOf(asking, taking).toLocaleString(locale()) })}</p>
           <div>
-            <button type="button" className="brush-button small" disabled={busy} onClick={() => void buy(asking)}>{t("market.buyGo")}</button>
+            <button type="button" className="brush-button small" disabled={busy} onClick={() => void buy(asking, taking)}>{t("market.buyGo")}</button>
             <button type="button" className="text-button" onClick={() => setAsking(null)}>{t("common.cancel")}</button>
           </div>
         </div>
@@ -220,8 +293,8 @@ const offerKey = (o: Offer) => (o.kind === "piece" ? o.piece.uid : o.id);
 
 function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null }) {
   const [picked, setPicked] = useState<string | null>(null);
-  const [price, setPrice] = useState("");
-  const [count, setCount] = useState("1");
+  const [price, setPrice] = useState(MIN_GEAR_PRICE);
+  const [count, setCount] = useState(1);
   const [busy, setBusy] = useState(false);
   const [listed, setListed] = useState<number | null>(null);
   useEffect(() => {
@@ -237,13 +310,20 @@ function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null
   const all = offers(bag);
   const offer = all.find((o) => offerKey(o) === picked) ?? null;
   const shelf: Shelf | null = offer ? (offer.kind === "piece" ? slotOf(offer.piece.id)! : "material") : null;
-  const min = shelf === "material" ? MIN_BUNDLE_PRICE : MIN_GEAR_PRICE;
-  const asked = Number(price);
-  const n = offer?.kind === "stack" ? Math.max(1, Math.min(offer.have, Math.floor(Number(count)) || 1)) : 1;
-  const priced = Number.isInteger(asked) && asked >= min;
+  const min = shelf === "material" ? MIN_MATERIAL_PRICE : MIN_GEAR_PRICE;
+  const most = offer?.kind === "stack" ? Math.min(offer.have, MAX_STACK) : 1;
+  const n = Math.max(1, Math.min(most, count));
+  const asked = Math.max(min, price);
+  const total = asked * n;
+  // A new pick starts at its lowest price and, for a material, all of it.
+  const pick = (o: Offer) => {
+    setPicked(offerKey(o));
+    setPrice(o.kind === "piece" ? MIN_GEAR_PRICE : MIN_MATERIAL_PRICE);
+    setCount(o.kind === "stack" ? Math.min(o.have, MAX_STACK) : 1);
+  };
 
   const list = async () => {
-    if (!offer || !priced) return;
+    if (!offer) return;
     setBusy(true);
     const r = await client.sellOnMarket(offer.kind === "piece" ? { uid: offer.piece.uid } : { item: offer.id, n }, asked);
     setBusy(false);
@@ -251,8 +331,6 @@ function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null
     else {
       setListed(r.listings.length);
       setPicked(null);
-      setPrice("");
-      setCount("1");
       say(t("market.listed"), "good");
     }
   };
@@ -269,7 +347,7 @@ function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null
             return (
               <button
                 key={offerKey(o)} type="button" className={`bag-cell trade${picked === offerKey(o) ? " picked" : ""}`}
-                onClick={() => setPicked(offerKey(o))} title={o.kind === "piece" ? gearName(o.piece) : itemName(o.id)}
+                onClick={() => pick(o)} title={o.kind === "piece" ? gearName(o.piece) : itemName(o.id)}
               >
                 <img src={iconFor(id) ?? undefined} alt="" />
                 {o.kind === "stack" && <span className="bag-cell-count">{o.have}</span>}
@@ -285,17 +363,20 @@ function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null
         <div className="market-form">
           <b>{offer.kind === "piece" ? gearName(offer.piece) : itemName(offer.id)}</b>
           {offer.kind === "stack" && (
-            <label>
-              {t("market.count")}
-              <input type="number" min={1} max={offer.have} value={count} onChange={(e) => setCount(e.target.value)} />
-            </label>
+            <div className="market-step-row">
+              <span className="market-step-label">{t("market.count")}</span>
+              <Stepper value={n} min={1} max={most} big={10} onChange={setCount} />
+            </div>
           )}
-          <label>
-            {t("market.price")}
-            <input type="number" min={min} value={price} placeholder={t("market.minPrice", { n: min })} onChange={(e) => setPrice(e.target.value)} />
-          </label>
-          {priced && <span className="note">{t("market.fee", { fee: marketFee(asked), gets: sellerGets(asked) })}</span>}
-          <button type="button" className="brush-button small" disabled={busy || !priced} onClick={() => void list()}>{t("market.list")}</button>
+          <div className="market-step-row">
+            <span className="market-step-label">{t(offer.kind === "stack" ? "market.priceEach" : "market.price")}</span>
+            <Stepper value={asked} min={min} max={MAX_PRICE} big={10} onChange={setPrice} />
+          </div>
+          <span className="note">
+            {offer.kind === "stack" && <>{t("market.total", { n: total.toLocaleString(locale()) })} · </>}
+            {t("market.fee", { fee: marketFee(total), gets: sellerGets(total) })}
+          </span>
+          <button type="button" className="brush-button small" disabled={busy} onClick={() => void list()}>{t("market.list")}</button>
         </div>
       )}
     </div>
@@ -343,7 +424,10 @@ function MineTab({ client, onGems, say, problem }: TabProps & { onGems: (n: numb
             <b>{listingName(l)}</b>
             <span className="note">{timeLeft(l.until, now)}</span>
           </span>
-          <span className="market-price"><Gems n={l.price} /></span>
+          <span className="market-price">
+            <Gems n={l.price} />
+            {!l.piece && <span className="note">{t("market.each")}</span>}
+          </span>
           <button type="button" className="text-button" disabled={busy} onClick={() => void cancel(l.id)}>{t("market.cancel")}</button>
         </li>
       ))}

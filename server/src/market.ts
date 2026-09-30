@@ -1,5 +1,5 @@
 import {
-  LISTING_MS, MAX_LISTINGS, readListing, sellerGets, type Listing, type Shelf,
+  LISTING_MS, MAX_LISTINGS, costOf, readBuyCount, readListing, sellerGets, type Listing, type Shelf,
 } from "../../src/game/account/market";
 import type { MailItem } from "../../src/game/account/mail";
 import type { GearPiece, ItemId } from "../../src/game/account/items";
@@ -7,8 +7,9 @@ import { RuleViolation } from "../../src/game/world/types";
 import { MAIL_COLLECTION, sendMail } from "./mail";
 import { changeGems } from "./store";
 
-// One row per listing, on every server at once. A listing changes hands only under its own lock,
-// so two buyers (or a buyer and the seller calling it off) can never both have it.
+// One row per listing, on every server at once. A listing changes hands only under its own lock, so
+// two buyers (or a buyer and the seller calling it off) can never both have the same things: each
+// takes what is left when their turn comes.
 export const MARKET_COLLECTION = "market";
 // Read at most this many rows of a shelf (or of one kind of item) to sort and page through.
 const SHELF_READ = 500;
@@ -33,9 +34,15 @@ function goods(listing: Pick<Listing, "item" | "piece" | "n">): MailItem[] {
   return listing.piece ? [{ id: listing.piece.id, n: 1, piece: listing.piece }] : [{ id: listing.item, n: listing.n, trade: true }];
 }
 
-// Words for a market letter: what it was about, and for how much.
-function about(listing: Pick<Listing, "item" | "plus" | "n" | "price">): Record<string, string | number> {
-  return { item: listing.item, plus: listing.plus, n: listing.n, price: listing.price };
+// Words for a market letter: what it was about, how many, and for how much in all.
+function about(listing: Pick<Listing, "item" | "plus">, n: number, total: number): Record<string, string | number> {
+  return { item: listing.item, plus: listing.plus, n, price: total };
+}
+
+// A listing's row as it is kept (prices by the one, marked so; see readListing).
+function rowOf(listing: Omit<Listing, "id">): Record<string, unknown> {
+  const { seller, sellerName, shelf, item, piece, n, plus, price, at, until } = listing;
+  return { seller, sellerName, shelf, item, piece, n, plus, price, each: true, at, until };
 }
 
 function readAll(rows: readonly unknown[]): Listing[] {
@@ -47,10 +54,10 @@ export async function addListing(
   seller: string, sellerName: string, what: { piece: GearPiece } | { item: ItemId; n: number }, shelf: Shelf, price: number, now: number,
 ): Promise<string> {
   const piece = "piece" in what ? what.piece : null;
-  const row = await $global.addCollectionItem(MARKET_COLLECTION, {
+  const row = await $global.addCollectionItem(MARKET_COLLECTION, rowOf({
     seller, sellerName, shelf, item: piece ? piece.id : (what as { item: ItemId }).item, piece,
     n: piece ? 1 : (what as { n: number }).n, plus: piece ? piece.plus : 0, price, at: now, until: now + LISTING_MS,
-  });
+  }));
   return (row as { __id: string }).__id;
 }
 
@@ -72,7 +79,9 @@ export async function sweepExpired(now: number): Promise<void> {
     await withListingLock(row.__id as string, async () => {
       const listing = readListing(await rowById(row.__id as string));
       await $global.deleteCollectionItem(MARKET_COLLECTION, row.__id as string).catch(() => undefined);
-      if (listing) await sendMail(listing.seller, { kind: "market_returned", gold: 0, gems: 0, items: goods(listing), params: about(listing) }, now);
+      if (listing) {
+        await sendMail(listing.seller, { kind: "market_returned", gold: 0, gems: 0, items: goods(listing), params: about(listing, listing.n, 0) }, now);
+      }
     });
   }
 }
@@ -94,30 +103,38 @@ export async function sellerListings(seller: string): Promise<Listing[]> {
   return readAll(rows).sort((a, b) => b.at - a.at);
 }
 
-// Buys a listing: the buyer's gems go (not_enough_gems if short), the row goes, the seller gets the
-// price less the fee by mail and the buyer the goods. Should a letter fail, the gems come back and
-// the listing stays up.
-export async function buyListing(buyer: string, id: string, now: number): Promise<Listing> {
+// Buys `count` of a listing (all there is of gear): the buyer's gems go (not_enough_gems if short),
+// the row loses what was bought (and goes once none is left), the seller gets the cost less the fee
+// by mail and the buyer the goods. More than is left (another buyer came first) is too_many. Should a
+// letter fail, the gems come back and the listing is as it was.
+export async function buyListing(buyer: string, id: string, rawCount: unknown, now: number): Promise<Listing> {
   return withListingLock(id, async () => {
     const listing = readListing(await rowById(id));
     if (!listing || listing.until <= now) throw new RuleViolation("listing_gone");
     if (listing.seller === buyer) throw new RuleViolation("own_listing");
-    await changeGems(buyer, -listing.price);
+    const count = readBuyCount(rawCount ?? 1, listing);
+    if (count === null) throw new RuleViolation("too_many");
+    const total = costOf(listing, count);
+    await changeGems(buyer, -total);
+    const { id: _, ...kept } = listing;
+    const left = listing.n - count;
     let sent: string[] = [];
     try {
-      await $global.deleteCollectionItem(MARKET_COLLECTION, id);
+      if (left > 0) await $global.updateCollectionItem(MARKET_COLLECTION, { __id: id, ...rowOf({ ...kept, n: left }) });
+      else await $global.deleteCollectionItem(MARKET_COLLECTION, id);
+      const bought = { ...listing, n: count };
       sent = [
-        await sendMail(listing.seller, { kind: "market_sold", gold: 0, gems: sellerGets(listing.price), items: [], params: about(listing) }, now),
-        await sendMail(buyer, { kind: "market_bought", gold: 0, gems: 0, items: goods(listing), params: about(listing) }, now),
+        await sendMail(listing.seller, { kind: "market_sold", gold: 0, gems: sellerGets(total), items: [], params: about(listing, count, total) }, now),
+        await sendMail(buyer, { kind: "market_bought", gold: 0, gems: 0, items: goods(bought), params: about(listing, count, total) }, now),
       ];
     } catch (error) {
       for (const letter of sent) await $global.deleteCollectionItem(MAIL_COLLECTION, letter).catch(() => undefined);
-      const { id: _, ...row } = listing;
-      await $global.addCollectionItem(MARKET_COLLECTION, row);
-      await changeGems(buyer, listing.price);
+      if (left > 0) await $global.updateCollectionItem(MARKET_COLLECTION, { __id: id, ...rowOf(kept) }).catch(() => undefined);
+      else await $global.addCollectionItem(MARKET_COLLECTION, rowOf(kept));
+      await changeGems(buyer, total);
       throw error;
     }
-    return listing;
+    return { ...listing, n: count };
   });
 }
 
@@ -127,6 +144,6 @@ export async function cancelListing(seller: string, id: string, now: number): Pr
     const listing = readListing(await rowById(id));
     if (!listing || listing.seller !== seller) throw new RuleViolation("listing_gone");
     await $global.deleteCollectionItem(MARKET_COLLECTION, id);
-    await sendMail(seller, { kind: "market_returned", gold: 0, gems: 0, items: goods(listing), params: about(listing) }, now);
+    await sendMail(seller, { kind: "market_returned", gold: 0, gems: 0, items: goods(listing), params: about(listing, listing.n, 0) }, now);
   });
 }

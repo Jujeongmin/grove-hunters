@@ -17,6 +17,57 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-market-each",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "거래소 개당 가격과 모바일 화면 개선",
+        lines: [
+          "재료는 이제 개당 보석으로 팔고, 사는 사람은 원하는 개수만큼 살 수 있어요. 남은 개수는 그대로 매물로 남아요.",
+          "개수와 가격은 « ‹ › » 화살표로 조절해요. 누르고 있으면 빠르게 바뀌어요.",
+          "골드와 보석이 화면 오른쪽 위에 항상 보여요.",
+          "모바일에서 채팅 입력 중에도 화면이 작아지지 않고, 화면이 더 선명해졌어요.",
+        ],
+      },
+      en: {
+        title: "Market prices by the one, and a better phone screen",
+        lines: [
+          "Materials are now priced per item in gems, and buyers take as many as they like; the rest stays listed.",
+          "Set counts and prices with the « ‹ › » arrows; hold one down to change it quickly.",
+          "Your gold and gems always show at the top right.",
+          "On phones, typing in chat no longer shrinks the game, and the picture is sharper.",
+        ],
+      },
+      ja: {
+        title: "取引所の1個単位価格とモバイル画面の改善",
+        lines: [
+          "素材は1個あたりの宝石価格で売れるようになり、買う人は好きな数だけ買えます。残りは出品されたままです。",
+          "数と価格は « ‹ › » の矢印で調整します。押し続けると速く変わります。",
+          "ゴールドと宝石が画面右上に常に表示されます。",
+          "モバイルでチャット入力中も画面が小さくならず、画面がより鮮明になりました。",
+        ],
+      },
+      "zh-Hant": {
+        title: "交易所單價販售與手機畫面改善",
+        lines: [
+          "材料現在以每個的寶石價格販售，買家可以買任意數量，剩下的會繼續上架。",
+          "數量與價格用 « ‹ › » 箭頭調整，按住可快速變動。",
+          "金幣與寶石會一直顯示在畫面右上角。",
+          "手機上輸入聊天時畫面不再縮小，畫面也更清晰了。",
+        ],
+      },
+      "zh-Hans": {
+        title: "交易所单价出售与手机画面改善",
+        lines: [
+          "材料现在以每个的宝石价格出售，买家可以买任意数量，剩下的会继续上架。",
+          "数量与价格用 « ‹ › » 箭头调整，按住可快速变动。",
+          "金币与宝石会一直显示在画面右上角。",
+          "手机上输入聊天时画面不再缩小，画面也更清晰了。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-fourth-skill",
     date: "2026-09-30",
     text: {

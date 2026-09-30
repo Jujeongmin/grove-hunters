@@ -604,8 +604,8 @@ export class WorldClient {
     return r;
   }
 
-  async buyListing(id: string): Promise<{ gems: number } | { problem: string }> {
-    return this.noteGems(await this.tryCall<{ gems: number }>("buyFromMarket", [id]));
+  async buyListing(id: string, count: number): Promise<{ gems: number } | { problem: string }> {
+    return this.noteGems(await this.tryCall<{ gems: number }>("buyFromMarket", [id, count]));
   }
 
   cancelListing(id: string): Promise<{ listings: ListingView[] } | { problem: string }> {

@@ -87,20 +87,32 @@ describe("market", () => {
     expect(await errorOf(server.buyFromMarket("nope"))).toContain("listing_gone");
   });
 
-  test("a bundle sells whole; under 20 gems the market keeps nothing", async (server) => {
+  test("materials are priced by the one, and a buyer takes as many as they like; the rest stays up", async (server) => {
     await stalls(server);
     await server.sellOnMarket({ item: "silk", n: 20 }, 3);
     expect((await server.getBag()).bagTrade.silk).toBe(10);
     server.connect({ account: "test-b" });
     const [listing] = (await server.market({ shelf: "material", item: "silk" })).listings;
     expect(listing).toMatchObject({ item: "silk", n: 20, price: 3, piece: null });
-    await server.buyFromMarket(listing.id);
-    const [bought] = await marketMail(server, "test-b");
-    await server.claimMail(bought.id);
+    // 5 of the 20, at 3 each.
+    expect((await server.buyFromMarket(listing.id, 5)).gems).toBe(500 - 15);
+    const [left] = (await server.market({ shelf: "material", item: "silk" })).listings;
+    expect([left.id, left.n, left.price]).toEqual([listing.id, 15, 3]);
+    // More than is left, or none, is refused and costs nothing.
+    expect(await errorOf(server.buyFromMarket(listing.id, 16))).toContain("too_many");
+    expect(await errorOf(server.buyFromMarket(listing.id, 0))).toContain("too_many");
+    expect((await server.getMounts()).gems).toBe(485);
+    // The rest: the listing is gone.
+    await server.buyFromMarket(listing.id, 15);
+    expect((await server.market({ shelf: "material", item: "silk" })).listings).toEqual([]);
+    const bought = await marketMail(server, "test-b");
+    expect(bought.map((m: any) => [m.params.n, m.params.price]).sort()).toEqual([[15, 45], [5, 15]]);
+    for (const letter of bought) await server.claimMail(letter.id);
     // Bought materials may be traded again.
     expect((await server.getBag()).bagTrade.silk).toBe(20);
-    const [sold] = await marketMail(server, "test-a");
-    expect(sold.gems).toBe(3);
+    // The seller is paid per sale, less 5% (nothing kept under 20 gems).
+    const sold = await marketMail(server, "test-a");
+    expect(sold.map((m: any) => m.gems).sort((x: number, y: number) => x - y)).toEqual([15, sellerGets(45)]);
   });
 
   test("taken down, or out of time, it comes back by mail", async (server) => {

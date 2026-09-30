@@ -632,6 +632,17 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .market-gems { display: inline-flex; align-items: center; gap: 3px; font: 700 13px var(--font-head); color: #bff0ff; font-variant-numeric: tabular-nums; }
 .market-gems img { width: 18px; height: 18px; image-rendering: pixelated; }
 .market-tab { display: flex; flex-direction: column; gap: 8px; }
+/* Arrows to set a count or a price: one step for the single ones, ten for the double, held to repeat. */
+.market-step-row { display: flex; align-items: center; gap: 8px; }
+.market-step-label { min-width: 88px; font: 600 12px var(--font-head); color: var(--ink-dim); }
+.stepper { display: inline-flex; align-items: center; gap: 4px; }
+.stepper b { min-width: 56px; text-align: center; font: 700 15px var(--font-head); color: #bff0ff; font-variant-numeric: tabular-nums; }
+.stepper-arrow {
+  width: 30px; height: 28px; padding: 0; border-radius: 6px; cursor: pointer; touch-action: none; user-select: none;
+  border: 1px solid rgba(255, 179, 90, 0.5); background: rgba(255, 179, 90, 0.12); color: var(--ink); font: 700 15px var(--font-head);
+}
+.stepper-arrow:active:not(:disabled) { background: rgba(255, 179, 90, 0.35); }
+.stepper-arrow:disabled { opacity: 0.35; cursor: default; }
 .market-tab > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }
 .market-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .market-chip {
