@@ -4,7 +4,7 @@ import { EMPTY_INVENTORY } from "../../src/game/account/inventory";
 import { QUEST_START, readDaily } from "../../src/game/account/quests";
 import { skillLearned } from "../../src/game/account/tutorial";
 import {
-  characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
+  GUILDLESS, characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
 } from "../../src/game/account/characters";
 import { DEFAULT_WORLD, readWorld, type World } from "../../src/game/account/worlds";
 import { playsFree, type PurchaseEvent } from "../../src/game/account/purchase";
@@ -128,6 +128,7 @@ export async function readProfile(account: string): Promise<Profile> {
       spot: readSpot(state.spot),
       made: 0,
       ...EMPTY_INVENTORY,
+      ...GUILDLESS,
       daily: readDaily(null),
       job: null,
       quest: QUEST_START,
@@ -197,6 +198,21 @@ export async function updateActive(account: string, change: (c: Character) => Ch
     if (!active) throw new RuleViolation("no_character");
     const next = change(active);
     await saveProfile(account, characters.map((c) => (c.id === active.id ? next : c)), next.id);
+    return next;
+  });
+}
+
+// Changes one of an account's characters (any, not only the active one) with `change` and saves;
+// null when the account no longer has it. For guild changes made by someone else.
+export async function updateCharacter(
+  account: string, id: string, change: (c: Character) => Character,
+): Promise<Character | null> {
+  return withProfileLock(account, async () => {
+    const { characters, active } = await readProfile(account);
+    const found = characters.find((c) => c.id === id);
+    if (!found) return null;
+    const next = change(found);
+    await saveProfile(account, characters.map((c) => (c.id === id ? next : c)), active?.id ?? null);
     return next;
   });
 }
@@ -331,7 +347,7 @@ export function zoneLook(c: Character): ZoneLook {
   // The advanced class goes out as its id, not its name: every client says it in its own language.
   return {
     name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job,
-    learned: skillLearned(c.tutorial, 0),
+    learned: skillLearned(c.tutorial, 0), guild: c.guild?.name ?? null,
   };
 }
 

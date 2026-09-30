@@ -32,6 +32,7 @@ import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
 import { MarketPanel } from "./MarketPanel";
+import { GuildPanel } from "./GuildPanel";
 import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
@@ -140,7 +141,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -330,13 +331,20 @@ function ZoneScreen({
       live = false;
     };
   }, [client]);
-  // Letters waiting in the mailbox (a dot on the menu), counted on coming in and every minute.
+  // Letters waiting in the mailbox, and applications waiting on your guild (dots on the menu),
+  // counted on coming in and every minute.
   const [mailWaiting, setMailWaiting] = useState(0);
+  const [applicants, setApplicants] = useState(0);
   useEffect(() => {
     let live = true;
-    const count = () => void client.mailCount().then((n) => {
-      if (live) setMailWaiting(n);
-    });
+    const count = () => {
+      void client.mailCount().then((n) => {
+        if (live) setMailWaiting(n);
+      });
+      void client.guildBadge().then((n) => {
+        if (live) setApplicants(n);
+      });
+    };
     count();
     const timer = setInterval(count, MAIL_REFRESH_MS);
     return () => {
@@ -385,6 +393,7 @@ function ZoneScreen({
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
+    { id: "guild", label: t("menu.guild"), key: "Z", code: "KeyZ", act: () => toggle("guild"), on: panel === "guild", dot: applicants > 0 },
     { id: "market", label: t("menu.market"), key: "X", code: "KeyX", act: () => toggle("market"), on: panel === "market" },
     { id: "mail", label: t("menu.mail"), key: "F", code: "KeyF", act: () => toggle("mail"), on: panel === "mail", dot: mailWaiting > 0 },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
@@ -661,6 +670,7 @@ function ZoneScreen({
         />
       )}
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
+      {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
       {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}

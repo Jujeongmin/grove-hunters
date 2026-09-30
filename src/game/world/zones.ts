@@ -215,4 +215,6 @@ export interface ZoneLook {
   // Whether the first skill is learned yet (new characters learn it from the elder); missing counts
   // as learned.
   learned?: boolean;
+  // Its guild's name, shown after its name.
+  guild?: string | null;
 }

@@ -10,17 +10,26 @@ const QUIET_LINES = 6;
 const QUIET_MS = 15_000;
 // Open, it shows this many to scroll back through.
 const OPEN_LINES = 30;
+// Guild chat is asked for this often: while its tab is open, and otherwise.
+const GUILD_POLL_OPEN_MS = 5_000;
+const GUILD_POLL_MS = 30_000;
 
 const PROBLEM: Record<string, Key> = {
   too_fast: "problem.tooFast",
 };
 
-// The channel chat, at the bottom left: the latest lines, and a box to say one. Enter opens it on a
+// The chat, at the bottom left: the channel's lines and your guild's (marked), and a box to say one
+// in either (tabs, once you are in a guild). Enter opens it on a
 // keyboard (and sends), the chat button on a touch screen, and a tap on the lines themselves
 // anywhere; closing it (the button, Escape) also clears the lines seen so far off the screen. Open,
 // it stands in the middle above the skill bar, off the pad.
 export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
+  const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
+  const [inGuild, setInGuild] = useState(client.state.inGuild);
+  const [mode, setMode] = useState<"channel" | "guild">("channel");
+  // Guild lines heard up to when the guild tab was last looked at: newer ones put a dot on it.
+  const [guildSeen, setGuildSeen] = useState(() => Date.now());
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
@@ -30,7 +39,23 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
   const input = useRef<HTMLInputElement>(null);
   const log = useRef<HTMLDivElement>(null);
 
-  useEffect(() => client.onChange((s) => setLines((prev) => (prev === s.chat ? prev : s.chat))), [client]);
+  useEffect(() => client.onChange((s) => {
+    setLines((prev) => (prev === s.chat ? prev : s.chat));
+    setGuildLines((prev) => (prev === s.guildChat ? prev : s.guildChat));
+    setInGuild(s.inGuild);
+  }), [client]);
+  const guildOpen = open && mode === "guild";
+  useEffect(() => {
+    void client.pollGuildChat();
+    const timer = setInterval(() => void client.pollGuildChat(), guildOpen ? GUILD_POLL_OPEN_MS : GUILD_POLL_MS);
+    return () => clearInterval(timer);
+  }, [client, guildOpen]);
+  useEffect(() => {
+    if (guildOpen) setGuildSeen(Date.now());
+  }, [guildOpen, guildLines]);
+  useEffect(() => {
+    if (!inGuild) setMode("channel");
+  }, [inGuild]);
   // Once a second, so old lines fade out of the closed box.
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -66,7 +91,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
       close();
       return;
     }
-    const code = await client.say(text);
+    const code = mode === "guild" ? await client.guildSay(text) : await client.say(text);
     if (code) {
       setProblem(t(PROBLEM[code] ?? "problem.cannotSend"));
       return;
@@ -75,15 +100,37 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     close(false);
   };
 
+  // Closed, the channel's and the guild's latest lines together, in the order they came.
+  const heard = [...lines.map((l) => ({ ...l, guild: false })), ...guildLines.map((l) => ({ ...l, guild: true }))].sort((a, b) => a.heardAt - b.heardAt);
   const shown = open
-    ? lines.slice(-OPEN_LINES)
-    : lines.slice(-QUIET_LINES).filter((l) => l.heardAt > seenUntil && now - l.heardAt < QUIET_MS);
+    ? (mode === "guild" ? guildLines.map((l) => ({ ...l, guild: true })) : lines.map((l) => ({ ...l, guild: false }))).slice(-OPEN_LINES)
+    : heard.slice(-QUIET_LINES).filter((l) => l.heardAt > seenUntil && now - l.heardAt < QUIET_MS);
+  const guildNew = guildLines.some((l) => l.heardAt > guildSeen && !l.mine);
   return (
     <div className={`chat${open ? " open" : ""}`}>
+      {open && inGuild && (
+        <div className="chat-tabs">
+          {(["channel", "guild"] as const).map((m) => (
+            <button
+              key={m} type="button" className={`chat-tab${mode === m ? " on" : ""}`}
+              onClick={() => {
+                setMode(m);
+                setProblem(null);
+                input.current?.focus();
+              }}
+            >
+              {t(m === "guild" ? "chat.guild" : "chat.channel")}
+              {m === "guild" && guildNew && mode !== "guild" && <i className="hud-dot" />}
+            </button>
+          ))}
+        </div>
+      )}
       {shown.length > 0 && (
         <div className="chat-log" ref={log} onClick={open ? undefined : () => setOpen(true)}>
           {shown.map((l) => (
-            <p key={l.id} className={l.mine ? "mine" : undefined}><b>{l.name}</b> {l.text}</p>
+            <p key={`${l.guild ? "g" : "c"}${l.id}`} className={[l.mine ? "mine" : "", l.guild ? "guild" : ""].join(" ").trim() || undefined}>
+              {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}<b>{l.name}</b> {l.text}
+            </p>
           ))}
         </div>
       )}

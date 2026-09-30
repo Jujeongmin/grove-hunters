@@ -15,6 +15,15 @@ import { NEWS, readNewsId } from "../../src/game/news";
 import { mailFits, receiveMail, type Mail } from "../../src/game/account/mail";
 import { openMailbox, takeMail } from "./mail";
 import {
+  GUILD_COST, REJOIN_MS, canAnswer, mayJoin, parseGuildName, rankedMembers, readNotice,
+  type Guild, type GuildListing, type GuildView,
+} from "../../src/game/account/guild";
+import {
+  addGuild, answer, apply, disband, findGuildByKey, guildLines, guildOf, myGuild, openGuilds, passMaster, readGuildById, remove,
+  sayInGuild, setNotice, setRole, withGuildNameLock, withdraw,
+} from "./guild";
+import { isOnline } from "../../src/game/account/friends";
+import {
   MAX_LISTINGS, pageOf, readBundle, readFilter, readPrice, shelfOf, type Listing, type ListingView, type Shelf,
 } from "../../src/game/account/market";
 import {
@@ -27,7 +36,7 @@ import {
 } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS, readJob } from "../../src/game/combat/jobs";
 import { TALK_RANGE, TALK_SLACK, npcSpot, type NpcId } from "../../src/game/world/npcs";
-import { CHARACTERS_PER_WORLD, characterView, type Character } from "../../src/game/account/characters";
+import { CHARACTERS_PER_WORLD, GUILDLESS, characterView, type Character } from "../../src/game/account/characters";
 import { FULL_GAME_PRODUCT, readPurchaseEvent } from "../../src/game/account/purchase";
 import { isFreeClass, readClass } from "../../src/game/combat/classes";
 import { rankOf, type RankDetail, type RankingView } from "../../src/game/account/ranking";
@@ -45,7 +54,7 @@ import {
   DUPLICATE_REFUND, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, rollMount, type MountId,
 } from "../../src/game/account/mounts";
 import {
-  channelPlayers, claimName, deleteCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, grantPurchase, readGems, markSeen,
+  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, grantPurchase, readGems, markSeen,
   ownsFullGame, pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
@@ -329,6 +338,38 @@ function currentChannel(): { roomId: string; zone: ZoneId } {
   return { roomId, zone: here.zone };
 }
 
+// Guilds listed to join, at most.
+const GUILD_LIST = 20;
+
+// Your guild as its screen shows it: each member with level, class and (online) where they are;
+// applications only for those who answer them.
+async function guildView(account: string, character: Character): Promise<GuildView> {
+  const guild = await guildOf(account, character);
+  const role = guild ? guild.members.find((m) => m.characterId === character.id)?.role ?? null : null;
+  const now = Date.now();
+  const applied = [];
+  for (const id of character.applied) {
+    const g = await readGuildById(id);
+    if (g) applied.push({ id, name: g.name });
+  }
+  const members = guild ? await Promise.all(rankedMembers(guild.members).map(async (m) => {
+    const state = await $global.getUserState(m.account);
+    const { characters, active } = await readProfile(m.account);
+    const c = characters.find((x) => x.id === m.characterId);
+    const online = isOnline(state.lastSeenAt, now) && active?.id === m.characterId;
+    return {
+      characterId: m.characterId, name: c?.name ?? m.name, role: m.role, level: c ? levelOf(c.xp).level : 1,
+      playerClass: c?.playerClass ?? null, job: c?.job ?? null, online, where: online ? readWhereabouts(state.where) : null,
+    };
+  })) : [];
+  return {
+    guild: guild ? {
+      id: guild.id, name: guild.name, notice: guild.notice, made: guild.made, members, applicants: canAnswer(role) ? guild.applicants : [],
+    } : null,
+    role, applied, waitUntil: character.guildLeftAt + REJOIN_MS,
+  };
+}
+
 // A listing as the market's screen shows it: whose it is by name only, and whether it is yours.
 function listingView(listing: Listing, account: string): ListingView {
   const { seller, ...shown } = listing;
@@ -489,6 +530,172 @@ export class Server {
     return { listings: (await sellerListings(account)).map((l) => listingView(l, account)) };
   }
 
+  // Your guild as its screen shows it (or none), with where you have applied.
+  async getGuild(): Promise<GuildView> {
+    const account = $sender.account;
+    return guildView(account, await playing(account));
+  }
+
+  // What the menu's guild button needs, cheaply: applications waiting (for those who answer them).
+  async guildBadge(): Promise<{ applicants: number }> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const guild = await guildOf(account, character);
+    const role = guild?.members.find((m) => m.characterId === character.id)?.role ?? null;
+    return { applicants: guild && canAnswer(role) ? guild.applicants.length : 0 };
+  }
+
+  // Guilds to join: the one named `query`, or those with the fewest members.
+  async findGuilds(query: unknown): Promise<GuildListing[]> {
+    let found: Guild[];
+    if (typeof query === "string" && query.trim() !== "") {
+      let key: string;
+      try {
+        key = parseGuildName(query).key;
+      } catch {
+        return [];
+      }
+      const guild = await findGuildByKey(key);
+      found = guild ? [guild] : [];
+    } else found = await openGuilds(GUILD_LIST);
+    return found.map((g) => ({ id: g.id, name: g.name, members: g.members.length, notice: g.notice }));
+  }
+
+  // Founds a guild for GUILD_COST gold, with you as its master.
+  async createGuild(rawName: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const now = Date.now();
+    const character = await playing(account);
+    if (await guildOf(account, character)) throw new RuleViolation("in_guild");
+    if (!mayJoin(character.guildLeftAt, now)) throw new RuleViolation("guild_wait");
+    const { name, key } = parseGuildName(rawName);
+    if (!(await $asset.has(GOLD, GUILD_COST))) throw new RuleViolation("not_enough_gold");
+    await $asset.burn(GOLD, GUILD_COST);
+    try {
+      await withGuildNameLock(key, async () => {
+        if (await findGuildByKey(key)) throw new RuleViolation("guild_name_taken");
+        const id = await addGuild({
+          name, key, notice: "", made: now, applicants: [],
+          members: [{ characterId: character.id, account, name: character.name, role: "master", joined: now }],
+        });
+        await updateCharacter(account, character.id, (c) => ({ ...c, guild: { id, name } }));
+      });
+    } catch (error) {
+      await $asset.mint(GOLD, GUILD_COST);
+      throw error;
+    }
+    for (const other of character.applied) await withdraw(other, account, character.id);
+    const next = await playing(account);
+    await refreshFighter(next);
+    return guildView(account, next);
+  }
+
+  async applyGuild(rawId: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    if (await guildOf(account, character)) throw new RuleViolation("in_guild");
+    if (!mayJoin(character.guildLeftAt, Date.now())) throw new RuleViolation("guild_wait");
+    await apply(requireText(rawId), account, character, Date.now());
+    return guildView(account, await playing(account));
+  }
+
+  async cancelApplication(rawId: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    await withdraw(requireText(rawId), account, character.id);
+    return guildView(account, await playing(account));
+  }
+
+  // A master or vice lets an applicant in, or turns them away.
+  async answerApplication(rawCharacter: unknown, accept: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await answer(guild.id, character.id, requireText(rawCharacter), accept === true, Date.now());
+    return guildView(account, character);
+  }
+
+  async leaveGuild(): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await remove(guild.id, null, character.id, Date.now());
+    const next = await playing(account);
+    await refreshFighter(next);
+    return guildView(account, next);
+  }
+
+  async kickMember(rawCharacter: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await remove(guild.id, character.id, requireText(rawCharacter), Date.now());
+    return guildView(account, character);
+  }
+
+  async setGuildRole(rawCharacter: unknown, role: unknown): Promise<GuildView> {
+    if (role !== "vice" && role !== "member") throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await setRole(guild.id, character.id, requireText(rawCharacter), role);
+    return guildView(account, character);
+  }
+
+  async passGuildMaster(rawCharacter: unknown): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await passMaster(guild.id, character.id, requireText(rawCharacter));
+    return guildView(account, character);
+  }
+
+  async setGuildNotice(raw: unknown): Promise<GuildView> {
+    const notice = readNotice(raw);
+    if (notice === null) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await setNotice(guild.id, character.id, notice);
+    return guildView(account, character);
+  }
+
+  async disbandGuild(): Promise<GuildView> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    await disband(guild.id, account, character.id, Date.now());
+    const next = await playing(account);
+    await refreshFighter(next);
+    return guildView(account, next);
+  }
+
+  // A line in your guild's chat, held to the chat's pace. Answers the line as it went out.
+  async guildSay(raw: unknown): Promise<ChatMessage> {
+    const text = readChat(raw);
+    if (text === null) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    const character = await playing(account);
+    const { guild } = await myGuild(account, character);
+    const now = Date.now();
+    const kept = (await $global.getUserState(account)).guildChatAt;
+    const said: number[] = Array.isArray(kept) ? kept.filter((t: unknown): t is number => typeof t === "number") : [];
+    if (!chatAllowed(said, now)) throw new RuleViolation("too_fast");
+    await $global.updateUserState(account, { guildChatAt: [...said.filter((t) => now - t < CHAT_WINDOW_MS), now] });
+    const line: ChatMessage = { account, name: character.name, text, at: now };
+    await sayInGuild(guild.id, line);
+    return line;
+  }
+
+  // Your guild's lines after `since` (ms), oldest first; none, and inGuild false, without a guild.
+  async guildChat(since: unknown): Promise<{ lines: ChatMessage[]; inGuild: boolean }> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const guild = await guildOf(account, character);
+    if (!guild) return { lines: [], inGuild: false };
+    return { lines: await guildLines(guild.id, typeof since === "number" && Number.isFinite(since) ? since : 0), inGuild: true };
+  }
+
   // How you set up the bar (skills in slots, what auto-battle may use), kept on the account so it
   // follows you to any device; null until first saved.
   async getControls(): Promise<Controls | null> {
@@ -523,7 +730,7 @@ export class Server {
       const character: Character = {
         id: `c-${token(10)}`, world, name, playerClass: picked, costume: look.id, xp: 0, spot: null, made: Date.now(),
         // Nothing to start with: the elder hands out the first skill and potions (the tutorial).
-        ...EMPTY_INVENTORY, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
+        ...EMPTY_INVENTORY, ...GUILDLESS, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
       };
       await withNicknameLock(() => claimName(account, character.id, key, name));
       await saveProfile(account, [...characters, character], character.id);

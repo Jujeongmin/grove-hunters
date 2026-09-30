@@ -3,6 +3,7 @@ import { JOBS, readJob, type JobId } from "../combat/jobs";
 import { costumeById } from "../render/costumes";
 import { readZone, type ZoneId } from "../world/zones";
 import { readInventory, type Inventory } from "./inventory";
+import { readGuildTag, type GuildTag } from "./guild";
 import { levelOf, readXp, type LevelView } from "./level";
 import { readDaily, readQuest, type DailyProgress, type QuestProgress } from "./quests";
 import { readTutorial, type TutorialStep } from "./tutorial";
@@ -36,7 +37,15 @@ export interface Character extends Inventory {
   tutorial: TutorialStep | null;
   // How it left its last room (see vitals.ts), until the next one takes it in; none when whole.
   vitals?: Vitals | null;
+  // Its guild (a copy; the guild's own row decides), when it last left one, and the guilds it has
+  // asked to join (see guild.ts).
+  guild: GuildTag | null;
+  guildLeftAt: number;
+  applied: string[];
 }
+
+// A character in no guild, never in one.
+export const GUILDLESS: Pick<Character, "guild" | "guildLeftAt" | "applied"> = { guild: null, guildLeftAt: 0, applied: [] };
 
 // What the menus show of a character.
 export interface CharacterView {
@@ -74,6 +83,9 @@ export function readCharacters(raw: unknown): Character[] {
       id: c.id, world: c.world, name: c.name, playerClass, costume: costume.id, xp: readXp(c.xp), spot: readSpot(c.spot), made,
       ...readInventory(c as Record<string, unknown>, c.id), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
       tutorial: readTutorial(c.tutorial), vitals: readVitals(c.vitals),
+      guild: readGuildTag(c.guild),
+      guildLeftAt: typeof c.guildLeftAt === "number" && Number.isFinite(c.guildLeftAt) ? c.guildLeftAt : 0,
+      applied: Array.isArray(c.applied) ? c.applied.filter((id): id is string => typeof id === "string") : [],
     });
   }
   return out.sort((a, b) => a.made - b.made);

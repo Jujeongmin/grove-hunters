@@ -15,7 +15,13 @@ import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
+import type { GuildListing, GuildView } from "../game/account/guild";
 import type { MatchTransport } from "./transport";
+
+// The guild changes the guild screen makes; each answers the screen after it.
+export type GuildCall =
+  | "createGuild" | "applyGuild" | "cancelApplication" | "answerApplication" | "leaveGuild" | "kickMember"
+  | "setGuildRole" | "passGuildMaster" | "setGuildNotice" | "disbandGuild";
 
 // One page of the market, and your gems.
 export interface MarketPage { listings: ListingView[]; page: number; pages: number; gems: number }
@@ -62,6 +68,9 @@ export interface WorldState {
   error: string | null;
   // The lines said in the channels you have been in this session, oldest first (at most CHAT_KEEP).
   chat: ChatLine[];
+  // Your guild's lines heard this session, and whether you are in a guild (as last asked).
+  guildChat: ChatLine[];
+  inGuild: boolean;
 }
 
 // A chat line as the client keeps it: numbered in the order it came, when it came (by this
@@ -113,7 +122,7 @@ function readLook(raw: unknown): ZoneLook | null {
   if (!l || typeof l.name !== "string" || typeof l.costume !== "string" || typeof l.playerClass !== "string") return null;
   return {
     name: l.name, costume: l.costume, playerClass: l.playerClass, level: typeof l.level === "number" ? l.level : 1,
-    job: typeof l.job === "string" ? l.job : null,
+    job: typeof l.job === "string" ? l.job : null, guild: typeof l.guild === "string" ? l.guild : null,
   };
 }
 
@@ -144,7 +153,7 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // Your place in the open world: which zone and channel you are in, who else is there and where,
 // and your own pose going out to them.
 export class WorldClient {
-  private current: WorldState = { phase: "idle", entry: null, others: [], monsters: {}, me: null, bag: null, error: null, chat: [] };
+  private current: WorldState = { phase: "idle", entry: null, others: [], monsters: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
   private members: string[] = [];
@@ -156,6 +165,8 @@ export class WorldClient {
   private payouts: Payout[] = [];
   private chatCount = 0;
   private seenNews: string | null | undefined = undefined;
+  // The newest guild line heard (its time), so each poll asks only for what is new.
+  private guildHeardAt = 0;
   // Whether the news has opened by itself yet this visit (once, not once per zone).
   newsShown = false;
   // Bumped by every enter and leave: one overtaken by a newer one (React's development double run
@@ -441,31 +452,81 @@ export class WorldClient {
     }
   }
 
+  // Guilds: your guild's screen, the list to join, and every change to them (each answers the guild
+  // screen after it, or the problem).
+  guild(): Promise<GuildView | { problem: string }> {
+    return this.tryCall("getGuild", []);
+  }
+
+  findGuilds(query: string): Promise<GuildListing[] | { problem: string }> {
+    return this.tryCall("findGuilds", [query]);
+  }
+
+  async guildBadge(): Promise<number> {
+    return (await this.transport.call<{ applicants: number }>("guildBadge").catch(() => null))?.applicants ?? 0;
+  }
+
+  guildCall(name: GuildCall, args: unknown[] = []): Promise<GuildView | { problem: string }> {
+    return this.tryCall(name, args);
+  }
+
+  // Your guild's chat: new lines since the last one heard join state.guildChat. Asked every few
+  // seconds by the chat box; `inGuild` says whether there is a guild to hear at all.
+  async pollGuildChat(): Promise<void> {
+    const r = await this.transport.call<{ lines: ChatMessage[]; inGuild: boolean }>("guildChat", [this.guildHeardAt]).catch(() => null);
+    if (!r) return;
+    if (!r.inGuild) {
+      if (this.current.inGuild || this.current.guildChat.length > 0) this.set({ inGuild: false, guildChat: [] });
+      return;
+    }
+    const fresh = r.lines.filter((l) => l.at > this.guildHeardAt);
+    if (fresh.length === 0) {
+      if (!this.current.inGuild) this.set({ inGuild: true });
+      return;
+    }
+    this.guildHeardAt = fresh[fresh.length - 1].at;
+    const lines = fresh.map((l): ChatLine => ({ ...l, id: ++this.chatCount, heardAt: this.now(), mine: l.account === this.account }));
+    this.set({ inGuild: true, guildChat: [...this.current.guildChat, ...lines].slice(-CHAT_KEEP) });
+  }
+
+  async guildSay(text: string): Promise<string | null> {
+    const line = readChat(text);
+    if (line === null) return "unavailable";
+    try {
+      await this.transport.call("guildSay", [line]);
+      await this.pollGuildChat();
+      return null;
+    } catch (error) {
+      return errorCode(error);
+    }
+  }
+
   // The market: a page of listings, your own, putting something up (the bag is read again), buying
   // and taking down. Each answers what the server did, or the problem.
   market(filter: Partial<MarketFilter>): Promise<MarketPage | { problem: string }> {
-    return this.marketCall<MarketPage>("market", [filter]);
+    return this.tryCall<MarketPage>("market", [filter]);
   }
 
   myListings(): Promise<{ listings: ListingView[]; gems: number } | { problem: string }> {
-    return this.marketCall("myListings", []);
+    return this.tryCall("myListings", []);
   }
 
   async sellOnMarket(what: { uid: string } | { item: ItemId; n: number }, price: number): Promise<{ listings: ListingView[] } | { problem: string }> {
-    const r = await this.marketCall<{ bag: BagView; listings: ListingView[] }>("sellOnMarket", [what, price]);
+    const r = await this.tryCall<{ bag: BagView; listings: ListingView[] }>("sellOnMarket", [what, price]);
     if ("bag" in r) this.set({ bag: r.bag });
     return r;
   }
 
   buyListing(id: string): Promise<{ gems: number } | { problem: string }> {
-    return this.marketCall("buyFromMarket", [id]);
+    return this.tryCall("buyFromMarket", [id]);
   }
 
   cancelListing(id: string): Promise<{ listings: ListingView[] } | { problem: string }> {
-    return this.marketCall("cancelMarketListing", [id]);
+    return this.tryCall("cancelMarketListing", [id]);
   }
 
-  private async marketCall<T>(name: string, args: unknown[]): Promise<T | { problem: string }> {
+  // A call whose refusal the screen shows: the answer, or the problem's code.
+  private async tryCall<T>(name: string, args: unknown[]): Promise<T | { problem: string }> {
     try {
       return await this.transport.call<T>(name, args);
     } catch (error) {

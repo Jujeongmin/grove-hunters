@@ -17,6 +17,62 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-guild",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "길드가 생겼어요",
+        lines: [
+          "메뉴의 '길드'에서 길드를 찾아 가입 신청하거나, 10,000골드로 직접 만들 수 있어요. 모든 서버가 같은 길드를 써요.",
+          "캐릭터마다 길드 하나. 길드는 최대 30명, 길드장 1명과 부길드장 3명까지예요.",
+          "길드원 목록에서 누가 어느 서버·채널·구역에 있는지 볼 수 있고, 머리 위 이름 옆에 <길드 이름>이 붙어요.",
+          "채팅창에 '길드' 탭이 생겨요. 서버와 채널이 달라도 길드원끼리 이야기할 수 있어요.",
+          "길드를 떠나거나 추방되면 24시간 뒤에 다른 길드에 들어갈 수 있어요. 함께 잡는 길드 보스도 준비 중이에요!",
+        ],
+      },
+      en: {
+        title: "Guilds are here",
+        lines: [
+          "Find a guild and apply under 'Guild' in the menu, or found your own for 10,000 gold. Every server shares the same guilds.",
+          "One guild per character. A guild holds up to 30, with one master and up to three vices.",
+          "The member list shows who is on which server, channel and zone, and your guild's <name> shows after your name.",
+          "The chat gains a 'Guild' tab: talk with your guild whatever server or channel they are on.",
+          "After leaving or being kicked, you can join another guild after 24 hours. Guild bosses to beat together are on the way!",
+        ],
+      },
+      ja: {
+        title: "ギルドができました",
+        lines: [
+          "メニューの「ギルド」でギルドを探して加入申請するか、10,000ゴールドで自分で作れます。すべてのサーバーで同じギルドです。",
+          "キャラクターごとにギルド1つ。ギルドは最大30人、マスター1人とサブマスター3人までです。",
+          "メンバー一覧で誰がどのサーバー・チャンネル・エリアにいるか見られ、頭上の名前の横に<ギルド名>が付きます。",
+          "チャットに「ギルド」タブができます。サーバーやチャンネルが違ってもギルドメンバー同士で話せます。",
+          "ギルドを離れたり追放されたりすると、24時間後に他のギルドに入れます。一緒に倒すギルドボスも準備中です！",
+        ],
+      },
+      "zh-Hant": {
+        title: "公會登場",
+        lines: [
+          "在選單的「公會」尋找公會申請加入，或花10,000金幣自己建立。所有伺服器共用相同的公會。",
+          "每個角色一個公會。公會最多30人，會長1人、副會長最多3人。",
+          "成員列表可以看到誰在哪個伺服器、頻道、區域，頭上名字旁會顯示<公會名稱>。",
+          "聊天視窗新增「公會」分頁，不論伺服器或頻道都能和公會成員聊天。",
+          "離開或被踢出公會後，24小時後才能加入其他公會。一起挑戰的公會首領也在準備中！",
+        ],
+      },
+      "zh-Hans": {
+        title: "公会登场",
+        lines: [
+          "在菜单的“公会”寻找公会申请加入，或花10,000金币自己创建。所有服务器共用相同的公会。",
+          "每个角色一个公会。公会最多30人，会长1人、副会长最多3人。",
+          "成员列表可以看到谁在哪个服务器、频道、区域，头上名字旁会显示<公会名称>。",
+          "聊天窗口新增“公会”标签，不论服务器或频道都能和公会成员聊天。",
+          "离开或被踢出公会后，24小时后才能加入其他公会。一起挑战的公会首领也在准备中！",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-market",
     date: "2026-09-30",
     text: {
