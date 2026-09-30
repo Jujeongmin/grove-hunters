@@ -673,8 +673,10 @@ export const ko = {
   "buy.reason.menu": "무료로는 마을과 숲 필드 1을 Lv {n}까지 즐길 수 있어요.",
   "buy.fields": "새 사냥터 {n}곳",
   "buy.noCap": "레벨 제한 해제",
-  "buy.noCapNote": "Lv {n}에서 멈추지 않고 전직 스킬 2개(Lv {third})까지",
-  "buy.bossNote": "내려찍기와 부하를 부르는 보스, 그 전용 장비",
+  "buy.noCapNote": "Lv {n}에서 멈추지 않고 전직 스킬 3개(Lv {third} · Lv {fourth})까지",
+  "buy.bossNote": "바닥 표시를 보고 피하는 패턴 공격, 보스만 떨어뜨리는 장비",
+  "buy.townNote": "Lv {n}부터 · 상인과 대장장이, 대장 브란의 새 퀘스트, 6·7등급 장비",
+  "buy.bosses": "보스: {names}",
   "buy.classes": "직업 {n}개",
   "buy.off": "{n}% 할인",
 

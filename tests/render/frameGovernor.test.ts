@@ -22,7 +22,8 @@ describe("the frame governor", () => {
   it("draws at fewer pixels while frames come late, down to its floor and no further", () => {
     const g = new FrameGovernor(1.5);
     const slow = run(g, 0, 20_000, 33);
-    expect(slow.changes).toEqual([1.25, 1, FLOOR_RATIO]);
+    expect(slow.changes).toEqual([1.25, FLOOR_RATIO]);
+    expect(FLOOR_RATIO).toBe(1);
     expect(g.pixelRatio).toBe(FLOOR_RATIO);
   });
 

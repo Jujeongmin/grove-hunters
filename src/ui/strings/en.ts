@@ -664,8 +664,10 @@ export const en: Bundle = {
   "buy.reason.menu": "The village and Forest Field 1 are free, up to Lv {n}.",
   "buy.fields": "{n} new hunting fields",
   "buy.noCap": "No level cap",
-  "buy.noCapNote": "Past Lv {n}, on to both of your path's skills (Lv {third})",
-  "buy.bossNote": "A boss that slams and calls its brood, and the gear it drops",
+  "buy.noCapNote": "Past Lv {n}, on to all three of your path's skills (Lv {third} · Lv {fourth})",
+  "buy.bossNote": "Marked attacks to read and dodge, and gear only bosses drop",
+  "buy.townNote": "From Lv {n} · a merchant and a smith, Captain Bran's new quests, tier 6 and 7 gear",
+  "buy.bosses": "Bosses: {names}",
   "buy.classes": "{n} classes",
   "buy.off": "{n}% off",
 

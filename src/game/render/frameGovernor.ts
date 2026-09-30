@@ -2,9 +2,10 @@
 // frames come late, and at more again once they have kept time for a while. On time is 60 frames a
 // second: a 120 Hz screen running at 60 is not worth blurring for.
 
-// Steps of pixels a point, and the fewest it goes down to (a little soft, but smooth).
+// Steps of pixels a point, and the fewest it goes down to: one pixel a point, never fewer (below it
+// a phone's picture turned visibly blurry).
 const STEP = 0.25;
-export const FLOOR_RATIO = 0.75;
+export const FLOOR_RATIO = 1;
 // How often it judges, over how many frames, and how late the middle frame may be.
 const JUDGE_MS = 1000;
 const WINDOW = 90;

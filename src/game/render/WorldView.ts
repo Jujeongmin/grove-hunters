@@ -235,6 +235,8 @@ export class WorldView {
   private trip: QuestTrip | null = null;
   private tripToResume: QuestTrip | null;
   private readonly hudListeners = new Set<(hud: WorldHud) => void>();
+  // Told when you asked for your mount by hand and have none (the screen opens the stable).
+  private readonly noMountListeners = new Set<() => void>();
   private readonly layout: LevelLayout;
   private readonly portals: Portal[];
   private readonly walls: SolidTest;
@@ -519,8 +521,11 @@ export class WorldView {
       if (id) playCue("open");
       else {
         this.noMountUntil = performance.now() + NO_MOUNT_RETRY_MS;
-        // Asked by hand: say why nothing happened.
-        if (byHand) this.notes.push({ text: t("mount.none"), at: performance.now() });
+        // Asked by hand: say why nothing happened, and show where a mount comes from.
+        if (byHand) {
+          this.notes.push({ text: t("mount.none"), at: performance.now() });
+          for (const cb of this.noMountListeners) cb();
+        }
       }
     });
   }
@@ -571,6 +576,13 @@ export class WorldView {
     this.hudListeners.add(cb);
     return () => {
       this.hudListeners.delete(cb);
+    };
+  }
+
+  onNoMount(cb: () => void): () => void {
+    this.noMountListeners.add(cb);
+    return () => {
+      this.noMountListeners.delete(cb);
     };
   }
 

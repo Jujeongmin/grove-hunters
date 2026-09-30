@@ -664,8 +664,10 @@ export const zhHans: Bundle = {
   "buy.reason.menu": "免费可游玩村庄与森林原野 1，直到 Lv {n}。",
   "buy.fields": "{n} 处新狩猎场",
   "buy.noCap": "解除等级上限",
-  "buy.noCapNote": "不停在 Lv {n}，一路到两个转职技能（Lv {third}）",
-  "buy.bossNote": "会重击并召唤手下的首领，以及它的专属装备",
+  "buy.noCapNote": "不停在 Lv {n}，一路到三个转职技能（Lv {third}・Lv {fourth}）",
+  "buy.bossNote": "看地面标记闪避的招式攻击，只有首领会掉落的装备",
+  "buy.townNote": "Lv {n} 起・商人与铁匠、队长布兰的新任务、6・7级装备",
+  "buy.bosses": "首领：{names}",
   "buy.classes": "{n} 种职业",
   "buy.off": "{n}% 折扣",
 

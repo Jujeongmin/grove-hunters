@@ -1,14 +1,19 @@
 import { CLASSES, isFreeClass } from "../game/combat/classes";
 import { className, monsterName, weaponName, zoneName } from "./names";
-import { THIRD_SKILL_LEVEL } from "../game/combat/skills";
+import { FOURTH_SKILL_LEVEL, THIRD_SKILL_LEVEL } from "../game/combat/skills";
+import { ZONE_BOSS, ZONE_MONSTERS } from "../game/world/monsters";
 import { t } from "./lang";
 import { iconFor, skillIconId } from "../game/render/icons";
 import type { Offer } from "../game/account/purchase";
-import { ZONES, ZONE_IDS } from "../game/world/zones";
+import { ZONES, ZONE_IDS, townOf } from "../game/world/zones";
 
 // What buying opens, read from the game itself rather than written out here: the zones that ask for
-// it, the classes it adds, and the level the free fields stop at.
+// it (the hunting fields among them, the towns, the bosses), the classes it adds, and the level the
+// free fields stop at.
 export const LOCKED_ZONES = ZONE_IDS.filter((z) => ZONES[z].paid);
+const LOCKED_FIELDS = LOCKED_ZONES.filter((z) => ZONE_MONSTERS[z].length > 0);
+const LOCKED_TOWNS = LOCKED_ZONES.filter((z) => townOf(z) === z);
+const LOCKED_BOSSES = LOCKED_ZONES.flatMap((z) => ZONE_BOSS[z] ?? []);
 const LOCKED_CLASSES = CLASSES.filter((c) => !isFreeClass(c));
 export const FREE_UNTIL = Math.min(...LOCKED_ZONES.map((z) => ZONES[z].minLevel));
 
@@ -58,15 +63,21 @@ export function UpgradePanel({ reason, offer, state, onBuy, onClose }: UpgradePa
 
         <ul className="upgrade-list">
           <li className="big">
-            <b>{t("buy.fields", { n: LOCKED_ZONES.length })}</b>
-            <span>{LOCKED_ZONES.map((z) => `${zoneName(z)} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
+            <b>{t("buy.fields", { n: LOCKED_FIELDS.length })}</b>
+            <span>{LOCKED_FIELDS.map((z) => `${zoneName(z)} (Lv ${ZONES[z].minLevel}~)`).join(" · ")}</span>
           </li>
+          {LOCKED_TOWNS.map((z) => (
+            <li key={z}>
+              <b>{zoneName(z)}</b>
+              <span>{t("buy.townNote", { n: ZONES[z].minLevel })}</span>
+            </li>
+          ))}
           <li>
             <b>{t("buy.noCap")}</b>
-            <span>{t("buy.noCapNote", { n: FREE_UNTIL, third: THIRD_SKILL_LEVEL })}</span>
+            <span>{t("buy.noCapNote", { n: FREE_UNTIL, third: THIRD_SKILL_LEVEL, fourth: FOURTH_SKILL_LEVEL })}</span>
           </li>
           <li>
-            <b>{monsterName("mushroom_king")}</b>
+            <b>{t("buy.bosses", { names: LOCKED_BOSSES.map((b) => monsterName(b)).join(" · ") })}</b>
             <span>{t("buy.bossNote")}</span>
           </li>
         </ul>

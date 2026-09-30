@@ -155,9 +155,26 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
             }}
             onBlur={() => close()}
           />
-          {/* Pressing these must not take the focus first, or the box would close before the tap lands. */}
-          <button type="submit" className="chat-send" onPointerDown={(e) => e.preventDefault()}>{t("chat.send")}</button>
-          <button type="button" className="chat-close" onPointerDown={(e) => e.preventDefault()} onClick={() => close()}>{t("common.close")}</button>
+          {/* These act the moment they are pressed: on a phone the box may lose the focus (and close) as
+              the finger lands, before any click would come. Enter still sends through the form. */}
+          <button
+            type="button" className="chat-send"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              void send();
+            }}
+          >
+            {t("chat.send")}
+          </button>
+          <button
+            type="button" className="chat-close"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              close();
+            }}
+          >
+            {t("common.close")}
+          </button>
           {problem && <span className="chat-problem">{problem}</span>}
         </form>
       ) : (

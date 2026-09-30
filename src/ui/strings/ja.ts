@@ -664,8 +664,10 @@ export const ja: Bundle = {
   "buy.reason.menu": "無料では村と森フィールド1をLv {n}まで遊べます。",
   "buy.fields": "新しい狩場 {n}か所",
   "buy.noCap": "レベル制限の解除",
-  "buy.noCapNote": "Lv {n}で止まらず、転職スキル2つ（Lv {third}）まで",
-  "buy.bossNote": "叩きつけと手下を呼ぶボス、その専用装備",
+  "buy.noCapNote": "Lv {n}で止まらず、転職スキル3つ（Lv {third}・Lv {fourth}）まで",
+  "buy.bossNote": "地面の表示を見て避けるパターン攻撃、ボスだけが落とす装備",
+  "buy.townNote": "Lv {n}から・商人と鍛冶屋、隊長ブランの新クエスト、6・7等級装備",
+  "buy.bosses": "ボス：{names}",
   "buy.classes": "職業 {n}種",
   "buy.off": "{n}% 割引",
 

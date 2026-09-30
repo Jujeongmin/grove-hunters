@@ -51,10 +51,12 @@ const STORAGE_KEY = "traitor-hunt:settings";
 // Graphics quality: how many pixels a point (at most) and how near trees and ground cover are drawn in
 // full (metres; beyond, pictures or nothing).
 export type Quality = "low" | "mid" | "high";
+// A phone's screen has 3 pixels a point: at 1.5 the world looked soft there, so the middle (a phone's
+// start) draws at 2, and the top at 2.5.
 export const QUALITY: Record<Quality, { pixelRatio: number; near: number }> = {
   low: { pixelRatio: 1, near: 26 },
-  mid: { pixelRatio: 1.5, near: 38 },
-  high: { pixelRatio: 2, near: 55 },
+  mid: { pixelRatio: 2, near: 38 },
+  high: { pixelRatio: 2.5, near: 55 },
 };
 // Phones and tablets start at the middle; computers at the top.
 const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;
