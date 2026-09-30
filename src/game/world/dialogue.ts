@@ -1,6 +1,6 @@
 import type { TutorialStep } from "../account/tutorial";
 import { QUESTS, questDone, type QuestProgress } from "../account/quests";
-import type { NpcId } from "./npcs";
+import { roleOf, type NpcId } from "./npcs";
 
 // Talking to the village's people: what hangs over each one's head, and what a talk can lead to.
 
@@ -12,8 +12,8 @@ export type NpcState = { quest: QuestProgress; tutorial: TutorialStep | null } |
 export type NpcMarker = "quest" | "report" | "shop" | "forge";
 
 export function npcMarker(id: NpcId, state: NpcState): NpcMarker | null {
-  if (id === "merchant") return "shop";
-  if (id === "smith") return "forge";
+  if (roleOf(id) === "merchant") return "shop";
+  if (roleOf(id) === "smith") return "forge";
   if (!state) return null;
   if (state.tutorial !== null) return "quest";
   if (!QUESTS[state.quest.index]) return null;
@@ -25,9 +25,10 @@ export function npcMarker(id: NpcId, state: NpcState): NpcMarker | null {
 export type DialogueChoice = "claim" | "seek" | "donate" | "shop" | "forge" | "close";
 
 export function dialogueChoices(id: NpcId, state: NpcState, building = false): DialogueChoice[] {
-  if (id === "merchant") return ["shop", "close"];
-  if (id === "smith") return ["forge", "close"];
+  if (roleOf(id) === "merchant") return ["shop", "close"];
+  if (roleOf(id) === "smith") return ["forge", "close"];
   if (!state || state.tutorial !== null) return ["close"];
   const quest: DialogueChoice[] = QUESTS[state.quest.index] ? [questDone(state.quest) ? "claim" : "seek"] : [];
-  return [...quest, ...(building ? ["donate" as const] : []), "close"];
+  // Gifts to the grove's buildings go to the village's own elder only.
+  return [...quest, ...(building && id === "elder" ? ["donate" as const] : []), "close"];
 }

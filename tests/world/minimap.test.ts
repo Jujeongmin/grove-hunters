@@ -30,11 +30,15 @@ describe("minimapModel", () => {
     }
   });
 
-  it("marks the villagers, and only in the village", () => {
-    const village = minimapModel("village").marks.filter((m) => m.kind === "npc");
-    expect(village.map((m) => m.npc)).toEqual(NPCS.map((n) => n.id));
-    expect(village.map((m) => [m.x, m.z])).toEqual(NPCS.map((n) => [npcSpot(n.id).x, npcSpot(n.id).z]));
+  it("marks each town's people in their own town, and none in the fields", () => {
+    for (const town of ["village", "outpost"] as const) {
+      const people = NPCS.filter((n) => n.zone === town);
+      const marks = minimapModel(town).marks.filter((m) => m.kind === "npc");
+      expect(marks.map((m) => m.npc)).toEqual(people.map((n) => n.id));
+      expect(marks.map((m) => [m.x, m.z])).toEqual(people.map((n) => [npcSpot(n.id).x, npcSpot(n.id).z]));
+    }
     expect(minimapModel("forest1").marks.some((m) => m.kind === "npc")).toBe(false);
+    expect(minimapModel("snow1").marks.some((m) => m.kind === "npc")).toBe(false);
   });
 
   it("gives the same model back for the same zone", () => {

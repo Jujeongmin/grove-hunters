@@ -36,6 +36,14 @@ export function trackFor(zone: ZoneId | null): Track {
       return "deep";
     case "boss":
     case "arena":
+    case "snowboss":
       return "boss";
+    case "outpost":
+      return "village";
+    case "snow1":
+    case "snow2":
+      return "field2";
+    case "snow3":
+      return "deep";
   }
 }

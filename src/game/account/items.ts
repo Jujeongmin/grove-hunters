@@ -12,9 +12,9 @@ export const GOLD = "gold";
 
 export type ItemId =
   | "potion_small" | "potion_big"
-  | "weapon_1" | "weapon_2" | "weapon_3" | "weapon_4" | "weapon_5"
-  | "armor_1" | "armor_2" | "armor_3" | "armor_4" | "armor_5"
-  | "stone" | "jelly" | "silk" | "core" | "spore";
+  | "weapon_1" | "weapon_2" | "weapon_3" | "weapon_4" | "weapon_5" | "weapon_6" | "weapon_7"
+  | "armor_1" | "armor_2" | "armor_3" | "armor_4" | "armor_5" | "armor_6" | "armor_7"
+  | "stone" | "jelly" | "silk" | "core" | "spore" | "frost_shard" | "snow_fur" | "ever_ice";
 
 export type Slot = "weapon" | "armor";
 
@@ -55,11 +55,19 @@ export const ITEMS: Record<ItemId, ItemSpec> = {
   armor_5: {
     ...none, kind: "armor", price: null, sell: 1700, hp: 140, guard: 0.2, tier: 5,
   },
+  // The snow region's: the canyon's and the peaks' gear, and the Glacier Emperor's.
+  weapon_6: { ...none, kind: "weapon", price: null, sell: 3000, power: 0.7, tier: 6 },
+  armor_6: { ...none, kind: "armor", price: null, sell: 2800, hp: 190, guard: 0.25, tier: 6 },
+  weapon_7: { ...none, kind: "weapon", price: null, sell: 6000, power: 0.85, tier: 7 },
+  armor_7: { ...none, kind: "armor", price: null, sell: 5500, hp: 250, guard: 0.3, tier: 7 },
   stone: { ...none, kind: "material", price: null, sell: 15 },
   jelly: { ...none, kind: "material", price: null, sell: 5 },
   silk: { ...none, kind: "material", price: null, sell: 12 },
   core: { ...none, kind: "material", price: null, sell: 30 },
   spore: { ...none, kind: "material", price: null, sell: 150 },
+  frost_shard: { ...none, kind: "material", price: null, sell: 40 },
+  snow_fur: { ...none, kind: "material", price: null, sell: 35 },
+  ever_ice: { ...none, kind: "material", price: null, sell: 250 },
 };
 
 export const ITEM_IDS = Object.keys(ITEMS) as ItemId[];

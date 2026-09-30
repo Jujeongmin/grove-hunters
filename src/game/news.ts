@@ -17,6 +17,62 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-snow-region",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "새 지역: 설산 (Lv40~60)",
+        lines: [
+          "깊은 숲 동쪽 포털 너머에 설산 전초기지가 열렸어요 (Lv38부터, 정식판).",
+          "설산 기슭(Lv40) · 얼음 협곡(Lv47) · 만년설 봉우리(Lv54)에 새 몬스터 11종이 살아요.",
+          "전초기지에는 상인, 대장장이, 퀘스트를 맡는 대장 브란이 있어요. 설산에서 쓰러지면 전초기지로 돌아와요.",
+          "새 장비 6등급(서리송곳)·7등급(빙하왕)과 새 재료 서리 결정·설원 가죽·만년빙이 생겼어요.",
+          "설산의 보스와 퀘스트, Lv40 네 번째 스킬도 곧 이어서 열려요!",
+        ],
+      },
+      en: {
+        title: "New region: the Snow (Lv40-60)",
+        lines: [
+          "Past the deep forest's east portal, the Snow Outpost is open (from Lv38, full game).",
+          "Eleven new monsters live in the Snowy Foothills (Lv40), the Ice Canyon (Lv47) and the Everfrost Peaks (Lv54).",
+          "The outpost has a merchant, a smith and Captain Bran for quests. Fall in the snow and you come back to the outpost.",
+          "New tier 6 (Frostfang) and tier 7 (Glacierking) gear, and new materials: frost shards, snowfield fur and everice.",
+          "The snow's boss, its quests and the fourth skill at Lv40 are coming next!",
+        ],
+      },
+      ja: {
+        title: "新地域：雪山（Lv40〜60）",
+        lines: [
+          "深い森の東の転送門の先に雪山前哨基地が開きました（Lv38から、製品版）。",
+          "雪山のふもと（Lv40）・氷の峡谷（Lv47）・万年雪の峰（Lv54）に新しいモンスター11種が住んでいます。",
+          "前哨基地には商人、鍛冶屋、クエスト担当の隊長ブランがいます。雪山で倒れると前哨基地に戻ります。",
+          "新装備6等級（霜牙）・7等級（氷河王）と、新素材の霜の結晶・雪原の毛皮・万年氷が登場しました。",
+          "雪山のボスとクエスト、Lv40の4つ目のスキルもまもなく！",
+        ],
+      },
+      "zh-Hant": {
+        title: "新地區：雪山（Lv40~60）",
+        lines: [
+          "深林東側傳送門的另一端，雪山前哨站開放了（Lv38起，正式版）。",
+          "雪山山麓（Lv40）、冰之峽谷（Lv47）、萬年雪峰（Lv54）住著11種新怪物。",
+          "前哨站有商人、鐵匠，以及負責任務的隊長布蘭。在雪山倒下會回到前哨站。",
+          "新增6級（霜牙）、7級（冰河王）裝備，以及新材料霜之結晶、雪原毛皮、萬年冰。",
+          "雪山首領、任務與Lv40第四個技能即將推出！",
+        ],
+      },
+      "zh-Hans": {
+        title: "新地区：雪山（Lv40~60）",
+        lines: [
+          "深林东侧传送门的另一端，雪山前哨站开放了（Lv38起，正式版）。",
+          "雪山山麓（Lv40）、冰之峡谷（Lv47）、万年雪峰（Lv54）住着11种新怪物。",
+          "前哨站有商人、铁匠，以及负责任务的队长布兰。在雪山倒下会回到前哨站。",
+          "新增6级（霜牙）、7级（冰河王）装备，以及新材料霜之结晶、雪原毛皮、万年冰。",
+          "雪山首领、任务与Lv40第四个技能即将推出！",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-mount-stars",
     date: "2026-09-30",
     text: {

@@ -6,7 +6,7 @@ import {
   minimapFit, minimapModel, minimapPick, minimapPoint,
   type MinimapFit, type MinimapModel, type MinimapPick,
 } from "../game/world/minimap";
-import type { NpcId } from "../game/world/npcs";
+import { roleOf, type NpcRole } from "../game/world/npcs";
 import type { ZoneId } from "../game/world/zones";
 import { npcName, zoneName } from "./names";
 import { pointIn } from "./useUiScale";
@@ -18,7 +18,7 @@ const GRASS = publicUrl("assets/ground/aerial_grass_rock.jpg");
 const FOREST_FLOOR = publicUrl("assets/ground/forest_floor.jpg");
 const MAGIC_CIRCLE = publicUrl("assets/fx/magic_circle.png");
 // Each villager's mark is the menu icon of what they keep: the shop, the quests, the forge.
-const NPC_ICONS: Record<NpcId, string> = { merchant: "ui_shop", elder: "ui_quests", smith: "ui_forge" };
+const NPC_ICONS: Record<NpcRole, string> = { merchant: "ui_shop", elder: "ui_quests", smith: "ui_forge" };
 
 // The map's own colours, which the photos only light and shade — the same way the ground shader
 // treats them in the world, so the map reads as the place you are standing in.
@@ -215,7 +215,7 @@ export function Minimap({ zone, me, width, height, labels = false, onPick, bosse
     for (const m of model.marks) {
       const at = minimapPoint(fit, m);
       // The corner map is too small for an icon to read, so only the big one carries them.
-      const icon = labels && m.npc ? picture(iconFor(NPC_ICONS[m.npc]) ?? "", again) : null;
+      const icon = labels && m.npc ? picture(iconFor(NPC_ICONS[roleOf(m.npc)]) ?? "", again) : null;
       if (m.kind === "portal" && circle) {
         // A portal sits on the zone's edge, where half its circle would be cut off, so the drawing
         // (not the place it stands for) is nudged back inside the map.

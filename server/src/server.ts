@@ -43,7 +43,7 @@ import {
   QUESTS, QUEST_START, countDaily, countKills, dailyToday, questDone, readDaily, readDailyId,
 } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS, readJob } from "../../src/game/combat/jobs";
-import { TALK_RANGE, TALK_SLACK, npcSpot, type NpcId } from "../../src/game/world/npcs";
+import { TALK_RANGE, TALK_SLACK, npcSpot, npcsIn, type NpcRole } from "../../src/game/world/npcs";
 import { CHARACTERS_PER_WORLD, GUILDLESS, characterView, type Character } from "../../src/game/account/characters";
 import { FULL_GAME_PRODUCT, readPurchaseEvent } from "../../src/game/account/purchase";
 import { isFreeClass, readClass } from "../../src/game/combat/classes";
@@ -54,7 +54,7 @@ import { readWorld } from "../../src/game/account/worlds";
 import { costumeById } from "../../src/game/render/costumes";
 import { PROTOCOL_VERSION, RuleViolation, isPose } from "../../src/game/world/types";
 import {
-  CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
+  CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, townOf, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
   readWhereabouts, readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
@@ -341,12 +341,18 @@ function readItem(value: unknown): ItemId {
   return id;
 }
 
-// The shop and the quests are kept by people in the village: you must be there, standing by them.
-async function requireNpc(id: NpcId): Promise<void> {
-  if (currentChannel().zone !== START_ZONE) throw new RuleViolation("not_in_village");
+// The shop, the forge and the quests are kept by people in the towns (the village, the snow outpost):
+// you must be in a town, standing by one who does that.
+async function requireNpc(role: NpcRole): Promise<void> {
+  const { zone } = currentChannel();
+  const here = npcsIn(zone).filter((n) => n.role === role);
+  if (here.length === 0) throw new RuleViolation("not_in_village");
   const pose = (await $room.getMyState()).pose;
-  const spot = npcSpot(id);
-  if (!isPose(pose) || Math.hypot(pose.x - spot.x, pose.z - spot.z) > TALK_RANGE + TALK_SLACK) throw new RuleViolation("not_near");
+  const near = isPose(pose) && here.some((n) => {
+    const spot = npcSpot(n.id);
+    return Math.hypot(pose.x - spot.x, pose.z - spot.z) <= TALK_RANGE + TALK_SLACK;
+  });
+  if (!near) throw new RuleViolation("not_near");
 }
 
 // Where the caller is fighting: a channel's room, or one of its guild's boss rooms (see arena.ts).
@@ -1217,6 +1223,8 @@ export class Server {
 
   // A gift of materials and gold to the village's building under way, from beside the elder.
   async donate(rawItems: unknown, rawGold: unknown): Promise<GroveView> {
+    // The grove's buildings are the village's: its own elder takes the gifts.
+    if (currentChannel().zone !== START_ZONE) throw new RuleViolation("not_in_village");
     await requireNpc("elder");
     const account = $sender.account;
     const world = (await readAccountWorld(account)).id;
@@ -1538,10 +1546,11 @@ export class Server {
     if ((await $room.getMyState()).dead !== true) throw new RuleViolation("unavailable");
     const here = readChannelRoom($sender.roomId);
     const character = await playing(account);
-    const home = zoneLayout(START_ZONE).playerSpawn;
-    // Whole again in the village.
+    // Whole again in the town of the region you fell in (the village, or the snow outpost).
+    const town = here ? townOf(here.zone) : START_ZONE;
+    const home = zoneLayout(town).playerSpawn;
     await updateActive(account, (c) => ({ ...c, vitals: null }));
-    return enter(account, character, START_ZONE, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
+    return enter(account, character, town, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
   }
 
   // The channels of your server, with how many play on each, for choosing one to move to.

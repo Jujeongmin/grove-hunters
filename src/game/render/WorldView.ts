@@ -29,10 +29,10 @@ import {
 import { Threats } from "../world/threats";
 import { MOUNTS, type MountId } from "../account/mounts";
 import type { Point2 } from "../rules/levelLayout";
-import { NPCS, NPC_MODELS, npcNear, npcFacing, npcSpot, type NpcId } from "../world/npcs";
+import { NPCS, npcNear, npcFacing, npcSpot, npcsIn, type NpcId } from "../world/npcs";
 import { NpcActor } from "./NpcActor";
 import type { Pose } from "../world/types";
-import { PORTAL_RADIUS, START_ZONE, ZONES, portalsOf, zoneLayout, type Portal, type ZoneEntry, type ZoneId } from "../world/zones";
+import { PORTAL_RADIUS, ZONES, portalsOf, zoneLayout, type Portal, type ZoneEntry, type ZoneId } from "../world/zones";
 import { playCue, preloadCues } from "../audio/sfx";
 import { costumeById, type Costume } from "./costumes";
 import { ARROW_MODEL, Effects, type ShotKind } from "./effects";
@@ -43,6 +43,7 @@ import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import type { LodBatch } from "./lodBatch";
 import { TelegraphLayer } from "./telegraphMarks";
+import { lookOf } from "./regionLook";
 import { GUILD_BOSSES } from "../world/guildBoss";
 import type { Telegraph } from "../world/telegraphs";
 import { MonsterActor } from "./MonsterActor";
@@ -331,7 +332,7 @@ export class WorldView {
 
   async start(): Promise<void> {
     const library = await ModelLibrary.load();
-    const npcModels = this.options.entry.zone === START_ZONE ? NPC_MODELS : [];
+    const npcModels = [...new Set(npcsIn(this.options.entry.zone).map((n) => n.model))];
     const houseModels = [...new Set((ZONES[this.options.entry.zone].houses ?? []).map((h) => h.model))];
     await library.preload(
       [...WORLD_MODELS, ...zoneMonsterModels(this.options.entry.zone), ...npcModels, ...houseModels, ...groveModels(this.options.entry.zone)],
@@ -341,14 +342,14 @@ export class WorldView {
     if (this.disposed) return;
     this.library = library;
     this.effects.useModels(library);
-    this.lod = buildLevelScene(this.scene, library, this.layout, this.renderer, this.doorways());
+    this.lod = buildLevelScene(this.scene, library, this.layout, this.renderer, this.doorways(), lookOf(ZONES[this.options.entry.zone].region));
     this.addPortals();
     this.addHouses();
     this.grove = new GroveScene(this.scene, library, this.layout, this.options.entry.zone);
     this.grove.set(this.groveView);
     // Your own name stays off: the camera is right behind you and it would only cover the view.
     this.me = this.hero(this.options.playerClass, this.options.costume);
-    if (this.options.entry.zone === START_ZONE) this.addNpcs();
+    this.addNpcs();
     this.clock.start();
     preloadCues();
     this.frame = requestAnimationFrame(this.tick);
@@ -406,13 +407,14 @@ export class WorldView {
     this.startTrip({ kind: "hunt", types: [...types] });
   }
 
-  // Heads for the elder in the village, from anywhere (to report a quest), and talks on arrival.
+  // Heads for the nearest town's elder (the village's, or the snow outpost's captain), from anywhere
+  // (to report a quest), and talks on arrival.
   goToElder(): void {
     this.startTrip({ kind: "elder" });
   }
 
   private startTrip(trip: QuestTrip): void {
-    const goals = trip.kind === "hunt" ? zonesWith(trip.types) : [START_ZONE];
+    const goals = trip.kind === "hunt" ? zonesWith(trip.types) : [...new Set(NPCS.filter((n) => n.role === "elder").map((n) => n.zone))];
     const way = questWay(this.options.entry.zone, goals, (zone) => this.entryTo(zone));
     const note = (text: string) => this.notes.push({ text, at: performance.now() });
     this.setTrip(null);
@@ -424,7 +426,8 @@ export class WorldView {
         : t("note.questLevel", { zone: zoneName(way.zone), n: ZONES[way.zone].minLevel }));
     } else if (way.kind === "here") {
       if (trip.kind === "elder") {
-        this.walkToNpc("elder");
+        const elder = npcsIn(this.options.entry.zone).find((n) => n.role === "elder");
+        if (elder) this.walkToNpc(elder.id);
         return;
       }
       this.walkGoal = null;
@@ -456,9 +459,9 @@ export class WorldView {
     return "open";
   }
 
-  // Walks you to a village NPC and opens the talk on arrival (the quest tracker's report).
+  // Walks you to an NPC of this town and opens the talk on arrival (the quest tracker's report).
   walkToNpc(id: NpcId): void {
-    if (this.options.entry.zone !== START_ZONE) return;
+    if (!npcsIn(this.options.entry.zone).some((n) => n.id === id)) return;
     this.setTrip(null);
     this.walkGoal = { to: npcSpot(id), talk: id };
     this.auto = false;
@@ -483,7 +486,7 @@ export class WorldView {
   // The on-screen buttons: a skill or the potion by tap, a jump, talking to the NPC close by.
   talk(): void {
     if (this.dialogue) return;
-    const id = npcNear(this.pose.x, this.pose.z);
+    const id = npcNear(this.options.entry.zone, this.pose.x, this.pose.z);
     if (id) this.options.onTalk(id);
   }
 
@@ -934,7 +937,7 @@ export class WorldView {
 
   private addNpcs(): void {
     const library = this.library!;
-    for (const npc of NPCS) {
+    for (const npc of npcsIn(this.options.entry.zone)) {
       const at = npcSpot(npc.id);
       // Looking out from their door.
       const out = npcFacing(npc.id);
@@ -1318,7 +1321,7 @@ export class WorldView {
           .map((m) => ({ x: m.x, z: m.z }))
         : [],
       npc: (() => {
-        const id = npcNear(this.pose.x, this.pose.z);
+        const id = npcNear(this.options.entry.zone, this.pose.x, this.pose.z);
         const npc = id ? NPCS.find((n) => n.id === id)! : null;
         return npc ? { id: npc.id, name: npcName(npc.id), role: npcRole(npc.id) } : null;
       })(),

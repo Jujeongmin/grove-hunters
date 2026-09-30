@@ -58,6 +58,23 @@ export const RECIPES: readonly Recipe[] = [
   { id: "armor_5", makes: "armor_5", n: 1, gold: 3500, needs: [{ item: "core", n: 12 }, { item: "stone", n: 8 }] },
   { id: "weapon_3", makes: "weapon_3", n: 1, gold: 6000, needs: [{ item: "spore", n: 4 }, { item: "core", n: 6 }] },
   { id: "armor_3", makes: "armor_3", n: 1, gold: 5500, needs: [{ item: "spore", n: 4 }, { item: "core", n: 6 }] },
+  // The snow region's.
+  {
+    id: "weapon_6", makes: "weapon_6", n: 1, gold: 12000,
+    needs: [{ item: "frost_shard", n: 12 }, { item: "snow_fur", n: 10 }, { item: "stone", n: 10 }],
+  },
+  {
+    id: "armor_6", makes: "armor_6", n: 1, gold: 11000,
+    needs: [{ item: "frost_shard", n: 10 }, { item: "snow_fur", n: 12 }, { item: "stone", n: 10 }],
+  },
+  {
+    id: "weapon_7", makes: "weapon_7", n: 1, gold: 30000,
+    needs: [{ item: "ever_ice", n: 6 }, { item: "frost_shard", n: 20 }, { item: "stone", n: 15 }],
+  },
+  {
+    id: "armor_7", makes: "armor_7", n: 1, gold: 28000,
+    needs: [{ item: "ever_ice", n: 6 }, { item: "snow_fur", n: 20 }, { item: "stone", n: 15 }],
+  },
 ];
 
 export function readRecipe(value: unknown): Recipe | null {

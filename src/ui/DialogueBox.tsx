@@ -5,7 +5,7 @@ import { objectParticle } from "./korean";
 import type { BagView } from "../game/account/items";
 import { QUESTS, questDone } from "../game/account/quests";
 import { dialogueChoices, type DialogueChoice } from "../game/world/dialogue";
-import type { NpcId } from "../game/world/npcs";
+import { roleOf, type NpcId } from "../game/world/npcs";
 
 // How fast the words come out, in characters a second.
 const TYPE_RATE = 40;
@@ -22,8 +22,8 @@ const CHOICE_LABEL: Record<DialogueChoice, Key> = {
 
 // What the NPC says, by who they are and where you stand with the elder.
 function lineFor(id: NpcId, bag: BagView | null): string {
-  if (id === "merchant") return t("npc.merchant.hello");
-  if (id === "smith") return t("npc.smith.hello");
+  if (roleOf(id) === "merchant") return t(`npc.${id}.hello` as Key);
+  if (roleOf(id) === "smith") return t(`npc.${id}.hello` as Key);
   if (!bag) return "…";
   if (bag.tutorial !== null) return t("npc.elder.tutorial");
   const quest = QUESTS[bag.quest.index];

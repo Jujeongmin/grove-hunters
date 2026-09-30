@@ -15,6 +15,10 @@ const animal = (model: string, height: number, clips: Partial<MonsterLook["clips
   look: { height, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death", ...clips } },
 });
 
+// The slimes' takes, and the walking mounts' (the cat, the dog, the penguin, the yeti).
+const BLOB: MonsterLook["clips"] = { idle: "Idle", walk: "Walk", attack: "Bite_Front", death: "Death" };
+const BEAST: MonsterLook["clips"] = { idle: "Idle", walk: "Walk", attack: "Bite_Front", death: "Death" };
+
 // The flying mounts' takes.
 const FLYER: MonsterLook["clips"] = { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" };
 
@@ -59,6 +63,20 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   guild_yeti: { model: "mnt_yeti", look: { height: 4.4, tint: 0xa8c4e8, clips: { idle: "Idle", walk: "Walk", attack: "Bite_Front", death: "Death" } } },
   guild_glub: { model: "mnt_glub_evolved", look: { height: 4.8, tint: 0x8a70c0, clips: FLYER } },
   glub_brood: { model: "mnt_glub", look: { height: 1.3, tint: 0x9a80d0, clips: FLYER } },
+  // The snow region's: the forest's models frosted over, and some of the mounts' gone wild.
+  frost_blob: { model: "mon_green_blob", look: { height: 1.0, tint: 0xbfe6ff, clips: BLOB } },
+  snow_hare: { model: "mnt_cat", look: { height: 0.9, tint: 0xf2f6ff, clips: BEAST } },
+  snow_wolf: { model: "mnt_dog", look: { height: 1.2, tint: 0xd8dde6, clips: BEAST } },
+  frost_spider: { model: "mon_spider", look: { height: 1.3, tint: 0x9fd0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
+  frost_bat: { model: "mon_bat", look: { height: 1.3, tint: 0x9fc8ff, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
+  penguin_brute: { model: "mnt_penguin", look: { height: 1.5, tint: null, clips: BEAST } },
+  frost_snake: { model: "mon_snake", look: { height: 0.9, tint: 0x8fe0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
+  ice_golem: {
+    model: "mon_goleling", look: { height: 2.2, tint: 0x9fdcff, clips: { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" } },
+  },
+  peak_yeti: { model: "mnt_yeti", look: { height: 2.4, tint: null, clips: BEAST } },
+  frost_drake: { model: "mnt_drake", look: { height: 2.2, tint: 0x9fd8ff, clips: FLYER } },
+  glacier_alpaking: { model: "mnt_alpaking", look: { height: 2.2, tint: 0xbfe8ff, clips: FLYER } },
 };
 
 export const GREEN_BLOB = MONSTER_SKINS.green_blob;

@@ -6,7 +6,14 @@ import { BUILDINGS } from "./grove";
 // A server runs as channels (see CHANNEL_CAPACITY), each zone of a channel one Verse8 room. The
 // village and the first field are free; the rest open with the full game.
 // The arena is where a guild fights its boss (see guildBoss.ts): no portal leads there, only the guild.
-export type ZoneId = "village" | "forest1" | "forest2" | "forest3" | "boss" | "arena";
+// Past the deep forest lies the snow region: its outpost, three fields and the Glacier Emperor's altar.
+export type ZoneId =
+  | "village" | "forest1" | "forest2" | "forest3" | "boss" | "arena"
+  | "outpost" | "snow1" | "snow2" | "snow3" | "snowboss";
+
+// The two regions: the grove (the village and the forest) and the snow. Falling in one sends you back
+// to its own town.
+export type Region = "grove" | "snow";
 
 // One way out of a zone: the edge it stands on, how far along that edge, and the zone it leads to.
 export interface ZonePortal {
@@ -17,6 +24,7 @@ export interface ZonePortal {
 
 export interface Zone {
   id: ZoneId;
+  region: Region;
   // Needs the full game bought.
   paid: boolean;
   // The level a character needs to go in.
@@ -44,6 +52,9 @@ const VILLAGE_HOUSES: House[] = [
 // the map like houses from the start, so the map never changes as they go up.
 const VILLAGE_SITES: House[] = BUILDINGS.map((b) => ({ model: b.model, at: b.at, face: b.face }));
 
+// Where everyone starts: the grove's village.
+const START_ZONE_ID = "village" as const;
+
 // Each zone's ways out, named once: the map below is drawn from the very same list.
 const VILLAGE_PORTALS: readonly ZonePortal[] = [{ to: "forest1", side: "E", at: 13 }];
 const FOREST1_PORTALS: readonly ZonePortal[] = [
@@ -52,55 +63,112 @@ const FOREST1_PORTALS: readonly ZonePortal[] = [
 const FOREST2_PORTALS: readonly ZonePortal[] = [
   { to: "forest1", side: "W", at: 17 }, { to: "boss", side: "N", at: 38 }, { to: "forest3", side: "E", at: 24 },
 ];
-const FOREST3_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "W", at: 20 }];
+const FOREST3_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "W", at: 20 }, { to: "outpost", side: "E", at: 20 }];
+const OUTPOST_PORTALS: readonly ZonePortal[] = [{ to: "forest3", side: "W", at: 12 }, { to: "snow1", side: "E", at: 12 }];
+const SNOW1_PORTALS: readonly ZonePortal[] = [{ to: "outpost", side: "W", at: 18 }, { to: "snow2", side: "E", at: 18 }];
+const SNOW2_PORTALS: readonly ZonePortal[] = [
+  { to: "snow1", side: "W", at: 18 }, { to: "snow3", side: "E", at: 18 }, { to: "snowboss", side: "N", at: 26 },
+];
+const SNOW3_PORTALS: readonly ZonePortal[] = [{ to: "snow2", side: "W", at: 20 }];
+const SNOWBOSS_PORTALS: readonly ZonePortal[] = [{ to: "snow2", side: "S", at: 15 }];
+
+// The outpost's buildings: the captain's watchtower, the merchant's and the smith's houses.
+const OUTPOST_HOUSES: House[] = [
+  { model: "bld_tower", at: [14, 4], face: "S" },
+  { model: "bld_house_small", at: [6, 10], face: "E" },
+  { model: "bld_house_long", at: [21, 14], face: "N" },
+  { model: "bld_house_tall", at: [8, 17], face: "N" },
+];
 const BOSS_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "S", at: 15 }];
 
 // The fields are wide open country (drawn by fieldMap from a few numbers): about 200 by 140 metres
 // of meadow and groves between walls of forest, the village a little smaller.
 export const ZONES: Record<ZoneId, Zone> = {
   village: {
-    id: "village", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
+    id: "village", region: "grove", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
     map: fieldMap({
       cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: VILLAGE_PORTALS,
       monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: [...VILLAGE_HOUSES, ...VILLAGE_SITES],
     }),
   },
   forest1: {
-    id: "forest1", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
+    id: "forest1", region: "grove", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 11, spawn: [5, 18], portals: FOREST1_PORTALS,
       monsters: 24, groves: 16, edge: 3, props: "cBccB",
     }),
   },
   forest2: {
-    id: "forest2", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
+    id: "forest2", region: "grove", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 29, spawn: [5, 17], portals: FOREST2_PORTALS,
       monsters: 26, groves: 20, edge: 3, props: "cBcH",
     }),
   },
   forest3: {
-    id: "forest3", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
+    id: "forest3", region: "grove", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
     map: fieldMap({
       cols: 54, rows: 40, seed: 61, spawn: [5, 20], portals: FOREST3_PORTALS,
       monsters: 28, groves: 26, edge: 4, props: "cBcHc",
     }),
   },
   boss: {
-    id: "boss", paid: true, minLevel: 25, portals: BOSS_PORTALS,
+    id: "boss", region: "grove", paid: true, minLevel: 25, portals: BOSS_PORTALS,
     map: fieldMap({
       cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: BOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
     }),
   },
   arena: {
-    id: "arena", paid: false, minLevel: 10, portals: [],
+    id: "arena", region: "grove", paid: false, minLevel: 10, portals: [],
     map: fieldMap({
       cols: 18, rows: 18, seed: 83, spawn: [9, 14], portals: [],
       monsters: 0, boss: [9, 7], groves: 0, edge: 3, props: "",
     }),
   },
+  outpost: {
+    id: "outpost", region: "snow", paid: true, minLevel: 38, portals: OUTPOST_PORTALS, houses: OUTPOST_HOUSES,
+    map: fieldMap({
+      cols: 30, rows: 24, seed: 101, spawn: [14, 12], portals: OUTPOST_PORTALS,
+      monsters: 0, groves: 4, edge: 2, props: "cBc", houses: OUTPOST_HOUSES,
+    }),
+  },
+  snow1: {
+    id: "snow1", region: "snow", paid: true, minLevel: 40, portals: SNOW1_PORTALS,
+    map: fieldMap({
+      cols: 50, rows: 36, seed: 113, spawn: [5, 18], portals: SNOW1_PORTALS,
+      monsters: 26, groves: 18, edge: 3, props: "cBcc",
+    }),
+  },
+  snow2: {
+    id: "snow2", region: "snow", paid: true, minLevel: 47, portals: SNOW2_PORTALS,
+    map: fieldMap({
+      cols: 52, rows: 38, seed: 127, spawn: [5, 18], portals: SNOW2_PORTALS,
+      monsters: 28, groves: 22, edge: 3, props: "cBH",
+    }),
+  },
+  snow3: {
+    id: "snow3", region: "snow", paid: true, minLevel: 54, portals: SNOW3_PORTALS,
+    map: fieldMap({
+      cols: 54, rows: 40, seed: 131, spawn: [5, 20], portals: SNOW3_PORTALS,
+      monsters: 28, groves: 26, edge: 4, props: "cBc",
+    }),
+  },
+  snowboss: {
+    id: "snowboss", region: "snow", paid: true, minLevel: 55, portals: SNOWBOSS_PORTALS,
+    map: fieldMap({
+      cols: 30, rows: 30, seed: 139, spawn: [15, 25], portals: SNOWBOSS_PORTALS,
+      monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
+    }),
+  },
 };
+
+// The town of each region: where the fallen of that region go back to.
+export const REGION_TOWN: Record<Region, ZoneId> = { grove: START_ZONE_ID, snow: "outpost" };
+
+export function townOf(zone: ZoneId): ZoneId {
+  return REGION_TOWN[ZONES[zone].region];
+}
 
 // The square the menus stand in: the first village, kept as it was, since the menu's camera and
 // lineup are placed on it.
@@ -117,7 +185,7 @@ export const MENU_MAP = [
 ];
 
 export const ZONE_IDS = Object.keys(ZONES) as ZoneId[];
-export const START_ZONE: ZoneId = "village";
+export const START_ZONE: ZoneId = START_ZONE_ID;
 // A channel is one copy of the whole world on a server, as in MapleStory: you keep yours from zone
 // to zone, and each zone of it is one Verse8 room. This many players at most in a channel, counted
 // across every zone, so no room ever holds more: everyone in a room hears everyone else's every

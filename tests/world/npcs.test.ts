@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { solidAt } from "../../src/game/rules/levelLayout";
 import { gridRoute } from "../../src/game/rules/pathing";
-import { NPCS, npcFacing, npcNear, npcSpot, TALK_RANGE } from "../../src/game/world/npcs";
+import { NPCS, npcFacing, npcNear, npcSpot, npcsIn, TALK_RANGE } from "../../src/game/world/npcs";
 import { START_ZONE, zoneLayout } from "../../src/game/world/zones";
 
-describe("village NPCs", () => {
+describe("town NPCs", () => {
   const village = zoneLayout(START_ZONE);
 
-  it("stand on open ground you can walk to from the spawn, apart from each other", () => {
+  it("stand on open ground you can walk to from their town's spawn, apart from each other", () => {
     for (const npc of NPCS) {
       const at = npcSpot(npc.id);
-      expect(solidAt(village, at.x, at.z)).toBe(false);
-      expect(gridRoute(village, village.playerSpawn, at)).not.toBeNull();
+      const town = zoneLayout(npc.zone);
+      expect(solidAt(town, at.x, at.z)).toBe(false);
+      expect(gridRoute(town, town.playerSpawn, at)).not.toBeNull();
       // Their own models, never a player class's hero.
       expect(npc.model.startsWith("hero_")).toBe(false);
     }
@@ -19,9 +20,16 @@ describe("village NPCs", () => {
     expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThan(TALK_RANGE * 2);
   });
 
+  it("each town has a merchant, an elder and a smith", () => {
+    for (const town of [START_ZONE, "outpost"] as const) {
+      expect(npcsIn(town).map((n) => n.role).sort()).toEqual(["elder", "merchant", "smith"]);
+    }
+  });
+
   it("stand outside the door of their building, looking out", () => {
     const t = village.tileSize;
     for (const npc of NPCS) {
+      const village = zoneLayout(npc.zone);
       const at = npcSpot(npc.id);
       const out = npcFacing(npc.id);
       const middle = { x: (npc.house[0] + 1) * t, z: (npc.house[1] + 1) * t };
@@ -34,8 +42,10 @@ describe("village NPCs", () => {
 
   it("can be talked to only close by", () => {
     const at = npcSpot("merchant");
-    expect(npcNear(at.x + 1, at.z)).toBe("merchant");
-    expect(npcNear(at.x + TALK_RANGE + 1, at.z)).not.toBe("merchant");
+    expect(npcNear(START_ZONE, at.x + 1, at.z)).toBe("merchant");
+    expect(npcNear(START_ZONE, at.x + TALK_RANGE + 1, at.z)).not.toBe("merchant");
+    // Another town's people are not heard from here.
+    expect(npcNear("outpost", at.x + 1, at.z)).not.toBe("merchant");
   });
 });
 

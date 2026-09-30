@@ -179,6 +179,17 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/icons/ui_market.png` | 거래소 버튼, 저울 | 2026-09-30, 34x34 |
 | `public/assets/ui/icons/ui_guild.png` | 길드 버튼, 깃발 | 2026-09-30, 34x34 |
 
+설산 지역의 아이템 그림은 `scripts/tint-icons.py`가 위 팩의 아이템 그림 색만 바꿔 만든다(명암은 그대로, 외곽선은 유지).
+같은 팩(CC0)의 파생물이다.
+
+| 파일 | 원본 | 쓰임 |
+|---|---|---|
+| `public/assets/ui/items/weapon_6.png`, `armor_6.png` | `weapon_5.png`, `armor_5.png` | 6등급 장비(서리송곳) |
+| `public/assets/ui/items/weapon_7.png`, `armor_7.png` | `weapon_5.png`, `armor_5.png` | 7등급 장비(빙하왕) |
+| `public/assets/ui/items/frost_shard.png` | `core.png` | 서리 결정 |
+| `public/assets/ui/items/snow_fur.png` | `silk.png` | 설원 가죽 |
+| `public/assets/ui/items/ever_ice.png` | `stone.png` | 만년빙 |
+
 나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
 물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.
 

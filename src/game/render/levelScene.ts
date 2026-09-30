@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GROVE_LOOK, type RegionLook } from "./regionLook";
 import type { ModelLibrary } from "../assets/ModelLibrary";
 import type { LevelLayout, Point2 } from "../rules/levelLayout";
 import { PATH_HALF_WIDTH, groundPaths, pathDistance } from "../rules/paths";
@@ -26,11 +27,6 @@ const FOG_FAR = 1100;
 export const VIEW_FAR = 1500;
 // Open ground is sunlit grass in patches of lighter, deeper and dried grass; the forest floor under
 // the trees is darker; the paths are dirt, fraying into the grass over PATH_FRAY metres.
-const PATH_COLOR = new THREE.Color(0x8fb35a);
-const DEEP_GRASS = new THREE.Color(0x6a9444);
-const DRY_GRASS = new THREE.Color(0xb0ac5e);
-const FOREST_COLOR = new THREE.Color(0x4f6e32);
-const DIRT_COLOR = new THREE.Color(0x9a7d52);
 const PATH_FRAY = 0.9;
 // Beyond the map the ground runs on this many cells so the forest never floats over the void.
 const GROUND_BORDER = 6;
@@ -51,7 +47,12 @@ export function platformMatrix(platform: Platform, bounds: THREE.Box3): THREE.Ma
 // A ground plane coloured per vertex: meadow where you can walk, in broad patches of lighter, deeper
 // and sun-dried grass; darker under the trees; worn to dirt along the paths. Over the colours lie the
 // grain of real grass, forest floor and path pictures (see groundTextures.ts).
-function buildGround(layout: LevelLayout, paths: readonly Point2[][]): THREE.Mesh {
+function buildGround(layout: LevelLayout, paths: readonly Point2[][], look: RegionLook): THREE.Mesh {
+  const PATH_COLOR = new THREE.Color(look.meadow);
+  const DEEP_GRASS = new THREE.Color(look.deep);
+  const DRY_GRASS = new THREE.Color(look.dry);
+  const FOREST_COLOR = new THREE.Color(look.forest);
+  const DIRT_COLOR = new THREE.Color(look.dirt);
   const t = layout.tileSize;
   const width = (layout.cols + GROUND_BORDER * 2) * t;
   const depth = (layout.rows + GROUND_BORDER * 2) * t;
@@ -102,10 +103,11 @@ function buildGround(layout: LevelLayout, paths: readonly Point2[][]): THREE.Mes
 // camera (see lodBatch.ts).
 export function buildLevelScene(
   scene: THREE.Scene, library: ModelLibrary, layout: LevelLayout, renderer: THREE.WebGLRenderer, destinations: readonly Point2[] = [],
+  look: RegionLook = GROVE_LOOK,
 ): LodBatch {
   scene.background = skyTexture() ?? new THREE.Color(SKY);
-  scene.fog = new THREE.Fog(SKY, FOG_NEAR, FOG_FAR);
-  scene.add(new THREE.HemisphereLight(0xe6f2ff, 0x5b6b34, 1.4));
+  scene.fog = new THREE.Fog(look.fog, FOG_NEAR, FOG_FAR);
+  scene.add(new THREE.HemisphereLight(look.hemiSky, look.hemiGround, 1.4));
   const sun = new THREE.DirectionalLight(0xfff0d6, 2.6);
   const centre = new THREE.Vector3((layout.cols * layout.tileSize) / 2, 0, (layout.rows * layout.tileSize) / 2);
   sun.position.copy(centre).add(SUN_OFFSET);
@@ -113,9 +115,9 @@ export function buildLevelScene(
   scene.add(sun, sun.target);
   const paths = groundPaths(layout, destinations);
   const sprites = bakeTreeSprites(renderer, library);
-  scene.add(buildGround(layout, paths), buildVista(layout, sprites, library));
+  scene.add(buildGround(layout, paths, look), buildVista(layout, sprites, library, look));
 
-  const pieces: StaticPiece[] = natureLayout(layout, paths).map((p) => ({
+  const pieces: StaticPiece[] = natureLayout(layout, paths, look.nature).map((p) => ({
     model: p.model,
     matrix: new THREE.Matrix4().compose(
       new THREE.Vector3(p.x, 0, p.z),

@@ -1,6 +1,6 @@
 import type { Point2 } from "../rules/levelLayout";
-import { NPCS, npcSpot, type NpcId } from "./npcs";
-import { START_ZONE, portalsOf, zoneLayout, type ZoneId } from "./zones";
+import { npcSpot, npcsIn, type NpcId } from "./npcs";
+import { portalsOf, zoneLayout, type ZoneId } from "./zones";
 
 // The map of a zone, flattened to what a minimap needs: a grid to paint and the few places worth a
 // mark on it. Monsters and other players are left off on purpose — the map is for finding your way,
@@ -38,12 +38,10 @@ export function minimapModel(zone: ZoneId): MinimapModel {
     return layout.forest[r][c] ? "forest" : "house";
   }));
   const marks: MinimapMark[] = portalsOf(zone).map((p) => ({ kind: "portal", x: p.x, z: p.z, to: p.to }));
-  // The NPCs all stand in the village, each at their own door.
-  if (zone === START_ZONE) {
-    for (const npc of NPCS) {
-      const spot = npcSpot(npc.id);
-      marks.push({ kind: "npc", x: spot.x, z: spot.z, npc: npc.id });
-    }
+  // A town's NPCs, each at their own door.
+  for (const npc of npcsIn(zone)) {
+    const spot = npcSpot(npc.id);
+    marks.push({ kind: "npc", x: spot.x, z: spot.z, npc: npc.id });
   }
   model = {
     zone, cols: layout.cols, rows: layout.rows, tileSize: layout.tileSize,

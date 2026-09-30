@@ -20,6 +20,15 @@ export const GROUND_PLANTS = [
   "sn_grass", "sn_grass", "sn_grass", "sn_grass", "sn_grass", "sn_grass_wispy", "sn_clover", "sn_clover", "sn_flowers", "sn_flowers",
   "sn_pebbles", "sn_pebbles", "sn_mushroom",
 ];
+// What grows in a region: the trees at the forest's edge, what lines the paths, and the ground cover.
+export interface NatureStyle { trees: readonly string[]; edge: readonly string[]; plants: readonly string[] }
+export const GROVE_NATURE: NatureStyle = { trees: TREES, edge: EDGE_PROPS, plants: GROUND_PLANTS };
+// The snow: dark pines, bare rock along the paths, and only pebbles and a few wisps of grass through
+// the snow.
+export const SNOW_NATURE: NatureStyle = {
+  trees: ["sn_pine_1", "sn_pine_3", "sn_pine_1"], edge: ["sn_rock"],
+  plants: ["sn_pebbles", "sn_pebbles", "sn_pebbles", "sn_grass_wispy"],
+};
 export const NATURE_MODELS = [...new Set([...TREES, ...EDGE_PROPS, ...GROUND_PLANTS, "sn_stepping"])];
 
 // What each model takes up on the ground at scale 1, as a radius in metres: the trunk for trees (the
@@ -98,7 +107,7 @@ function between(range: readonly number[], noise: number): number {
 }
 
 // `paths` are the dirt paths (see paths.ts): nothing grows on them.
-export function natureLayout(layout: LevelLayout, paths: readonly Point2[][] = []): NaturePiece[] {
+export function natureLayout(layout: LevelLayout, paths: readonly Point2[][] = [], style: NatureStyle = GROVE_NATURE): NaturePiece[] {
   const t = layout.tileSize;
   const inside = (c: number, r: number) => c >= 0 && r >= 0 && c < layout.cols && r < layout.rows;
   // Outside the map counts as solid: the forest goes on. A house's cells are neither forest nor
@@ -160,7 +169,7 @@ export function natureLayout(layout: LevelLayout, paths: readonly Point2[][] = [
         if (open.length === 0) continue;
         const trees = 1;
         for (let i = 0; i < trees; i++) {
-          const model = pick(TREES, cellNoise(c, r, 20 + i) ** 1.6);
+          const model = pick(style.trees, cellNoise(c, r, 20 + i) ** 1.6);
           const scale = 0.85 + cellNoise(c, r, 60 + i) * 0.4;
           // Jittered, but the trunk stays inside the cell.
           const room = t / 2 - FOOTPRINT[model] * scale - EDGE_GAP;
@@ -173,7 +182,7 @@ export function natureLayout(layout: LevelLayout, paths: readonly Point2[][] = [
           // A boulder or bush on the side that faces a path (straight sides first), its edge flush
           // with the cell's edge so it lines the path without stepping onto it.
           const [dc, dr] = [...open].sort((a, b) => Math.abs(a[0]) + Math.abs(a[1]) - (Math.abs(b[0]) + Math.abs(b[1])))[0];
-          const model = pick(EDGE_PROPS, cellNoise(c, r, 70));
+          const model = pick(style.edge, cellNoise(c, r, 70));
           const scale = model === "sn_rock" ? between(ROCK_SCALE, cellNoise(c, r, 72)) : 1 + cellNoise(c, r, 72) * 0.4;
           const reach = t / 2 - FOOTPRINT[model] * scale - EDGE_GAP;
           const len = Math.hypot(dc, dr);
@@ -188,7 +197,7 @@ export function natureLayout(layout: LevelLayout, paths: readonly Point2[][] = [
       if (busy.has(key(c, r)) || built(c, r)) continue;
       const plants = 1 + Math.floor(cellNoise(c, r, 80) * 5);
       for (let i = 0; i < plants; i++) {
-        const model = pick(GROUND_PLANTS, cellNoise(c, r, 81 + i));
+        const model = pick(style.plants, cellNoise(c, r, 81 + i));
         const scale = (PLANT_SCALE[model] ?? 1) * (0.8 + cellNoise(c, r, 120 + i) * 0.5);
         place(model, scale, cellNoise(c, r, 110 + i) * Math.PI * 2, (k) => {
           const x = cx + (cellNoise(c, r, 90 + i + k * 200) - 0.5) * t * 0.8;

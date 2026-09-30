@@ -9,7 +9,10 @@ export type MonsterType =
   | "spider" | "snake" | "wasp" | "goleling" | "bat"
   | "dire_spider" | "venom_snake" | "hornet" | "vampire_bat" | "stone_golem"
   | "mushnub_guard" | "mushroom_king" | "grove_guardian"
-  | "guild_dragon" | "guild_yeti" | "guild_glub" | "glub_brood";
+  | "guild_dragon" | "guild_yeti" | "guild_glub" | "glub_brood"
+  | "frost_blob" | "snow_hare" | "snow_wolf" | "frost_spider"
+  | "frost_bat" | "penguin_brute" | "frost_snake" | "ice_golem"
+  | "peak_yeti" | "frost_drake" | "glacier_alpaking";
 
 export interface MonsterSpec {
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
@@ -81,6 +84,29 @@ const field2 = {
   ] as MonsterSpec["drops"],
 };
 
+// The snow region's fields: the foothills', the canyon's and the peaks' loot.
+const snow1 = {
+  ...common, aggro: 11, gold: [60, 110] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.15 }, { item: "weapon_5", chance: 0.01 }, { item: "armor_5", chance: 0.01 },
+    { item: "frost_shard", chance: 0.15 }, { item: "snow_fur", chance: 0.2 }, { item: "stone", chance: 0.15 },
+  ] as MonsterSpec["drops"],
+};
+const snow2 = {
+  ...common, aggro: 12, gold: [90, 150] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.15 }, { item: "weapon_6", chance: 0.015 }, { item: "armor_6", chance: 0.015 },
+    { item: "frost_shard", chance: 0.2 }, { item: "snow_fur", chance: 0.15 }, { item: "stone", chance: 0.18 },
+  ] as MonsterSpec["drops"],
+};
+const snow3 = {
+  ...common, aggro: 12, gold: [120, 200] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.18 }, { item: "weapon_6", chance: 0.02 }, { item: "armor_6", chance: 0.02 },
+    { item: "frost_shard", chance: 0.22 }, { item: "ever_ice", chance: 0.08 }, { item: "stone", chance: 0.2 },
+  ] as MonsterSpec["drops"],
+};
+
 // The first field is for levels 1 to about 11, the second for 12 to 29, the deep forest for 28 to
 // 40 (its monsters are the second field's, grown and darker); the boss is a level-32 fight for a group. Health, damage and XP climb with each monster's level.
 export const MONSTERS: Record<MonsterType, MonsterSpec> = {
@@ -100,6 +126,18 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
   hornet: { ...field3, level: 34, hp: 1700, damage: 70, speed: 2.8, aggro: 8, aggressive: true, xp: 160 },
   vampire_bat: { ...field3, level: 37, hp: 1900, damage: 76, speed: 3, aggro: 8, aggressive: true, xp: 180 },
   stone_golem: { ...field3, level: 40, hp: 3200, damage: 90, speed: 1.6, body: 0.8, xp: 240 },
+  // The snow region, levels 40 to 60: the deep forest's climb carried on.
+  frost_blob: { ...snow1, level: 40, hp: 2600, damage: 80, speed: 1.7, xp: 230 },
+  snow_hare: { ...snow1, level: 41, hp: 2500, damage: 78, speed: 3.0, xp: 240 },
+  snow_wolf: { ...snow1, level: 42, hp: 2900, damage: 88, speed: 2.8, aggro: 9, aggressive: true, xp: 260 },
+  frost_spider: { ...snow1, level: 44, hp: 3200, damage: 92, speed: 2.3, xp: 280 },
+  frost_bat: { ...snow2, level: 47, hp: 3400, damage: 98, speed: 3.0, aggro: 8, aggressive: true, xp: 310 },
+  penguin_brute: { ...snow2, level: 48, hp: 3900, damage: 104, speed: 2.0, xp: 330 },
+  frost_snake: { ...snow2, level: 49, hp: 3700, damage: 108, xp: 340 },
+  ice_golem: { ...snow2, level: 50, hp: 5200, damage: 118, speed: 1.6, body: 0.8, xp: 400 },
+  peak_yeti: { ...snow3, level: 55, hp: 6200, damage: 132, speed: 2.2, body: 0.9, aggro: 9, aggressive: true, xp: 480 },
+  frost_drake: { ...snow3, level: 57, hp: 6000, damage: 140, speed: 2.6, aggro: 10, aggressive: true, xp: 520 },
+  glacier_alpaking: { ...snow3, level: 58, hp: 7200, damage: 150, speed: 2.0, body: 0.9, xp: 560 },
   // The boss's brood: they come when it calls, and do not come back.
   mushnub_guard: {
     ...common, level: 30, hp: 900, damage: 40, speed: 2.2, aggro: 30, xp: 60,
@@ -160,6 +198,11 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   forest3: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"],
   boss: [],
   arena: [],
+  outpost: [],
+  snow1: ["frost_blob", "snow_hare", "snow_wolf", "frost_spider"],
+  snow2: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"],
+  snow3: ["peak_yeti", "frost_drake", "glacier_alpaking"],
+  snowboss: [],
 };
 export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king" };
 // Where the grove's guardian comes (see grove.ts).

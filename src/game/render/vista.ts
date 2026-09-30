@@ -4,6 +4,7 @@ import { cellNoise, forestFillers } from "../rules/nature";
 import { buildSpriteForest, buildWorldTreeSprite, type TreeSprites } from "./treeSprites";
 import type { ModelSource } from "./staticBatch";
 import { groundMaterial } from "./groundTextures";
+import { GROVE_LOOK, type RegionLook } from "./regionLook";
 
 // The land beyond the playable map, so a zone sits in wide country instead of a walled box: forest
 // floor running out flat under a dark forest for hundreds of metres, until it fades into the haze.
@@ -41,14 +42,14 @@ function outside(layout: LevelLayout, x: number, z: number): number {
 // The colour of the forest floor, as under the trees at the map's edge (levelScene).
 const FOREST_FLOOR = new THREE.Color(0x4f6e32);
 
-function buildLand(centre: THREE.Vector3): THREE.Mesh {
+function buildLand(centre: THREE.Vector3, floor: THREE.Color): THREE.Mesh {
   const size = LAND_RADIUS * 2;
   const geometry = new THREE.PlaneGeometry(size, size, 1, 1);
   geometry.rotateX(-Math.PI / 2);
   // Under the map the detailed ground (levelScene) covers this; kept just below it.
   geometry.translate(centre.x, -0.08, centre.z);
   const count = geometry.getAttribute("position").count;
-  geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 3).map((_, i) => FOREST_FLOOR.toArray()[i % 3]), 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 3).map((_, i) => floor.toArray()[i % 3]), 3));
   // All forest floor (see groundTextures.ts).
   geometry.setAttribute("splat", new THREE.BufferAttribute(new Float32Array(count * 3).map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
   return new THREE.Mesh(geometry, groundMaterial());
@@ -103,11 +104,13 @@ function buildCastle(layout: LevelLayout, library: ModelSource, centre: THREE.Ve
   return group;
 }
 
-export function buildVista(layout: LevelLayout, sprites: TreeSprites, library: ModelSource): THREE.Group {
+export function buildVista(layout: LevelLayout, sprites: TreeSprites, library: ModelSource, look: RegionLook = GROVE_LOOK): THREE.Group {
   const centre = new THREE.Vector3((layout.cols * layout.tileSize) / 2, 0, (layout.rows * layout.tileSize) / 2);
   const group = new THREE.Group();
   const fillers = forestFillers(layout).map((f) => ({ ...f, y: 0 }));
-  group.add(buildLand(centre), buildSpriteForest(sprites, [...fillers, ...farTrees(layout)]));
+  const floor = look === GROVE_LOOK ? FOREST_FLOOR : new THREE.Color(look.forest);
+  group.add(buildLand(centre, floor), buildSpriteForest(sprites, [...fillers, ...farTrees(layout)], look.farTrees));
+  if (!look.landmarks) return group;
   group.add(buildCastle(layout, library, centre));
   group.add(buildWorldTreeSprite(
     sprites,

@@ -93,12 +93,12 @@ export interface SpriteTree {
 }
 
 // Every tree in the list as crossed cards, one instanced mesh per kind of tree.
-export function buildSpriteForest(sprites: TreeSprites, trees: readonly SpriteTree[]): THREE.Group {
+export function buildSpriteForest(sprites: TreeSprites, trees: readonly SpriteTree[], kinds: readonly string[] = SPRITE_TREES): THREE.Group {
   const group = new THREE.Group();
   const geometry = crossedCards();
   const byKind = new Map<string, SpriteTree[]>();
   for (const t of trees) {
-    const kind = SPRITE_TREES[Math.min(SPRITE_TREES.length - 1, Math.floor(t.shade * SPRITE_TREES.length))];
+    const kind = kinds[Math.min(kinds.length - 1, Math.floor(t.shade * kinds.length))];
     const list = byKind.get(kind) ?? [];
     list.push(t);
     byKind.set(kind, list);
