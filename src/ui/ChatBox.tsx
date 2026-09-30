@@ -7,9 +7,6 @@ import type { ChatLine, WorldClient } from "../net/worldClient";
 import { announceText } from "./announceText";
 import { settings } from "./settings";
 
-// Closed, the box shows the last few lines, each for a while after it came.
-const QUIET_LINES = 6;
-const QUIET_MS = 15_000;
 // Open, it shows this many to scroll back through.
 const OPEN_LINES = 30;
 // Guild chat is asked for this often: while its tab is open, and otherwise.
@@ -21,8 +18,9 @@ const PROBLEM: Record<string, Key> = {
 };
 
 // The chat, at the bottom left: the channel's lines and your guild's (marked), and a box to say one
-// in either (tabs, once you are in a guild). Enter opens it on a
-// keyboard (and sends), the chat button on a touch screen, and a tap on the lines themselves
+// in either (tabs, once you are in a guild). Closed, the latest line stays in view on one line above
+// the chat button, as a preview. Enter opens it on a keyboard (and sends), the chat button on a touch
+// screen (and the send button beside the box, or the keyboard's own), and a tap on the preview
 // anywhere; closing it (the button, Escape, or the focus leaving the box, as when a phone's keyboard is
 // put away) also clears the lines seen so far off the screen, and keeps what was typed for next time.
 // Open, it stands in the middle above the skill bar, off the pad.
@@ -37,9 +35,6 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  // Lines heard up to when the chat was last closed have been seen: they stay off the closed box.
-  const [seenUntil, setSeenUntil] = useState(0);
   const input = useRef<HTMLInputElement>(null);
   const log = useRef<HTMLDivElement>(null);
 
@@ -61,11 +56,6 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
   useEffect(() => {
     if (!inGuild) setMode("channel");
   }, [inGuild]);
-  // Once a second, so old lines fade out of the closed box.
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
   useEffect(() => {
     if (open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -83,12 +73,9 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
   }, [lines, open]);
 
-  // Closing by hand marks the lines so far as seen; closing on a send does not, so what you just
-  // said (and what came meanwhile) still shows in the closed box.
-  const close = (seen = true) => {
+  const close = () => {
     setOpen(false);
     setProblem(null);
-    if (seen) setSeenUntil(Date.now());
     input.current?.blur();
   };
   const send = async () => {
@@ -102,7 +89,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
       return;
     }
     setText("");
-    close(false);
+    close();
   };
 
   // The announcements to every server, as lines of the channel's chat (the game's, not a player's).
@@ -110,11 +97,11 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     id: -1 - i, account: "", name: "📢", text: announceText(a), at: a.at, heardAt: a.heardAt, mine: false, guild: false, system: true,
   })) : [];
   const channel = [...lines.map((l) => ({ ...l, guild: false, system: false })), ...told].sort((a, b) => a.heardAt - b.heardAt);
-  // Closed, the channel's and the guild's latest lines together, in the order they came.
+  // Closed, the latest of the channel's and the guild's lines.
   const heard = [...channel, ...guildLines.map((l) => ({ ...l, guild: true, system: false }))].sort((a, b) => a.heardAt - b.heardAt);
   const shown = open
     ? (mode === "guild" ? guildLines.map((l) => ({ ...l, guild: true, system: false })) : channel).slice(-OPEN_LINES)
-    : heard.slice(-QUIET_LINES).filter((l) => l.heardAt > seenUntil && now - l.heardAt < QUIET_MS);
+    : heard.slice(-1);
   const guildNew = guildLines.some((l) => l.heardAt > guildSeen && !l.mine);
   return (
     <div className={`chat${open ? " open" : ""}`}>
@@ -168,7 +155,8 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
             }}
             onBlur={() => close()}
           />
-          {/* Pressing it must not take the focus first, or the box would close before the tap lands. */}
+          {/* Pressing these must not take the focus first, or the box would close before the tap lands. */}
+          <button type="submit" className="chat-send" onPointerDown={(e) => e.preventDefault()}>{t("chat.send")}</button>
           <button type="button" className="chat-close" onPointerDown={(e) => e.preventDefault()} onClick={() => close()}>{t("common.close")}</button>
           {problem && <span className="chat-problem">{problem}</span>}
         </form>

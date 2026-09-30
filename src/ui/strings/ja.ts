@@ -586,6 +586,7 @@ export const ja: Bundle = {
   "sleep.hint": "画面を2回押すと戻ります",
 
   "chat.placeholder": "チャンネルに話す",
+  "chat.send": "送信",
   "chat.open": "チャット",
   "chat.enterHint": "でチャット",
   "lobby.deleteCharacter": "{name}を削除",

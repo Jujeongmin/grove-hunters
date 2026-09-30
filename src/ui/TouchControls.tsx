@@ -10,7 +10,7 @@ export function isTouchDevice(): boolean {
 }
 
 // The joystick's ring, and how far the knob can be pushed, in CSS pixels.
-const STICK_RADIUS = 56;
+const STICK_RADIUS = 42;
 // A touch on the look area that moved less than this many pixels was a tap, not a look about.
 const TAP_SLOP = 10;
 

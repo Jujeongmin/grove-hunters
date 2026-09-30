@@ -32,6 +32,9 @@ export function useKeyboardFreeze(): void {
     const html = document.documentElement;
     let held = false;
     let slide = 0;
+    // A box taken off the page while it had the focus sends no focusout in every browser: while held,
+    // look now and then whether a box still has it.
+    let watch: ReturnType<typeof setInterval> | undefined;
 
     const place = () => {
       if (!held) return;
@@ -51,11 +54,15 @@ export function useKeyboardFreeze(): void {
       root.style.width = `${root.offsetWidth}px`;
       root.style.height = `${root.offsetHeight}px`;
       html.classList.add("typing");
+      watch = setInterval(() => {
+        if (!isTextBox(document.activeElement) || !document.activeElement.isConnected) letGo();
+      }, 500);
     };
     const letGo = () => {
       if (!held) return;
       held = false;
       slide = 0;
+      clearInterval(watch);
       root.style.width = "";
       root.style.height = "";
       root.style.marginTop = "";

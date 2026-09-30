@@ -586,6 +586,7 @@ export const zhHant: Bundle = {
   "sleep.hint": "點兩下畫面即可返回",
 
   "chat.placeholder": "對頻道說話",
+  "chat.send": "傳送",
   "chat.open": "聊天",
   "chat.enterHint": "開始聊天",
   "lobby.deleteCharacter": "刪除 {name}",

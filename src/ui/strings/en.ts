@@ -586,6 +586,7 @@ export const en: Bundle = {
   "sleep.hint": "Tap the screen twice to go back",
 
   "chat.placeholder": "Say something to the channel",
+  "chat.send": "Send",
   "chat.open": "Chat",
   "chat.enterHint": "to chat",
   "lobby.deleteCharacter": "Delete {name}",

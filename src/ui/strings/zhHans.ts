@@ -586,6 +586,7 @@ export const zhHans: Bundle = {
   "sleep.hint": "点两下画面即可返回",
 
   "chat.placeholder": "对频道说话",
+  "chat.send": "发送",
   "chat.open": "聊天",
   "chat.enterHint": "开始聊天",
   "lobby.deleteCharacter": "删除 {name}",

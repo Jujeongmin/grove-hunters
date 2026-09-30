@@ -595,6 +595,7 @@ export const ko = {
   "sleep.hint": "화면을 두 번 누르면 돌아가요",
 
   "chat.placeholder": "채널에 말하기",
+  "chat.send": "보내기",
   "chat.open": "채팅",
   "chat.enterHint": "눌러서 채팅",
   "lobby.deleteCharacter": "{name} 삭제",
