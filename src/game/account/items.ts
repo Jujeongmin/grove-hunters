@@ -159,8 +159,9 @@ export interface BagView {
   daily: DailyProgress;
   // The first tutorial's step; null once done (see tutorial.ts).
   tutorial: TutorialStep | null;
-  // The account's picked mount (it adds to every fight, ridden or not; see mounts.ts).
+  // The account's picked mount (it adds to every fight, ridden or not; see mounts.ts), and its stars.
   mount: MountId | null;
+  mountStars: number;
 }
 
 export function sellPrice(id: ItemId): number {

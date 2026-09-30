@@ -19,6 +19,8 @@ import {
 } from "../../src/game/world/guildBoss";
 import { bossView, enterWeek, findWeek, type BossView } from "./guildBoss";
 import { noteArenaDamage, tickArena } from "./arena";
+import { announce, announcementsSince } from "./announce";
+import { ANNOUNCE_PLUS, type Announcement } from "../../src/game/world/announce";
 import { weekEndsAt } from "../../src/game/world/grove";
 import {
   GUILD_COST, REJOIN_MS, canAnswer, mayJoin, parseGuildName, rankedMembers, readNotice,
@@ -57,7 +59,7 @@ import {
 } from "../../src/game/world/zones";
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
-  DUPLICATE_REFUND, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, rollMount, type MountId,
+  DUPLICATE_REFUND, MAX_STARS, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, readStars, rollMount, tierOf, type MountId,
 } from "../../src/game/account/mounts";
 import {
   channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, grantPurchase, readGems, markSeen,
@@ -155,22 +157,29 @@ interface Pay {
 
 // Your gems, the mounts you own and the one you ride (the first you own if none was picked, or it
 // is no longer yours).
-interface MountsView { gems: number; owned: MountId[]; selected: MountId | null }
+interface MountsView { gems: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }
 async function mountsView(account: string): Promise<MountsView> {
-  const { owned, selected } = await accountMounts(account);
-  return { gems: await readGems(account), owned, selected };
+  const { owned, selected, stars } = await accountMounts(account);
+  return { gems: await readGems(account), owned, selected, stars };
 }
 
-async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null }> {
+async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
   const state = await $global.getUserState(account);
   const owned = ownedMounts(state.mounts, await ownsFullGame(account));
   const picked = readMountId(state.mount);
-  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null };
+  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars) };
 }
 
-// A character with its account's picked mount, which adds to its every fight (see mounts.ts).
-async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null }> {
-  return { ...character, mount: (await accountMounts(account)).selected };
+// A character with its account's picked mount and its stars, which add to its every fight (see mounts.ts).
+async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null; mountStars: number }> {
+  const { selected, stars } = await accountMounts(account);
+  return { ...character, mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0 };
+}
+
+// Who a moment happened to, as an announcement names them: the character played and its server.
+async function announcedAs(account: string): Promise<{ name: string; world: string }> {
+  const { active } = await readProfile(account);
+  return { name: active?.name ?? (await readNickname(account)) ?? "", world: active?.world ?? (await readAccountWorld(account)).id };
 }
 
 // Lag between two potions sent a second apart can bring them closer; this much of the gap is held.
@@ -290,7 +299,10 @@ async function bagView(character: Character): Promise<BagView> {
     gold: await $asset.get(GOLD), bag: character.bag, bagTrade: character.bagTrade, pieces: character.pieces, gear: character.gear,
     job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
-    mount: (await accountMounts($sender.account)).selected,
+    ...(await (async () => {
+      const { selected, stars } = await accountMounts($sender.account);
+      return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0 };
+    })()),
   };
 }
 
@@ -964,7 +976,9 @@ export class Server {
   }
 
   // One draw for PULL_COST gems: a mount to keep, or, if already owned, DUPLICATE_REFUND gems back.
-  async pullMount(): Promise<MountsView & { mount: MountId; repeat: boolean }> {
+  // A repeat of one owned already breaks through: a star more (see mounts.ts), and only past MAX_STARS
+  // gems back. `star` is the star it reached (null for a new mount or gems back).
+  async pullMount(): Promise<MountsView & { mount: MountId; repeat: boolean; star: number | null }> {
     const account = $sender.account;
     const pulled = await $lock(`mounts:${account}`, async () => {
       await changeGems(account, -PULL_COST);
@@ -972,13 +986,28 @@ export class Server {
       const state = await $global.getUserState(account);
       const drawn = ownedMounts(state.mounts, false);
       const repeat = drawn.includes(mount);
-      if (repeat) await changeGems(account, DUPLICATE_REFUND);
-      else await $global.updateUserState(account, { mounts: [...drawn, mount] });
-      return { ...(await mountsView(account)), mount, repeat };
+      let star: number | null = null;
+      if (repeat) {
+        const stars = readStars(state.mountStars);
+        const was = stars[mount] ?? 0;
+        if (was < MAX_STARS) {
+          star = was + 1;
+          await $global.updateUserState(account, { mountStars: { ...stars, [mount]: star } });
+        } else await changeGems(account, DUPLICATE_REFUND);
+      } else await $global.updateUserState(account, { mounts: [...drawn, mount] });
+      return { ...(await mountsView(account)), mount, repeat, star };
     });
-    // A first mount is picked on its own, and makes you stronger.
-    if (!pulled.repeat) await refreshMounted(account);
+    const now = Date.now();
+    if (!pulled.repeat && tierOf(pulled.mount) === "legendary") await announce("mount_legendary", { ...(await announcedAs(account)), mount: pulled.mount }, now);
+    if (pulled.star === MAX_STARS) await announce("mount_star5", { ...(await announcedAs(account)), mount: pulled.mount }, now);
+    // A first mount is picked on its own, and a star on the picked one makes you stronger.
+    if (!pulled.repeat || (pulled.star !== null && pulled.selected === pulled.mount)) await refreshMounted(account);
     return pulled;
+  }
+
+  // The announcements to every server after `since` (ms), oldest first.
+  async announcements(since: unknown): Promise<Announcement[]> {
+    return announcementsSince(typeof since === "number" && Number.isFinite(since) ? since : Date.now());
   }
 
   // The mount you ride from now on (any you own).
@@ -1347,6 +1376,10 @@ export class Server {
         return { ...paid, gear: { ...c.gear, [slot]: null } };
       });
       await refreshFighter(next);
+      // A big one is told to everyone.
+      if ((outcome as EnhanceOutcome) === "success" && cost.to >= ANNOUNCE_PLUS) {
+        await announce("enhance", { name: next.name, world: next.world, item: piece.id, plus: cost.to }, Date.now());
+      }
       return { outcome, bag: await bagView(next) };
     } catch (error) {
       await $asset.mint(GOLD, cost.gold);

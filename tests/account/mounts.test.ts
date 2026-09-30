@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MOUNTS, MOUNT_IDS, PULL_COST, gemsFor, ownedMounts,
-  mountBonus, readMountId, rollMount, tierOf,
+  MAX_STARS, STAR_BONUS, mountBonus, readMountId, readStars, rollMount, tierOf,
 } from "../../src/game/account/mounts";
 import { combatPowerAt } from "../../src/game/combat/power";
 
@@ -49,5 +49,22 @@ describe("mounts", () => {
     expect(gemsFor("full-game", 1)).toBeNull();
     expect(Object.keys(GEM_PRODUCTS).length).toBeGreaterThan(0);
     expect(DUPLICATE_REFUND).toBeLessThan(PULL_COST);
+  });
+});
+
+describe("breaking through", () => {
+  it("each star adds a fifth of the tier's bonus; ★5 doubles it", () => {
+    expect(mountBonus("dragon", 0)).toEqual(mountBonus("dragon"));
+    expect(mountBonus("dragon", MAX_STARS).power).toBeCloseTo(mountBonus("dragon").power * 2);
+    expect(mountBonus("dragon", MAX_STARS).hp).toBe(mountBonus("dragon").hp * 2);
+    expect(mountBonus("pig", 1).hp).toBe(Math.round(mountBonus("pig").hp * (1 + STAR_BONUS)));
+    // No more than MAX_STARS counts.
+    expect(mountBonus("dragon", 9)).toEqual(mountBonus("dragon", MAX_STARS));
+    expect(mountBonus(null, 3)).toEqual({ power: 0, hp: 0 });
+  });
+
+  it("reads saved stars, only whole ones in range for known mounts", () => {
+    expect(readStars({ dragon: 3, pig: 9, moon: 2, cat: 0, dog: 1.5 })).toEqual({ dragon: 3, pig: MAX_STARS });
+    expect(readStars(null)).toEqual({});
   });
 });

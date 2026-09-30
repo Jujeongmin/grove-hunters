@@ -15,6 +15,7 @@ import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
 import { readTelegraphs, type Telegraph } from "../game/world/telegraphs";
 import type { GuildBossType } from "../game/world/guildBoss";
+import type { Announcement } from "../game/world/announce";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
@@ -59,6 +60,8 @@ export interface MountsView {
   gems: number;
   owned: MountId[];
   selected: MountId | null;
+  // Each mount's stars (★0 not listed; see mounts.ts).
+  stars: Partial<Record<MountId, number>>;
 }
 
 // You in a fight, as the server keeps it.
@@ -94,6 +97,8 @@ export interface WorldState {
   chat: ChatLine[];
   // Your guild's lines heard this session, and whether you are in a guild (as last asked).
   guildChat: ChatLine[];
+  // The announcements to every server heard this session (the chat shows them), oldest first.
+  announced: (Announcement & { heardAt: number })[];
   inGuild: boolean;
 }
 
@@ -181,7 +186,7 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // and your own pose going out to them.
 export class WorldClient {
   private current: WorldState = {
-    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false,
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
   };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
@@ -196,6 +201,9 @@ export class WorldClient {
   private seenNews: string | null | undefined = undefined;
   // The newest guild line heard (its time), so each poll asks only for what is new.
   private guildHeardAt = 0;
+  // The newest announcement heard (server ms); only those after it are asked for. Starts now: what
+  // was told before this visit is not told again.
+  private announcedAt = Date.now();
   // Whether the news has opened by itself yet this visit (once, not once per zone).
   newsShown = false;
   // Bumped by every enter and leave: one overtaken by a newer one (React's development double run
@@ -529,6 +537,18 @@ export class WorldClient {
     return this.tryCall(name, args);
   }
 
+  // New announcements to every server since the last heard; they join state.announced (the chat) and
+  // come back for the banner.
+  async pollAnnouncements(): Promise<Announcement[]> {
+    const fresh = (await this.transport.call<Announcement[]>("announcements", [this.announcedAt]).catch(() => null)) ?? [];
+    const newer = fresh.filter((a) => a.at > this.announcedAt);
+    if (newer.length === 0) return [];
+    this.announcedAt = newer[newer.length - 1].at;
+    const heardAt = this.now();
+    this.set({ announced: [...this.current.announced, ...newer.map((n) => ({ ...n, heardAt }))].slice(-CHAT_KEEP) });
+    return newer;
+  }
+
   // Your guild's chat: new lines since the last one heard join state.guildChat. Asked every few
   // seconds by the chat box; `inGuild` says whether there is a guild to hear at all.
   async pollGuildChat(): Promise<void> {
@@ -599,9 +619,9 @@ export class WorldClient {
     return this.transport.call<MountsView>("getMounts").catch(() => null);
   }
 
-  async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean }) | { problem: string }> {
+  async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean; star: number | null }) | { problem: string }> {
     try {
-      const pulled = await this.transport.call<MountsView & { mount: MountId; repeat: boolean }>("pullMount");
+      const pulled = await this.transport.call<MountsView & { mount: MountId; repeat: boolean; star: number | null }>("pullMount");
       // A new mount may be the picked one now, and the picked one adds to 전투력.
       void this.refreshBag();
       return pulled;

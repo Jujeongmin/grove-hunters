@@ -686,6 +686,18 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .arena-hint { margin: 0; text-align: center; font-size: 12px; color: #ffb08a; }
 .arena-leave { align-self: center; pointer-events: auto; font-size: 12px; }
 .arena-end { width: min(360px, 90%); gap: 10px; text-align: center; align-items: center; }
+/* An announcement to every server: a gold band at the top, below the corner HUD's reach. */
+.announce {
+  position: absolute; top: 72px; left: 50%; transform: translateX(-50%); max-width: min(520px, 70%); display: flex; align-items: center;
+  gap: 8px; padding: 6px 16px; border-radius: 18px; pointer-events: none; z-index: 4;
+  font: 700 13px var(--font-head); color: #2a1a06; text-align: center;
+  background: linear-gradient(90deg, #c8912a, #ffe08a 50%, #c8912a); box-shadow: 0 0 18px rgba(255, 211, 106, 0.55), 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: announce-in 0.35s ease-out;
+}
+.announce-mark { flex: none; }
+@keyframes announce-in { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .announce { animation: none; } }
+.chat-log p.system, .chat-log p.system b { color: #ffd36a; }
 /* The grove this week and the village it is rebuilding, in one screen. */
 .grove-panel { width: min(520px, 94%); gap: 8px; }
 .grove-gauge { height: 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
@@ -1547,6 +1559,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-plate > :is(.brush-button, .stable-riding, .stable-locked) { grid-row: 3 / span 2; grid-column: 2; }
 .stable-stats { grid-row: 4; grid-column: 1; font: 400 12px var(--font-head); color: #ffb35a; white-space: nowrap; }
 .stable-plate .brush-button.small { justify-self: end; min-width: 0; padding: 8px 18px; font-size: 14px; }
+/* Its stars (돌파) under the name, and what the next star would bring. */
+.stable-stars { grid-column: 1 / -1; justify-self: center; font: 400 16px var(--font-head); letter-spacing: 2px; color: #ffd36a; text-shadow: 0 0 8px rgba(255, 211, 106, 0.6); }
+.stable-next { grid-row: 5; grid-column: 1 / -1; font: 400 12px var(--font-head); color: var(--ink-dim); white-space: nowrap; }
+.stable-card { position: relative; }
+.stable-card-stars {
+  position: absolute; top: 3px; right: 4px; padding: 0 4px; border-radius: 4px; font: 700 11px var(--font-head);
+  color: #1a120b; background: #ffd36a;
+}
 .stable-riding, .stable-locked { justify-self: end; font: 400 13px var(--font-head); white-space: nowrap; }
 .stable-riding { color: #8fe08a; }
 .stable-riding::before { content: "● "; }

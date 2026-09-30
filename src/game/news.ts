@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-mount-stars",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "탈것 돌파와 전체 공지",
+        lines: [
+          "이미 가진 탈것이 알에서 또 나오면 이제 돌파해서 별(★)이 올라요. 별 하나마다 보너스 +20%, ★5면 2배(전설 공격 +60%, 체력 +200).",
+          "★5가 된 탈것이 또 나오면 전처럼 보석 30개를 돌려받아요.",
+          "전설 탈것 획득, ★5 돌파, +8 이상 강화 성공, 길드 보스 처치는 모든 서버에 공지돼요. 설정에서 끌 수 있어요.",
+        ],
+      },
+      en: {
+        title: "Mount breakthroughs and announcements",
+        lines: [
+          "A mount you already own, hatched again, now breaks through: a star (★) more. Each star adds 20% to its bonus; ★5 doubles it (a legendary gives +60% power, +200 health).",
+          "Past ★5 a repeat comes back as 30 gems, as before.",
+          "Legendary mounts, ★5 breakthroughs, enhancements to +8 and past, and guild bosses slain are announced to every server. You can turn this off in Settings.",
+        ],
+      },
+      ja: {
+        title: "乗り物の突破と全体告知",
+        lines: [
+          "持っている乗り物が卵からまた出ると、突破して星(★)が上がります。星1つごとにボーナス+20%、★5で2倍（レジェンドは攻撃+60%、体力+200）。",
+          "★5の乗り物がまた出ると、これまで通り宝石30個が戻ります。",
+          "レジェンド乗り物の獲得、★5突破、+8以上の強化成功、ギルドボス撃破は全サーバーに告知されます。設定でオフにできます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "坐騎突破與全服公告",
+        lines: [
+          "蛋裡再次孵出已擁有的坐騎時會突破，星級(★)提升。每顆星加成+20%，★5為2倍（傳說坐騎攻擊+60%、體力+200）。",
+          "★5的坐騎再次出現時，與以前一樣退還30顆寶石。",
+          "獲得傳說坐騎、★5突破、強化+8以上成功、擊敗公會首領會向全服公告，可在設定中關閉。",
+        ],
+      },
+      "zh-Hans": {
+        title: "坐骑突破与全服公告",
+        lines: [
+          "蛋里再次孵出已拥有的坐骑时会突破，星级(★)提升。每颗星加成+20%，★5为2倍（传说坐骑攻击+60%、体力+200）。",
+          "★5的坐骑再次出现时，与以前一样退还30颗宝石。",
+          "获得传说坐骑、★5突破、强化+8以上成功、击败公会首领会向全服公告，可在设置中关闭。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-guild-boss",
     date: "2026-09-30",
     text: {

@@ -34,6 +34,7 @@ import { MailPanel } from "./MailPanel";
 import { MarketPanel } from "./MarketPanel";
 import { GuildPanel } from "./GuildPanel";
 import { ArenaHud } from "./ArenaHud";
+import { AnnounceBanner } from "./AnnounceBanner";
 import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
@@ -540,7 +541,7 @@ function ZoneScreen({
                 <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
                 {bag && (
                   <span className="hud-power" title={t("rank.power")}>
-                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount).toLocaleString()}
+                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars).toLocaleString()}
                   </span>
                 )}
               </div>
@@ -645,6 +646,7 @@ function ZoneScreen({
             />
           )}
           {entry.zone === "arena" && <ArenaHud client={client} />}
+          <AnnounceBanner client={client} />
           {hud.dead && entry.zone !== "arena" && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} travelling={travelling} />
           )}

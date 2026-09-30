@@ -4,6 +4,8 @@ import type { Key } from "./strings/ko";
 import { typing } from "../game/render/FpsInput";
 import { CHAT_MAX } from "../game/world/chat";
 import type { ChatLine, WorldClient } from "../net/worldClient";
+import { announceText } from "./announceText";
+import { settings } from "./settings";
 
 // Closed, the box shows the last few lines, each for a while after it came.
 const QUIET_LINES = 6;
@@ -27,6 +29,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
   const [inGuild, setInGuild] = useState(client.state.inGuild);
+  const [announced, setAnnounced] = useState(client.state.announced);
   const [mode, setMode] = useState<"channel" | "guild">("channel");
   // Guild lines heard up to when the guild tab was last looked at: newer ones put a dot on it.
   const [guildSeen, setGuildSeen] = useState(() => Date.now());
@@ -43,6 +46,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     setLines((prev) => (prev === s.chat ? prev : s.chat));
     setGuildLines((prev) => (prev === s.guildChat ? prev : s.guildChat));
     setInGuild(s.inGuild);
+    setAnnounced((prev) => (prev === s.announced ? prev : s.announced));
   }), [client]);
   const guildOpen = open && mode === "guild";
   useEffect(() => {
@@ -100,10 +104,15 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     close(false);
   };
 
+  // The announcements to every server, as lines of the channel's chat (the game's, not a player's).
+  const told = settings().showAnnouncements ? announced.map((a, i) => ({
+    id: -1 - i, account: "", name: "📢", text: announceText(a), at: a.at, heardAt: a.heardAt, mine: false, guild: false, system: true,
+  })) : [];
+  const channel = [...lines.map((l) => ({ ...l, guild: false, system: false })), ...told].sort((a, b) => a.heardAt - b.heardAt);
   // Closed, the channel's and the guild's latest lines together, in the order they came.
-  const heard = [...lines.map((l) => ({ ...l, guild: false })), ...guildLines.map((l) => ({ ...l, guild: true }))].sort((a, b) => a.heardAt - b.heardAt);
+  const heard = [...channel, ...guildLines.map((l) => ({ ...l, guild: true, system: false }))].sort((a, b) => a.heardAt - b.heardAt);
   const shown = open
-    ? (mode === "guild" ? guildLines.map((l) => ({ ...l, guild: true })) : lines.map((l) => ({ ...l, guild: false }))).slice(-OPEN_LINES)
+    ? (mode === "guild" ? guildLines.map((l) => ({ ...l, guild: true, system: false })) : channel).slice(-OPEN_LINES)
     : heard.slice(-QUIET_LINES).filter((l) => l.heardAt > seenUntil && now - l.heardAt < QUIET_MS);
   const guildNew = guildLines.some((l) => l.heardAt > guildSeen && !l.mine);
   return (
@@ -128,7 +137,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
       {shown.length > 0 && (
         <div className="chat-log" ref={log} onClick={open ? undefined : () => setOpen(true)}>
           {shown.map((l) => (
-            <p key={`${l.guild ? "g" : "c"}${l.id}`} className={[l.mine ? "mine" : "", l.guild ? "guild" : ""].join(" ").trim() || undefined}>
+            <p key={`${l.guild ? "g" : "c"}${l.id}`} className={[l.mine ? "mine" : "", l.guild ? "guild" : "", l.system ? "system" : ""].join(" ").trim() || undefined}>
               {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}<b>{l.name}</b> {l.text}
             </p>
           ))}

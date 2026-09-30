@@ -24,7 +24,7 @@ describe("bag and gold", () => {
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
       gold: 0, bag: { potion_small: 5 }, bagTrade: {}, pieces: [], gear: { weapon: null, armor: null }, job: null, quest: { index: 0, count: 0 }, tutorial: null,
-      mount: "deer",
+      mount: "deer", mountStars: 0,
     });
     expect(daily.counts).toEqual({});
     expect(daily.claimed).toEqual([]);

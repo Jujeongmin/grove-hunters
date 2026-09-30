@@ -30,6 +30,7 @@ const SCREEN: Slider[] = [
 const SHOWN: { key: FlagKey; label: Key }[] = [
   { key: "showNames", label: "settings.showNames" },
   { key: "damageNumbers", label: "settings.damageNumbers" },
+  { key: "showAnnouncements", label: "settings.announcements" },
 ];
 const QUALITY_LABEL: Record<Quality, Key> = {
   low: "settings.quality.low", mid: "settings.quality.mid", high: "settings.quality.high",

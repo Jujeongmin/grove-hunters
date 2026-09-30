@@ -11,16 +11,18 @@ export interface FightBonus { power: number; hp: number; guard: number; heal: nu
 
 // The stats a character fights with at its level, in its gear and advanced class, with the account's
 // picked mount.
-export function fightStats(c: { xp: number; gear: Gear; job: JobId | null; mount?: MountId | null }): { maxHp: number; gear: FightBonus } {
-  return fightStatsAt(levelOf(c.xp).level, c.gear, c.job, c.mount);
+export function fightStats(
+  c: { xp: number; gear: Gear; job: JobId | null; mount?: MountId | null; mountStars?: number },
+): { maxHp: number; gear: FightBonus } {
+  return fightStatsAt(levelOf(c.xp).level, c.gear, c.job, c.mount, c.mountStars);
 }
 
 export function fightStatsAt(
-  level: number, gear: Gear, job: JobId | null, mount: MountId | null = null,
+  level: number, gear: Gear, job: JobId | null, mount: MountId | null = null, stars = 0,
 ): { maxHp: number; gear: FightBonus } {
   const worn = gearStats(gear);
   const advanced = job ? JOBS[job] : null;
-  const steed = mountBonus(mount);
+  const steed = mountBonus(mount, stars);
   const bonus = {
     power: worn.power + (advanced?.power ?? 0) + steed.power, hp: worn.hp + (advanced?.hp ?? 0) + steed.hp,
     guard: worn.guard + (advanced?.guard ?? 0),
@@ -33,15 +35,15 @@ export function fightStatsAt(
 // weapon (at its level, gear and advanced class) and how much it takes to fell it (health, over the
 // share of each blow that gets through). Healing adds to both halves.
 export function combatPower(
-  c: { xp: number; playerClass: PlayerClass; gear: Gear; job: JobId | null; mount?: MountId | null },
+  c: { xp: number; playerClass: PlayerClass; gear: Gear; job: JobId | null; mount?: MountId | null; mountStars?: number },
 ): number {
-  return combatPowerAt(levelOf(c.xp).level, c.playerClass, c.gear, c.job, c.mount);
+  return combatPowerAt(levelOf(c.xp).level, c.playerClass, c.gear, c.job, c.mount, c.mountStars);
 }
 
 export function combatPowerAt(
-  level: number, playerClass: PlayerClass, gear: Gear, job: JobId | null, mount: MountId | null = null,
+  level: number, playerClass: PlayerClass, gear: Gear, job: JobId | null, mount: MountId | null = null, stars = 0,
 ): number {
-  const { maxHp, gear: bonus } = fightStatsAt(level, gear, job, mount);
+  const { maxHp, gear: bonus } = fightStatsAt(level, gear, job, mount, stars);
   const weapon = WEAPONS[playerClass];
   const perSecond = damageAt(weapon.damage, level, bonus.power) / (weapon.intervalMs / 1000);
   const toFell = maxHp / (1 - Math.min(0.8, bonus.guard));

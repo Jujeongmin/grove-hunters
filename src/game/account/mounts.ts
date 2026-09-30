@@ -59,8 +59,28 @@ const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
   epic: { power: 0.25, hp: 80 },
   legendary: { power: 0.3, hp: 100 },
 };
-export function mountBonus(id: MountId | null | undefined): MountBonus {
-  return id ? TIER_BONUS[MOUNTS[id].tier ?? "base"] : { power: 0, hp: 0 };
+export function mountBonus(id: MountId | null | undefined, stars = 0): MountBonus {
+  if (!id) return { power: 0, hp: 0 };
+  const base = TIER_BONUS[MOUNTS[id].tier ?? "base"];
+  const grown = 1 + STAR_BONUS * Math.max(0, Math.min(MAX_STARS, stars));
+  return { power: Math.round(base.power * grown * 1000) / 1000, hp: Math.round(base.hp * grown) };
+}
+
+// Breaking through (돌파): a mount drawn again when already owned gains a star instead of gems back,
+// up to MAX_STARS; each star adds STAR_BONUS of its tier's bonus (★5 doubles it). Only past ★5 does a
+// repeat come back as DUPLICATE_REFUND gems.
+export const MAX_STARS = 5;
+export const STAR_BONUS = 0.2;
+
+// The stars an account's mounts have, as saved (★0 is not written down).
+export function readStars(raw: unknown): Partial<Record<MountId, number>> {
+  const out: Partial<Record<MountId, number>> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
+    const mount = readMountId(id);
+    if (mount && typeof n === "number" && Number.isInteger(n) && n > 0) out[mount] = Math.min(MAX_STARS, n);
+  }
+  return out;
 }
 
 // The draw: a tier by these odds (shown to the player as they are, as Korean law requires of paid
@@ -72,7 +92,7 @@ export const GACHA_ODDS: readonly { tier: MountTier; chance: number }[] = [
   { tier: "legendary", chance: 0.01 },
 ];
 export const PULL_COST = 100;
-// A mount already owned comes back as this many gems.
+// A mount already at MAX_STARS, drawn again, comes back as this many gems.
 export const DUPLICATE_REFUND = 30;
 
 // Gems are kept on the account (its global user state, changed only under the account's gem lock);

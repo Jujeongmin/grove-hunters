@@ -19,6 +19,8 @@ export interface Settings extends Controls {
   // Other players' names over them, and damage numbers over monsters and you.
   showNames: boolean;
   damageNumbers: boolean;
+  // The announcements to every server (a legendary mount, a big enhancement…) at the top and in chat.
+  showAnnouncements: boolean;
   // From Controls: which of the potion and the three skills auto-battle may use on its own
   // (dragged down under their slots to turn on), and what sits in the three skill slots of the bar,
   // per class (a skill's index, or null for an empty slot; a learned skill is dragged in from the
@@ -59,7 +61,7 @@ const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: c
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: null,
-  quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true,
+  quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true, showAnnouncements: true,
   sensitivity: 1, volume: 0.8, music: 0.5, brightness: 1, autoPotion: true, potionAt: POTION_AT.start, autoSkills: [true, false, false], hotbars: {},
 };
 

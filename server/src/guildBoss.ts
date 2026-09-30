@@ -6,6 +6,8 @@ import type { Guild } from "../../src/game/account/guild";
 import type { MailItem } from "../../src/game/account/mail";
 import { RuleViolation } from "../../src/game/world/types";
 import { sendMail } from "./mail";
+import { announce } from "./announce";
+import { readGuildById } from "./guild";
 
 // One row per guild and week: the boss, its full health, the damage done so far and by whom, who went
 // in on which day, and how many stages have been paid. Changed only under the guild's boss lock.
@@ -108,6 +110,10 @@ export async function addDamage(guildId: string, week: number, by: Record<string
     const next: BossWeek = { ...w, damage, hitters, stagesPaid: Math.max(w.stagesPaid, reached) };
     await writeWeek(next);
     for (let stage = w.stagesPaid + 1; stage <= reached; stage++) await payStage(next, stage, now);
+    if (w.stagesPaid < STAGE_REWARDS.length && reached >= STAGE_REWARDS.length) {
+      const guild = await readGuildById(guildId);
+      await announce("guild_boss", { guild: guild?.name ?? "", boss: w.boss }, now);
+    }
     return next;
   });
 }

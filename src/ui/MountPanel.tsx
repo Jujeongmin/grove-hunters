@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MOUNTS, MOUNT_IDS, PULL_COST, mountBonus, mountsOfTier,
+  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL_COST, mountBonus, mountsOfTier,
   type MountId, type MountTier,
 } from "../game/account/mounts";
 import type { ModelLibrary } from "../game/assets/ModelLibrary";
@@ -48,7 +48,7 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
   const [view, setView] = useState<MountsView | null>(null);
   const [looking, setLooking] = useState<MountId>(BASE_MOUNT);
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
-  const [hatched, setHatched] = useState<{ mount: MountId; repeat: boolean } | null>(null);
+  const [hatched, setHatched] = useState<{ mount: MountId; repeat: boolean; star: number | null } | null>(null);
   const [hatchCount, setHatchCount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -133,9 +133,9 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
       setBusy(false);
       setView(r);
       setLooking(r.mount);
-      setHatched({ mount: r.mount, repeat: r.repeat });
+      setHatched({ mount: r.mount, repeat: r.repeat, star: r.star });
       setHatchCount((n) => n + 1);
-      playCue(r.repeat ? "gold" : "levelup");
+      playCue(r.repeat && r.star === null ? "gold" : "levelup");
     });
   };
   const ride = (id: MountId) => {
@@ -151,6 +151,7 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
   };
 
   const gems = view?.gems ?? 0;
+  const starsOf = (id: MountId) => view?.stars[id] ?? 0;
   const shown = tab === "hatch" && !hatched ? null : looking;
   return (
     <div className="stable" role="dialog">
@@ -177,12 +178,12 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
           {/* The burst on screen: a flash, and for a new mount its tier and name thrown up big, with
               turning rays behind for the rare and better. Keyed so each hatch plays it afresh. */}
           {tab === "hatch" && hatched && (
-            <div key={hatchCount} className={`stable-burst tier-${tierKey(hatched.mount)}${hatched.repeat ? " repeat" : ""}`}>
+            <div key={hatchCount} className={`stable-burst tier-${tierKey(hatched.mount)}${hatched.repeat && hatched.star === null ? " repeat" : ""}`}>
               <i className="stable-flash" />
-              {!hatched.repeat && tierKey(hatched.mount) !== "common" && <i className="stable-rays" />}
+              {(!hatched.repeat || hatched.star !== null) && tierKey(hatched.mount) !== "common" && <i className="stable-rays" />}
               <span className="stable-banner">
-                <small>{t(hatched.repeat ? "mount.repeatBadge" : "mount.newBadge")}</small>
-                <b>{tierName(tierKey(hatched.mount))}</b>
+                <small>{t(hatched.star !== null ? "mount.starBadge" : hatched.repeat ? "mount.repeatBadge" : "mount.newBadge")}</small>
+                <b>{hatched.star !== null ? `★${hatched.star}` : tierName(tierKey(hatched.mount))}</b>
               </span>
             </div>
           )}
@@ -194,9 +195,18 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
                 {t("mount.speed", { n: MOUNTS[shown].speed })}
                 <i className="stable-pips" style={{ ["--pips" as string]: Math.round((MOUNTS[shown].speed - 1) * 10) }} />
               </span>
+              {mine(shown) && shown !== BASE_MOUNT && <span className="stable-stars">{starMarks(starsOf(shown))}</span>}
               <span className="stable-stats">
-                {t("mount.stats", { p: Math.round(mountBonus(shown).power * 100), h: mountBonus(shown).hp })}
+                {t("mount.stats", { p: Math.round(mountBonus(shown, starsOf(shown)).power * 100), h: mountBonus(shown, starsOf(shown)).hp })}
               </span>
+              {mine(shown) && shown !== BASE_MOUNT && starsOf(shown) < MAX_STARS && (
+                <span className="stable-next">
+                  {t("mount.nextStar", {
+                    n: starsOf(shown) + 1,
+                    p: Math.round(mountBonus(shown, starsOf(shown) + 1).power * 100), h: mountBonus(shown, starsOf(shown) + 1).hp,
+                  })}
+                </span>
+              )}
               {tab === "stable" && (mine(shown)
                 ? view?.selected === shown
                   ? <span className="stable-riding">{t("mount.riding")}</span>
@@ -218,6 +228,7 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
                   >
                     {portraits[id] ? <img src={portraits[id]} alt="" /> : <span className="stable-card-blank" />}
                     <b>{mountName(id)}</b>
+                    {mine(id) && starsOf(id) > 0 && <span className="stable-card-stars">★{starsOf(id)}</span>}
                     {!mine(id) && <img className="stable-lock" src={iconFor("ui_lock") ?? undefined} alt="" />}
                   </button>
                 ))}
@@ -237,9 +248,11 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
               </button>
               {hatched && (
                 <p className={`stable-result tier-${tierKey(hatched.mount)}`}>
-                  {hatched.repeat
-                    ? t("mount.repeat", { name: mountName(hatched.mount), n: DUPLICATE_REFUND })
-                    : t("mount.new", { name: mountName(hatched.mount), tier: tierName(tierKey(hatched.mount)) })}
+                  {hatched.star !== null
+                    ? t("mount.star", { name: mountName(hatched.mount), n: hatched.star })
+                    : hatched.repeat
+                      ? t("mount.repeat", { name: mountName(hatched.mount), n: DUPLICATE_REFUND })
+                      : t("mount.new", { name: mountName(hatched.mount), tier: tierName(tierKey(hatched.mount)) })}
                 </p>
               )}
               {!busy && view && gems < PULL_COST && (
@@ -258,7 +271,7 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
                     </div>
                   );
                 })}
-                <small>{t("mount.repeatNote", { n: DUPLICATE_REFUND })}</small>
+                <small>{t("mount.repeatNote", { n: DUPLICATE_REFUND, max: MAX_STARS })}</small>
               </div>
             </>
           )}
@@ -292,4 +305,9 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
       </div>
     </div>
   );
+}
+
+// A mount's stars as five marks, the earned ones filled.
+function starMarks(n: number): string {
+  return "★".repeat(n) + "☆".repeat(Math.max(0, MAX_STARS - n));
 }
