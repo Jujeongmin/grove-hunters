@@ -33,6 +33,21 @@ export async function makeCharacter(
   return view;
 }
 
+// The uid of the first piece of a kind of gear in a bag view.
+export function pieceOf(bag: { pieces: { uid: string; id: string }[] }, id: string): string {
+  const piece = bag.pieces.find((p) => p.id === id);
+  if (!piece) throw new Error(`no ${id} in the bag`);
+  return piece.uid;
+}
+
+// Changes the account's active character as saved (what it carries, most often).
+export async function editActive(account: string, change: (c: any) => any): Promise<void> {
+  const state = await $global.getUserState(account);
+  const map = { ...state.characterMap };
+  map[state.active] = change(map[state.active]);
+  await $global.updateUserState(account, { characterMap: map });
+}
+
 // Sets the XP of an account's active character, as hunting will.
 export async function giveXp(account: string, xp: number): Promise<void> {
   const state = await $global.getUserState(account);

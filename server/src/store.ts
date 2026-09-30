@@ -1,6 +1,6 @@
 import { isOnline, readFriendLists, type FriendEntry, type FriendSide } from "../../src/game/account/friends";
 import { levelOf, readXp } from "../../src/game/account/level";
-import { NO_GEAR } from "../../src/game/account/items";
+import { EMPTY_INVENTORY } from "../../src/game/account/inventory";
 import { QUEST_START, readDaily } from "../../src/game/account/quests";
 import { skillLearned } from "../../src/game/account/tutorial";
 import {
@@ -127,9 +127,7 @@ export async function readProfile(account: string): Promise<Profile> {
       xp: Math.max(readXp(state.xp), oldXp),
       spot: readSpot(state.spot),
       made: 0,
-      bag: {},
-      gear: NO_GEAR,
-      plus: {},
+      ...EMPTY_INVENTORY,
       daily: readDaily(null),
       job: null,
       quest: QUEST_START,

@@ -15,8 +15,8 @@ describe("mounts", () => {
   it("the picked mount adds to 전투력, more the rarer it is; none adds nothing", () => {
     expect(mountBonus(null)).toEqual({ power: 0, hp: 0 });
     const order = [BASE_MOUNT, "pig", "panda", "yeti", "dragon"] as const;
-    const power = order.map((id) => combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, {}, id));
-    expect(power[0]).toBeGreaterThan(combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, {}, null));
+    const power = order.map((id) => combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, id));
+    expect(power[0]).toBeGreaterThan(combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, null));
     for (let i = 1; i < power.length; i++) expect(power[i]).toBeGreaterThan(power[i - 1]);
   });
 

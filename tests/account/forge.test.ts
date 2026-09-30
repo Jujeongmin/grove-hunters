@@ -29,12 +29,14 @@ describe("enhancing", () => {
   });
 
   it("adds to the gear's stats and shows in its name", () => {
-    const plain = gearStats({ weapon: "weapon_2", armor: "armor_2" });
-    const plus = gearStats({ weapon: "weapon_2", armor: "armor_2" }, { weapon_2: 5, armor_2: 3 });
+    const piece = (id: "weapon_2" | "armor_2", plus: number) => ({ uid: id, id, plus, trade: false });
+    const plain = gearStats({ weapon: piece("weapon_2", 0), armor: piece("armor_2", 0) });
+    const plus = gearStats({ weapon: piece("weapon_2", 5), armor: piece("armor_2", 3) });
     expect(plus.power).toBeGreaterThan(plain.power);
     expect(plus.hp).toBeGreaterThan(plain.hp);
     expect(plus.guard).toBeGreaterThan(plain.guard);
-    expect(gearName("weapon_2", { weapon_2: 5 })).toBe(`+5 ${itemName("weapon_2")}`);
+    expect(gearName(piece("weapon_2", 5))).toBe(`+5 ${itemName("weapon_2")}`);
+    expect(gearName(piece("weapon_2", 0))).toBe(itemName("weapon_2"));
   });
 });
 

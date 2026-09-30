@@ -74,55 +74,48 @@ export function readItemId(value: unknown): ItemId | null {
   return typeof value === "string" && value in ITEMS ? (value as ItemId) : null;
 }
 
-// How many of each item a character carries. Only items it has are listed.
+// How many of each potion and material a character carries (gear is carried piece by piece; see
+// inventory.ts). Only items it has are listed.
 export type Bag = Partial<Record<ItemId, number>>;
 
-export interface Gear { weapon: ItemId | null; armor: ItemId | null }
+// One piece of gear: its own + and whether it may be sold on the market. uid tells two pieces of the
+// same kind apart.
+export interface GearPiece { uid: string; id: ItemId; plus: number; trade: boolean }
 
-// How far each kind of gear has been enhanced (+1 to +10), by item. Kept per kind of item, not per
-// copy: a character wears one of each and rarely owns two.
-export type Plus = Partial<Record<ItemId, number>>;
+// What a character wears, a piece in each slot.
+export interface Gear { weapon: GearPiece | null; armor: GearPiece | null }
+
 export const MAX_PLUS = 10;
 // What each + adds: a weapon's share of damage; armour's health and share of each blow stopped.
 export const PLUS_POWER = 0.04;
 export const PLUS_HP = 12;
 export const PLUS_GUARD = 0.005;
 
-export function readPlus(raw: unknown): Plus {
-  const out: Plus = {};
-  if (!raw || typeof raw !== "object") return out;
-  for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
-    const item = readItemId(id);
-    if (item && ITEMS[item].kind !== "potion" && ITEMS[item].kind !== "material" && typeof n === "number" && Number.isInteger(n)
-      && n > 0) out[item] = Math.min(n, MAX_PLUS);
-  }
-  return out;
-}
-
 export const NO_GEAR: Gear = { weapon: null, armor: null };
 
+// The slot a kind of item is worn in; null for potions and materials.
+export function slotOf(id: ItemId): Slot | null {
+  const kind = ITEMS[id].kind;
+  return kind === "weapon" || kind === "armor" ? kind : null;
+}
+
+// Potions and materials, as saved; gear kinds are left out (they are pieces now).
 export function readBag(raw: unknown): Bag {
   const out: Bag = {};
   if (!raw || typeof raw !== "object") return out;
   for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
     const item = readItemId(id);
-    if (item && typeof n === "number" && Number.isInteger(n) && n > 0) out[item] = Math.min(n, MAX_STACK);
+    if (item && !slotOf(item) && typeof n === "number" && Number.isInteger(n) && n > 0) out[item] = Math.min(n, MAX_STACK);
   }
   return out;
 }
 
-export function readGear(raw: unknown): Gear {
-  const g = (raw ?? {}) as Record<string, unknown>;
-  const worn = (slot: Slot) => {
-    const id = readItemId(g[slot]);
-    return id && ITEMS[id].kind === slot ? id : null;
-  };
-  return { weapon: worn("weapon"), armor: worn("armor") };
-}
-
-// Whether n more of an item still fit its stack. What is bought or made must; loot past it is lost.
-export function fitsInBag(bag: Bag, id: ItemId, n: number): boolean {
-  return (bag[id] ?? 0) + n <= MAX_STACK;
+export function readPiece(raw: unknown): GearPiece | null {
+  const p = raw as Partial<Record<keyof GearPiece, unknown>> | null;
+  const id = readItemId(p?.id);
+  if (!p || !id || !slotOf(id) || typeof p.uid !== "string" || p.uid.length === 0 || p.uid.length > 64) return null;
+  const plus = typeof p.plus === "number" && Number.isInteger(p.plus) ? Math.max(0, Math.min(MAX_PLUS, p.plus)) : 0;
+  return { uid: p.uid, id, plus, trade: p.trade === true };
 }
 
 // The bag with n more of an item (never past MAX_STACK), or n fewer; fewer than it has is refused.
@@ -136,32 +129,16 @@ export function addItem(bag: Bag, id: ItemId, n: number): Bag {
   return out;
 }
 
-// Wears an item from the bag; whatever was in that slot goes back into the bag.
-export function equip(bag: Bag, gear: Gear, id: ItemId): { bag: Bag; gear: Gear } {
-  const kind = ITEMS[id].kind;
-  if (kind === "potion" || kind === "material") throw new RuleViolation("unavailable");
-  let next = addItem(bag, id, -1);
-  const old = gear[kind];
-  if (old) next = addItem(next, old, 1);
-  return { bag: next, gear: { ...gear, [kind]: id } };
-}
-
-export function unequip(bag: Bag, gear: Gear, slot: Slot): { bag: Bag; gear: Gear } {
-  const old = gear[slot];
-  if (!old) return { bag, gear };
-  return { bag: addItem(bag, old, 1), gear: { ...gear, [slot]: null } };
-}
-
 // What the worn gear adds up to in a fight.
 export interface GearStats { power: number; hp: number; guard: number }
 
-export function gearStats(gear: Gear, plus: Plus = {}): GearStats {
+export function gearStats(gear: Gear): GearStats {
   const out = { power: 0, hp: 0, guard: 0 };
-  if (gear.weapon) out.power += ITEMS[gear.weapon].power + (plus[gear.weapon] ?? 0) * PLUS_POWER;
+  if (gear.weapon) out.power += ITEMS[gear.weapon.id].power + gear.weapon.plus * PLUS_POWER;
   if (gear.armor) {
-    const n = plus[gear.armor] ?? 0;
-    out.hp += ITEMS[gear.armor].hp + n * PLUS_HP;
-    out.guard += ITEMS[gear.armor].guard + n * PLUS_GUARD;
+    const n = gear.armor.plus;
+    out.hp += ITEMS[gear.armor.id].hp + n * PLUS_HP;
+    out.guard += ITEMS[gear.armor.id].guard + n * PLUS_GUARD;
   }
   return out;
 }
@@ -170,9 +147,12 @@ export function gearStats(gear: Gear, plus: Plus = {}): GearStats {
 // advanced class (전직) and where it is in the quests.
 export interface BagView {
   gold: number;
+  // Potions and materials that stay with the character, and materials that may go to the market.
   bag: Bag;
+  bagTrade: Bag;
+  // Gear in the bag, piece by piece, and what is worn.
+  pieces: GearPiece[];
   gear: Gear;
-  plus: Plus;
   job: JobId | null;
   quest: QuestProgress;
   // Today's daily quests.

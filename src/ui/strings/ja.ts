@@ -267,6 +267,9 @@ export const ja: Bundle = {
   "bag.equip": "装備",
   "bag.sell": "売る（{n}）",
   "bag.keys": "Q: ポーションを飲む · I: カバン",
+  "item.trade": "取引可能",
+  "item.bound": "取引不可",
+  "forge.tradeChance": "作った装備は{pct}の確率で取引可能になります。",
 
   "shop.title": "村のショップ",
   "shop.buy": "買う",

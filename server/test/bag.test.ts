@@ -2,7 +2,7 @@ import { ITEMS, sellPrice } from "../../src/game/account/items";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
-import { STEED, enterAs, errorOf, join, makeCharacter, toNpc, walkTo } from "./helpers";
+import { STEED, editActive, enterAs, errorOf, join, makeCharacter, pieceOf, toNpc, walkTo } from "./helpers";
 
 // A character standing in the village, by the merchant.
 async function inVillage(server: any, account = "test-a"): Promise<any> {
@@ -23,7 +23,8 @@ describe("bag and gold", () => {
     await inVillage(server);
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
-      gold: 0, bag: { potion_small: 5 }, gear: { weapon: null, armor: null }, plus: {}, job: null, quest: { index: 0, count: 0 }, tutorial: null, mount: "deer",
+      gold: 0, bag: { potion_small: 5 }, bagTrade: {}, pieces: [], gear: { weapon: null, armor: null }, job: null, quest: { index: 0, count: 0 }, tutorial: null,
+      mount: "deer",
     });
     expect(daily.counts).toEqual({});
     expect(daily.claimed).toEqual([]);
@@ -47,6 +48,70 @@ describe("bag and gold", () => {
     expect(result.gold).toBeGreaterThanOrEqual(low);
     expect(result.gold).toBeLessThanOrEqual(high);
     expect((await server.getBag()).gold).toBe(result.gold);
+  });
+
+  test("drops: materials may be traded, gear on its chance", async (server) => {
+    const village = await inVillage(server);
+    await toForest(server, "test-a", village);
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await walkTo(server, spawn.x, spawn.z, 0);
+    const rat = (id: string) => ({
+      [id]: {
+        type: "rat", x: spawn.x, z: spawn.z - 1.5, yaw: 0, hp: 1, alive: true, stunnedUntil: 0, attackReadyAt: 0,
+        respawnAt: 0, homeX: spawn.x, homeZ: spawn.z - 1.5,
+      },
+    });
+    // Every roll 0: everything the rat carries drops, and its gear may be traded.
+    await $room.updateRoomState({ monsters: rat("m0") });
+    const real = Math.random;
+    Math.random = () => 0;
+    try {
+      await server.strike("m0");
+    } finally {
+      Math.random = real;
+    }
+    const bag = await server.getBag();
+    expect(bag.bagTrade).toEqual({ jelly: 1, stone: 1 });
+    expect(bag.bag.potion_small).toBe(6);
+    // (The other side of the trade roll is in tests/account/inventory.test.ts.)
+    expect(bag.pieces.map((p: any) => [p.id, p.trade])).toEqual([["weapon_1", true], ["armor_1", true]]);
+  });
+
+  test("a save from before pieces reads as pieces that may not be traded, the + on one of them", async (server) => {
+    await inVillage(server);
+    await editActive("test-a", (c) => {
+      const { pieces: _, bagTrade: __, ...old } = c;
+      return { ...old, bag: { potion_small: 3, weapon_2: 2, stone: 4 }, gear: { weapon: "weapon_2", armor: null }, plus: { weapon_2: 6 } };
+    });
+    const bag = await server.getBag();
+    expect(bag.bag).toEqual({ potion_small: 3, stone: 4 });
+    expect(bag.bagTrade).toEqual({});
+    expect([bag.gear.weapon.id, bag.gear.weapon.plus, bag.gear.weapon.trade]).toEqual(["weapon_2", 6, false]);
+    expect(bag.pieces.map((p: any) => [p.id, p.plus, p.trade])).toEqual([["weapon_2", 0, false], ["weapon_2", 0, false]]);
+    // The worn piece's + counts in a fight at once.
+    const stats = (await $room.getMyState()).gear;
+    expect(stats.power).toBeGreaterThanOrEqual(0);
+    // Saved in the new form by the next change, with the same pieces.
+    await server.equipItem(bag.pieces[0].uid);
+    const after = await server.getBag();
+    expect(after.gear.weapon.uid).toBe(bag.pieces[0].uid);
+    expect(after.pieces.map((p: any) => p.uid).sort()).toEqual([bag.gear.weapon.uid, bag.pieces[1].uid].sort());
+  });
+
+  test("the shop buys back a piece by its uid, and a stack from the side asked for", async (server) => {
+    await inVillage(server);
+    await $asset.mint("gold", 1000);
+    const bought = await server.buyItem("weapon_1");
+    const uid = pieceOf(bought, "weapon_1");
+    const sold = await server.sellPiece(uid);
+    expect(sold.pieces).toEqual([]);
+    expect(sold.gold).toBe(bought.gold + sellPrice("weapon_1"));
+    expect(await errorOf(server.sellPiece(uid))).toContain("no_item");
+    expect(await errorOf(server.sellItem("weapon_1"))).toContain("unavailable");
+    await editActive("test-a", (c) => ({ ...c, bag: { ...c.bag, silk: 2 }, bagTrade: { silk: 3 } }));
+    const fromTrade = await server.sellItem("silk", 3, true);
+    expect([fromTrade.bag.silk, fromTrade.bagTrade.silk]).toEqual([2, undefined]);
+    expect(await errorOf(server.sellItem("silk", 3))).toContain("no_item");
   });
 
   test("the shop is the merchant's, in the village, and wants the gold up front", async (server) => {
@@ -84,27 +149,28 @@ describe("bag and gold", () => {
     await inVillage(server);
     await $asset.mint("gold", 1000);
     await server.buyItem("weapon_1");
-    await server.buyItem("armor_1");
-    await server.equipItem("weapon_1");
-    const worn = await server.equipItem("armor_1");
-    expect(worn.gear).toEqual({ weapon: "weapon_1", armor: "armor_1" });
-    expect(worn.bag.weapon_1).toBeUndefined();
+    const bought = await server.buyItem("armor_1");
+    // Bought from the shop: pieces that may never be traded.
+    expect(bought.pieces.map((p: any) => [p.id, p.plus, p.trade])).toEqual([["weapon_1", 0, false], ["armor_1", 0, false]]);
+    await server.equipItem(pieceOf(bought, "weapon_1"));
+    const worn = await server.equipItem(pieceOf(bought, "armor_1"));
+    expect([worn.gear.weapon.id, worn.gear.armor.id]).toEqual(["weapon_1", "armor_1"]);
+    expect(worn.pieces).toEqual([]);
     const mine = await $room.getMyState();
     expect(mine.maxHp).toBe(maxHpAt(1) + ITEMS.armor_1.hp + STEED.hp);
     expect(mine.gear.power).toBeCloseTo(ITEMS.weapon_1.power + STEED.power);
-    expect(await errorOf(server.equipItem("potion_small"))).toContain("unavailable");
+    expect(await errorOf(server.equipItem("potion_small"))).toContain("no_item");
 
     const off = await server.unequipItem("weapon");
     expect(off.gear.weapon).toBeNull();
-    expect(off.bag.weapon_1).toBe(1);
+    expect(off.pieces.map((p: any) => p.id)).toEqual(["weapon_1"]);
     expect((await $room.getMyState()).gear.power).toBeCloseTo(STEED.power);
   });
 
   test("a sharper weapon lands a bigger blow", async (server) => {
     const village = await inVillage(server);
     await $asset.mint("gold", 1000);
-    await server.buyItem("weapon_2");
-    await server.equipItem("weapon_2");
+    await server.equipItem(pieceOf(await server.buyItem("weapon_2"), "weapon_2"));
     await toForest(server, "test-a", village);
     const spawn = zoneLayout("forest1").playerSpawn;
     await walkTo(server, spawn.x, spawn.z, 0);

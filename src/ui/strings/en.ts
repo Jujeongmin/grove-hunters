@@ -267,6 +267,9 @@ export const en: Bundle = {
   "bag.equip": "Wear",
   "bag.sell": "Sell ({n})",
   "bag.keys": "Q: drink a potion · I: bag",
+  "item.trade": "Tradable",
+  "item.bound": "Not tradable",
+  "forge.tradeChance": "Gear made here is tradable {pct} of the time.",
 
   "shop.title": "Village Shop",
   "shop.buy": "Buy",

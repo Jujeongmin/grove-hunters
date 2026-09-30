@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
-import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type ItemId, type Slot } from "../game/account/items";
+import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL, jobsOf, type JobId } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName, pathSkillName } from "./names";
@@ -48,27 +48,20 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
   level: number;
 }) {
   const [problem, act] = useAction();
-  const [picked, setPicked] = useState<{ gear: Slot } | { item: ItemId } | null>(null);
+  const [picked, setPicked] = useState<Picked | null>(null);
   // A path tapped, waiting for a yes: the choice is for good, so one tap never makes it.
   const [path, setPath] = useState<JobId | null>(null);
-  const items = ITEM_IDS.filter((id) => (bag?.bag[id] ?? 0) > 0);
+  const cells = bag ? bagCells(bag) : [];
   const job = bag?.job ?? null;
-  // What the right side tells about: the worn piece or the carried item picked, while it is still there.
-  const shown = (() => {
-    if (!bag || !picked) return null;
-    if ("gear" in picked) {
-      const id = bag.gear[picked.gear];
-      return id ? { id, worn: picked.gear } : null;
-    }
-    return (bag.bag[picked.item] ?? 0) > 0 ? { id: picked.item, worn: null } : null;
-  })();
+  // What the right side tells about: the worn piece or the carried thing picked, while it is still there.
+  const shown = bag && picked ? showing(bag, picked) : null;
   return (
     <div className="menu-modal" onClick={onClose}>
       <div className="solid-panel bag-panel bag-inventory" onClick={(e) => e.stopPropagation()}>
         <header className="bag-head">
           <h2>{t("bag.title")}</h2>
           <span className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</span>
-          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.plus, bag.mount).toLocaleString(locale()) })}</span>}
+          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount).toLocaleString(locale()) })}</span>}
         </header>
         <div className="bag-job">
           {job ? (
@@ -110,26 +103,31 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
             <div className="bag-gear">
               {(["weapon", "armor"] as Slot[]).map((slot) => {
                 const worn = bag?.gear[slot] ?? null;
-                const on = !!picked && "gear" in picked && picked.gear === slot;
+                const on = picked?.kind === "worn" && picked.slot === slot;
                 return (
-                  <button key={slot} type="button" className={`bag-worn${on ? " picked" : ""}`} disabled={!worn} onClick={() => setPicked({ gear: slot })}>
+                  <button key={slot} type="button" className={`bag-worn${on ? " picked" : ""}`} disabled={!worn} onClick={() => setPicked({ kind: "worn", slot })}>
                     <span className="bag-slot">{slotLabel(slot)}</span>
-                    {worn && <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />}
-                    <b>{worn ? gearName(worn, bag?.plus) : t("common.nothing")}</b>
+                    {worn && <img className="bag-icon" src={iconFor(worn.id) ?? undefined} alt="" />}
+                    <b>{worn ? gearName(worn) : t("common.nothing")}</b>
                   </button>
                 );
               })}
             </div>
-            {items.length === 0 ? (
+            {cells.length === 0 ? (
               <p className="note">{t("bag.empty")}</p>
             ) : (
               <div className="bag-grid">
-                {items.map((id) => {
-                  const on = !!picked && "item" in picked && picked.item === id;
+                {cells.map((cell) => {
+                  const on = !!picked && sameCell(picked, cell);
                   return (
-                    <button key={id} type="button" className={`bag-cell${on ? " picked" : ""}`} onClick={() => setPicked({ item: id })} title={itemName(id)}>
-                      <img src={iconFor(id) ?? undefined} alt={itemName(id)} />
-                      <span className="bag-cell-count">{bag!.bag[id]}</span>
+                    <button
+                      key={cellKey(cell)} type="button" className={`bag-cell${on ? " picked" : ""}${cell.trade ? " trade" : ""}`}
+                      onClick={() => setPicked(cell)} title={itemName(cell.id)}
+                    >
+                      <img src={iconFor(cell.id) ?? undefined} alt={itemName(cell.id)} />
+                      {cell.kind === "stack" && <span className="bag-cell-count">{cell.n}</span>}
+                      {cell.kind === "piece" && cell.piece.plus > 0 && <span className="bag-cell-plus">+{cell.piece.plus}</span>}
+                      {cell.trade && <i className="bag-cell-trade" title={t("item.trade")} />}
                     </button>
                   );
                 })}
@@ -143,9 +141,12 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
               <>
                 <div className="bag-detail-head">
                   <img className="bag-icon" src={iconFor(shown.id) ?? undefined} alt="" />
-                  <b>{ITEMS[shown.id].kind === "material" ? itemName(shown.id) : gearName(shown.id, bag!.plus)}</b>
-                  {!shown.worn && <span className="bag-count">×{bag!.bag[shown.id]}</span>}
+                  <b>{shown.piece ? gearName(shown.piece) : itemName(shown.id)}</b>
+                  {shown.n !== null && <span className="bag-count">×{shown.n}</span>}
                 </div>
+                {shown.trade !== null && (
+                  <p className={`bag-trade${shown.trade ? " on" : ""}`}>{t(shown.trade ? "item.trade" : "item.bound")}</p>
+                )}
                 <p className="bag-blurb">{itemBlurb(shown.id)}</p>
                 <div className="bag-actions">
                   {shown.worn && (
@@ -154,11 +155,14 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
                   {!shown.worn && ITEMS[shown.id].kind === "potion" && (
                     <button type="button" className="text-button" onClick={() => act(() => client.drink(shown.id))}>{t("bag.drink")}</button>
                   )}
-                  {!shown.worn && (ITEMS[shown.id].kind === "weapon" || ITEMS[shown.id].kind === "armor") && (
-                    <button type="button" className="text-button" onClick={() => act(() => client.equip(shown.id))}>{t("bag.equip")}</button>
+                  {!shown.worn && shown.piece && (
+                    <button type="button" className="text-button" onClick={() => act(() => client.equip(shown.piece!.uid))}>{t("bag.equip")}</button>
                   )}
                   {!shown.worn && inVillage && (
-                    <button type="button" className="text-button" onClick={() => act(() => client.sell(shown.id))}>
+                    <button
+                      type="button" className="text-button"
+                      onClick={() => act(() => (shown.piece ? client.sellPiece(shown.piece.uid) : client.sell(shown.id, 1, shown.trade === true)))}
+                    >
                       {t("bag.sell", { n: sellPrice(shown.id) })}
                     </button>
                   )}
@@ -175,6 +179,50 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
       </div>
     </div>
   );
+}
+
+// One square of the bag's grid: a stack of potions or materials (materials that may be traded
+// stand apart from those that may not), or one piece of gear.
+type Cell =
+  | { kind: "stack"; id: ItemId; trade: boolean; n: number }
+  | { kind: "piece"; id: ItemId; trade: boolean; piece: GearPiece };
+type Picked = Cell | { kind: "worn"; slot: Slot };
+
+// The grid in the item table's order, each kind's pieces together.
+export function bagCells(bag: Pick<BagView, "bag" | "bagTrade" | "pieces">): Cell[] {
+  const out: Cell[] = [];
+  for (const id of ITEM_IDS) {
+    if ((bag.bag[id] ?? 0) > 0) out.push({ kind: "stack", id, trade: false, n: bag.bag[id]! });
+    if ((bag.bagTrade[id] ?? 0) > 0) out.push({ kind: "stack", id, trade: true, n: bag.bagTrade[id]! });
+    for (const piece of bag.pieces) if (piece.id === id) out.push({ kind: "piece", id, trade: piece.trade, piece });
+  }
+  return out;
+}
+
+function cellKey(cell: Cell): string {
+  return cell.kind === "piece" ? cell.piece.uid : `${cell.id}:${cell.trade}`;
+}
+
+function sameCell(picked: Picked, cell: Cell): boolean {
+  return picked.kind !== "worn" && cellKey(picked) === cellKey(cell);
+}
+
+// What the detail side says about the thing picked, as it is now (null once it is gone). n: how many
+// (stacks only); trade: whether it may go to the market (null for potions, which never do).
+function showing(bag: BagView, picked: Picked): {
+  id: ItemId; piece: GearPiece | null; n: number | null; trade: boolean | null; worn: Slot | null;
+} | null {
+  if (picked.kind === "worn") {
+    const piece = bag.gear[picked.slot];
+    return piece ? { id: piece.id, piece, n: null, trade: piece.trade, worn: picked.slot } : null;
+  }
+  if (picked.kind === "piece") {
+    const piece = bag.pieces.find((p) => p.uid === picked.piece.uid);
+    return piece ? { id: piece.id, piece, n: null, trade: piece.trade, worn: null } : null;
+  }
+  const n = (picked.trade ? bag.bagTrade : bag.bag)[picked.id] ?? 0;
+  if (n === 0) return null;
+  return { id: picked.id, piece: null, n, trade: ITEMS[picked.id].kind === "material" ? picked.trade : null, worn: null };
 }
 
 // The village shop: potions and the gear sold for gold.

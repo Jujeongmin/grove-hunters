@@ -17,6 +17,62 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-tradable",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "장비마다 강화 수치와 거래 가능 표시",
+        lines: [
+          "장비는 이제 한 점씩 따로 들고 다녀요. 강화 수치도 장비 한 점마다 붙어요.",
+          "파란 다이아몬드 표시가 있으면 '거래 가능'이에요. 곧 열릴 거래소에서 보석을 받고 팔 수 있어요.",
+          "몬스터가 떨어뜨린 장비는 30%, 대장간에서 만든 장비는 10% 확률로 거래 가능해요. 상점·퀘스트 장비는 거래할 수 없어요.",
+          "몬스터가 떨어뜨린 재료는 거래 가능해요. 강화·제작·기부에는 거래 불가 재료부터 쓰여요.",
+          "지금까지 가진 장비와 재료는 모두 거래 불가로 남고, 종류별 강화 수치는 입고 있던 한 점(없으면 가방의 첫 점)으로 옮겼어요.",
+        ],
+      },
+      en: {
+        title: "Each piece of gear has its own + and may be tradable",
+        lines: [
+          "Gear is now carried piece by piece, and each piece keeps its own +.",
+          "A blue diamond means 'Tradable': such pieces can be sold for gems on the market, opening soon.",
+          "Gear monsters drop is tradable 30% of the time, gear the forge makes 10%. Shop and quest gear never is.",
+          "Materials monsters drop are tradable. Enhancing, crafting and gifts use materials that are not tradable first.",
+          "Everything you had stays not tradable, and each kind's + moved to the piece you wore (or the first in the bag).",
+        ],
+      },
+      ja: {
+        title: "装備ごとの強化値と取引可能の表示",
+        lines: [
+          "装備は1つずつ別々に持つようになり、強化値も装備1つごとに付きます。",
+          "青いダイヤの印は「取引可能」です。まもなく開く取引所で宝石と引き換えに売れます。",
+          "モンスターが落とした装備は30%、鍛冶場で作った装備は10%の確率で取引可能です。ショップ・クエストの装備は取引できません。",
+          "モンスターが落とした素材は取引可能です。強化・製作・寄付には取引不可の素材から使われます。",
+          "これまでの装備と素材はすべて取引不可のままで、種類ごとの強化値は着ていた1つ（なければかばんの最初の1つ）に移しました。",
+        ],
+      },
+      "zh-Hant": {
+        title: "每件裝備各自的強化值與可交易標示",
+        lines: [
+          "裝備現在一件一件分開攜帶，強化值也跟著每一件裝備。",
+          "有藍色菱形標示就是「可交易」，可在即將開放的交易所換取寶石。",
+          "怪物掉落的裝備有30%、鍛造製作的裝備有10%機率可交易。商店與任務裝備不可交易。",
+          "怪物掉落的材料可交易。強化、製作、捐贈會先使用不可交易的材料。",
+          "原有的裝備與材料全部維持不可交易，各類強化值移到穿著的那一件（沒有則為背包中的第一件）。",
+        ],
+      },
+      "zh-Hans": {
+        title: "每件装备各自的强化值与可交易标示",
+        lines: [
+          "装备现在一件一件分开携带，强化值也跟着每一件装备。",
+          "有蓝色菱形标示就是“可交易”，可在即将开放的交易所换取宝石。",
+          "怪物掉落的装备有30%、锻造制作的装备有10%概率可交易。商店与任务装备不可交易。",
+          "怪物掉落的材料可交易。强化、制作、捐赠会先使用不可交易的材料。",
+          "原有的装备与材料全部保持不可交易，各类强化值移到穿着的那一件（没有则为背包中的第一件）。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-mail",
     date: "2026-09-30",
     text: {

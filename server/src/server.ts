@@ -5,8 +5,11 @@ import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
 } from "../../src/game/account/level";
 import {
-  GOLD, ITEMS, MAX_STACK, NO_GEAR, POTION_GAP_MS, addItem, equip, fitsInBag, readItemId, sellPrice, unequip, type BagView, type ItemId, type Slot,
+  GOLD, ITEMS, MAX_STACK, POTION_GAP_MS, addItem, readItemId, sellPrice, slotOf, type BagView, type ItemId, type Slot,
 } from "../../src/game/account/items";
+import {
+  EMPTY_INVENTORY, TRADE_CRAFT_CHANCE, allStacks, countOf, equipPiece, fits, give, loot, spend, takePiece, takeStack, unequipSlot,
+} from "../../src/game/account/inventory";
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { NEWS, readNewsId } from "../../src/game/news";
 import { mailFits, type Mail } from "../../src/game/account/mail";
@@ -51,6 +54,9 @@ import { deathLossFactor, huntXpFactor, potionPriceFactor } from "../../src/game
 import {
   TUTORIAL, TUTORIAL_GOLD, TUTORIAL_POTIONS, readTutorial, type TutorialStep,
 } from "../../src/game/account/tutorial";
+
+// A new piece of gear's id.
+const newUid = () => `g-${token(10)}`;
 
 // How often a walking character's spot is saved to the account (the room keeps the live pose).
 const SAVE_SPOT_MS = 5_000;
@@ -203,7 +209,7 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
     if (account !== $sender.account) await $asset.transfer(account, GOLD, pay.gold);
   }
   const next = await updateActive(account, (c) => ({
-    ...c, xp: c.xp + pay.xp, bag: pay.items.reduce((bag, id) => addItem(bag, id, 1), c.bag), quest: countKills(c.quest, pay.felled),
+    ...loot(c, pay.items, Math.random, newUid), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
     daily: countDaily(c.daily, pay.felled, Date.now()),
   }));
   if (pay.xp > 0) await writeRanking(account, next);
@@ -259,7 +265,8 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
 
 async function bagView(character: Character): Promise<BagView> {
   return {
-    gold: await $asset.get(GOLD), bag: character.bag, gear: character.gear, plus: character.plus, job: character.job, quest: character.quest,
+    gold: await $asset.get(GOLD), bag: character.bag, bagTrade: character.bagTrade, pieces: character.pieces, gear: character.gear,
+    job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
     mount: (await accountMounts($sender.account)).selected,
   };
@@ -322,13 +329,12 @@ async function claimLetter(account: string, id: string): Promise<void> {
   await takeMail(
     account, id, Date.now(),
     async (mail) => {
-      if (mail.items.length > 0 && !mailFits((await playing(account)).bag, mail)) throw new RuleViolation("bag_full");
+      if (mail.items.length > 0 && !mailFits(await playing(account), mail)) throw new RuleViolation("bag_full");
     },
     async (mail) => {
       if (mail.items.length > 0) {
         await updateActive(account, (c) => {
-          if (!mailFits(c.bag, mail)) throw new RuleViolation("bag_full");
-          return { ...c, bag: mail.items.reduce((bag, item) => addItem(bag, item.id, item.n), c.bag) };
+          return give(c, mail.items, false, newUid);
         });
       }
       if (mail.gems > 0) await changeGems(account, mail.gems);
@@ -435,7 +441,7 @@ export class Server {
       const character: Character = {
         id: `c-${token(10)}`, world, name, playerClass: picked, costume: look.id, xp: 0, spot: null, made: Date.now(),
         // Nothing to start with: the elder hands out the first skill and potions (the tutorial).
-        bag: {}, gear: NO_GEAR, plus: {}, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
+        ...EMPTY_INVENTORY, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
       };
       await withNicknameLock(() => claimName(account, character.id, key, name));
       await saveProfile(account, [...characters, character], character.id);
@@ -507,7 +513,7 @@ export class Server {
     if (!character) throw new RuleViolation("unavailable");
     return {
       id, nickname: character.name, level: levelOf(character.xp).level, xp: character.xp,
-      playerClass: character.playerClass, job: character.job, power: combatPower(await mounted(row.account, character)), gear: character.gear, plus: character.plus,
+      playerClass: character.playerClass, job: character.job, power: combatPower(await mounted(row.account, character)), gear: character.gear,
       world: readWorld(character.world)?.id ?? character.world, rank: rankOf(board, id),
     };
   }
@@ -796,7 +802,7 @@ export class Server {
       async (take) => {
         if (take.gold > 0) await $asset.burn(GOLD, take.gold);
         try {
-          await updateActive(account, (c) => ({ ...c, bag: takeFromBag(c.bag, take) }));
+          await updateActive(account, (c) => takeFromBag(c, take));
         } catch (error) {
           if (take.gold > 0) await $asset.mint(GOLD, take.gold);
           throw error;
@@ -811,12 +817,12 @@ export class Server {
     return bagView(await playing($sender.account));
   }
 
-  // Wears an item from the bag (what was in its slot goes back in the bag).
-  async equipItem(id: unknown): Promise<BagView> {
-    const item = readItem(id);
+  // Wears a piece of gear from the bag (what was in its slot goes back in the bag).
+  async equipItem(rawUid: unknown): Promise<BagView> {
+    const uid = requireText(rawUid);
     const account = $sender.account;
     await playing(account);
-    const next = await updateActive(account, (c) => ({ ...c, ...equip(c.bag, c.gear, item) }));
+    const next = await updateActive(account, (c) => equipPiece(c, uid));
     await refreshFighter(next);
     return bagView(next);
   }
@@ -825,7 +831,7 @@ export class Server {
     if (slot !== "weapon" && slot !== "armor") throw new RuleViolation("unavailable");
     const account = $sender.account;
     await playing(account);
-    const next = await updateActive(account, (c) => ({ ...c, ...unequip(c.bag, c.gear, slot as Slot) }));
+    const next = await updateActive(account, (c) => unequipSlot(c, slot as Slot));
     await refreshFighter(next);
     return bagView(next);
   }
@@ -856,7 +862,7 @@ export class Server {
     return bagView(next);
   }
 
-  // The village shop: gold for items, at the listed price.
+  // The village shop: gold for items, at the listed price. Gear bought here may never be traded.
   async buyItem(id: unknown, count?: unknown): Promise<BagView> {
     const item = readItem(id);
     const n = readCount(count);
@@ -864,7 +870,8 @@ export class Server {
     const listed = ITEMS[item].price;
     if (listed === null) throw new RuleViolation("unavailable");
     const account = $sender.account;
-    if (!fitsInBag((await playing(account)).bag, item, n)) throw new RuleViolation("bag_full");
+    const bought = [{ id: item, n }];
+    if (!fits(await playing(account), bought, false)) throw new RuleViolation("bag_full");
     // The village's herbalist, once built, sells potions cheaper on this server.
     const price = ITEMS[item].kind === "potion"
       ? Math.round(listed * potionPriceFactor(await villageOf((await readAccountWorld(account)).id)))
@@ -873,61 +880,67 @@ export class Server {
     if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost);
     try {
-      return bagView(await updateActive(account, (c) => {
-        if (!fitsInBag(c.bag, item, n)) throw new RuleViolation("bag_full");
-        return { ...c, bag: addItem(c.bag, item, n) };
-      }));
+      return bagView(await updateActive(account, (c) => give(c, bought, false, newUid)));
     } catch (error) {
       await $asset.mint(GOLD, cost);
       throw error;
     }
   }
 
-  // Sells items from the bag back to the shop for half their price.
-  async sellItem(id: unknown, count?: unknown): Promise<BagView> {
+  // Sells potions or materials back to the shop: from the stack that may be traded when `trade`.
+  async sellItem(id: unknown, count?: unknown, trade?: unknown): Promise<BagView> {
     const item = readItem(id);
+    if (slotOf(item)) throw new RuleViolation("unavailable");
     const n = readCount(count);
     await requireNpc("merchant");
     const account = $sender.account;
     await playing(account);
-    const next = await updateActive(account, (c) => {
-      const bag = addItem(c.bag, item, -n);
-      // The last one sold, its + goes with it.
-      if ((bag[item] ?? 0) > 0 || c.gear.weapon === item || c.gear.armor === item || !c.plus[item]) return { ...c, bag };
-      const plus = { ...c.plus };
-      delete plus[item];
-      return { ...c, bag, plus };
-    });
+    const next = await updateActive(account, (c) => takeStack(c, item, n, trade === true));
     await $asset.mint(GOLD, sellPrice(item) * n);
     return bagView(next);
   }
 
+  // Sells a piece of gear from the bag back to the shop, its + and all.
+  async sellPiece(rawUid: unknown): Promise<BagView> {
+    const uid = requireText(rawUid);
+    await requireNpc("merchant");
+    const account = $sender.account;
+    await playing(account);
+    let sold: ItemId | null = null;
+    const next = await updateActive(account, (c) => {
+      const taken = takePiece(c, uid);
+      sold = taken.piece.id;
+      return taken.inv;
+    });
+    await $asset.mint(GOLD, sellPrice(sold!));
+    return bagView(next);
+  }
+
   // Enhances what you wear in a slot by one + (from the forge in the menu, anywhere): the gold and 강화석 are spent whatever
-  // happens; a failure on the way to +6 and above may break the gear (see forge.ts).
+  // happens; a failure on the way to +6 and above may break the piece (see forge.ts).
   async enhanceGear(rawSlot: unknown): Promise<{ outcome: EnhanceOutcome; bag: BagView }> {
     if (rawSlot !== "weapon" && rawSlot !== "armor") throw new RuleViolation("unavailable");
     const slot: Slot = rawSlot;
     const account = $sender.account;
     const current = await playing(account);
-    const item = current.gear[slot];
-    if (!item) throw new RuleViolation("unavailable");
-    const cost = enhanceCost(item, current.plus[item] ?? 0);
+    const piece = current.gear[slot];
+    if (!piece) throw new RuleViolation("unavailable");
+    const cost = enhanceCost(piece.id, piece.plus);
     if (!cost) throw new RuleViolation("max_plus");
-    if ((current.bag.stone ?? 0) < cost.stones) throw new RuleViolation("no_item");
+    if (countOf(current, "stone") < cost.stones) throw new RuleViolation("no_item");
     if (!(await $asset.has(GOLD, cost.gold))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost.gold);
     let outcome: EnhanceOutcome = "fail";
     try {
       const next = await updateActive(account, (c) => {
         // Changed since it was priced (another tab): nothing happens and the gold comes back.
-        if (c.gear[slot] !== item || (c.plus[item] ?? 0) !== cost.to - 1) throw new RuleViolation("unavailable");
-        const bag = addItem(c.bag, "stone", -cost.stones);
+        const worn = c.gear[slot];
+        if (worn?.uid !== piece.uid || worn.plus !== cost.to - 1) throw new RuleViolation("unavailable");
+        const paid = spend(c, [{ id: "stone", n: cost.stones }]);
         outcome = rollEnhance(cost, Math.random(), Math.random());
-        if (outcome === "success") return { ...c, bag, plus: { ...c.plus, [item]: cost.to } };
-        if (outcome === "fail") return { ...c, bag };
-        const plus = { ...c.plus };
-        delete plus[item];
-        return { ...c, bag, gear: { ...c.gear, [slot]: null }, plus };
+        if (outcome === "success") return { ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } } };
+        if (outcome === "fail") return paid;
+        return { ...paid, gear: { ...c.gear, [slot]: null } };
       });
       await refreshFighter(next);
       return { outcome, bag: await bagView(next) };
@@ -937,22 +950,23 @@ export class Server {
     }
   }
 
-  // Makes something from materials and gold (see RECIPES in forge.ts), anywhere.
+  // Makes something from materials and gold (see RECIPES in forge.ts), anywhere. Gear made here may be
+  // traded one time in TRADE_CRAFT_CHANCE.
   async craftItem(rawRecipe: unknown): Promise<BagView> {
     const recipe = readRecipe(rawRecipe);
     if (!recipe) throw new RuleViolation("unavailable");
     const account = $sender.account;
     const current = await playing(account);
-    if (!hasMaterials(current.bag, recipe)) throw new RuleViolation("no_item");
-    if (!fitsInBag(current.bag, recipe.makes, recipe.n)) throw new RuleViolation("bag_full");
+    const made = [{ id: recipe.makes, n: recipe.n }];
+    const trade = slotOf(recipe.makes) !== null && Math.random() < TRADE_CRAFT_CHANCE;
+    if (!hasMaterials(allStacks(current), recipe)) throw new RuleViolation("no_item");
+    if (!fits(current, made, trade)) throw new RuleViolation("bag_full");
     if (!(await $asset.has(GOLD, recipe.gold))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, recipe.gold);
     try {
       return bagView(await updateActive(account, (c) => {
-        let bag = c.bag;
-        for (const need of recipe.needs) bag = addItem(bag, need.item, -need.n);
-        if (!fitsInBag(bag, recipe.makes, recipe.n)) throw new RuleViolation("bag_full");
-        return { ...c, bag: addItem(bag, recipe.makes, recipe.n) };
+        const paid = spend(c, recipe.needs.map((need) => ({ id: need.item, n: need.n })));
+        return give(paid, made, trade, newUid);
       }));
     } catch (error) {
       await $asset.mint(GOLD, recipe.gold);
@@ -1023,9 +1037,8 @@ export class Server {
       const quest = QUESTS[c.quest.index];
       paid = quest.gold;
       return {
-        ...c,
+        ...give(c, quest.items, false, newUid),
         xp: c.xp + quest.xp,
-        bag: quest.items.reduce((bag, item) => addItem(bag, item.id, item.n), c.bag),
         quest: { index: c.quest.index + 1, count: 0 },
       };
     });
@@ -1045,8 +1058,7 @@ export class Server {
       const today = dailyToday(c.daily, Date.now());
       if ((today.counts[quest.id] ?? 0) < quest.count || today.claimed.includes(quest.id)) throw new RuleViolation("quest_unfinished");
       return {
-        ...c,
-        bag: quest.items.reduce((bag, item) => addItem(bag, item.id, item.n), c.bag),
+        ...give(c, quest.items, false, newUid),
         daily: { ...today, claimed: [...today.claimed, quest.id] },
       };
     });

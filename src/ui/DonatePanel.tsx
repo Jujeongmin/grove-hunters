@@ -4,6 +4,7 @@ import { itemName } from "./names";
 import { iconFor } from "../game/render/icons";
 import { BUILDINGS, type GroveView } from "../game/world/grove";
 import type { BagView, ItemId } from "../game/account/items";
+import { countOf } from "../game/account/inventory";
 
 const PROBLEM: Record<string, Key> = {
   not_near: "problem.not_near_elder", nothing: "problem.nothing", no_building: "problem.no_building",
@@ -54,7 +55,7 @@ export function DonatePanel({ view, bag, onDonate, onClose }: DonatePanelProps) 
         <h2>{t("donate.title", { building: t(`grove.building.${building.id}` as Key) })}</h2>
         <ul className="donate-needs">
           {(Object.entries(building.needs) as [ItemId, number][]).map(([id, need]) => {
-            const have = bag?.bag[id] ?? 0;
+            const have = bag ? countOf(bag, id) : 0;
             const room = need - (going.given.items[id] ?? 0);
             return (
               <li key={id}>

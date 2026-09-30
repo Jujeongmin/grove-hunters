@@ -267,6 +267,9 @@ export const zhHans: Bundle = {
   "bag.equip": "装备",
   "bag.sell": "卖出（{n}）",
   "bag.keys": "Q：喝药水 · I：背包",
+  "item.trade": "可交易",
+  "item.bound": "不可交易",
+  "forge.tradeChance": "制作的装备有{pct}概率可交易。",
 
   "shop.title": "村庄商店",
   "shop.buy": "购买",

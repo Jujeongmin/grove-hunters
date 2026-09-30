@@ -681,6 +681,15 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-cell img { width: 34px; height: 34px; image-rendering: pixelated; display: block; }
 .bag-cell-count { position: absolute; right: 3px; bottom: 1px; font: 700 11px var(--font-head); color: var(--ink); text-shadow: var(--shadow); }
 .bag-worn.picked, .bag-cell.picked, .bag-cell:hover, .bag-worn:hover:not(:disabled) { border-color: var(--ember); }
+/* A piece's +, top left; a thing that may go to the market has a gold corner and a gem dot. */
+.bag-cell-plus { position: absolute; left: 3px; top: 1px; font: 700 11px var(--font-head); color: #ffd36a; text-shadow: var(--shadow); }
+.bag-cell.trade { border-color: rgba(120, 220, 255, 0.55); background-image: linear-gradient(135deg, rgba(120, 220, 255, 0.18), transparent 45%); }
+.bag-cell-trade {
+  position: absolute; right: 3px; top: 3px; width: 7px; height: 7px; transform: rotate(45deg);
+  background: #7fe0ff; box-shadow: 0 0 0 1px #10202a, 0 0 5px rgba(127, 224, 255, 0.8);
+}
+.bag-trade { margin: 0; font: 600 12px var(--font-head); color: var(--ink-dim); }
+.bag-trade.on { color: #7fe0ff; }
 .bag-detail { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); min-height: 140px; }
 .bag-detail .note { margin: auto 0; font-size: 12px; }
 .bag-detail-head { display: flex; align-items: center; gap: 8px; }

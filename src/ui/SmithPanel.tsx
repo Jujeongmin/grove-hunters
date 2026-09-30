@@ -2,6 +2,7 @@ import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials } from "../game/account/forge";
 import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
+import { TRADE_CRAFT_CHANCE, allStacks } from "../game/account/inventory";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
 import { problemText, slotLabel } from "./BagPanel";
@@ -22,17 +23,18 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState<Enhancing | null>(null);
-  const stones = bag?.bag.stone ?? 0;
+  const stones = bag ? (bag.bag.stone ?? 0) + (bag.bagTrade.stone ?? 0) : 0;
+  const stacks = bag ? allStacks(bag) : {};
 
   // The attempt plays out (see EnhanceShow): the gauge fills while the server answers, and the
   // outcome shows once both are done.
   const enhance = (slot: Slot) => {
     const worn = bag?.gear[slot];
-    const cost = worn ? enhanceCost(worn, bag!.plus[worn] ?? 0) : null;
+    const cost = worn ? enhanceCost(worn.id, worn.plus) : null;
     if (!worn || !cost) return;
     setBusy(true);
     setNote(null);
-    setShow({ item: worn, name: itemName(worn), from: bag!.plus[worn] ?? 0, to: cost.to, outcome: null });
+    setShow({ item: worn.id, name: itemName(worn.id), from: worn.plus, to: cost.to, outcome: null });
     void Promise.all([client.enhance(slot), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
       setBusy(false);
       if ("outcome" in r) {
@@ -77,12 +79,12 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                   </div>
                 );
               }
-              const cost = enhanceCost(worn, bag.plus[worn] ?? 0);
+              const cost = enhanceCost(worn.id, worn.plus);
               return (
                 <div key={slot} className="bag-row smith-row">
                   <span className="bag-slot">{slotLabel(slot)}</span>
-                  <img className="bag-icon" src={iconFor(worn) ?? undefined} alt="" />
-                  <b>{gearName(worn, bag.plus)}</b>
+                  <img className="bag-icon" src={iconFor(worn.id) ?? undefined} alt="" />
+                  <b>{gearName(worn)}</b>
                   {cost ? (
                     <>
                       <button
@@ -110,7 +112,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
         {tab === "craft" && bag && (
           <div className="bag-list">
             {RECIPES.map((recipe) => {
-              const ready = hasMaterials(bag.bag, recipe) && bag.gold >= recipe.gold;
+              const ready = hasMaterials(stacks, recipe) && bag.gold >= recipe.gold;
               const name = itemName(recipe.makes);
               return (
                 <div key={recipe.id} className="bag-row smith-row">
@@ -119,7 +121,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                   <button type="button" className="text-button" disabled={busy || !ready} onClick={() => craft(recipe.id, name)}>{t("forge.craft")}</button>
                   <span className="bag-blurb">
                     {itemBlurb(recipe.makes)} · {recipe.needs.map((need) => {
-                      const have = bag.bag[need.item] ?? 0;
+                      const have = stacks[need.item] ?? 0;
                       return <span key={need.item} className={have >= need.n ? "" : "smith-short"}>{itemName(need.item)} {have}/{need.n} · </span>;
                     })}
                     {t("common.gold", { n: recipe.gold.toLocaleString(locale()) })}
@@ -127,10 +129,11 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                 </div>
               );
             })}
+            <p className="note">{t("forge.tradeChance", { pct: percent(TRADE_CRAFT_CHANCE) })}</p>
           </div>
         )}
 
-        {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
+        {note &&<p className={`smith-note ${note.tone}`}>{note.text}</p>}
         <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
       {show && <EnhanceShow show={show} onClose={() => setShow(null)} />}

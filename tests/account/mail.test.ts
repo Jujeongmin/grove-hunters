@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   GIFTS, MAIL_KEEP_MS, daysLeft, giftById, giftsDue, mailExpired, mailFits, readGiftsTaken, readMail,
 } from "../../src/game/account/mail";
+import { EMPTY_INVENTORY } from "../../src/game/account/inventory";
 
 const DAY = 24 * 60 * 60 * 1000;
 const LANGS = ["ko", "en", "ja", "zh-Hant", "zh-Hans"] as const;
@@ -30,11 +31,12 @@ describe("mail", () => {
   });
 
   it("is only taken when all of it fits the bag", () => {
-    expect(mailFits({ potion_big: 89 }, { items: [{ id: "potion_big", n: 10 }] })).toBe(true);
-    expect(mailFits({ potion_big: 90 }, { items: [{ id: "potion_big", n: 10 }] })).toBe(false);
+    const holding = (potions: number) => ({ ...EMPTY_INVENTORY, bag: { potion_big: potions } });
+    expect(mailFits(holding(89), { items: [{ id: "potion_big", n: 10 }] })).toBe(true);
+    expect(mailFits(holding(90), { items: [{ id: "potion_big", n: 10 }] })).toBe(false);
     // The same item twice adds up.
-    expect(mailFits({ potion_big: 80 }, { items: [{ id: "potion_big", n: 10 }, { id: "potion_big", n: 10 }] })).toBe(false);
-    expect(mailFits({}, { items: [] })).toBe(true);
+    expect(mailFits(holding(80), { items: [{ id: "potion_big", n: 10 }, { id: "potion_big", n: 10 }] })).toBe(false);
+    expect(mailFits(EMPTY_INVENTORY, { items: [] })).toBe(true);
   });
 
   it("hands out each gift once while it is on", () => {

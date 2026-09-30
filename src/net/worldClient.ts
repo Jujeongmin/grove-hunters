@@ -372,8 +372,8 @@ export class WorldClient {
   }
 
   // The bag and the shop. Each answers null when done, or why it was refused.
-  equip(id: ItemId): Promise<string | null> {
-    return this.bagCall("equipItem", [id]);
+  equip(uid: string): Promise<string | null> {
+    return this.bagCall("equipItem", [uid]);
   }
 
   unequip(slot: Slot): Promise<string | null> {
@@ -388,8 +388,13 @@ export class WorldClient {
     return this.bagCall("buyItem", [id, count]);
   }
 
-  sell(id: ItemId, count = 1): Promise<string | null> {
-    return this.bagCall("sellItem", [id, count]);
+  // Potions or materials: `trade` sells from the stack that may be traded.
+  sell(id: ItemId, count = 1, trade = false): Promise<string | null> {
+    return this.bagCall("sellItem", [id, count, trade]);
+  }
+
+  sellPiece(uid: string): Promise<string | null> {
+    return this.bagCall("sellPiece", [uid]);
   }
 
   private async bagCall(name: string, args: unknown[]): Promise<string | null> {

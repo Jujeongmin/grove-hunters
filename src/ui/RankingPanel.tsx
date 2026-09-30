@@ -4,7 +4,7 @@ import { slotLabel } from "./BagPanel";
 
 import type { RankDetail, RankRow, RankingView } from "../game/account/ranking";
 import type { PlayerClass } from "../game/combat/classes";
-import { className, itemName, jobName, serverName } from "./names";
+import { className, gearName, jobName, serverName } from "./names";
 import type { JobId } from "../game/combat/jobs";
 import { usePages } from "./Pager";
 
@@ -128,8 +128,8 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                   <dt>{t("rank.level")}</dt><dd>Lv {detail.level}</dd>
                   <dt>{t("rank.xp")}</dt><dd>{detail.xp.toLocaleString()}</dd>
                   <dt>{t("rank.power")}</dt><dd className="power">{detail.power.toLocaleString()}</dd>
-                  <dt>{slotLabel("weapon")}</dt><dd>{detail.gear.weapon ? itemName(detail.gear.weapon) : t("common.nothing")}</dd>
-                  <dt>{slotLabel("armor")}</dt><dd>{detail.gear.armor ? itemName(detail.gear.armor) : t("common.nothing")}</dd>
+                  <dt>{slotLabel("weapon")}</dt><dd>{detail.gear.weapon ? gearName(detail.gear.weapon) : t("common.nothing")}</dd>
+                  <dt>{slotLabel("armor")}</dt><dd>{detail.gear.armor ? gearName(detail.gear.armor) : t("common.nothing")}</dd>
                 </dl>
               </>
             )}

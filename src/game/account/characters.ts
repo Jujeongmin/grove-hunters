@@ -2,7 +2,7 @@ import { readClass, type PlayerClass } from "../combat/classes";
 import { JOBS, readJob, type JobId } from "../combat/jobs";
 import { costumeById } from "../render/costumes";
 import { readZone, type ZoneId } from "../world/zones";
-import { readBag, readGear, readPlus, type Bag, type Gear, type Plus } from "./items";
+import { readInventory, type Inventory } from "./inventory";
 import { levelOf, readXp, type LevelView } from "./level";
 import { readDaily, readQuest, type DailyProgress, type QuestProgress } from "./quests";
 import { readTutorial, type TutorialStep } from "./tutorial";
@@ -15,7 +15,7 @@ export const CHARACTERS_PER_WORLD = 4;
 // Where a character last stood, so it comes back to the same spot.
 export interface Spot { zone: ZoneId; x: number; z: number }
 
-export interface Character {
+export interface Character extends Inventory {
   id: string;
   world: string;
   name: string;
@@ -25,11 +25,7 @@ export interface Character {
   spot: Spot | null;
   // When it was made (ms), for listing in order; 0 for characters from before this was kept.
   made: number;
-  // What it carries, and what it wears.
-  bag: Bag;
-  gear: Gear;
-  // How far each kind of its gear has been enhanced.
-  plus: Plus;
+  // What it carries and wears: the Inventory it extends (see inventory.ts).
   // Today's daily quests.
   daily: DailyProgress;
   // The advanced class it took (전직), if any, and where it is in the village's quests.
@@ -76,7 +72,7 @@ export function readCharacters(raw: unknown): Character[] {
     const made = typeof c.made === "number" && Number.isFinite(c.made) ? c.made : 0;
     out.push({
       id: c.id, world: c.world, name: c.name, playerClass, costume: costume.id, xp: readXp(c.xp), spot: readSpot(c.spot), made,
-      bag: readBag(c.bag), gear: readGear(c.gear), plus: readPlus(c.plus), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
+      ...readInventory(c as Record<string, unknown>, c.id), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
       tutorial: readTutorial(c.tutorial), vitals: readVitals(c.vitals),
     });
   }

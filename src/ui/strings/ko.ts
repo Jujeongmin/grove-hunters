@@ -276,6 +276,9 @@ export const ko = {
   "bag.equip": "장착",
   "bag.sell": "팔기 ({n})",
   "bag.keys": "Q: 물약 마시기 · I: 가방",
+  "item.trade": "거래 가능",
+  "item.bound": "거래 불가",
+  "forge.tradeChance": "만든 장비는 {pct} 확률로 거래 가능해요.",
 
   "shop.title": "마을 상점",
   "shop.buy": "사기",

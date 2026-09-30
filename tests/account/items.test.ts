@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_STACK, NO_GEAR, addItem, equip, gearStats, readBag, readGear, unequip } from "../../src/game/account/items";
+import { MAX_STACK, addItem, gearStats, readBag, readPiece, slotOf } from "../../src/game/account/items";
 import { MONSTERS, rollLoot } from "../../src/game/world/monsters";
 
 describe("items", () => {
@@ -10,20 +10,24 @@ describe("items", () => {
     expect(() => addItem({}, "potion_small", -1)).toThrow("no_item");
   });
 
-  it("wearing swaps with what was in the slot, and adds up in a fight", () => {
-    const first = equip({ weapon_1: 1, weapon_2: 1 }, NO_GEAR, "weapon_1");
-    expect(first).toEqual({ bag: { weapon_2: 1 }, gear: { weapon: "weapon_1", armor: null } });
-    const second = equip(first.bag, first.gear, "weapon_2");
-    expect(second).toEqual({ bag: { weapon_1: 1 }, gear: { weapon: "weapon_2", armor: null } });
-    expect(gearStats({ weapon: "weapon_2", armor: "armor_2" })).toEqual({ power: 0.25, hp: 60, guard: 0.1 });
-    expect(unequip(second.bag, second.gear, "weapon")).toEqual({ bag: { weapon_1: 1, weapon_2: 1 }, gear: NO_GEAR });
-    expect(() => equip({ potion_small: 1 }, NO_GEAR, "potion_small")).toThrow("unavailable");
+  it("worn pieces add up in a fight, each with its own +", () => {
+    const weapon = { uid: "a", id: "weapon_2" as const, plus: 0, trade: false };
+    const armor = { uid: "b", id: "armor_2" as const, plus: 0, trade: false };
+    expect(gearStats({ weapon, armor })).toEqual({ power: 0.25, hp: 60, guard: 0.1 });
+    const sharper = gearStats({ weapon: { ...weapon, plus: 5 }, armor: { ...armor, plus: 2 } });
+    expect(sharper.power).toBeCloseTo(0.25 + 5 * 0.04);
+    expect(sharper.hp).toBe(60 + 2 * 12);
   });
 
   it("reads back only what makes sense from a save", () => {
-    expect(readBag({ potion_small: 2, nothing: 3, potion_big: -1, weapon_1: 1.5 })).toEqual({ potion_small: 2 });
-    expect(readGear({ weapon: "armor_1", armor: "armor_1" })).toEqual({ weapon: null, armor: "armor_1" });
-    expect(readGear(undefined)).toEqual(NO_GEAR);
+    // Gear kinds are pieces now, never counted in the bag.
+    expect(readBag({ potion_small: 2, nothing: 3, potion_big: -1, weapon_1: 2, stone: 1.5 })).toEqual({ potion_small: 2 });
+    expect(readPiece({ uid: "x", id: "weapon_1", plus: 3, trade: true })).toEqual({ uid: "x", id: "weapon_1", plus: 3, trade: true });
+    expect(readPiece({ uid: "x", id: "weapon_1", plus: 30 })).toEqual({ uid: "x", id: "weapon_1", plus: 10, trade: false });
+    expect(readPiece({ uid: "x", id: "potion_small" })).toBeNull();
+    expect(readPiece({ id: "weapon_1" })).toBeNull();
+    expect(slotOf("armor_3")).toBe("armor");
+    expect(slotOf("stone")).toBeNull();
   });
 
   it("loot pays gold in the monster's range and drops on each item's chance", () => {

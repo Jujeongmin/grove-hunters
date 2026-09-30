@@ -1,4 +1,5 @@
-import { addItem, type ItemId } from "../../src/game/account/items";
+import type { ItemId } from "../../src/game/account/items";
+import { allStacks, spend, type Inventory } from "../../src/game/account/inventory";
 import { completionRewards, donation, giveTo, settle, underWay, type Offer } from "../../src/game/world/grove";
 import type { Character } from "../../src/game/account/characters";
 import { RuleViolation } from "../../src/game/world/types";
@@ -167,7 +168,7 @@ export async function giveToVillage(
   return withGroveLock(world, async () => {
     const { character, gold } = await load();
     const { id, village } = await readVillageRecord(world);
-    const gift = donation(village, offer, character.bag, gold);
+    const gift = donation(village, offer, allStacks(character), gold);
     if (!gift) throw new RuleViolation(underWay(village) ? "nothing" : "no_building");
     const next = giveTo(village, gift.building.id, gift.take, gift.points, account, character.name);
     await pay(gift.take);
@@ -185,8 +186,7 @@ export async function giveToVillage(
   });
 }
 
-export function takeFromBag(bag: Character["bag"], take: Offer): Character["bag"] {
-  let next = bag;
-  for (const [item, n] of Object.entries(take.items) as [ItemId, number][]) next = addItem(next, item, -n);
-  return next;
+// What a gift takes from the giver's things: materials that may not be traded go first.
+export function takeFromBag<I extends Inventory>(inv: I, take: Offer): I {
+  return spend(inv, (Object.entries(take.items) as [ItemId, number][]).map(([id, n]) => ({ id, n })));
 }

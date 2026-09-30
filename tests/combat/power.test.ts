@@ -10,8 +10,8 @@ describe("combatPower", () => {
     const start = combatPower(base);
     expect(start).toBeGreaterThan(0);
     expect(combatPower({ ...base, xp: levelCost(1) + levelCost(2) })).toBeGreaterThan(start);
-    expect(combatPower({ ...base, gear: { weapon: "weapon_2", armor: null } })).toBeGreaterThan(start);
-    expect(combatPower({ ...base, gear: { weapon: null, armor: "armor_2" } })).toBeGreaterThan(start);
+    expect(combatPower({ ...base, gear: { weapon: { uid: "w", id: "weapon_2", plus: 0, trade: false }, armor: null } })).toBeGreaterThan(start);
+    expect(combatPower({ ...base, gear: { weapon: null, armor: { uid: "a", id: "armor_2", plus: 0, trade: false } } })).toBeGreaterThan(start);
     expect(combatPower({ ...base, job: "berserker" })).toBeGreaterThan(start);
   });
 });

@@ -1,4 +1,4 @@
-import { ITEMS, type ItemId, type Plus } from "../game/account/items";
+import { ITEMS, type GearPiece, type ItemId } from "../game/account/items";
 import { readWorld } from "../game/account/worlds";
 import { JOBS, type JobId } from "../game/combat/jobs";
 import type { MonsterType } from "../game/world/monsters";
@@ -123,9 +123,8 @@ export function serverName(id: string): string {
 }
 
 // A piece of gear's name with its +, as the screens show it.
-export function gearName(id: ItemId, plus: Plus = {}): string {
-  const n = plus[id] ?? 0;
-  return n > 0 ? `+${n} ${itemName(id)}` : itemName(id);
+export function gearName(piece: Pick<GearPiece, "id" | "plus">): string {
+  return piece.plus > 0 ? `+${piece.plus} ${itemName(piece.id)}` : itemName(piece.id);
 }
 
 // A quest is known by where it stands in the village's list; a daily one by its own id.

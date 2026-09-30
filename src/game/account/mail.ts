@@ -1,5 +1,6 @@
 import type { Lang } from "../langs";
-import { MAX_STACK, readItemId, type Bag, type ItemId } from "./items";
+import { readItemId, type ItemId } from "./items";
+import { fits, type Inventory } from "./inventory";
 
 // Mail: only the game sends it (gifts now; the market's proceeds and returns later). One mailbox per
 // account, the same on every server and character; what a letter carries goes to the character that
@@ -67,12 +68,10 @@ export function daysLeft(mail: Pick<Mail, "at">, now: number): number {
   return Math.max(0, Math.ceil((mail.at + MAIL_KEEP_MS - now) / (24 * 60 * 60 * 1000)));
 }
 
-// Whether everything a letter carries fits the bag (no stack past MAX_STACK). One that does not is
-// left in the mailbox rather than half taken.
-export function mailFits(bag: Bag, mail: Pick<Mail, "items">): boolean {
-  const adding: Partial<Record<ItemId, number>> = {};
-  for (const item of mail.items) adding[item.id] = (adding[item.id] ?? 0) + item.n;
-  return Object.entries(adding).every(([id, n]) => (bag[id as ItemId] ?? 0) + (n ?? 0) <= MAX_STACK);
+// Whether everything a letter carries fits the bag (no stack past MAX_STACK, no gear past
+// MAX_PIECES). One that does not is left in the mailbox rather than half taken.
+export function mailFits(inv: Inventory, mail: Pick<Mail, "items">): boolean {
+  return fits(inv, mail.items, false);
 }
 
 // Gifts from the game to every account that comes in while one is on: each account gets each once.
