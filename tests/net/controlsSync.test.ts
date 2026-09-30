@@ -23,13 +23,14 @@ describe("syncControls", () => {
     const stop = syncControls(first);
     await settle();
     stop();
-    expect(await first.call("getControls")).toMatchObject({ hotbars: { warrior: [1, 0, null] }, autoPotion: false });
+    // A bar saved from before the fourth slot comes back with it.
+    expect(await first.call("getControls")).toMatchObject({ hotbars: { warrior: [1, 0, null, null] }, autoPotion: false });
 
     // Another device, set up otherwise, gets the account's.
     updateSettings(DEFAULT_SETTINGS);
     const stopAgain = syncControls(new LocalTransport(world, "test-a"));
     await settle();
-    expect(settings().hotbars.warrior).toEqual([1, 0, null]);
+    expect(settings().hotbars.warrior).toEqual([1, 0, null, null]);
     expect(settings().autoPotion).toBe(false);
     stopAgain();
   });
@@ -46,7 +47,7 @@ describe("syncControls", () => {
     await vi.advanceTimersByTimeAsync(CONTROLS_SAVE_MS);
     vi.useRealTimers();
     await settle();
-    expect(await transport.call("getControls")).toMatchObject({ hotbars: { warrior: [0, 2, 1] } });
+    expect(await transport.call("getControls")).toMatchObject({ hotbars: { warrior: [0, 2, 1, null] } });
     stop();
   });
 });

@@ -8,12 +8,19 @@ export function typing(e: KeyboardEvent): boolean {
 
 // A press that moved less than this many pixels was a click, not a drag to look about.
 const DRAG_SLOP = 6;
+// Walking keys: WASD or the arrows, each a push along one axis.
+const WALK_KEYS: Record<string, { forward?: number; strafe?: number }> = {
+  KeyW: { forward: 1 }, ArrowUp: { forward: 1 }, KeyS: { forward: -1 }, ArrowDown: { forward: -1 },
+  KeyD: { strafe: 1 }, ArrowRight: { strafe: 1 }, KeyA: { strafe: -1 }, ArrowLeft: { strafe: -1 },
+};
 
 export class FpsInput {
   // The attack button held: swing. The right mouse button or the guard button held: raise the shield.
   firing = false;
   blocking = false;
   private readonly pressed = new Set<string>();
+  // Walking keys held down.
+  private readonly held = new Set<string>();
   private lookX = 0;
   private lookY = 0;
   // On-screen controls (every device): the pad's push, look drags, and held buttons.
@@ -26,6 +33,7 @@ export class FpsInput {
     element.addEventListener("contextmenu", this.onContextMenu);
     window.addEventListener("mouseup", this.onMouseUp);
     window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
     document.addEventListener("mousemove", this.onMouseMove);
   }
@@ -38,9 +46,14 @@ export class FpsInput {
   // Where the last click (or tap) that did not drag landed, in client pixels, until read.
   private click: { x: number; y: number } | null = null;
 
-  // Walking is the on-screen pad's alone, on every device, so the mouse plays the whole game.
+  // Walking is the on-screen pad's, on every device, or on a keyboard WASD's (or the arrows'); the
+  // mouse still turns the view by dragging, never captured.
   moveInput(): MoveInput {
-    const { forward, strafe } = this.virtualMove;
+    let { forward, strafe } = this.virtualMove;
+    for (const code of this.held) {
+      forward += WALK_KEYS[code].forward ?? 0;
+      strafe += WALK_KEYS[code].strafe ?? 0;
+    }
     return { forward: Math.max(-1, Math.min(1, forward)), strafe: Math.max(-1, Math.min(1, strafe)) };
   }
 
@@ -103,6 +116,7 @@ export class FpsInput {
     this.element.removeEventListener("contextmenu", this.onContextMenu);
     window.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.onBlur);
     document.removeEventListener("mousemove", this.onMouseMove);
   }
@@ -133,10 +147,20 @@ export class FpsInput {
   };
   private onKeyDown = (e: KeyboardEvent) => {
     if (typing(e)) return;
+    if (e.code in WALK_KEYS) {
+      this.held.add(e.code);
+      // The arrows would otherwise scroll the page.
+      e.preventDefault();
+      return;
+    }
     if (!e.repeat) this.pressed.add(e.code);
+  };
+  private onKeyUp = (e: KeyboardEvent) => {
+    this.held.delete(e.code);
   };
   private onBlur = () => {
     this.pressed.clear();
+    this.held.clear();
     this.click = null;
     this.dragging = false;
     this.mouseBlocking = false;

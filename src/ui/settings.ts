@@ -1,4 +1,4 @@
-import { HOTBAR_SLOTS, POTION_AT, type Controls } from "../game/account/controls";
+import { HOTBAR_SLOTS, POTION_AT, padded, type Controls } from "../game/account/controls";
 
 // Player settings, kept in this browser (the bar's set-up is also kept on the account; see
 // syncControls). Read live by the game view and the sound effects.
@@ -21,8 +21,8 @@ export interface Settings extends Controls {
   damageNumbers: boolean;
   // The announcements to every server (a legendary mount, a big enhancement…) at the top and in chat.
   showAnnouncements: boolean;
-  // From Controls: which of the potion and the three skills auto-battle may use on its own
-  // (dragged down under their slots to turn on), and what sits in the three skill slots of the bar,
+  // From Controls: which of the potion and the four skills auto-battle may use on its own
+  // (dragged down under their slots to turn on), and what sits in the four skill slots of the bar,
   // per class (a skill's index, or null for an empty slot; a learned skill is dragged in from the
   // skill panel).
 }
@@ -36,7 +36,7 @@ export { HOTBAR_SLOTS };
 
 // A class's bar: its first skill in the first slot until the player arranges it.
 export function hotbarFor(playerClass: string): (number | null)[] {
-  const bar = current.hotbars[playerClass] ?? [0, null, null];
+  const bar = current.hotbars[playerClass] ?? [0];
   return Array.from({ length: HOTBAR_SLOTS }, (_, i) => (typeof bar[i] === "number" ? bar[i] : null));
 }
 
@@ -62,13 +62,16 @@ const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: c
 export const DEFAULT_SETTINGS: Settings = {
   lang: null,
   quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true, showAnnouncements: true,
-  sensitivity: 1, volume: 0.8, music: 0.5, brightness: 1, autoPotion: true, potionAt: POTION_AT.start, autoSkills: [true, false, false], hotbars: {},
+  sensitivity: 1, volume: 0.8, music: 0.5, brightness: 1, autoPotion: true, potionAt: POTION_AT.start, autoSkills: [true, false, false, false], hotbars: {},
 };
 
 function load(): Settings {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...DEFAULT_SETTINGS, ...(JSON.parse(saved) as Partial<Settings>) } : { ...DEFAULT_SETTINGS };
+    if (!saved) return { ...DEFAULT_SETTINGS };
+    const loaded = { ...DEFAULT_SETTINGS, ...(JSON.parse(saved) as Partial<Settings>) };
+    // Saves from before the fourth slot have three.
+    return { ...loaded, autoSkills: padded(Array.isArray(loaded.autoSkills) ? loaded.autoSkills : [], false) };
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

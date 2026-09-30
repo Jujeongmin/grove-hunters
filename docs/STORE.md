@@ -1,7 +1,7 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-09-28): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 4곳 + 보스, 퀘스트 13개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
+숫자는 코드 기준(2026-09-30): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 7곳 + 보스 2, 퀘스트 21개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
 
 ## 제목
 
@@ -26,7 +26,7 @@ English:
 
 ■ 6가지 직업
 전사, 궁수, 마법사, 성직자, 도적, 무도가. 직업마다 무기와 공격 방식, 첫 스킬이 다릅니다.
-Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 2개를 익힙니다. (총 12종)
+Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 3개를 익힙니다(마지막은 Lv40). (총 12종)
 
 ■ 함께하는 사냥
 서버마다 채널 10개, 채널당 10명. 친구가 어느 채널에 있는지 보고 바로 옮겨 갈 수 있습니다.
@@ -63,7 +63,7 @@ Take on the villagers' requests, head into the forest to hunt monsters, level up
 
 ■ Six classes
 Warrior, Ranger, Wizard, Cleric, Rogue and Monk, each with its own weapon, fighting style and first skill.
-At Lv 10 each class advances down one of two paths and learns that path's two skills (12 paths in all).
+At Lv 10 each class advances down one of two paths and learns that path's three skills, the last at Lv 40 (12 paths in all).
 
 ■ Hunt together
 Ten channels per server, ten players each. See which channel your friends are on and hop over to them.

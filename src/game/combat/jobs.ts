@@ -1,7 +1,7 @@
 import type { PlayerClass } from "./classes";
 
 // Advancement (전직): from ADVANCE_LEVEL a character picks one of two paths of its class, for good.
-// The path is where the second and third skills come from (see JOB_SKILLS in skills.ts), and it adds
+// The path is where the second to fourth skills come from (see JOB_SKILLS in skills.ts), and it adds
 // to every fight what gear would (damage, health, a share of each blow stopped); a cleric's healer
 // path heals more. Its name shows before the character's name; the name itself and the line
 // describing what it gives are built in the UI from these numbers (see ui/names.ts).

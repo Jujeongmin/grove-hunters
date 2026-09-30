@@ -19,6 +19,8 @@ describe("icons", () => {
     expect(skillIconId("warrior", "guardian", 1)).toBe("guardian_1");
     expect(skillIconId("warrior", "berserker", 1)).toBe("warrior_1");
     expect(skillIconId("cleric", "high_priest", 2)).toBe("cleric_2");
+    // Every path's fourth skill has a gilded picture of its own.
+    for (const job of Object.keys(JOBS)) expect(skillIconId(JOBS[job as JobId].playerClass, job, 3)).toBe(`${job}_3`);
     // The pictures live with the other assets on the deploy branch; where they are here, all must be.
     const { existsSync } = await import("node:fs");
     const here = existsSync("public/assets/ui/items");

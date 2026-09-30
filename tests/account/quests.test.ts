@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { QUESTS, countKills, questDone, readQuest } from "../../src/game/account/quests";
 import { CLASSES } from "../../src/game/combat/classes";
 import { ADVANCE_LEVEL, JOBS, jobsOf } from "../../src/game/combat/jobs";
-import { CLASS_SKILLS, JOB_SKILLS, THIRD_SKILL_LEVEL, skillAt } from "../../src/game/combat/skills";
+import { CLASS_SKILLS, FOURTH_SKILL_LEVEL, JOB_SKILLS, THIRD_SKILL_LEVEL, skillAt } from "../../src/game/combat/skills";
 import { MONSTERS, XP_GRACE, xpFor } from "../../src/game/world/monsters";
 
 describe("quests", () => {
@@ -31,13 +31,18 @@ describe("growth tables", () => {
       expect(jobsOf(c)).toHaveLength(2);
       for (const id of [a, b]) {
         expect(JOBS[id].playerClass).toBe(c);
-        expect(JOB_SKILLS[id].map((s) => s.level)).toEqual([ADVANCE_LEVEL, THIRD_SKILL_LEVEL]);
+        expect(JOB_SKILLS[id].map((s) => s.level)).toEqual([ADVANCE_LEVEL, THIRD_SKILL_LEVEL, FOURTH_SKILL_LEVEL]);
+        // The fourth is the path's great one: its strongest, on the longest wait.
+        expect(JOB_SKILLS[id][2].cooldownMs).toBeGreaterThanOrEqual(40_000);
+        expect(JOB_SKILLS[id][2].damage + JOB_SKILLS[id][2].heal).toBeGreaterThan(JOB_SKILLS[id][1].damage + JOB_SKILLS[id][1].heal);
       }
       expect(JOB_SKILLS[a]).not.toEqual(JOB_SKILLS[b]);
       // Before advancing, only the first slot holds a skill.
       expect(skillAt(c, null, 0)).toBe(CLASS_SKILLS[c]);
       expect(skillAt(c, null, 1)).toBeNull();
       expect(skillAt(c, a, 2)).toBe(JOB_SKILLS[a][1]);
+      expect(skillAt(c, a, 3)).toBe(JOB_SKILLS[a][2]);
+      expect(skillAt(c, a, 4)).toBeNull();
     }
     // A path of another class gives nothing.
     expect(skillAt("warrior", "sniper", 1)).toBeNull();

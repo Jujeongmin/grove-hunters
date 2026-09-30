@@ -154,7 +154,7 @@ export interface WorldHud {
   me: { x: number; z: number; yaw: number };
   // A locked portal needs the full game or, failing that, a level.
   portal: { to: string; locked: boolean; needLevel: number | null } | null;
-  // The three slots of the bar (keys 1 to 3): the skill each holds, or null while empty.
+  // The four slots of the bar (keys 1 to 4): the skill each holds, or null while empty.
   skills: ({ skill: number; readyInMs: number; cooldownMs: number; level: number; open: boolean } | null)[];
   blocking: boolean;
   hp: number;

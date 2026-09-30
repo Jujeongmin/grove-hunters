@@ -241,10 +241,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The quest log has the full height of the right side (the bar below is not needed with it open),
    and its three pages fit it without a scroll. */
 .ui .side-panel.quest-log { top: 12px; bottom: 12px; overflow: hidden; gap: 6px; }
-/* The skills reach up to the top, and stop above the bar they are dragged onto; the rows are tight
-   enough that three skills and their words fit without a scroll. */
+/* The skills reach up to the top, and stop above the bar they are dragged onto; the rows are tight,
+   and should the four skills' words still be more than fits, their list scrolls. */
 .ui .side-panel.skill-panel { top: 12px; overflow: hidden; gap: 4px; padding-top: 10px; padding-bottom: 10px; }
 .skill-panel .skill-row { gap: 8px; }
+/* Four skills with their lines may be more than the panel holds on a small screen: only they scroll. */
+.skill-panel .skill-rows { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 .skill-panel .skill-row-text { font-size: 11px; line-height: 1.3; gap: 1px; }
 .skill-panel .skill-row-text b { font-size: 13px; }
 .quest-log h2 { margin: 0; }

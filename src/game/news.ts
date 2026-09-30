@@ -17,6 +17,57 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-fourth-skill",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "Lv40 네 번째 스킬과 WASD 이동",
+        lines: [
+          "전직한 캐릭터는 Lv40에 전직 갈래마다 다른 네 번째 스킬을 배워요 (12종, 금테 아이콘).",
+          "스킬 칸이 4개가 됐어요. 스킬 창(K)에서 4번 칸으로 끌어다 놓고 4번 키로 써요.",
+          "네 번째 스킬은 재사용이 40~60초로 길지만 갈래의 가장 강한 한 방이에요.",
+          "키보드로 WASD(또는 방향키) 이동이 돼요. 시점은 전처럼 마우스를 끌어서 돌려요.",
+        ],
+      },
+      en: {
+        title: "A fourth skill at Lv40, and WASD walking",
+        lines: [
+          "Advanced characters learn a fourth skill at Lv40, different for every path (12 in all, gold-rimmed icons).",
+          "The bar has four slots now: drag it into slot 4 from the skill window (K) and use it with key 4.",
+          "Its cooldown is long (40-60s), but it is the path's strongest move.",
+          "You can walk with WASD (or the arrow keys). The view still turns by dragging the mouse.",
+        ],
+      },
+      ja: {
+        title: "Lv40の4つ目のスキルとWASD移動",
+        lines: [
+          "転職したキャラクターはLv40で、転職先ごとに異なる4つ目のスキルを覚えます（全12種、金枠アイコン）。",
+          "スキル枠が4つになりました。スキル画面（K）から4番枠にドラッグし、4キーで使います。",
+          "4つ目のスキルは再使用40〜60秒と長いですが、転職先で最も強力な一撃です。",
+          "キーボードのWASD（または矢印キー）で移動できます。視点は今まで通りマウスのドラッグで回します。",
+        ],
+      },
+      "zh-Hant": {
+        title: "Lv40第四個技能與WASD移動",
+        lines: [
+          "轉職後的角色在Lv40會學會各轉職路線不同的第四個技能（共12種，金框圖示）。",
+          "技能欄增加為4格。在技能視窗（K）拖到第4格，按4鍵使用。",
+          "第四個技能冷卻較長（40~60秒），但是該路線最強的一擊。",
+          "可以用WASD（或方向鍵）移動。視角仍與以往相同，以滑鼠拖曳轉動。",
+        ],
+      },
+      "zh-Hans": {
+        title: "Lv40第四个技能与WASD移动",
+        lines: [
+          "转职后的角色在Lv40会学会各转职路线不同的第四个技能（共12种，金框图标）。",
+          "技能栏增加为4格。在技能窗口（K）拖到第4格，按4键使用。",
+          "第四个技能冷却较长（40~60秒），但是该路线最强的一击。",
+          "可以用WASD（或方向键）移动。视角仍与以往相同，以鼠标拖拽转动。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-snow-quests",
     date: "2026-09-30",
     text: {

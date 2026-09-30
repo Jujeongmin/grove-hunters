@@ -30,7 +30,7 @@ export function weaponName(c: PlayerClass): string {
   return t(key("weapon", c));
 }
 
-// A skill by slot, as skillAt reads it: 0 is the class's own, 1 and 2 are the advanced path's.
+// A skill by slot, as skillAt reads it: 0 is the class's own, 1 to 3 are the advanced path's.
 function skillKey(c: PlayerClass, job: JobId | null, slot: number): string | null {
   if (slot === 0) return key("skill", c, 0);
   return job ? key("skill", job, slot - 1) : null;
@@ -46,7 +46,7 @@ export function skillBlurb(c: PlayerClass, job: JobId | null, slot: number): str
   return k ? t(`${k}.blurb` as Key) : "";
 }
 
-// One of a path's two skills (0 or 1), for showing a path before it is taken.
+// One of a path's three skills (0 to 2), for showing a path before it is taken.
 export function pathSkillName(job: JobId, i: number): string {
   return t(key("skill", job, i));
 }

@@ -92,7 +92,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
                 {jobsOf(playerClass).map((id) => (
                   <button key={id} type="button" className={`world-card${path === id ? " picked" : ""}`} onClick={() => setPath(id)}>
                     <b>{jobName(id)}</b>
-                    <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)}</span>
+                    <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)} · {pathSkillName(id, 2)}</span>
                     <span>{jobBlurb(id)}</span>
                   </button>
                 ))}

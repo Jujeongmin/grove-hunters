@@ -6,10 +6,11 @@ import type { Pose, Vec2 } from "../world/types";
 // What a skill needs to know of a monster.
 interface Target extends Vec2 { alive: boolean; returning?: boolean }
 
-// Three skills, on keys 1, 2 and 3, each on its own cooldown. The first is the class's own, from
-// the start. The other two come with the path taken at advancement (전직, see jobs.ts): the second on
-// advancing, the third at a higher level. Two characters of one class fight alike until they part
-// ways, and differently after.
+// Four skills, on keys 1 to 4, each on its own cooldown. The first is the class's own, from the
+// start. The other three come with the path taken at advancement (전직, see jobs.ts): the second on
+// advancing, the third at a higher level, and the fourth, the path's great one on a long cooldown, at
+// the snow's level. Two characters of one class fight alike until they part ways, and differently
+// after.
 export interface Skill {
   // The level it opens up at.
   level: number;
@@ -26,17 +27,19 @@ export interface Skill {
   heal: number;
 }
 
-export const SKILL_SLOTS = 3;
-// Keys 1, 2 and 3.
-export const SKILL_KEYS = ["Digit1", "Digit2", "Digit3"] as const;
-// The path's second skill opens this many levels after advancing.
+export const SKILL_SLOTS = 4;
+// Keys 1 to 4.
+export const SKILL_KEYS = ["Digit1", "Digit2", "Digit3", "Digit4"] as const;
+// The path's second skill opens at this level, and its third at the next.
 export const THIRD_SKILL_LEVEL = 20;
+export const FOURTH_SKILL_LEVEL = 40;
 
 const deg = (d: number) => (d * Math.PI) / 180;
 const base = { stunMs: 0, maxTargets: 0, heal: 0 };
 const all = deg(360);
 const second = { ...base, level: ADVANCE_LEVEL };
 const third = { ...base, level: THIRD_SKILL_LEVEL };
+const fourth = { ...base, level: FOURTH_SKILL_LEVEL };
 
 // Each class's own skill, on key 1 from level 1.
 export const CLASS_SKILLS: Record<PlayerClass, Skill> = {
@@ -48,60 +51,72 @@ export const CLASS_SKILLS: Record<PlayerClass, Skill> = {
   monk: { ...base, level: 1, cooldownMs: 10000, damage: 20, reach: 2.6, arc: deg(120), stunMs: 2500 },
 };
 
-// The two skills each path brings, on keys 2 and 3. Of a class's two paths, the one leaning on damage
+// The three skills each path brings, on keys 2 to 4. Of a class's two paths, the one leaning on damage
 // hits harder; the one leaning on health stuns and heals.
-export const JOB_SKILLS: Record<JobId, readonly [Skill, Skill]> = {
+export const JOB_SKILLS: Record<JobId, readonly [Skill, Skill, Skill]> = {
   berserker: [
     { ...second, cooldownMs: 9000, damage: 75, reach: 4, arc: deg(70), stunMs: 800 },
     { ...third, cooldownMs: 20000, damage: 110, reach: 4.5, arc: all, stunMs: 1500 },
+    { ...fourth, cooldownMs: 45000, damage: 240, reach: 5, arc: all, stunMs: 1500 },
   ],
   guardian: [
     { ...second, cooldownMs: 7000, damage: 45, reach: 2.6, arc: deg(90), maxTargets: 1, stunMs: 1800 },
     { ...third, cooldownMs: 22000, damage: 30, reach: 6, arc: all, heal: 60 },
+    { ...fourth, cooldownMs: 50000, damage: 80, reach: 6, arc: all, stunMs: 3000, heal: 150 },
   ],
   sniper: [
     { ...second, cooldownMs: 6000, damage: 80, reach: 11, arc: deg(30), maxTargets: 1 },
     { ...third, cooldownMs: 18000, damage: 90, reach: 7, arc: all },
+    { ...fourth, cooldownMs: 40000, damage: 320, reach: 14, arc: deg(10), maxTargets: 1 },
   ],
   tracker: [
     { ...second, cooldownMs: 7000, damage: 40, reach: 11, arc: deg(20), maxTargets: 1, stunMs: 2000 },
     { ...third, cooldownMs: 14000, damage: 65, reach: 10, arc: deg(60) },
+    { ...fourth, cooldownMs: 45000, damage: 130, reach: 12, arc: deg(70), stunMs: 3000 },
   ],
   elementalist: [
     { ...second, cooldownMs: 8000, damage: 60, reach: 11, arc: deg(20), maxTargets: 1, stunMs: 2000 },
     { ...third, cooldownMs: 22000, damage: 140, reach: 6, arc: all },
+    { ...fourth, cooldownMs: 55000, damage: 260, reach: 7, arc: all, stunMs: 1500 },
   ],
   warder: [
     { ...second, cooldownMs: 9000, damage: 35, reach: 5, arc: all, stunMs: 1500 },
     { ...third, cooldownMs: 24000, damage: 0, reach: 7, arc: all, heal: 70 },
+    { ...fourth, cooldownMs: 55000, damage: 60, reach: 8, arc: all, stunMs: 3000, heal: 120 },
   ],
   high_priest: [
     { ...second, cooldownMs: 9000, damage: 50, reach: 10, arc: deg(20), maxTargets: 1, heal: 20 },
     { ...third, cooldownMs: 25000, damage: 40, reach: 8, arc: all, heal: 90 },
+    { ...fourth, cooldownMs: 60000, damage: 60, reach: 10, arc: all, heal: 200 },
   ],
   paladin: [
     { ...second, cooldownMs: 8000, damage: 60, reach: 3, arc: deg(110), stunMs: 1000 },
     { ...third, cooldownMs: 20000, damage: 120, reach: 4, arc: all, stunMs: 1200 },
+    { ...fourth, cooldownMs: 50000, damage: 200, reach: 5, arc: all, stunMs: 2000, heal: 60 },
   ],
   assassin: [
     { ...second, cooldownMs: 6000, damage: 55, reach: 5, arc: deg(100) },
     { ...third, cooldownMs: 18000, damage: 130, reach: 3.5, arc: all },
+    { ...fourth, cooldownMs: 40000, damage: 400, reach: 3.5, arc: deg(90), maxTargets: 1 },
   ],
   scout: [
     { ...second, cooldownMs: 12000, damage: 20, reach: 4, arc: all, stunMs: 2000 },
     { ...third, cooldownMs: 14000, damage: 70, reach: 9, arc: deg(50) },
+    { ...fourth, cooldownMs: 45000, damage: 160, reach: 10, arc: deg(90), stunMs: 1000 },
   ],
   fist_master: [
     { ...second, cooldownMs: 7000, damage: 50, reach: 2.8, arc: all },
     { ...third, cooldownMs: 18000, damage: 160, reach: 3, arc: deg(90), maxTargets: 1, stunMs: 2000 },
+    { ...fourth, cooldownMs: 50000, damage: 280, reach: 4, arc: all, stunMs: 1500 },
   ],
   iron_monk: [
     { ...second, cooldownMs: 8000, damage: 45, reach: 3, arc: deg(100), stunMs: 1500 },
     { ...third, cooldownMs: 24000, damage: 60, reach: 4, arc: all, heal: 50 },
+    { ...fourth, cooldownMs: 55000, damage: 100, reach: 5, arc: all, stunMs: 2500, heal: 120 },
   ],
 };
 
-// The skill in slot `index` of a character: 0 is the class's own, 1 and 2 are its path's. Null for a
+// The skill in slot `index` of a character: 0 is the class's own, 1 to 3 are its path's. Null for a
 // path skill before advancing, or for a path that is not the class's.
 export function skillAt(playerClass: PlayerClass, job: JobId | null, index: number): Skill | null {
   if (index === 0) return CLASS_SKILLS[playerClass];
@@ -109,7 +124,7 @@ export function skillAt(playerClass: PlayerClass, job: JobId | null, index: numb
   return JOB_SKILLS[job][index - 1];
 }
 
-// A skill slot number from a client: 0, 1 or 2.
+// A skill slot number from a client: 0 to 3.
 export function readSlot(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 && value < SKILL_SLOTS ? value : null;
 }

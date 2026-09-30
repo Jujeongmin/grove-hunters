@@ -37,7 +37,7 @@ const QUALITY_LABEL: Record<Quality, Key> = {
 };
 // The keys to look up: what to press, and the line that says what it does.
 const KEYS: [string, Key][] = [
-  ["Space", "keys.jump"], ["keys.click", "keys.attackGuard"], ["1 ~ 3", "keys.skills"],
+  ["WASD", "keys.move"], ["Space", "keys.jump"], ["keys.click", "keys.attackGuard"], ["1 ~ 4", "keys.skills"],
   ["Q", "keys.potion"], ["E", "keys.talk"], ["R", "keys.auto"], ["T", "keys.ride"], ["J", "keys.quest"], ["Enter", "keys.chat"],
   ["M", "keys.menu"], ["Esc", "keys.closeWindow"], ["N", "keys.map"], ["C", "keys.channel"],
   ["O / L / K / U / I / H", "keys.panels"], ["B", "keys.powerSave"], ["P", "keys.settings"],

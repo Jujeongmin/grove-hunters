@@ -10,6 +10,9 @@ import { publicUrl } from "../assets/publicUrl";
 const PATH_ICONS = [
   "guardian_1", "guardian_2", "tracker_1", "tracker_2", "warder_1", "warder_2", "high_priest_1", "paladin_2",
   "scout_1", "scout_2", "iron_monk_1", "iron_monk_2",
+  // Every path's fourth skill: its third's picture, gilded (drawn by scripts/fourth-skill-icons.py).
+  "berserker_3", "guardian_3", "sniper_3", "tracker_3", "elementalist_3", "warder_3",
+  "high_priest_3", "paladin_3", "assassin_3", "scout_3", "fist_master_3", "iron_monk_3",
 ];
 
 // The icons under assets/ui/icons, by id: skills (class_slot, path_slot), menu buttons (ui_) and pad
@@ -44,8 +47,8 @@ export function iconFor(id: string): string | null {
 }
 
 // The icon for the skill in a slot (see skillAt): the path's own picture where it has one, otherwise
-// the class's for that slot.
+// the class's for that slot (the class has three; a fourth slot waiting for its path shows the third's).
 export function skillIconId(playerClass: string, job: string | null, slot: number): string {
   const own = slot > 0 && job ? `${job}_${slot}` : null;
-  return own && PATH_ICONS.includes(own) ? own : `${playerClass}_${slot}`;
+  return own && PATH_ICONS.includes(own) ? own : `${playerClass}_${Math.min(slot, 2)}`;
 }

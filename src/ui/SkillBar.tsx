@@ -14,7 +14,7 @@ const DRAG_TOGGLE = 28;
 interface SkillBarProps {
   hud: WorldHud;
   playerClass: PlayerClass;
-  // The advanced path, whose skills sit on keys 2 and 3.
+  // The advanced path, whose skills sit on keys 2 to 4.
   job: JobId | null;
   onSkill: (slot: number) => void;
   onPotion: () => void;
@@ -121,7 +121,7 @@ function PotionSetting({ on }: { on: boolean }) {
   );
 }
 
-// The potion and the three skills, bottom centre, as a row of squares.
+// The potion and the four skills, bottom centre, as a row of squares.
 export function SkillBar({ hud, playerClass, job, onSkill, onPotion, glow }: SkillBarProps) {
   const [auto, setAuto] = useState(() => ({ potion: settings().autoPotion, skills: settings().autoSkills }));
   useEffect(() => onSettings((s) => setAuto({ potion: s.autoPotion, skills: s.autoSkills })), []);

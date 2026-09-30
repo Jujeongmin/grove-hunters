@@ -20,7 +20,7 @@ interface SkillPanelProps {
   onClose: () => void;
 }
 
-// Your three skills, top right: the class's own, and the two your advanced path brings (shown as
+// Your four skills, top right: the class's own, and the three your advanced path brings (shown as
 // waiting until you advance). The ones learned can be dragged onto a slot of the bar at the bottom
 // (the hotbar's cells carry data-slot). The panel leaves the bar in view.
 export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClose }: SkillPanelProps) {
@@ -42,6 +42,7 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
       <div className="side-panel skill-panel">
         <h2>{t("skills.title")}</h2>
         <p className="note">{t("skills.dragNote")}</p>
+        <div className="skill-rows">
         {Array.from({ length: SKILL_SLOTS }, (_, i) => {
           const skill = skillAt(playerClass, job, i);
           const taught = skillLearned(tutorial, i);
@@ -90,6 +91,7 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
             </div>
           );
         })}
+        </div>
         <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
       {drag && (

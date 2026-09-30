@@ -16,9 +16,17 @@ describe("mouse and keys", () => {
   });
   afterEach(() => input.dispose());
 
-  it("walks only by the pad, never by WASD", () => {
+  it("walks by the pad, or by WASD and the arrows while they are held", () => {
     // Two keys, not four: W with S (or A with D) would cancel out and hide a key that still walks.
-    for (const code of ["KeyW", "KeyD"]) window.dispatchEvent(event("keydown", { code, repeat: false }));
+    for (const code of ["KeyW", "KeyD"]) window.dispatchEvent(event("keydown", { code, repeat: false, preventDefault() {} }));
+    expect(input.moveInput()).toEqual({ forward: 1, strafe: 1 });
+    // Walking keys are held, not pressed: the skills and the rest never see them.
+    expect(input.consumePress("KeyW")).toBe(false);
+    for (const code of ["KeyW", "KeyD"]) window.dispatchEvent(event("keyup", { code }));
+    window.dispatchEvent(event("keydown", { code: "ArrowLeft", repeat: false, preventDefault() {} }));
+    expect(input.moveInput()).toEqual({ forward: 0, strafe: -1 });
+    // Leaving the window lets go of them.
+    window.dispatchEvent(event("blur", {}));
     expect(input.moveInput()).toEqual({ forward: 0, strafe: 0 });
     input.setVirtualMove(1, -0.5);
     expect(input.moveInput()).toEqual({ forward: 1, strafe: -0.5 });
