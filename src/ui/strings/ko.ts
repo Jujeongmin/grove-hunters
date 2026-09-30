@@ -882,7 +882,7 @@ export const ko = {
   "pad.dismount": "내리기",
   "problem.not_enough_gems": "보석이 모자라요",
   "problem.no_mount": "그 탈것이 없어요",
-  "mount.none": "탈 탈것이 없어요. 정식판에는 사슴이 있고, 알 부화로 더 얻을 수 있어요.",
+  "mount.none": "아직 탈것이 없어요. 정식판에는 사슴이 있고, 알 부화로 더 얻을 수 있어요.",
   "mount.rideHint": "T키나 탈것 버튼으로 타고 내려요. 공격하거나 맞으면 내려요.",
   "mount.stats": "공격 +{p}% · 체력 +{h}",
   "mount.statsNote": "고른 탈것은 타지 않아도 공격력과 체력을 올려 줘요.",
