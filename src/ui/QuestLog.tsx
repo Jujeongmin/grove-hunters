@@ -20,10 +20,14 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const today = dailyToday(bag.daily, Date.now());
+  // A region's dailies to a page (the grove's, the snow's); it opens on the first page with one under
+  // way, so a hunter in the snow lands on the snow's.
+  const going = DAILY_QUESTS.findIndex((q) => (today.counts[q.id] ?? 0) > 0 && !today.claimed.includes(q.id));
+  const page = usePages(DAILY_QUESTS, DAILY_PER_PAGE, going < 0 ? 0 : Math.floor(going / DAILY_PER_PAGE));
   return (
     <>
       <p className="note">{t("quests.daily")}</p>
-      {DAILY_QUESTS.map((q) => {
+      {page.shown.map((q) => {
         const count = today.counts[q.id] ?? 0;
         const claimed = today.claimed.includes(q.id);
         const done = count >= q.count;
@@ -53,6 +57,7 @@ function DailyList({ bag, onClaimDaily }: { bag: BagView; onClaimDaily: (id: str
           </div>
         );
       })}
+      {page.pager}
       {problem && <p className="note">{problem}</p>}
     </>
   );
@@ -130,6 +135,7 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
 
 // Finished quests on one page of their tab.
 const PAST_PER_PAGE = 5;
+const DAILY_PER_PAGE = 3;
 
 // The moment a quest is done: a panel in the middle of the screen, shown once, that fades by itself.
 export function QuestCompleteBanner({ index, inVillage, onClose }: { index: number; inVillage: boolean; onClose: () => void }) {

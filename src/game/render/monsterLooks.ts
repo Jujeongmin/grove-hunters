@@ -77,6 +77,7 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   peak_yeti: { model: "mnt_yeti", look: { height: 2.4, tint: null, clips: BEAST } },
   frost_drake: { model: "mnt_drake", look: { height: 2.2, tint: 0x9fd8ff, clips: FLYER } },
   glacier_alpaking: { model: "mnt_alpaking", look: { height: 2.2, tint: 0xbfe8ff, clips: FLYER } },
+  frost_emperor: { model: "mnt_alpaking_evolved", look: { height: 4.2, tint: 0xbfe8ff, clips: FLYER } },
 };
 
 export const GREEN_BLOB = MONSTER_SKINS.green_blob;

@@ -37,12 +37,21 @@ export const QUESTS: readonly Quest[] = [
     targets: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"], count: 200, xp: 350000, gold: 25000,
     items: [{ id: "stone", n: 20 }, { id: "potion_big", n: 20 }],
   },
+  // The snow region's, from the outpost's captain (any town's elder takes the reports).
+  { targets: ["frost_blob", "snow_hare"], count: 60, xp: 90000, gold: 8000, items: [{ id: "potion_big", n: 10 }] },
+  { targets: ["snow_wolf", "frost_spider"], count: 80, xp: 110000, gold: 10000, items: [{ id: "frost_shard", n: 10 }] },
+  { targets: ["frost_bat", "penguin_brute"], count: 80, xp: 140000, gold: 12000, items: [{ id: "snow_fur", n: 10 }] },
+  { targets: ["frost_snake", "ice_golem"], count: 90, xp: 170000, gold: 15000, items: [{ id: "armor_6", n: 1 }] },
+  { targets: ["ice_golem"], count: 100, xp: 200000, gold: 18000, items: [{ id: "stone", n: 30 }] },
+  { targets: ["peak_yeti"], count: 80, xp: 250000, gold: 22000, items: [{ id: "ever_ice", n: 3 }] },
+  { targets: ["frost_drake", "glacier_alpaking"], count: 100, xp: 300000, gold: 26000, items: [{ id: "weapon_6", n: 1 }] },
+  { targets: ["frost_emperor"], count: 1, xp: 400000, gold: 30000, items: [{ id: "ever_ice", n: 6 }] },
 ];
 
 // Daily quests, one per hunting field: fell that many of its monsters in a day (Korean time) and
 // claim the reward, from anywhere. They start over at midnight.
 export interface DailyQuest {
-  id: "forest1" | "forest2" | "forest3";
+  id: "forest1" | "forest2" | "forest3" | "snow1" | "snow2" | "snow3";
   targets: MonsterType[];
   count: number;
   gold: number;
@@ -61,6 +70,18 @@ export const DAILY_QUESTS: readonly DailyQuest[] = [
   {
     id: "forest3", targets: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"],
     count: 50, gold: 2500, items: [{ id: "stone", n: 6 }, { id: "core", n: 6 }],
+  },
+  {
+    id: "snow1", targets: ["frost_blob", "snow_hare", "snow_wolf", "frost_spider"],
+    count: 50, gold: 4000, items: [{ id: "stone", n: 8 }, { id: "snow_fur", n: 4 }],
+  },
+  {
+    id: "snow2", targets: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"],
+    count: 60, gold: 5500, items: [{ id: "stone", n: 10 }, { id: "frost_shard", n: 5 }],
+  },
+  {
+    id: "snow3", targets: ["peak_yeti", "frost_drake", "glacier_alpaking"],
+    count: 60, gold: 7000, items: [{ id: "stone", n: 12 }, { id: "ever_ice", n: 1 }],
   },
 ];
 

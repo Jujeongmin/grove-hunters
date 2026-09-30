@@ -77,6 +77,17 @@ describe("guild boss", () => {
     expect(pools.every((t) => t.pool && t.pool.until > t.hitAt)).toBe(true);
   });
 
+  it("the snow's emperor: spears under everyone, a blizzard at the nearest, ice pools that stay", () => {
+    const spears = castPattern("frost_emperor", 0, boss, prey, 0, false, still, "e").telegraphs;
+    for (const p of prey) expect(spears.some((t) => inShape(t.shape, p.x, p.z))).toBe(true);
+    const blizzard = castPattern("frost_emperor", 1, boss, prey, 0, false, still, "e").telegraphs[0];
+    expect(inShape(blizzard.shape, 3, 0)).toBe(true);
+    expect(inShape(blizzard.shape, -8, 0)).toBe(false);
+    const pools = castPattern("frost_emperor", 2, boss, prey, 0, false, still, "e").telegraphs;
+    expect(pools.length).toBe(3);
+    expect(pools.every((t) => t.pool && t.pool.until > t.hitAt)).toBe(true);
+  });
+
   it("raging: quicker marks and more of them", () => {
     const calm = castPattern("guild_yeti", 1, boss, prey, 0, false, Math.random, "y").telegraphs;
     const angry = castPattern("guild_yeti", 1, boss, prey, 0, true, Math.random, "y").telegraphs;

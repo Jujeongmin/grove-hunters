@@ -1,6 +1,6 @@
 import { levelCost } from "../../src/game/account/level";
 import { GOLD, ITEMS } from "../../src/game/account/items";
-import { QUESTS } from "../../src/game/account/quests";
+import { DAILY_QUESTS, QUESTS } from "../../src/game/account/quests";
 import { npcSpot } from "../../src/game/world/npcs";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { editActive, enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
@@ -61,5 +61,20 @@ describe("the snow region", () => {
     await standingIn(server, "snow1", 45);
     await $room.updateMyState({ dead: true, hp: 0 });
     expect((await server.respawn()).zone).toBe("outpost");
+  });
+
+  test("the captain's quests pay the snow's gear, bound; and the snow has dailies of its own", async (server) => {
+    await standingIn(server, "outpost", 50);
+    const armour = QUESTS.findIndex((q) => q.items.some((i) => i.id === "armor_6"));
+    expect(armour).toBeGreaterThan(12);
+    await editActive("test-a", (c) => ({ ...c, quest: { index: armour, count: QUESTS[armour].count } }));
+    const captain = npcSpot("captain");
+    await walkTo(server, captain.x + 1, captain.z);
+    const paid = await server.claimQuest();
+    expect(paid.quest.index).toBe(armour + 1);
+    expect(paid.pieces.filter((p: any) => p.id === "armor_6").map((p: any) => p.trade)).toEqual([false]);
+    // The last one wants the emperor.
+    expect(QUESTS[QUESTS.length - 1].targets).toEqual(["frost_emperor"]);
+    expect(DAILY_QUESTS.map((q) => q.id).filter((id) => id.startsWith("snow"))).toEqual(["snow1", "snow2", "snow3"]);
   });
 });

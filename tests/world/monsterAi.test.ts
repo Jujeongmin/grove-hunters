@@ -216,4 +216,18 @@ describe("a guild boss", () => {
     stepMonsters(monsters, [{ account: "a", x: at.x, z: at.z + 6 }], arena, 0.2, 0, [], () => 0);
     expect(Object.values(monsters).filter((m) => m.type === "glub_brood").length).toBe(4);
   });
+
+  it("the snow's emperor waits at its altar, then marks the ground at those who come near, and comes back whole", () => {
+    const altar = zoneLayout("snowboss");
+    const monsters = spawnMonsters("snowboss");
+    const emperor = monsters.boss;
+    expect(emperor.type).toBe("frost_emperor");
+    const far = [{ account: "a", x: emperor.x + 40, z: emperor.z }];
+    const marks: Telegraph[] = [];
+    for (let t = 0; t < 10; t++) stepMonsters(monsters, far, altar, 0.5, 1000 + t * 500, marks);
+    expect(marks).toEqual([]);
+    const near = [{ account: "a", x: emperor.x + 4, z: emperor.z }];
+    for (let t = 0; t < 12 && marks.length === 0; t++) stepMonsters(monsters, near, altar, 0.5, 10_000 + t * 500, marks);
+    expect(marks.length).toBeGreaterThan(0);
+  });
 });

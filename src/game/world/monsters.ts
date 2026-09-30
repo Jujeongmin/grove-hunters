@@ -12,7 +12,7 @@ export type MonsterType =
   | "guild_dragon" | "guild_yeti" | "guild_glub" | "glub_brood"
   | "frost_blob" | "snow_hare" | "snow_wolf" | "frost_spider"
   | "frost_bat" | "penguin_brute" | "frost_snake" | "ice_golem"
-  | "peak_yeti" | "frost_drake" | "glacier_alpaking";
+  | "peak_yeti" | "frost_drake" | "glacier_alpaking" | "frost_emperor";
 
 export interface MonsterSpec {
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
@@ -168,6 +168,16 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
   glub_brood: {
     ...common, level: 25, hp: 1500, damage: 20, speed: 2.4, aggro: 60, aggressive: true, xp: 30, gold: [0, 0], drops: [],
   },
+  // The snow region's boss, at its altar: it casts marked patterns (see guildBoss.ts), comes back five
+  // minutes after it falls, and brings the Glacierking gear.
+  frost_emperor: {
+    level: 60, hp: 90000, damage: 220, range: 3.2, attackMs: 1800, speed: 1.8, aggro: 22, aggressive: true, body: 1.2, xp: 20000,
+    respawnMs: 300_000, gold: [3000, 5000],
+    drops: [
+      { item: "potion_big", chance: 1 }, { item: "weapon_7", chance: 0.25 }, { item: "armor_7", chance: 0.25 },
+      { item: "ever_ice", chance: 1 }, { item: "ever_ice", chance: 0.5 }, { item: "frost_shard", chance: 1 }, { item: "frost_shard", chance: 1 },
+    ],
+  },
   mushroom_king: {
     level: 32, hp: 30000, damage: 90, range: 2.8, attackMs: 1800, speed: 1.6, aggro: 22, body: 1.0, xp: 6000,
     respawnMs: 300_000, gold: [800, 1200],
@@ -204,7 +214,7 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   snow3: ["peak_yeti", "frost_drake", "glacier_alpaking"],
   snowboss: [],
 };
-export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king" };
+export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king", snowboss: "frost_emperor" };
 // Where the grove's guardian comes (see grove.ts).
 export const GROVE_GUARDIAN_ZONE: ZoneId = "forest1";
 

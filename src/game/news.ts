@@ -17,6 +17,57 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-snow-quests",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "설산 퀘스트와 보스 '빙하의 황제'",
+        lines: [
+          "대장 브란의 메인 퀘스트 8개가 이어져요. 보상으로 6등급 장비와 설산 재료를 받아요.",
+          "설산 기슭 · 얼음 협곡 · 만년설 봉우리 일일 퀘스트가 생겼어요 (퀘스트 창에서 페이지를 넘겨요).",
+          "빙하의 제단(Lv55)에 보스 '빙하의 황제'가 나타나요. 바닥 표시를 보고 얼음 창·눈보라·얼음 웅덩이를 피하세요.",
+          "빙하의 황제는 쓰러지고 5분 뒤 다시 나타나고, 7등급 빙하왕 장비를 떨어뜨려요.",
+        ],
+      },
+      en: {
+        title: "Snow quests and the Glacier Emperor",
+        lines: [
+          "Captain Bran's eight main quests carry the story on, paying tier 6 gear and the snow's materials.",
+          "New dailies for the Snowy Foothills, the Ice Canyon and the Everfrost Peaks (turn the page in the quest log).",
+          "The Glacier Emperor waits at the Glacier Altar (Lv55). Watch the ground and dodge its ice spears, blizzard and ice pools.",
+          "It comes back five minutes after it falls, and drops tier 7 Glacierking gear.",
+        ],
+      },
+      ja: {
+        title: "雪山クエストとボス「氷河の皇帝」",
+        lines: [
+          "隊長ブランのメインクエスト8つが続きます。報酬は6等級装備と雪山の素材です。",
+          "雪山のふもと・氷の峡谷・万年雪の峰のデイリークエストが登場（クエスト画面でページをめくります）。",
+          "氷河の祭壇（Lv55）にボス「氷河の皇帝」が現れます。地面の表示を見て氷の槍・吹雪・氷の水たまりを避けましょう。",
+          "倒れて5分後に再び現れ、7等級の氷河王装備を落とします。",
+        ],
+      },
+      "zh-Hant": {
+        title: "雪山任務與首領「冰河皇帝」",
+        lines: [
+          "隊長布蘭的8個主線任務接續登場，獎勵6級裝備與雪山材料。",
+          "新增雪山山麓、冰之峽谷、萬年雪峰的每日任務（在任務視窗翻頁）。",
+          "冰河祭壇（Lv55）出現首領「冰河皇帝」。注意地面標記，躲開冰槍、暴風雪與冰池。",
+          "倒下5分鐘後會再次出現，並掉落7級冰河王裝備。",
+        ],
+      },
+      "zh-Hans": {
+        title: "雪山任务与首领“冰河皇帝”",
+        lines: [
+          "队长布兰的8个主线任务接续登场，奖励6级装备与雪山材料。",
+          "新增雪山山麓、冰之峡谷、万年雪峰的每日任务（在任务窗口翻页）。",
+          "冰河祭坛（Lv55）出现首领“冰河皇帝”。注意地面标记，躲开冰枪、暴风雪与冰池。",
+          "倒下5分钟后会再次出现，并掉落7级冰河王装备。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-snow-region",
     date: "2026-09-30",
     text: {

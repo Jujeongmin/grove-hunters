@@ -1,11 +1,16 @@
 import { crowdBlocks, PLAYER_BODY, type Body } from "../rules/crowd";
 import { solidWith, type LevelLayout } from "../rules/levelLayout";
 import { MAX_STEP_SECONDS, stepAround, type SolidTest } from "../rules/movement";
-import { BOSS_MOVES, MONSTERS, ZONE_BOSS, respawned, type MonsterState } from "./monsters";
+import { BOSS_MOVES, MONSTERS, respawned, type MonsterState } from "./monsters";
 import type { Telegraph } from "./telegraphs";
-import { BROOD_COUNT, GUILD_BOSSES, RAGE_BELOW, castPattern, nextPattern, patternGap, type GuildBossType } from "./guildBoss";
+import {
+  BROOD_COUNT, GUILD_BOSSES, PATTERN_BOSSES, RAGE_BELOW, castPattern, nextPattern, patternGap, type PatternBossType,
+} from "./guildBoss";
 
-const BOSSES = new Set(Object.values(ZONE_BOSS));
+// The Mushroom King's own moves (the slam, the brood); the bosses that cast marked patterns instead
+// (the guild bosses and the snow's emperor); and the guild bosses, whose health is their guild's.
+const BOSSES = new Set<string>(["mushroom_king"]);
+const PATTERN_BOSS_TYPES = new Set<string>(PATTERN_BOSSES);
 const GUILD_BOSS_TYPES = new Set<string>(GUILD_BOSSES);
 // A guild boss waits this long after the fight starts before its first pattern.
 const FIRST_PATTERN_MS = 3_000;
@@ -42,12 +47,13 @@ export function stepMonsters(
     // kinds, and the boss's brood called up mid-fight, go for any hunter in sight as well.
     const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
     if (BOSSES.has(m.type) && provoked.length > 0 && stepBoss(id, m, monsters, prey, now, telegraphs)) continue;
-    if (GUILD_BOSS_TYPES.has(m.type) && stepGuildBoss(id, m, monsters, prey, now, telegraphs, random)) continue;
+    if (PATTERN_BOSS_TYPES.has(m.type) && !m.returning && stepGuildBoss(id, m, monsters, prey, now, telegraphs, random)) continue;
     if (now < m.stunnedUntil) continue;
 
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
     // A guild boss never gives up (its health is the guild's: going home would heal it).
     if (!m.returning && fromHome > LEASH && !GUILD_BOSS_TYPES.has(m.type)) {
+      delete m.nextPatternAt;
       m.returning = true;
       delete m.hitters;
     }
@@ -156,14 +162,18 @@ function stepBoss(
   return m.slamming === true;
 }
 
-// A guild boss's own moves (see guildBoss.ts), before its ordinary chase and bite: a pattern every
-// few seconds, standing still while its marks are down; the yeti's charge; the glub's brood. Returns
-// true while it is busy with them (it neither moves nor bites then).
+// A pattern boss's own moves (see guildBoss.ts), before its ordinary chase and bite: a pattern every
+// few seconds at the players it can see, standing still while its marks are down; the yeti's charge;
+// the glub's brood. Returns true while it is busy with them (it neither moves nor bites then).
 function stepGuildBoss(
   id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], now: number, telegraphs: Telegraph[],
   random: () => number,
 ): boolean {
-  if (prey.length === 0) return true;
+  const aggro = MONSTERS[m.type].aggro;
+  const seen = prey.filter((p) => Math.hypot(p.x - m.x, p.z - m.z) <= aggro);
+  // A guild boss waits in its arena for someone to come; a field boss goes about as any monster does.
+  if (seen.length === 0) return GUILD_BOSS_TYPES.has(m.type);
+  prey = seen;
   if (m.chargeAt !== undefined && now >= m.chargeAt) {
     // The charge: it is at the lane's end the moment the lane lands.
     m.x = m.chargeX ?? m.x;
@@ -177,7 +187,7 @@ function stepGuildBoss(
   if (now < m.nextPatternAt) return false;
   const rage = m.hp < (m.maxHp ?? MONSTERS[m.type].hp) * RAGE_BELOW;
   const index = nextPattern(m.lastPattern ?? null, random);
-  const cast = castPattern(m.type as GuildBossType, index, m, prey, now, rage, random, `${id}-${now}`);
+  const cast = castPattern(m.type as PatternBossType, index, m, prey, now, rage, random, `${id}-${now}`);
   telegraphs.push(...cast.telegraphs);
   if (cast.chargeTo) {
     m.chargeAt = cast.chargeTo.at;

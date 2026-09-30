@@ -7,6 +7,9 @@ import { facingOf, yawToward, type Shape, type Telegraph } from "./telegraphs";
 // the server keeps each guild's week and the screen shows it.
 
 export type GuildBossType = "guild_dragon" | "guild_yeti" | "guild_glub";
+// Every boss that fights with marked patterns: the guild bosses and the snow's Glacier Emperor.
+export type PatternBossType = GuildBossType | "frost_emperor";
+export const PATTERN_BOSSES: readonly PatternBossType[] = ["guild_dragon", "guild_yeti", "guild_glub", "frost_emperor"];
 // Week by week, in turn.
 export const GUILD_BOSSES: readonly GuildBossType[] = ["guild_dragon", "guild_yeti", "guild_glub"];
 
@@ -102,7 +105,7 @@ const circle = (x: number, z: number, r: number): Shape => ({ kind: "circle", x,
 // Pattern `index` (0 to 2) of `type`, cast now from where the boss stands at the players about.
 // random gives numbers in [0, 1); id prefixes every mark's id.
 export function castPattern(
-  type: GuildBossType, index: number, boss: { x: number; z: number }, prey: readonly Quarry[], now: number, rage: boolean,
+  type: PatternBossType, index: number, boss: { x: number; z: number }, prey: readonly Quarry[], now: number, rage: boolean,
   random: () => number, id: string,
 ): Pattern {
   const warn = (ms: number) => Math.round(ms * (rage ? RAGE_WARN : 1));
@@ -145,6 +148,19 @@ export function castPattern(
       return { telegraphs: scatter(7 + extra, 9, boss).map((s, i) => mark(i, circle(s.x, s.z, 2), 1800, 0.4)) };
     }
     return { telegraphs: [mark(0, { kind: "ring", x: boss.x, z: boss.z, inner: 3, outer: 10 }, 2000, 0.45)] };
+  }
+  if (type === "frost_emperor") {
+    if (index === 0) {
+      // Ice spears under everyone near (and, raging, a couple more).
+      const spots = [...prey.map((p) => ({ x: p.x, z: p.z })), ...scatter(extra, 5, nearest[0] ?? boss)];
+      return { telegraphs: spots.map((s, i) => mark(i, circle(s.x, s.z, 2.5), 1500, 0.35)) };
+    }
+    if (index === 1) {
+      const target = nearest[0] ?? { x: boss.x, z: boss.z - 1 };
+      return { telegraphs: [mark(0, { kind: "cone", x: boss.x, z: boss.z, yaw: yawToward(boss.x, boss.z, target.x, target.z), r: 12, arc: (100 * Math.PI) / 180 }, 2000, 0.5)] };
+    }
+    const spots = scatter(3 + extra, 4, nearest[0] ?? boss);
+    return { telegraphs: spots.map((s, i) => mark(i, circle(s.x, s.z, 3), 1800, 0.25, { lasts: 5000, tickShare: 0.07 })) };
   }
   // The elder glub.
   if (index === 0) return { telegraphs: [], summon: BROOD_COUNT };
