@@ -13,6 +13,7 @@ import type { EnhanceOutcome } from "../game/account/forge";
 import { readChat, type ChatMessage } from "../game/world/chat";
 import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
+import { readTelegraphs, type Telegraph } from "../game/world/telegraphs";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
@@ -62,6 +63,8 @@ export interface WorldState {
   others: OtherPlayer[];
   // The monsters of your channel, by id.
   monsters: Record<string, MonsterState>;
+  // The marks of the room's telegraphed attacks (see telegraphs.ts).
+  telegraphs: Telegraph[];
   me: Vitals | null;
   // Your gold, bag and gear; null until the server has said.
   bag: BagView | null;
@@ -153,7 +156,9 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // Your place in the open world: which zone and channel you are in, who else is there and where,
 // and your own pose going out to them.
 export class WorldClient {
-  private current: WorldState = { phase: "idle", entry: null, others: [], monsters: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false };
+  private current: WorldState = {
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false,
+  };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
   private members: string[] = [];
@@ -244,7 +249,7 @@ export class WorldClient {
   async leave(): Promise<void> {
     const mine = ++this.generation;
     this.unlisten();
-    this.set({ phase: "idle", entry: null, others: [], monsters: {}, me: null });
+    this.set({ phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], me: null });
     // Entered again at once (React's development double run): there is nothing to leave.
     await Promise.resolve();
     if (mine !== this.generation) return;
@@ -651,7 +656,7 @@ export class WorldClient {
     this.users = [];
     this.lastPose = null;
     this.payoutSeen = undefined;
-    this.set({ phase: "in", entry, others: [], monsters: {}, me: null, error: null });
+    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], me: null, error: null });
     void this.refreshBag();
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
@@ -659,6 +664,8 @@ export class WorldClient {
         this.members = Array.isArray(users) ? users.filter((u): u is string => typeof u === "string") : [];
         const monsters = (state as { monsters?: unknown }).monsters;
         if (monsters !== undefined) this.set({ monsters: readMonsters(monsters) });
+        const telegraphs = (state as { telegraphs?: unknown }).telegraphs;
+        if (telegraphs !== undefined) this.set({ telegraphs: readTelegraphs(telegraphs) });
         this.refreshOthers();
       }),
       this.transport.onRoomMessage(entry.roomId, "chat", (message) => this.heard(message)),

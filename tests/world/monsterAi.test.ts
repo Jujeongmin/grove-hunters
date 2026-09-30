@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveTelegraphs, type Telegraph } from "../../src/game/world/telegraphs";
 import { LEASH, stepMonsters } from "../../src/game/world/monsterAi";
 import { BOSS_MOVES, MONSTERS, spawnMonsters, type MonsterState } from "../../src/game/world/monsters";
 import { zoneLayout } from "../../src/game/world/zones";
@@ -111,17 +112,24 @@ describe("the boss", () => {
     attackReadyAt: 0, respawnAt: 0, homeX: at.x, homeZ: at.z, ...extra,
   });
 
-  it("rears up with a warning, then slams everyone close, not those who stepped out", () => {
+  it("rears up and marks the ground round itself; the mark lands on everyone still inside, not those who stepped out", () => {
     const monsters: Record<string, MonsterState> = { boss: king({ hitters: { near: 1, far: 1 } }) };
     const prey = [{ account: "near", x: at.x + 5, z: at.z }, { account: "far", x: at.x + 12, z: at.z }];
-    stepMonsters(monsters, prey, arena, 0.2, 0);
+    const marks: Telegraph[] = [];
+    stepMonsters(monsters, prey, arena, 0.2, 0, marks);
     const slamAt = monsters.boss.slamAt!;
     expect(slamAt).toBe(BOSS_MOVES.slamEveryMs);
-    stepMonsters(monsters, prey, arena, 0.2, slamAt - BOSS_MOVES.slamWarnMs + 10);
+    expect(marks).toEqual([]);
+    stepMonsters(monsters, prey, arena, 0.2, slamAt - BOSS_MOVES.slamWarnMs + 10, marks);
     expect(monsters.boss.slamming).toBe(true);
-    const hits = stepMonsters(monsters, prey, arena, 0.2, slamAt + 10);
-    expect(hits.filter((h) => h.damage === BOSS_MOVES.slamDamage).map((h) => h.account)).toEqual(["near"]);
+    expect(marks.length).toBe(1);
+    expect(marks[0]).toMatchObject({ hitAt: slamAt, damage: BOSS_MOVES.slamDamage, shape: { kind: "circle", r: BOSS_MOVES.slamRadius } });
+    stepMonsters(monsters, prey, arena, 0.2, slamAt + 10, marks);
     expect(monsters.boss.slamming).toBe(false);
+    // One more mark, not a second: the next is for the next slam.
+    expect(marks.length).toBe(1);
+    const landed = resolveTelegraphs(marks, prey.map((p) => ({ ...p, maxHp: 500 })), slamAt + 10);
+    expect(landed.hits).toEqual([{ account: "near", damage: BOSS_MOVES.slamDamage }]);
   });
 
   it("calls its brood once at each threshold, and the brood does not come back", () => {

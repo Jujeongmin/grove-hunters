@@ -4,6 +4,7 @@ import { readSlot, skillAt, skillTargets } from "../../src/game/combat/skills";
 import { readJob, type JobId } from "../../src/game/combat/jobs";
 import type { FightBonus } from "../../src/game/combat/power";
 import { stepMonsters, type Prey } from "../../src/game/world/monsterAi";
+import { readTelegraphs, resolveTelegraphs } from "../../src/game/world/telegraphs";
 import {
   ZONE_BOSS, ZONE_MONSTERS, damageAt, maxHpAt, readMonsterType, respawnDelay, spawnMonsters, type MonsterState,
   type MonsterType,
@@ -99,9 +100,10 @@ async function writeMonsters(monsters: Record<string, MonsterState>): Promise<vo
 }
 
 // One room tick: monsters move and swing, blows land on players (a raised guard facing the monster
-// stops part of it), and players out of a fight heal a little. Answers who fell in it.
+// stops part of it), marked attacks land on whoever is still inside them (no guard helps: only
+// stepping out), and players out of a fight heal a little. Answers who fell in it.
 export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Promise<string[]> {
-  const state = await $room.getRoomState(["monsters", "regenAt"]);
+  const state = await $room.getRoomState(["monsters", "regenAt", "telegraphs"]);
   const accounts: string[] = state.$users;
   if (accounts.length === 0) return [];
   const monsters = await readMonsters(zone);
@@ -117,9 +119,20 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   const safe = new Set(users.filter((u) => typeof u.safeUntil === "number" && now < u.safeUntil).map((u) => u.account));
   for (const [account, f] of fighters) if (f.pose && !f.dead && !safe.has(account)) prey.push({ account, x: f.pose.x, z: f.pose.z });
 
-  const hits = stepMonsters(monsters, prey, zoneLayout(zone), Math.min(deltaMs, MAX_TICK_MS) / 1000, now);
+  const marks = readTelegraphs(state.telegraphs);
+  const hits = stepMonsters(monsters, prey, zoneLayout(zone), Math.min(deltaMs, MAX_TICK_MS) / 1000, now, marks);
+  const struck = resolveTelegraphs(marks, prey.map((p) => ({ ...p, maxHp: fighters.get(p.account)!.maxHp })), now);
   const hurt = new Set<string>();
   const fell: string[] = [];
+  for (const hit of struck.hits) {
+    const f = fighters.get(hit.account);
+    if (!f || f.dead) continue;
+    f.hp = Math.max(0, f.hp - Math.max(1, Math.round(hit.damage * (1 - f.gear.guard))));
+    f.dead = f.hp <= 0;
+    if (f.dead) fell.push(hit.account);
+    f.hitAt = now;
+    hurt.add(hit.account);
+  }
   for (const hit of hits) {
     const f = fighters.get(hit.account);
     const m = monsters[hit.monsterId];
@@ -149,6 +162,9 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   // Written only when something changed (or they were just spawned): most ticks of a quiet room write nothing.
   if (JSON.stringify(tidy(monsters)) !== JSON.stringify(state.monsters ?? null)) await writeMonsters(monsters);
   if (regen) await $room.updateRoomState({ regenAt: now + REGEN_MS }, { returnState: false });
+  if (JSON.stringify(struck.left) !== JSON.stringify(readTelegraphs(state.telegraphs))) {
+    await $room.updateRoomState({ telegraphs: struck.left }, { returnState: false });
+  }
   return fell;
 }
 

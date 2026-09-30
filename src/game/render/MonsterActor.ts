@@ -1,6 +1,5 @@
 import * as THREE from "three";
-import { magicCircle } from "./magicCircle";
-import { BOSS_MOVES, type MonsterState } from "../world/monsters";
+import type { MonsterState } from "../world/monsters";
 import { ActionBlender, clipByName, ownMaterials, skinnedHeight } from "./skinned";
 
 const HIT_FLASH_SECONDS = 0.08;
@@ -15,7 +14,7 @@ const MAX_CATCH_UP = 2;
 const KNOCK_RETURN = 9;
 
 // What a frame's sync saw happen to a monster, for the view's numbers and puffs.
-export interface MonsterChange { damage: number; died: boolean; slammed: boolean }
+export interface MonsterChange { damage: number; died: boolean }
 
 // How a monster model is drawn: its standing height in metres, an optional colour tint, and the
 // names of its clips (they differ from pack to pack). A null death means it just sinks away.
@@ -51,10 +50,6 @@ export class MonsterActor {
   private readonly knock = new THREE.Vector3();
   // Where the next blow comes from (set by the view before sync), to push away from.
   private blowFrom: { x: number; z: number } | null = null;
-  // The boss's warning: a red magic circle on the ground where its slam will land, while it rears up.
-  private readonly warning: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  private warningClock = 0;
-  private wasSlamming = false;
 
   constructor(readonly id: string, readonly body: THREE.Object3D, clips: THREE.AnimationClip[], look: MonsterLook, private readonly maxHp = 100) {
     body.scale.setScalar(look.height / skinnedHeight(body));
@@ -86,12 +81,8 @@ export class MonsterActor {
     this.bar.add(back, this.barFill);
     this.bar.position.y = look.height + 0.35;
     this.bar.visible = false;
-    this.warning = magicCircle(0xff3a2a, 0.9);
-    this.warning.scale.setScalar(BOSS_MOVES.slamRadius);
-    this.warning.position.y = 0.07;
-    this.warning.visible = false;
     this.object = new THREE.Group();
-    this.object.add(body, this.bar, this.warning);
+    this.object.add(body, this.bar);
   }
 
   // The spot the next blow comes from (a hunter), so the monster jolts away from it.
@@ -107,18 +98,8 @@ export class MonsterActor {
   // view: what the camera sees (last frame's); a monster outside it is neither drawn nor animated,
   // only kept up to date, and catches its animation up when it comes back into view.
   sync(state: MonsterState, dt: number, camera: THREE.Camera | null, view: THREE.Frustum | null = null): MonsterChange {
-    const change: MonsterChange = { damage: 0, died: false, slammed: false };
-    // The boss rearing up: the ring pulses; when it lets go, the view shows a shockwave.
-    const slamming = state.slamming === true && state.alive;
-    if (this.wasSlamming && !slamming && state.alive) change.slammed = true;
-    this.wasSlamming = slamming;
-    this.warning.visible = slamming;
-    if (slamming) {
-      this.warningClock += dt;
-      const pulse = 0.5 + 0.5 * Math.sin(this.warningClock * 14);
-      this.warning.material.opacity = 0.55 + pulse * 0.45;
-      this.warning.rotation.y = this.warningClock * 1.5;
-    }
+    // (Where a boss's slam lands is marked on the ground by the view's telegraph layer.)
+    const change: MonsterChange = { damage: 0, died: false };
     const p = this.object.position;
     // Back from the dead: standing where it started.
     if (state.alive && this.dead) {

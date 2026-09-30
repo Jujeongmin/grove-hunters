@@ -2,6 +2,7 @@ import { crowdBlocks, PLAYER_BODY, type Body } from "../rules/crowd";
 import { solidWith, type LevelLayout } from "../rules/levelLayout";
 import { MAX_STEP_SECONDS, stepAround, type SolidTest } from "../rules/movement";
 import { BOSS_MOVES, MONSTERS, ZONE_BOSS, respawned, type MonsterState } from "./monsters";
+import type { Telegraph } from "./telegraphs";
 
 const BOSSES = new Set(Object.values(ZONE_BOSS));
 
@@ -18,8 +19,10 @@ export const LEASH = 20;
 // One step of every monster in a room: the fallen come back when their time is up, the rest leave
 // players be until hit (the aggressive kinds not) and then chase whoever hit them, walk round each
 // other, the players and the forest, and swing when close enough. Returns the blows landed; the caller takes them off the players.
+// A boss's marked attacks go into `telegraphs` (the room's), which land later (see telegraphs.ts).
 export function stepMonsters(
   monsters: Record<string, MonsterState>, prey: readonly Prey[], layout: LevelLayout, dt: number, now: number,
+  telegraphs: Telegraph[] = [],
 ): MonsterHit[] {
   const hits: MonsterHit[] = [];
   const walls: SolidTest = solidWith(layout, 0);
@@ -34,7 +37,7 @@ export function stepMonsters(
     // Monsters are neutral until a player hits them: then they turn on whoever did. The aggressive
     // kinds, and the boss's brood called up mid-fight, go for any hunter in sight as well.
     const provoked = m.hitters ? prey.filter((p) => m.hitters![p.account]) : [];
-    if (BOSSES.has(m.type) && provoked.length > 0 && stepBoss(id, m, monsters, prey, now, hits)) continue;
+    if (BOSSES.has(m.type) && provoked.length > 0 && stepBoss(id, m, monsters, prey, now, telegraphs)) continue;
     if (now < m.stunnedUntil) continue;
 
     const fromHome = Math.hypot(m.x - m.homeX, m.z - m.homeZ);
@@ -101,10 +104,11 @@ export function stepMonsters(
 }
 
 // The boss's own moves, before its ordinary chase and bite. Calls its brood at set shares of its
-// health; with a hunter near, slams the ground on a timer after a warning. Returns true while it is
-// rearing up for a slam (it neither moves nor bites then).
+// health; with a hunter near, marks the ground round itself on a timer and slams it when the mark
+// lands (see telegraphs.ts). Returns true while it is rearing up for a slam (it neither moves nor
+// bites then).
 function stepBoss(
-  id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], now: number, hits: MonsterHit[],
+  id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], now: number, telegraphs: Telegraph[],
 ): boolean {
   const spec = MONSTERS[m.type];
   const calls = m.calls ?? 0;
@@ -130,13 +134,14 @@ function stepBoss(
     return false;
   }
   if (m.slamAt === undefined) m.slamAt = now + BOSS_MOVES.slamEveryMs;
-  if (!m.slamming && now >= m.slamAt - BOSS_MOVES.slamWarnMs) m.slamming = true;
+  if (!m.slamming && now >= m.slamAt - BOSS_MOVES.slamWarnMs) {
+    m.slamming = true;
+    telegraphs.push({
+      id: `${id}-slam-${m.slamAt}`, shape: { kind: "circle", x: m.x, z: m.z, r: BOSS_MOVES.slamRadius },
+      startAt: now, hitAt: m.slamAt, damage: BOSS_MOVES.slamDamage,
+    });
+  }
   if (m.slamming && now >= m.slamAt) {
-    for (const p of prey) {
-      if (Math.hypot(p.x - m.x, p.z - m.z) <= BOSS_MOVES.slamRadius) {
-        hits.push({ monsterId: id, account: p.account, damage: BOSS_MOVES.slamDamage });
-      }
-    }
     m.slamming = false;
     m.slamAt = now + BOSS_MOVES.slamEveryMs;
     // The slam is its swing: the client plays the attack and a shockwave.

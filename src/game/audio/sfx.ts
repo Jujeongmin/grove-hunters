@@ -24,6 +24,8 @@ const CUES = {
   quest: { file: "enhance_ok.wav", level: 0.33 },
   // Heard far more than any of them, so it sits under the loudness the others share.
   hurt: { file: "hurt.wav", level: 0.2 },
+  // A boss marks the ground: step out.
+  warn: { file: "bolt.ogg", level: 1.6 },
   enhance_fail: { file: "enhance_fail.ogg", level: 0.66 },
   enhance_break: { file: "enhance_break.ogg", level: 0.6 },
 } as const;

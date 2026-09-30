@@ -38,8 +38,9 @@ export interface MonsterSpec {
 
 // The boss's moves, beyond biting whoever is closest (see stepBoss in monsterAi.ts).
 export const BOSS_MOVES = {
-  // Every slamEveryMs it rears up for slamWarnMs (a red ring shows where it will land), then strikes
-  // everyone within slamRadius for slamDamage (a raised guard facing it still helps).
+  // Every slamEveryMs it rears up for slamWarnMs (a marked circle shows where it will land; see
+  // telegraphs.ts), then strikes everyone still within slamRadius for slamDamage. Only stepping out
+  // helps: a raised guard does not.
   slamEveryMs: 12_000,
   slamWarnMs: 1_500,
   slamRadius: 7,

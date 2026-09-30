@@ -42,6 +42,8 @@ import { HEROES, HERO_MODELS } from "./heroes";
 import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import type { LodBatch } from "./lodBatch";
+import { TelegraphLayer } from "./telegraphMarks";
+import type { Telegraph } from "../world/telegraphs";
 import { MonsterActor } from "./MonsterActor";
 import { MONSTER_SKINS } from "./monsterLooks";
 import { PlayerActor } from "./PlayerActor";
@@ -210,6 +212,8 @@ export class WorldView {
   private readonly clock = new THREE.Clock();
   private readonly input: FpsInput;
   private readonly effects = new Effects(this.scene);
+  // The marks of telegraphed attacks on the ground.
+  private readonly marks = new TelegraphLayer();
   private readonly others = new Map<string, { actor: PlayerActor; key: string }>();
   private readonly monsters = new Map<string, MonsterActor>();
   private readonly npcs: { id: NpcId; actor: NpcActor; at: Point2 }[] = [];
@@ -566,6 +570,7 @@ export class WorldView {
 
   dispose(): void {
     this.disposed = true;
+    this.marks.dispose();
     cancelAnimationFrame(this.frame);
     this.stopBackground();
     this.stopQuality();
@@ -730,6 +735,7 @@ export class WorldView {
     this.showHurt(state.me?.hp ?? null);
     this.syncActors(state.others, dt, dead);
     this.syncMonsters(state.monsters, dt);
+    this.syncMarks(state.telegraphs);
     this.effects.update(dt, this.camera);
     for (const glow of this.portalGlows) glow.rotation.y += dt * 0.6;
     const cam = chaseCamera(this.pose, this.yaw, this.pitch, this.walls, SKY_CEILING);
@@ -1184,6 +1190,17 @@ export class WorldView {
     this.lastHp = hp;
   }
 
+  // The ground marks of attacks about to land: a warning as one appears, a shockwave as it lands.
+  private syncMarks(telegraphs: readonly Telegraph[]): void {
+    if (!this.marks.object.parent) this.scene.add(this.marks.object);
+    const { appeared, landed } = this.marks.sync(telegraphs, performance.now());
+    if (appeared) playCue("warn");
+    for (const t of landed) {
+      const reach = t.shape.kind === "circle" ? t.shape.r : t.shape.kind === "ring" ? t.shape.outer : 0;
+      if (reach > 0) this.effects.ring(new THREE.Vector3(t.shape.x, 0, t.shape.z), reach, 0xff7a3a);
+    }
+  }
+
   private syncMonsters(monsters: Record<string, MonsterState>, dt: number): void {
     const library = this.library;
     if (!library) return;
@@ -1209,10 +1226,6 @@ export class WorldView {
       // Heard only near you, not from across the field.
       const near = Math.hypot(actor.object.position.x - this.pose.x, actor.object.position.z - this.pose.z) < DIE_HEARD;
       if (change.died && near) playCue("die");
-      if (change.slammed) {
-        const ground = new THREE.Vector3(actor.object.position.x, 0, actor.object.position.z);
-        this.effects.ring(ground, BOSS_MOVES.slamRadius, 0xff7a3a);
-      }
     }
     for (const [id, actor] of this.monsters) {
       if (monsters[id]) continue;

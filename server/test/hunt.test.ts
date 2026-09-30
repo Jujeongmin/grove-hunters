@@ -49,6 +49,27 @@ describe("hunting", () => {
     expect(Object.values(monsters).every((m: any) => m.alive && m.hp > 0)).toBe(true);
   });
 
+  test("a marked attack lands on whoever is still inside it, guard or no guard, and is gone once landed", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await only("rat", spawn.x + 30, spawn.z + 30);
+    await standAt(server, spawn.x, spawn.z);
+    const full = (await $room.getMyState()).maxHp;
+    // Raising a guard helps nothing against it.
+    await $room.updateMyState({ pose: { ...(await $room.getMyState()).pose, block: true } });
+    const now = Date.now();
+    await $room.updateRoomState({
+      telegraphs: [
+        { id: "hit", shape: { kind: "circle", x: spawn.x, z: spawn.z, r: 3 }, startAt: now - 2000, hitAt: now - 1, share: 0.5 },
+        { id: "miss", shape: { kind: "circle", x: spawn.x + 20, z: spawn.z, r: 3 }, startAt: now - 2000, hitAt: now - 1, share: 0.5 },
+        { id: "later", shape: { kind: "circle", x: spawn.x, z: spawn.z, r: 3 }, startAt: now, hitAt: now + 60_000, share: 0.5 },
+      ],
+    });
+    await server.simulateTick(entry.roomId, 200);
+    expect((await $room.getMyState()).hp).toBe(full - Math.round(full * 0.5));
+    expect((await $room.getRoomState()).telegraphs.map((t: any) => t.id)).toEqual(["later"]);
+  });
+
   test("a room kept from before the field gained monsters gets the new ones", async (server) => {
     const entry = await toForest(server, "test-a");
     const { m0 } = spawnMonsters("forest1");
