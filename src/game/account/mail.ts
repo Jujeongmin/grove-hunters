@@ -1,14 +1,16 @@
 import type { Lang } from "../langs";
-import { readItemId, type ItemId } from "./items";
-import { fits, type Inventory } from "./inventory";
+import { readItemId, readPiece, slotOf, type GearPiece, type ItemId } from "./items";
+import { give, putPiece, type Inventory, type MakeUid } from "./inventory";
 
-// Mail: only the game sends it (gifts now; the market's proceeds and returns later). One mailbox per
-// account, the same on every server and character; what a letter carries goes to the character that
-// takes it, its gold and gems to the account.
+// Mail: only the game sends it (gifts, and the market's proceeds, purchases and returns). One mailbox
+// per account, the same on every server and character; what a letter carries goes to the character
+// that takes it, its gold and gems to the account.
 
-export type MailKind = "gift";
+export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned";
 
-export interface MailItem { id: ItemId; n: number }
+// What a letter carries: n of an item, given new (gear as new pieces; trade: whether it may be
+// traded), or one whole piece of gear as it was (from the market, its + and all).
+export interface MailItem { id: ItemId; n: number; trade?: boolean; piece?: GearPiece }
 
 export interface Mail {
   // The row's id in the mail collection.
@@ -28,7 +30,7 @@ export const MAIL_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 // The mailbox shows the newest this many.
 export const MAILBOX_SHOWN = 50;
 
-const KINDS: readonly MailKind[] = ["gift"];
+const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned"];
 
 const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
 
@@ -36,10 +38,17 @@ function readItems(raw: unknown): MailItem[] | null {
   if (!Array.isArray(raw)) return null;
   const out: MailItem[] = [];
   for (const entry of raw) {
-    const id = readItemId((entry as { id?: unknown } | null)?.id);
-    const n = count((entry as { n?: unknown } | null)?.n);
+    const e = entry as { id?: unknown; n?: unknown; trade?: unknown; piece?: unknown } | null;
+    if (e?.piece !== undefined) {
+      const piece = readPiece(e.piece);
+      if (!piece) return null;
+      out.push({ id: piece.id, n: 1, piece });
+      continue;
+    }
+    const id = readItemId(e?.id);
+    const n = count(e?.n);
     if (!id || n === 0) return null;
-    out.push({ id, n });
+    out.push(e?.trade === true ? { id, n, trade: true } : { id, n });
   }
   return out;
 }
@@ -68,10 +77,33 @@ export function daysLeft(mail: Pick<Mail, "at">, now: number): number {
   return Math.max(0, Math.ceil((mail.at + MAIL_KEEP_MS - now) / (24 * 60 * 60 * 1000)));
 }
 
+// What a letter carries, into a character's things: all of it, or nothing (bag_full).
+export function receiveMail<I extends Inventory>(inv: I, items: readonly MailItem[], makeUid: MakeUid): I {
+  let next = inv;
+  for (const item of items) {
+    next = item.piece ? putPiece(next, item.piece) : give(next, [{ id: item.id, n: item.n }], item.trade === true, makeUid);
+  }
+  return next;
+}
+
 // Whether everything a letter carries fits the bag (no stack past MAX_STACK, no gear past
 // MAX_PIECES). One that does not is left in the mailbox rather than half taken.
 export function mailFits(inv: Inventory, mail: Pick<Mail, "items">): boolean {
-  return fits(inv, mail.items, false);
+  try {
+    receiveMail(inv, mail.items, () => "fit");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// The one piece or kind of item a market letter is about (for its title).
+export function marketThing(mail: Pick<Mail, "items" | "params">): { id: ItemId; plus: number; n: number } | null {
+  const item = readItemId(mail.params.item);
+  if (!item) return null;
+  const plus = typeof mail.params.plus === "number" ? mail.params.plus : 0;
+  const n = typeof mail.params.n === "number" ? mail.params.n : 1;
+  return { id: item, plus: slotOf(item) ? plus : 0, n };
 }
 
 // Gifts from the game to every account that comes in while one is on: each account gets each once.

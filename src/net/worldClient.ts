@@ -14,7 +14,11 @@ import { readChat, type ChatMessage } from "../game/world/chat";
 import { readMountId, type MountId } from "../game/account/mounts";
 import { NEWS } from "../game/news";
 import type { Mail } from "../game/account/mail";
+import type { ListingView, MarketFilter } from "../game/account/market";
 import type { MatchTransport } from "./transport";
+
+// One page of the market, and your gems.
+export interface MarketPage { listings: ListingView[]; page: number; pages: number; gems: number }
 
 export type WorldPhase = "idle" | "entering" | "in" | "travelling" | "error";
 
@@ -432,6 +436,38 @@ export class WorldClient {
       const taken = await this.transport.call<{ mail: Mail[]; left: number; problem: string | null }>("claimAllMail");
       void this.refreshBag();
       return taken;
+    } catch (error) {
+      return { problem: errorCode(error) };
+    }
+  }
+
+  // The market: a page of listings, your own, putting something up (the bag is read again), buying
+  // and taking down. Each answers what the server did, or the problem.
+  market(filter: Partial<MarketFilter>): Promise<MarketPage | { problem: string }> {
+    return this.marketCall<MarketPage>("market", [filter]);
+  }
+
+  myListings(): Promise<{ listings: ListingView[]; gems: number } | { problem: string }> {
+    return this.marketCall("myListings", []);
+  }
+
+  async sellOnMarket(what: { uid: string } | { item: ItemId; n: number }, price: number): Promise<{ listings: ListingView[] } | { problem: string }> {
+    const r = await this.marketCall<{ bag: BagView; listings: ListingView[] }>("sellOnMarket", [what, price]);
+    if ("bag" in r) this.set({ bag: r.bag });
+    return r;
+  }
+
+  buyListing(id: string): Promise<{ gems: number } | { problem: string }> {
+    return this.marketCall("buyFromMarket", [id]);
+  }
+
+  cancelListing(id: string): Promise<{ listings: ListingView[] } | { problem: string }> {
+    return this.marketCall("cancelMarketListing", [id]);
+  }
+
+  private async marketCall<T>(name: string, args: unknown[]): Promise<T | { problem: string }> {
+    try {
+      return await this.transport.call<T>(name, args);
     } catch (error) {
       return { problem: errorCode(error) };
     }

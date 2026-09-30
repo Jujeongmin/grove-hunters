@@ -5,15 +5,21 @@ import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
 } from "../../src/game/account/level";
 import {
-  GOLD, ITEMS, MAX_STACK, POTION_GAP_MS, addItem, readItemId, sellPrice, slotOf, type BagView, type ItemId, type Slot,
+  GOLD, ITEMS, MAX_STACK, POTION_GAP_MS, addItem, readItemId, sellPrice, slotOf, type BagView, type GearPiece, type ItemId, type Slot,
 } from "../../src/game/account/items";
 import {
-  EMPTY_INVENTORY, TRADE_CRAFT_CHANCE, allStacks, countOf, equipPiece, fits, give, loot, spend, takePiece, takeStack, unequipSlot,
+  EMPTY_INVENTORY, TRADE_CRAFT_CHANCE, allStacks, countOf, equipPiece, fits, give, loot, putPiece, spend, takePiece, takeStack, unequipSlot,
 } from "../../src/game/account/inventory";
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { NEWS, readNewsId } from "../../src/game/news";
-import { mailFits, type Mail } from "../../src/game/account/mail";
+import { mailFits, receiveMail, type Mail } from "../../src/game/account/mail";
 import { openMailbox, takeMail } from "./mail";
+import {
+  MAX_LISTINGS, pageOf, readBundle, readFilter, readPrice, shelfOf, type Listing, type ListingView, type Shelf,
+} from "../../src/game/account/market";
+import {
+  addListing, buyListing, cancelListing, countListings, sellerListings, shelfListings, sweepExpired, withSellerLock,
+} from "./market";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
 import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
@@ -323,6 +329,12 @@ function currentChannel(): { roomId: string; zone: ZoneId } {
   return { roomId, zone: here.zone };
 }
 
+// A listing as the market's screen shows it: whose it is by name only, and whether it is yours.
+function listingView(listing: Listing, account: string): ListingView {
+  const { seller, ...shown } = listing;
+  return { ...shown, mine: seller === account };
+}
+
 // One letter out of the mailbox and into your hands. Items need a character to carry them (and room in its bag); gold and
 // gems go to the account.
 async function claimLetter(account: string, id: string): Promise<void> {
@@ -334,7 +346,7 @@ async function claimLetter(account: string, id: string): Promise<void> {
     async (mail) => {
       if (mail.items.length > 0) {
         await updateActive(account, (c) => {
-          return give(c, mail.items, false, newUid);
+          return receiveMail(c, mail.items, newUid);
         });
       }
       if (mail.gems > 0) await changeGems(account, mail.gems);
@@ -405,6 +417,76 @@ export class Server {
       }
     }
     return { mail: await openMailbox(account, Date.now()), claimed, left, problem };
+  }
+
+  // The market: one page of a shelf, cheapest first, and your gems. Listings past their time go back
+  // to their sellers first.
+  async market(rawFilter: unknown): Promise<{ listings: ListingView[]; page: number; pages: number; gems: number }> {
+    const account = $sender.account;
+    const now = Date.now();
+    await sweepExpired(now);
+    const filter = readFilter(rawFilter);
+    const found = pageOf(await shelfListings(filter.shelf, filter.item), filter, now);
+    return { ...found, listings: found.listings.map((l) => listingView(l, account)), gems: await readGems(account) };
+  }
+
+  // Your listings, newest first, and your gems.
+  async myListings(): Promise<{ listings: ListingView[]; gems: number }> {
+    const account = $sender.account;
+    await sweepExpired(Date.now());
+    return { listings: (await sellerListings(account)).map((l) => listingView(l, account)), gems: await readGems(account) };
+  }
+
+  // Puts a tradable piece ({ uid }) or bundle of tradable material ({ item, n }) up for `price` gems.
+  // It leaves the bag at once and comes back by mail if it is taken down or runs out of time.
+  async sellOnMarket(rawWhat: unknown, rawPrice: unknown): Promise<{ bag: BagView; listings: ListingView[] }> {
+    const account = $sender.account;
+    const current = await playing(account);
+    const what = (rawWhat ?? {}) as { uid?: unknown; item?: unknown; n?: unknown };
+    let offer: { piece: GearPiece } | { item: ItemId; n: number };
+    let shelf: Shelf;
+    if (typeof what.uid === "string") {
+      const piece = current.pieces.find((p) => p.uid === what.uid);
+      if (!piece) throw new RuleViolation("no_item");
+      if (!piece.trade) throw new RuleViolation("not_tradable");
+      offer = { piece };
+      shelf = slotOf(piece.id)!;
+    } else {
+      const item = readItem(what.item);
+      const n = readBundle(what.n);
+      if (shelfOf(item) !== "material") throw new RuleViolation("not_tradable");
+      if (n === null) throw new RuleViolation("unavailable");
+      offer = { item, n };
+      shelf = "material";
+    }
+    const price = readPrice(rawPrice, shelf);
+    if (price === null) throw new RuleViolation("bad_price");
+    const next = await withSellerLock(account, async () => {
+      if ((await countListings(account)) >= MAX_LISTINGS) throw new RuleViolation("listing_limit");
+      const taken = await updateActive(account, (c) => ("piece" in offer ? takePiece(c, offer.piece.uid).inv : takeStack(c, offer.item, offer.n, true)));
+      try {
+        await addListing(account, current.name, offer, shelf, price, Date.now());
+      } catch (error) {
+        await updateActive(account, (c) => ("piece" in offer ? putPiece(c, offer.piece) : give(c, [{ id: offer.item, n: offer.n }], true, newUid)));
+        throw error;
+      }
+      return taken;
+    });
+    return { bag: await bagView(next), listings: (await sellerListings(account)).map((l) => listingView(l, account)) };
+  }
+
+  // Buys a listing for its price in gems; what was bought comes by mail.
+  async buyFromMarket(rawId: unknown): Promise<{ gems: number }> {
+    const account = $sender.account;
+    await buyListing(account, requireText(rawId), Date.now());
+    return { gems: await readGems(account) };
+  }
+
+  // Takes one of your listings down; it comes back by mail.
+  async cancelMarketListing(rawId: unknown): Promise<{ listings: ListingView[] }> {
+    const account = $sender.account;
+    await cancelListing(account, requireText(rawId), Date.now());
+    return { listings: (await sellerListings(account)).map((l) => listingView(l, account)) };
   }
 
   // How you set up the bar (skills in slots, what auto-battle may use), kept on the account so it

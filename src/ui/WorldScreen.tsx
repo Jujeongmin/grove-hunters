@@ -31,6 +31,7 @@ import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
+import { MarketPanel } from "./MarketPanel";
 import { unseenNews } from "../game/news";
 import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
@@ -139,7 +140,7 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -384,6 +385,7 @@ function ZoneScreen({
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
     { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
+    { id: "market", label: t("menu.market"), key: "X", code: "KeyX", act: () => toggle("market"), on: panel === "market" },
     { id: "mail", label: t("menu.mail"), key: "F", code: "KeyF", act: () => toggle("mail"), on: panel === "mail", dot: mailWaiting > 0 },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
@@ -659,6 +661,7 @@ function ZoneScreen({
         />
       )}
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
+      {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (

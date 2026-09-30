@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { daysLeft, giftById, type Mail } from "../game/account/mail";
+import { daysLeft, giftById, marketThing, type Mail } from "../game/account/mail";
+import { marketFee } from "../game/account/market";
 import { iconFor } from "../game/render/icons";
 import { problemText } from "./BagPanel";
 import { lang, t } from "./lang";
-import { itemName } from "./names";
+import { gearName, itemName } from "./names";
 import type { WorldClient } from "../net/worldClient";
 
 interface MailPanelProps {
@@ -13,11 +14,17 @@ interface MailPanelProps {
   onClose: () => void;
 }
 
-// What a letter is called and says: a gift in its own words, anything else by its kind.
+// What a letter is called and says: a gift in its own words, a market letter by what it was about.
 function words(mail: Mail): { title: string; body: string | null } {
   const gift = mail.kind === "gift" ? giftById(mail.params.gift) : null;
   if (gift) return gift.text[lang()];
-  return { title: t("mail.gift"), body: null };
+  const thing = marketThing(mail);
+  if (mail.kind === "gift" || !thing) return { title: t("mail.gift"), body: null };
+  const item = thing.n > 1 ? `${itemName(thing.id)} ×${thing.n}` : gearName({ id: thing.id, plus: thing.plus });
+  const price = typeof mail.params.price === "number" ? mail.params.price : 0;
+  if (mail.kind === "market_sold") return { title: t("mail.marketSold", { item }), body: t("mail.marketSoldBody", { price, fee: marketFee(price) }) };
+  if (mail.kind === "market_bought") return { title: t("mail.marketBought", { item }), body: t("mail.marketBoughtBody", { price }) };
+  return { title: t("mail.marketReturned", { item }), body: t("mail.marketReturnedBody") };
 }
 
 // The account's mailbox: what the game has sent, newest first, each to take on its own or all at once.
@@ -80,9 +87,9 @@ export function MailPanel({ client, onCount, onClose }: MailPanelProps) {
                         </span>
                       )}
                       {letter.items.map((item, i) => (
-                        <span key={i} className="mail-thing" title={itemName(item.id)}>
+                        <span key={i} className={`mail-thing${item.piece?.trade || item.trade ? " trade" : ""}`} title={itemName(item.id)}>
                           <img src={iconFor(item.id) ?? undefined} alt="" draggable={false} />
-                          {itemName(item.id)} ×{item.n}
+                          {item.piece ? gearName(item.piece) : `${itemName(item.id)} ×${item.n}`}
                         </span>
                       ))}
                     </span>

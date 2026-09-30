@@ -19,12 +19,23 @@ interface CollectionQuery {
   limit?: number;
 }
 
-// Only equality filters so far; anything else fails loudly instead of matching everything.
+// Equality and comparisons (the market sweeps listings past their time); anything else fails loudly
+// instead of matching everything.
+const COMPARE: Record<string, (a: any, b: any) => boolean> = {
+  "==": (a, b) => a === b,
+  "!=": (a, b) => a !== b,
+  "<": (a, b) => a < b,
+  "<=": (a, b) => a <= b,
+  ">": (a, b) => a > b,
+  ">=": (a, b) => a >= b,
+};
+
 function query(items: Json[], options: CollectionQuery = {}): Json[] {
   let found = items;
   for (const filter of options.filters ?? []) {
-    if (filter.operator !== "==") throw new Error(`LocalWorld: unsupported filter operator ${filter.operator}`);
-    found = found.filter((item) => item[filter.field] === filter.value);
+    const test = COMPARE[filter.operator];
+    if (!test) throw new Error(`LocalWorld: unsupported filter operator ${filter.operator}`);
+    found = found.filter((item) => test(item[filter.field], filter.value));
   }
   return options.limit ? found.slice(0, options.limit) : found;
 }

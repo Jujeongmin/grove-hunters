@@ -17,6 +17,62 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-09-30-market",
+    date: "2026-09-30",
+    text: {
+      ko: {
+        title: "거래소가 열렸어요",
+        lines: [
+          "메뉴의 '거래소'에서 거래 가능한 장비와 재료를 보석으로 사고팔 수 있어요. 모든 서버가 같은 거래소를 써요.",
+          "장비는 강화 수치 그대로 한 점씩, 재료는 묶음으로 팔아요. 장비는 10보석, 재료 묶음은 1보석부터예요.",
+          "팔리면 수수료 5%를 뺀 보석이, 산 물건은 그대로 우편으로 와요. 거래소에서 산 물건은 다시 팔 수 있어요.",
+          "매물은 한 번에 10개까지, 48시간 동안 올라가요. 안 팔리거나 내리면 우편으로 돌아와요.",
+          "모은 보석으로 마구간에서 탈것을 뽑아 보세요!",
+        ],
+      },
+      en: {
+        title: "The market is open",
+        lines: [
+          "Buy and sell tradable gear and materials for gems under 'Market' in the menu. Every server shares one market.",
+          "Gear sells a piece at a time with its +, materials as a bundle. Gear starts at 10 gems, a bundle at 1.",
+          "When something sells, the gems (less a 5% fee) come by mail, and what you buy comes by mail as it was. Bought things can be sold again.",
+          "Up to 10 listings at once, each up for 48 hours. Anything unsold or taken down comes back by mail.",
+          "Spend the gems you earn on mount draws in the stable!",
+        ],
+      },
+      ja: {
+        title: "取引所がオープンしました",
+        lines: [
+          "メニューの「取引所」で、取引可能な装備と素材を宝石で売買できます。すべてのサーバーが同じ取引所を使います。",
+          "装備は強化値そのままで1つずつ、素材は束で売ります。装備は10宝石、素材の束は1宝石からです。",
+          "売れると手数料5%を引いた宝石が、買ったものはそのまま郵便で届きます。取引所で買ったものはまた売れます。",
+          "出品は一度に10個まで、48時間掲載されます。売れなかったり取り下げたものは郵便で戻ります。",
+          "集めた宝石で馬小屋の乗り物を引いてみましょう！",
+        ],
+      },
+      "zh-Hant": {
+        title: "交易所開放了",
+        lines: [
+          "可在選單的「交易所」以寶石買賣可交易的裝備與材料，所有伺服器共用一個交易所。",
+          "裝備保留強化值一件一件賣，材料整束賣。裝備10寶石起，材料每束1寶石起。",
+          "售出後扣除5%手續費的寶石、購買的物品都會原樣以郵件送達。在交易所買的物品可以再賣。",
+          "一次最多上架10件，每件上架48小時。未售出或下架的物品會以郵件退回。",
+          "用賺到的寶石去馬廄抽坐騎吧！",
+        ],
+      },
+      "zh-Hans": {
+        title: "交易所开放了",
+        lines: [
+          "可在菜单的“交易所”以宝石买卖可交易的装备与材料，所有服务器共用一个交易所。",
+          "装备保留强化值一件一件卖，材料整束卖。装备10宝石起，材料每束1宝石起。",
+          "售出后扣除5%手续费的宝石、购买的物品都会原样以邮件送达。在交易所买的物品可以再卖。",
+          "一次最多上架10件，每件上架48小时。未售出或下架的物品会以邮件退回。",
+          "用赚到的宝石去马厩抽坐骑吧！",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-tradable",
     date: "2026-09-30",
     text: {

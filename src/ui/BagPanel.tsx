@@ -9,12 +9,14 @@ import { iconFor } from "../game/render/icons";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import type { WorldClient } from "../net/worldClient";
+import { MAX_LISTINGS } from "../game/account/market";
 
 // What the server said went wrong, in the reader's language. Anything it does not know about is
 // still said, in the plainest way there is.
 export function problemText(code: string | null | undefined): string | null {
   if (!code) return null;
   if (code === "too_low") return t("problem.too_low_advance", { n: ADVANCE_LEVEL });
+  if (code === "listing_limit") return t("problem.listing_limit", { n: MAX_LISTINGS });
   const key = `problem.${code}` as Key;
   const said = t(key);
   return said === key ? t("problem.unavailable") : said;
