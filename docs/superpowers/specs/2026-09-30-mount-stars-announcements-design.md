@@ -8,7 +8,7 @@
   ★5인 탈것이 또 나오면 지금처럼 `DUPLICATE_REFUND`(30) 보석.
 - 보너스: 등급 보너스 × (1 + `STAR_BONUS`(0.2) × 별). ★5 = 2배(전설 공격력 +60%, 체력 +200). 속도는 그대로.
   지금처럼 **고른 탈것 하나**만 적용.
-- 저장: 계정 state `mountStars: { [MountId]: 1..5 }`(★0은 적지 않음). 정식판의 사슴은 뽑기에 나오지 않아 늘 ★0.
+- 저장: 계정 state `mountStars: { [MountId]: 1..5 }`(★0은 적지 않음). 사슴(모든 계정 기본)과 VIP 10 전용 천상의 용은 뽑기에 나오지 않아 늘 ★0.
 - 전투력 계산(`power.ts`)은 탈것과 그 별을 받는다(`mountBonus(id, stars)`); 방의 전투 수치, 가방·HUD의 전투력, 랭킹이
   모두 따른다.
 - 마구간: 카드에 ★, 고른 탈것의 지금 보너스와 다음 별의 보너스, 뽑기 결과에 "★N 달성!", 확률표 아래 규칙 한 줄.
@@ -17,9 +17,13 @@
 
 - 종류와 문구 구멍:
   - `mount_legendary` { name, world, mount } — 전설 탈것을 새로 얻음
+  - `mount_mythic` { name, world, mount } — 신화 탈것을 새로 얻음 (2026-10-01)
   - `mount_star5` { name, world, mount } — 탈것 ★5 달성
   - `enhance` { name, world, item, plus } — 장비 +8 이상 강화 성공
   - `guild_boss` { guild, boss } — 길드 보스 처치
+  - `vip` { name, world, vip } — VIP 5 이상 달성 (2026-10-01)
+  - `power_top` { name, world, power } — 전투력 랭킹 1위 교체 (2026-10-01)
+  - `guild_week` { guild } — 길드 보스 주간 순위 1위 길드 (2026-10-01)
 - 서버가 일어난 자리에서 행을 하나 쓰고, 최근 `ANNOUNCE_KEEP`(20)개만 남긴다.
 - 원격 함수 `announcements(since)`: `since` 뒤의 것, 오래된 순.
 - 화면: 월드에 있는 동안 30초마다 새 공지를 가져와 위쪽 가운데 금색 띠로 하나씩 6초, 채팅창에도 시스템 줄로 남긴다.
