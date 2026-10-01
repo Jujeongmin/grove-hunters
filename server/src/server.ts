@@ -60,7 +60,7 @@ import {
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MOUNTS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, gemsFor, ownedMounts, readMountId, readPity, readStars,
-  rollMounts, tierOf, type MountId, type Pity,
+  rollMounts, tierOf, vipMounts, type MountId, type Pity,
 } from "../../src/game/account/mounts";
 import {
   channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, markSeen,
@@ -69,7 +69,7 @@ import {
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
 import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, vipOfAccount } from "./premium";
-import { huntBonus, premiumView, protectCost, vipOf, type PremiumView } from "../../src/game/account/premium";
+import { huntBonus, premiumView, protectCost, readPremium, vipOf, type PremiumView } from "../../src/game/account/premium";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
 import type { GroveView } from "../../src/game/world/grove";
@@ -219,7 +219,8 @@ async function drawMounts(account: string, n: number, cost: number): Promise<{ v
 
 async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
   const state = await $global.getUserState(account);
-  const owned = ownedMounts(state.mounts);
+  // VIP rank's own mounts come with the rank.
+  const owned = [...new Set([...ownedMounts(state.mounts), ...vipMounts(vipOf(readPremium(state).vipPoints))])];
   const picked = readMountId(state.mount);
   return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars) };
 }

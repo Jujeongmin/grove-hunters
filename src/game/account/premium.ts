@@ -18,7 +18,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // VIP n needs VIP_POINTS[n - 1] points. Each rank adds VIP_BONUS to hunting's XP and gold; reaching
 // VIP_ANNOUNCE or above is told to every server.
 export const VIP_POINTS: readonly number[] = [100, 550, 1200, 3000, 6000, 12000, 25000, 50000, 100000, 200000];
-export const VIP_BONUS = 0.02;
+export const VIP_BONUS = 0.2;
 export const VIP_ANNOUNCE = 5;
 
 // Gems to keep a failed attempt at this + from breaking the gear (from +6, where breaking begins).

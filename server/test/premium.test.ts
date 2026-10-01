@@ -66,4 +66,12 @@ describe("premium", () => {
     server.connect({ account: BUYER });
     expect((await server.getMail()).mail.filter((m: any) => m.kind === "monthly_pass")).toEqual([]);
   });
+
+  test("VIP 10 brings its own mythic mount, to ride like any other", async (server) => {
+    await $global.updateUserState(BUYER, { vipPoints: 200_000 });
+    const view = await premiumOf(server);
+    expect(view.premium.vip).toBe(10);
+    expect(view.owned).toContain("celestial_dragon");
+    expect((await server.selectMount("celestial_dragon")).selected).toBe("celestial_dragon");
+  });
 });

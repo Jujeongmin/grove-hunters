@@ -218,7 +218,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                 ? view?.selected === shown
                   ? <span className="stable-riding">{t("mount.riding")}</span>
                   : <button type="button" className="brush-button small" onClick={() => ride(shown)}>{t("mount.pick")}</button>
-                : <span className="stable-locked">{t("mount.notOwned")}</span>)}
+                : <span className="stable-locked">{MOUNTS[shown].vipOnly ? t("mount.vipOnly", { n: MOUNTS[shown].vipOnly! }) : t("mount.notOwned")}</span>)}
             </div>
           )}
         </section>
@@ -335,6 +335,9 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                           <td>
                             {t("mount.vipBonus", { n: Math.round(rank * VIP_BONUS * 100) })}
                             {rank >= VIP_ANNOUNCE && <> · {t("mount.vipAnnounced")}</>}
+                            {MOUNT_IDS.filter((id) => MOUNTS[id].vipOnly === rank).map((id) => (
+                              <b key={id} className="stable-vip-gift"> · {t("mount.vipGift", { name: mountName(id) })}</b>
+                            ))}
                           </td>
                         </tr>
                       );

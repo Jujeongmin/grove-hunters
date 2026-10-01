@@ -1650,6 +1650,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-vip-table td { padding: 2px 4px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
 .stable-vip-table tr.mine td { background: rgba(255, 211, 106, 0.14); }
 .stable-vip-table tr.past { opacity: 0.55; }
+.stable-vip-gift { color: #ff9ae6; font-weight: 700; }
 .stable-hatch small { display: flex; align-items: center; gap: 4px; font: 400 14px var(--font-head); }
 .stable-hatch small img { width: 18px; height: 18px; image-rendering: pixelated; }
 .stable-hatch:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #6b4b1e, 0 4px 10px rgba(0, 0, 0, 0.5); }

@@ -38,6 +38,7 @@ export const MOUNT_LOOKS: Record<MountId, MountLook> = {
   drake: { height: 0.75, seat: 0.97, forward: -0.2, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
   dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
   golden_dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
+  celestial_dragon: { height: 1.0, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.55 },
   void_emperor: { height: 0.95, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
 };
 

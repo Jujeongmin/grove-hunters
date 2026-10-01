@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MYTHIC_PITY, PITY, PULL10, readPity, rollMounts, tierOf } from "../../src/game/account/mounts";
+import { MYTHIC_PITY, PITY, PULL10, mountsOfTier, readPity, rollMounts, tierOf, vipMounts } from "../../src/game/account/mounts";
 
 // Rolls that always land on the commonest tier: only the guarantees lift a draw above it.
 const unlucky = () => 0;
@@ -30,5 +30,11 @@ describe("the draw's guarantees", () => {
     expect(readPity(undefined)).toEqual({ legendary: 0, mythic: 0 });
     expect(readPity(37)).toEqual({ legendary: 37, mythic: 0 });
     expect(readPity({ legendary: 400, mythic: 9999 })).toEqual({ legendary: PITY - 1, mythic: MYTHIC_PITY - 1 });
+  });
+
+  it("never draws VIP 10's own mythic; the rank gives it", () => {
+    expect(mountsOfTier("mythic")).toEqual(["golden_dragon", "void_emperor"]);
+    expect(vipMounts(9)).toEqual([]);
+    expect(vipMounts(10)).toEqual(["celestial_dragon"]);
   });
 });

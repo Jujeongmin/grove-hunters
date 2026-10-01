@@ -9,7 +9,8 @@ export type MountId =
   | "panda" | "crab" | "armabee" | "glub" | "squidle"
   | "yeti" | "drake" | "hywirl" | "alpaking" | "queen_armabee"
   | "elder_glub" | "alpaking_emperor" | "dragon"
-  | "golden_dragon" | "void_emperor";
+  | "golden_dragon" | "void_emperor"
+  | "celestial_dragon";
 
 export interface Mount {
   model: string;
@@ -21,6 +22,8 @@ export interface Mount {
   flies?: boolean;
   // A model worn in other colours: its own colours mixed toward `tint`, and a glow of it (0 to 1).
   dye?: { tint: number; glow: number };
+  // Never drawn: every account of this VIP rank or above has it (see premium.ts).
+  vipOnly?: number;
 }
 
 // Every account's own mount.
@@ -52,6 +55,10 @@ export const MOUNTS: Record<MountId, Mount> = {
   // Above legendary: the legendaries' own models in new colours, glowing.
   golden_dragon: { model: "mnt_dragon", tier: "mythic", speed: TIER_SPEED.mythic, flies: true, dye: { tint: 0xffc83a, glow: 0.35 } },
   void_emperor: { model: "mnt_alpaking_evolved", tier: "mythic", speed: TIER_SPEED.mythic, flies: true, dye: { tint: 0x7a3cff, glow: 0.4 } },
+  // VIP 10's own: a dragon in white and sky blue, shining.
+  celestial_dragon: {
+    model: "mnt_dragon", tier: "mythic", speed: TIER_SPEED.mythic, flies: true, dye: { tint: 0xd8f4ff, glow: 0.6 }, vipOnly: 10,
+  },
 };
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
 
@@ -132,8 +139,14 @@ export function tierOf(id: MountId): MountTier | null {
   return MOUNTS[id].tier;
 }
 
+// A tier's mounts in the draw (a VIP rank's own are never drawn).
 export function mountsOfTier(tier: MountTier): MountId[] {
-  return MOUNT_IDS.filter((id) => MOUNTS[id].tier === tier);
+  return MOUNT_IDS.filter((id) => MOUNTS[id].tier === tier && !MOUNTS[id].vipOnly);
+}
+
+// The mounts an account's VIP rank gives it.
+export function vipMounts(vip: number): MountId[] {
+  return MOUNT_IDS.filter((id) => (MOUNTS[id].vipOnly ?? Infinity) <= vip);
 }
 
 const TIER_RANK: Record<MountTier, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
