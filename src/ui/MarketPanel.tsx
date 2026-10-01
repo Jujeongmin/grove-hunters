@@ -9,6 +9,7 @@ import type { MarketPage, WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
 import { locale, t } from "./lang";
 import { gearName, itemName } from "./names";
+import { FullScreen } from "./FullScreen";
 
 type Tab = "buy" | "sell" | "mine";
 const SHELVES: readonly Shelf[] = ["weapon", "armor", "material"];
@@ -99,33 +100,26 @@ export function MarketPanel({ client, bag, onClose }: { client: WorldClient; bag
   const say = (text: string, tone: "good" | "bad") => setNote({ text, tone });
   const problem = (code: string) => say(problemText(code)!, "bad");
   return (
-    <div className="menu-modal" onClick={onClose}>
-      <div className="solid-panel market-panel" onClick={(e) => e.stopPropagation()}>
-        <header className="market-head">
-          <h2>{t("market.title")}</h2>
-          {gems !== null && <Gems n={gems} />}
-        </header>
-        <div className="smith-tabs">
-          {(["buy", "sell", "mine"] as Tab[]).map((id) => (
-            <button
-              key={id} type="button" className={`text-button${tab === id ? " on" : ""}`}
-              onClick={() => {
-                setTab(id);
-                setNote(null);
-              }}
-            >
-              {t(`market.${id}`)}
-            </button>
-          ))}
-        </div>
-        {tab === "buy" && <BuyTab client={client} onGems={setGems} say={say} problem={problem} />}
-        {tab === "sell" && <SellTab client={client} bag={bag} say={say} problem={problem} />}
-        {tab === "mine" && <MineTab client={client} onGems={setGems} say={say} problem={problem} />}
-        {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
-        <p className="note market-note">{t("market.note")}</p>
-        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
+    <FullScreen title={t("market.title")} className="market-panel" bar={gems !== null && <Gems n={gems} />} onClose={onClose}>
+      <div className="smith-tabs">
+        {(["buy", "sell", "mine"] as Tab[]).map((id) => (
+          <button
+            key={id} type="button" className={`text-button${tab === id ? " on" : ""}`}
+            onClick={() => {
+              setTab(id);
+              setNote(null);
+            }}
+          >
+            {t(`market.${id}`)}
+          </button>
+        ))}
       </div>
-    </div>
+      {tab === "buy" && <BuyTab client={client} onGems={setGems} say={say} problem={problem} />}
+      {tab === "sell" && <SellTab client={client} bag={bag} say={say} problem={problem} />}
+      {tab === "mine" && <MineTab client={client} onGems={setGems} say={say} problem={problem} />}
+      {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
+      <p className="note market-note">{t("market.note")}</p>
+    </FullScreen>
   );
 }
 

@@ -634,44 +634,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .market-form input { width: 90px; }
 .market-form .brush-button.small { padding: 6px 16px; font-size: 13px; }
 .market-note { margin: 0; font-size: 12px; color: var(--ink-dim); text-align: center; }
-/* Guilds: finding and founding one, or your guild's notice, members and applications. */
-/* The guild opens over the whole screen, like the stable: a bar with the guild's name, its tabs and a
-   close button, and under it one column (no wider than reads well) where only the body scrolls. */
-.guild-screen {
-  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(90, 60, 30, 0.35), transparent 70%), #0a0806;
-  animation: stable-in 0.2s ease-out;
-}
-.guild-bar {
-  display: flex; align-items: center; gap: 14px; flex: none; min-height: 50px;
-  padding: 6px max(12px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
-  background: linear-gradient(180deg, #3a2a1c, #2a1d13 60%, #1a120c);
-  border-bottom: 2px solid #0e0906; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-}
-.guild-bar h2 {
-  margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font: 800 20px var(--font-head); color: #f3d99a; text-shadow: 0 2px 0 #0e0906;
-}
-.guild-tabs { display: flex; gap: 6px; }
-.guild-tab {
-  padding: 6px 16px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
-  border: 1px solid #0e0906; border-radius: 8px; background: linear-gradient(180deg, #4a3624, #36271a);
-}
-.guild-tab:hover { color: var(--ink); }
-.guild-tab.on { color: #1a120c; background: linear-gradient(180deg, #f3d99a, #d9b86a); border-color: #7a5a2a; }
-.guild-close {
-  margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: var(--ink);
-  font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
-}
-.guild-close:hover { border-color: #d9b86a; }
-.guild-tab:focus-visible, .guild-close:focus-visible { outline: 2px solid #d9b86a; outline-offset: 2px; }
-.guild-panel {
-  flex: 1 1 auto; min-height: 0; width: 100%; max-width: 760px; margin: 0 auto; box-sizing: border-box;
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 12px max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-}
-.guild-panel > * { flex-shrink: 0; }
-.guild-panel > .guild-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* Guilds: finding and founding one, or your guild's notice, members and applications (a FullScreen). */
 .guild-body { display: flex; flex-direction: column; gap: 6px; }
 .guild-body h3 { margin: 4px 0 0; font: 700 14px var(--font-head); }
 .guild-body > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }
@@ -1812,4 +1775,48 @@ button.hud-prompt:hover { color: #ffe0b0; }
 @media (prefers-reduced-motion: reduce) {
   .stable-flash, .stable-rays { animation: none; opacity: 0; }
   .stable-banner { animation: none; }
+}
+
+/* The big screens (bag, shop, forge, market, mail, grove, ranking, guild) cover the whole stage, like
+   the stable: a bar with the title, what the screen keeps up there and a close button, and under it
+   one column, no wider than reads well, whose body scrolls. The screen's own class sits on that
+   column, so the rules here outrank its sizing as a centred panel. */
+.full-screen {
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(90, 60, 30, 0.35), transparent 70%), #0a0806;
+  animation: stable-in 0.2s ease-out;
+}
+.full-bar {
+  display: flex; align-items: center; gap: 14px; flex: none; min-height: 50px; box-sizing: border-box;
+  padding: 6px max(12px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, #3a2a1c, #2a1d13 60%, #1a120c);
+  border-bottom: 2px solid #0e0906; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+.full-bar h2 {
+  margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 800 20px var(--font-head); color: #f3d99a; text-shadow: 0 2px 0 #0e0906;
+}
+.full-bar .bag-head { display: flex; align-items: baseline; gap: 12px; }
+.full-bar .bag-head .bag-power { margin-left: 0; }
+.full-tabs { display: flex; gap: 6px; }
+.full-tab {
+  padding: 6px 16px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
+  border: 1px solid #0e0906; border-radius: 8px; background: linear-gradient(180deg, #4a3624, #36271a);
+}
+.full-tab:hover { color: var(--ink); }
+.full-tab.on { color: #1a120c; background: linear-gradient(180deg, #f3d99a, #d9b86a); border-color: #7a5a2a; }
+.full-close {
+  margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: var(--ink);
+  font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
+}
+.full-close:hover { border-color: #d9b86a; }
+.full-tab:focus-visible, .full-close:focus-visible { outline: 2px solid #d9b86a; outline-offset: 2px; }
+.full-screen > .full-body {
+  flex: 1 1 auto; min-height: 0; width: 100%; max-width: 760px; max-height: none; margin: 0 auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  padding: 12px max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.full-screen > .full-body > * { flex-shrink: 0; }
+.full-screen > .full-body > .mail-list, .full-screen > .full-body > .market-tab, .full-screen > .full-body > .guild-body {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
 }

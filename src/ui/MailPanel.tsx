@@ -6,6 +6,7 @@ import { problemText } from "./BagPanel";
 import { lang, t, type Key } from "./lang";
 import { gearName, itemName } from "./names";
 import type { WorldClient } from "../net/worldClient";
+import { FullScreen } from "./FullScreen";
 
 interface MailPanelProps {
   client: WorldClient;
@@ -78,63 +79,59 @@ export function MailPanel({ client, onCount, onClose }: MailPanelProps) {
   const now = Date.now();
 
   return (
-    <div className="menu-modal" onClick={onClose}>
-      <div className="solid-panel mail-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("mail.title")}</h2>
-        {!mail && <p className="note">{failed ? t("mail.failed") : t("common.loading")}</p>}
-        {mail && mail.length === 0 && <p className="note">{t("mail.empty")}</p>}
-        {mail && mail.length > 0 && (
-          <ul className="mail-list">
-            {mail.map((letter) => {
-              const { title, body } = words(letter);
-              return (
-                <li key={letter.id}>
-                  <div className="mail-head">
-                    <b>{title}</b>
-                    <span className="note">{t("mail.daysLeft", { n: daysLeft(letter, now) })}</span>
-                  </div>
-                  {body && <p className="mail-body">{body}</p>}
-                  <div className="mail-row">
-                    <span className="mail-things">
-                      {letter.gold > 0 && <span className="mail-thing">{t("mail.gold", { n: letter.gold.toLocaleString() })}</span>}
-                      {letter.gems > 0 && (
-                        <span className="mail-thing">
-                          <img src={iconFor("ui_gem") ?? undefined} alt="" draggable={false} />
-                          {letter.gems.toLocaleString()}
-                        </span>
-                      )}
-                      {letter.items.map((item, i) => (
-                        <span key={i} className={`mail-thing${item.piece?.trade || item.trade ? " trade" : ""}`} title={itemName(item.id)}>
-                          <img src={iconFor(item.id) ?? undefined} alt="" draggable={false} />
-                          {item.piece ? gearName(item.piece) : `${itemName(item.id)} ×${item.n}`}
-                        </span>
-                      ))}
-                    </span>
-                    <button
-                      type="button" className="brush-button small" disabled={busy}
-                      onClick={() => void take(async () => {
-                        const r = await client.claimMail(letter.id);
-                        return "mail" in r ? { ...r, left: 0, problem: null } : r;
-                      })}
-                    >
-                      {t("mail.claim")}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+    <FullScreen title={t("mail.title")} className="mail-panel" onClose={onClose}>
+      {!mail && <p className="note">{failed ? t("mail.failed") : t("common.loading")}</p>}
+      {mail && mail.length === 0 && <p className="note">{t("mail.empty")}</p>}
+      {mail && mail.length > 0 && (
+        <ul className="mail-list">
+          {mail.map((letter) => {
+            const { title, body } = words(letter);
+            return (
+              <li key={letter.id}>
+                <div className="mail-head">
+                  <b>{title}</b>
+                  <span className="note">{t("mail.daysLeft", { n: daysLeft(letter, now) })}</span>
+                </div>
+                {body && <p className="mail-body">{body}</p>}
+                <div className="mail-row">
+                  <span className="mail-things">
+                    {letter.gold > 0 && <span className="mail-thing">{t("mail.gold", { n: letter.gold.toLocaleString() })}</span>}
+                    {letter.gems > 0 && (
+                      <span className="mail-thing">
+                        <img src={iconFor("ui_gem") ?? undefined} alt="" draggable={false} />
+                        {letter.gems.toLocaleString()}
+                      </span>
+                    )}
+                    {letter.items.map((item, i) => (
+                      <span key={i} className={`mail-thing${item.piece?.trade || item.trade ? " trade" : ""}`} title={itemName(item.id)}>
+                        <img src={iconFor(item.id) ?? undefined} alt="" draggable={false} />
+                        {item.piece ? gearName(item.piece) : `${itemName(item.id)} ×${item.n}`}
+                      </span>
+                    ))}
+                  </span>
+                  <button
+                    type="button" className="brush-button small" disabled={busy}
+                    onClick={() => void take(async () => {
+                      const r = await client.claimMail(letter.id);
+                      return "mail" in r ? { ...r, left: 0, problem: null } : r;
+                    })}
+                  >
+                    {t("mail.claim")}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {note && <p className="note bad">{note}</p>}
+      <div className="mail-actions">
+        {mail && mail.length > 1 && (
+          <button type="button" className="brush-button small" disabled={busy} onClick={() => void take(() => client.claimAllMail())}>
+            {t("mail.claimAll")}
+          </button>
         )}
-        {note && <p className="note bad">{note}</p>}
-        <div className="mail-actions">
-          {mail && mail.length > 1 && (
-            <button type="button" className="brush-button small" disabled={busy} onClick={() => void take(() => client.claimAllMail())}>
-              {t("mail.claimAll")}
-            </button>
-          )}
-          <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
-        </div>
       </div>
-    </div>
+    </FullScreen>
   );
 }

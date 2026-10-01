@@ -10,6 +10,7 @@ import { ARENA_SEATS, LEAGUE_GUILD_GEMS, LEAGUE_PLAYER_GEMS, type LeagueView } f
 import { problemText } from "./BagPanel";
 import { locale, t, type Key } from "./lang";
 import { className, jobLabel, serverName, zoneName } from "./names";
+import { FullScreen } from "./FullScreen";
 
 interface GuildPanelProps {
   client: WorldClient;
@@ -60,37 +61,34 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
   const ask = (text: string, run: () => void) => setAsking({ text, run });
 
   return (
-    <div className="guild-screen" role="dialog">
-      <header className="guild-bar">
-        <h2>{view?.guild ? view.guild.name : t("guild.title")}</h2>
-        {view?.guild && (
-          <nav className="guild-tabs">
-            {(["members", "boss"] as const).map((id) => (
-              <button key={id} type="button" className={`guild-tab${tab === id ? " on" : ""}`} onClick={() => setTab(id)}>
-                {t(id === "boss" ? "guild.tab.boss" : "guild.tab.members")}
-              </button>
-            ))}
-          </nav>
-        )}
-        <button type="button" className="guild-close" onClick={onClose} aria-label={t("common.close")}>✕</button>
-      </header>
-      <div className="guild-panel">
-        {!view && <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>}
-        {view && !view.guild && <NoGuild client={client} view={view} busy={busy} act={act} />}
-        {view?.guild && tab === "members" && <InGuild view={view} busy={busy} act={act} ask={ask} />}
-        {view?.guild && tab === "boss" && <BossTab client={client} onEntered={onClose} />}
-        {asking && (
-          <div className="market-confirm">
-            <p>{asking.text}</p>
-            <div>
-              <button type="button" className="brush-button small" disabled={busy} onClick={asking.run}>{t("guild.yes")}</button>
-              <button type="button" className="text-button" onClick={() => setAsking(null)}>{t("common.cancel")}</button>
-            </div>
+    <FullScreen
+      title={view?.guild ? view.guild.name : t("guild.title")} className="guild-panel"
+      bar={view?.guild && (
+        <nav className="full-tabs">
+          {(["members", "boss"] as const).map((id) => (
+            <button key={id} type="button" className={`full-tab${tab === id ? " on" : ""}`} onClick={() => setTab(id)}>
+              {t(id === "boss" ? "guild.tab.boss" : "guild.tab.members")}
+            </button>
+          ))}
+        </nav>
+      )}
+      onClose={onClose}
+    >
+      {!view && <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>}
+      {view && !view.guild && <NoGuild client={client} view={view} busy={busy} act={act} />}
+      {view?.guild && tab === "members" && <InGuild view={view} busy={busy} act={act} ask={ask} />}
+      {view?.guild && tab === "boss" && <BossTab client={client} onEntered={onClose} />}
+      {asking && (
+        <div className="market-confirm">
+          <p>{asking.text}</p>
+          <div>
+            <button type="button" className="brush-button small" disabled={busy} onClick={asking.run}>{t("guild.yes")}</button>
+            <button type="button" className="text-button" onClick={() => setAsking(null)}>{t("common.cancel")}</button>
           </div>
-        )}
-        {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
-      </div>
-    </div>
+        </div>
+      )}
+      {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
+    </FullScreen>
   );
 }
 

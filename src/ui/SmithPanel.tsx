@@ -10,6 +10,7 @@ import { problemText, slotLabel } from "./BagPanel";
 import { locale, t } from "./lang";
 import { playCue } from "../game/audio/sfx";
 import { CHARGE_MS, EnhanceShow, OUTCOME, type Enhancing } from "./EnhanceShow";
+import { FullScreen } from "./FullScreen";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // Without motion the outcome shows at once.
@@ -62,9 +63,8 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   };
 
   return (
-    <div className="menu-modal" onClick={onClose}>
-      <div className="solid-panel bag-panel smith-panel" onClick={(e) => e.stopPropagation()}>
-        <h2>{t("forge.title")}</h2>
+    <>
+      <FullScreen title={t("forge.title")} className="bag-panel smith-panel" onClose={onClose}>
         <p className="bag-gold">{bag ? `${t("common.gold", { n: bag.gold.toLocaleString(locale()) })} · ${t("forge.stones", { n: stones })}` : t("common.loading")}</p>
         <div className="smith-tabs">
           <button type="button" className={`text-button${tab === "enhance" ? " on" : ""}`} onClick={() => setTab("enhance")}>{t("forge.enhance")}</button>
@@ -150,9 +150,8 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
         )}
 
         {note &&<p className={`smith-note ${note.tone}`}>{note.text}</p>}
-        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
-      </div>
+      </FullScreen>
       {show && <EnhanceShow show={show} onClose={() => setShow(null)} />}
-    </div>
+    </>
   );
 }
