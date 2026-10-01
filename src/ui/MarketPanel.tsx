@@ -3,6 +3,7 @@ import {
   MAX_LISTINGS, MAX_PRICE, MIN_GEAR_PRICE, MIN_MATERIAL_PRICE, costOf, marketFee, sellerGets, shelfOf, type ListingView, type Shelf,
 } from "../game/account/market";
 import { ITEM_IDS, MAX_STACK, slotOf, type BagView, type GearPiece, type ItemId } from "../game/account/items";
+import { noMarketFee } from "../game/account/premium";
 import { iconFor } from "../game/render/icons";
 import type { MarketPage, WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
@@ -374,7 +375,9 @@ function SellTab({ client, bag, say, problem }: TabProps & { bag: BagView | null
           </div>
           <span className="note">
             {offer.kind === "stack" && <>{t("market.total", { n: total.toLocaleString(locale()) })} · </>}
-            {t("market.fee", { fee: marketFee(total), gets: sellerGets(total) })}
+            {noMarketFee(bag.vip)
+              ? t("market.noFee", { gets: total.toLocaleString(locale()) })
+              : t("market.fee", { fee: marketFee(total), gets: sellerGets(total) })}
           </span>
           <button type="button" className="brush-button small" disabled={busy} onClick={() => void list()}>{t("market.list")}</button>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials } from "../game/account/forge";
-import { protectCost } from "../game/account/premium";
+import { protectCost, vipEnhance } from "../game/account/premium";
 import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
 import { TRADE_CRAFT_CHANCE, allStacks } from "../game/account/inventory";
 import { iconFor } from "../game/render/icons";
@@ -100,7 +100,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                         {t("forge.enhance")}
                       </button>
                       <span className="bag-blurb">
-                        {t("forge.chance", { to: cost.to, pct: percent(cost.success) })}
+                        {t("forge.chance", { to: cost.to, pct: percent(Math.min(1, cost.success + vipEnhance(bag.vip))) })}
                         {cost.breaks > 0 && (shield !== null
                           ? <em className="smith-safe"> · {t("forge.protected", { n: shield })}</em>
                           : <em className="smith-risk"> · {t("forge.breakRisk", { pct: percent(cost.breaks) })}</em>)}

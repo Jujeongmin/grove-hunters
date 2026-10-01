@@ -1,6 +1,6 @@
 import {
-  PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_POINTS, PASS_PRODUCT, VIP_ANNOUNCE, extendPass, gemPurchase, passActive, readPremium, vipOf,
-  type Premium,
+  PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_POINTS, PASS_PRODUCT, VIP_ANNOUNCE, extendPass, gemPurchase, passActive, pieceLimit, readPremium,
+  vipDailyGems, vipOf, type Premium,
 } from "../../src/game/account/premium";
 import type { PurchaseEvent } from "../../src/game/account/purchase";
 import { dailyDay } from "../../src/game/account/quests";
@@ -20,6 +20,23 @@ export async function accountPremium(account: string): Promise<Premium> {
 
 export async function vipOfAccount(account: string): Promise<number> {
   return vipOf((await accountPremium(account)).vipPoints);
+}
+
+// How many pieces of gear an account's characters may carry (VIP 2 gives more).
+export async function roomOf(account: string): Promise<number> {
+  return pieceLimit(await vipOfAccount(account));
+}
+
+// The VIP rank's gems for today, by mail, the first time the account comes into the world that day.
+export async function payVipDay(account: string, now: number): Promise<void> {
+  await withPremiumLock(account, async () => {
+    const premium = await accountPremium(account);
+    const gems = vipDailyGems(vipOf(premium.vipPoints));
+    const today = dailyDay(now);
+    if (gems <= 0 || premium.vipPaidDay === today) return;
+    await $global.updateUserState(account, { vipPaidDay: today });
+    await sendMail(account, { kind: "vip_daily", gold: 0, gems, items: [], params: { vip: vipOf(premium.vipPoints) } }, now);
+  });
 }
 
 // A rank of VIP_ANNOUNCE or above, newly reached, is told to every server under the account's

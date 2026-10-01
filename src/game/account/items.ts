@@ -171,6 +171,8 @@ export interface BagView {
   // The account's picked mount (it adds to every fight, ridden or not; see mounts.ts), and its stars.
   mount: MountId | null;
   mountStars: number;
+  // The account's VIP rank (see premium.ts).
+  vip: number;
 }
 
 export function sellPrice(id: ItemId): number {

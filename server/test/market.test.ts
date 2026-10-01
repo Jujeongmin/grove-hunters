@@ -138,4 +138,16 @@ describe("market", () => {
     expect(returned.map((m: any) => m.kind)).toEqual(["market_returned"]);
     expect((await server.myListings()).listings).toEqual([]);
   });
+
+  test("from VIP 8 a sale pays all of it, no fee", async (server) => {
+    await stalls(server);
+    await $global.updateUserState("test-a", { vipPoints: 50_000 });
+    server.connect({ account: "test-a" });
+    await server.sellOnMarket({ uid: "good" }, 100);
+    server.connect({ account: "test-b" });
+    const [listing] = (await server.market({ shelf: "weapon" })).listings;
+    await server.buyFromMarket(listing.id, 1);
+    const [sold] = await marketMail(server, "test-a");
+    expect([sold.gems, sold.params.fee]).toEqual([100, 0]);
+  });
 });

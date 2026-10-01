@@ -117,14 +117,14 @@ export function allStacks(inv: Inventory): Bag {
 
 // Whether `items` all fit: no stack past MAX_STACK, no more than MAX_PIECES pieces. `trade` says which
 // stack materials go to.
-export function fits(inv: Inventory, items: readonly ItemCount[], trade: boolean): boolean {
+export function fits(inv: Inventory, items: readonly ItemCount[], trade: boolean, room = MAX_PIECES): boolean {
   let gear = 0;
   const adding: Partial<Record<ItemId, number>> = {};
   for (const { id, n } of items) {
     if (slotOf(id)) gear += n;
     else adding[id] = (adding[id] ?? 0) + n;
   }
-  if (gear > 0 && inv.pieces.length + gear > MAX_PIECES) return false;
+  if (gear > 0 && inv.pieces.length + gear > room) return false;
   return (Object.entries(adding) as [ItemId, number][]).every(([id, n]) => (stackFor(inv, id, trade)[id] ?? 0) + n <= MAX_STACK);
 }
 
@@ -148,8 +148,8 @@ function freshUid(inv: Inventory, made: readonly GearPiece[], makeUid: MakeUid):
 
 // Hands over `items` (from the shop, a quest, a letter…): all of it or, if it does not fit, nothing
 // (bag_full). Gear comes as new pieces with `trade`; materials go to that stack.
-export function give<I extends Inventory>(inv: I, items: readonly ItemCount[], trade: boolean, makeUid: MakeUid): I {
-  if (!fits(inv, items, trade)) throw new RuleViolation("bag_full");
+export function give<I extends Inventory>(inv: I, items: readonly ItemCount[], trade: boolean, makeUid: MakeUid, room = MAX_PIECES): I {
+  if (!fits(inv, items, trade, room)) throw new RuleViolation("bag_full");
   let next = inv;
   for (const { id, n } of items) {
     if (slotOf(id)) {
@@ -164,12 +164,12 @@ export function give<I extends Inventory>(inv: I, items: readonly ItemCount[], t
 
 // What a kill drops: materials may always be traded; gear may be one time in TRADE_DROP_CHANCE
 // (`random` in [0, 1)). What does not fit is lost, as loot past a full stack always was.
-export function loot<I extends Inventory>(inv: I, ids: readonly ItemId[], random: () => number, makeUid: MakeUid): I {
+export function loot<I extends Inventory>(inv: I, ids: readonly ItemId[], random: () => number, makeUid: MakeUid, room = MAX_PIECES): I {
   let next = inv;
   for (const id of ids) {
     if (slotOf(id)) {
       const trade = random() < TRADE_DROP_CHANCE;
-      if (next.pieces.length < MAX_PIECES) next = { ...next, pieces: [...next.pieces, { uid: freshUid(next, [], makeUid), id, plus: 0, trade }] };
+      if (next.pieces.length < room) next = { ...next, pieces: [...next.pieces, { uid: freshUid(next, [], makeUid), id, plus: 0, trade }] };
     } else if (ITEMS[id].kind === "material") next = { ...next, bagTrade: addItem(next.bagTrade, id, 1) };
     else next = { ...next, bag: addItem(next.bag, id, 1) };
   }
@@ -207,8 +207,8 @@ export function takePiece<I extends Inventory>(inv: I, uid: string): { inv: I; p
 }
 
 // Puts a whole piece back (a letter from the market); bag_full past MAX_PIECES.
-export function putPiece<I extends Inventory>(inv: I, piece: GearPiece): I {
-  if (inv.pieces.length >= MAX_PIECES) throw new RuleViolation("bag_full");
+export function putPiece<I extends Inventory>(inv: I, piece: GearPiece, room = MAX_PIECES): I {
+  if (inv.pieces.length >= room) throw new RuleViolation("bag_full");
   if (inv.pieces.some((p) => p.uid === piece.uid)) throw new RuleViolation("unavailable");
   return { ...inv, pieces: [...inv.pieces, piece] };
 }
@@ -222,9 +222,9 @@ export function equipPiece<I extends Inventory>(inv: I, uid: string): I {
 }
 
 // Takes off what is worn in a slot, into the bag (bag_full if the bag has no room for it).
-export function unequipSlot<I extends Inventory>(inv: I, slot: Slot): I {
+export function unequipSlot<I extends Inventory>(inv: I, slot: Slot, room = MAX_PIECES): I {
   const old = inv.gear[slot];
   if (!old) return inv;
-  if (inv.pieces.length >= MAX_PIECES) throw new RuleViolation("bag_full");
+  if (inv.pieces.length >= room) throw new RuleViolation("bag_full");
   return { ...inv, pieces: [...inv.pieces, old], gear: { ...inv.gear, [slot]: null } };
 }

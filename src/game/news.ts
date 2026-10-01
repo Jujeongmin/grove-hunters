@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-01-vip-perks",
+    date: "2026-10-01",
+    text: {
+      ko: {
+        title: "VIP 혜택 대폭 강화",
+        lines: [
+          "VIP 등급마다 사냥 경험치·골드 +20% (VIP 10은 +200%).",
+          "등급별 고유 혜택: 2 가방 장비 칸 +10 · 3 매일 보석 10 · 4 제자리 부활 무료 · 5 공격력·최대 체력 +10%와 금색 이름 · 6 매일 보석 30 · 7 강화 성공률 +5%p · 8 거래소 수수료 면제 · 9 강화 +10%p와 매일 보석 50 · 10 전용 신화 탈것 천상의 용.",
+          "높은 등급은 아래 등급의 혜택을 모두 가져요. 보석 상점의 VIP 막대를 눌러 확인하세요.",
+        ],
+      },
+      en: {
+        title: "Much stronger VIP perks",
+        lines: [
+          "Each VIP rank adds 20% to hunting XP and gold (VIP 10: +200%).",
+          "Each rank's own perk: 2 +10 gear slots · 3 10 gems a day · 4 free rising where you fell · 5 +10% damage and max health and a golden name · 6 30 gems a day · 7 enhancing +5 points · 8 no market fee · 9 enhancing +10 points and 50 gems a day · 10 the Celestial Dragon, a mythic of its own.",
+          "A rank keeps every perk below it. Tap the VIP bar in the gem shop to see them.",
+        ],
+      },
+      ja: {
+        title: "VIP特典を大幅強化",
+        lines: [
+          "VIPランクごとに狩りの経験値・ゴールド+20%（VIP 10は+200%）。",
+          "ランク別特典：2 装備枠+10 · 3 毎日宝石10 · 4 その場復活無料 · 5 攻撃力・最大体力+10%と金色の名前 · 6 毎日宝石30 · 7 強化成功率+5%p · 8 取引所手数料免除 · 9 強化+10%pと毎日宝石50 · 10 専用神話の乗り物「天上の竜」。",
+          "上のランクは下のランクの特典をすべて持ちます。宝石ショップのVIPバーで確認できます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "VIP福利大幅強化",
+        lines: [
+          "每個VIP等級狩獵經驗與金幣+20%（VIP 10為+200%）。",
+          "各級專屬福利：2 裝備格+10 · 3 每天寶石10 · 4 原地復活免費 · 5 攻擊力與最大體力+10%、金色名字 · 6 每天寶石30 · 7 強化成功率+5%p · 8 交易所免手續費 · 9 強化+10%p、每天寶石50 · 10 專屬神話坐騎天上之龍。",
+          "高等級擁有所有較低等級的福利。點擊寶石商店的VIP條即可查看。",
+        ],
+      },
+      "zh-Hans": {
+        title: "VIP福利大幅强化",
+        lines: [
+          "每个VIP等级狩猎经验与金币+20%（VIP 10为+200%）。",
+          "各级专属福利：2 装备格+10 · 3 每天宝石10 · 4 原地复活免费 · 5 攻击力与最大体力+10%、金色名字 · 6 每天宝石30 · 7 强化成功率+5%p · 8 交易所免手续费 · 9 强化+10%p、每天宝石50 · 10 专属神话坐骑天上之龙。",
+          "高等级拥有所有较低等级的福利。点击宝石商店的VIP条即可查看。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-01-mythic",
     date: "2026-10-01",
     text: {

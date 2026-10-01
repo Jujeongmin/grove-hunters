@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   PASS_DAYS, PASS_XP, VIP_BONUS, VIP_POINTS, extendPass, gemPurchase, huntBonus, nextVipAt, passDaysLeft, protectCost, readPremium, vipOf,
+  freeRevive, noMarketFee, pieceLimit, vipDailyGems, vipEnhance,
 } from "../../src/game/account/premium";
+import { combatPowerAt } from "../../src/game/combat/power";
 
 const DAY = 24 * 60 * 60 * 1000;
 const none = readPremium(null);
 
 describe("premium", () => {
   it("reads an account's state, keeping only what makes sense", () => {
-    expect(none).toEqual({ vipPoints: 0, firstBought: [], passUntil: 0, passPaidDay: null });
+    expect(none).toEqual({ vipPoints: 0, firstBought: [], passUntil: 0, passPaidDay: null, vipPaidDay: null });
     expect(readPremium({ vipPoints: 640.7, firstBought: ["gems-100", "nope", "gems-100"], passUntil: -5, passPaidDay: 3 }))
-      .toEqual({ vipPoints: 640, firstBought: ["gems-100"], passUntil: 0, passPaidDay: null });
+      .toEqual({ vipPoints: 640, firstBought: ["gems-100"], passUntil: 0, passPaidDay: null, vipPaidDay: null });
   });
 
   it("ranks VIP by points bought, ten ranks in all", () => {
@@ -52,5 +54,17 @@ describe("premium", () => {
     expect(protectCost(5)).toBeNull();
     expect(protectCost(6)).toBe(20);
     expect(protectCost(10)).toBe(120);
+  });
+
+  it("each rank keeps the perks below it; of the daily gems and the odds, the highest counts", () => {
+    expect([pieceLimit(1), pieceLimit(2), pieceLimit(10)]).toEqual([50, 60, 60]);
+    expect([2, 3, 5, 6, 8, 9, 10].map(vipDailyGems)).toEqual([0, 10, 10, 30, 30, 50, 50]);
+    expect([freeRevive(3), freeRevive(4), freeRevive(10)]).toEqual([false, true, true]);
+    expect([vipEnhance(6), vipEnhance(7), vipEnhance(9)]).toEqual([0, 0.05, 0.1]);
+    expect([noMarketFee(7), noMarketFee(8)]).toEqual([false, true]);
+    // VIP 5's might shows in 전투력.
+    const at = (vip: number) => combatPowerAt(30, "warrior", { weapon: null, armor: null }, null, null, 0, vip);
+    expect(at(5)).toBeGreaterThan(at(4));
+    expect(at(4)).toBe(at(0));
   });
 });

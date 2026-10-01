@@ -491,7 +491,7 @@ function ZoneScreen({
                 <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
                 {bag && (
                   <span className="hud-power" title={t("rank.power")}>
-                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars).toLocaleString()}
+                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip).toLocaleString()}
                   </span>
                 )}
               </div>
@@ -602,7 +602,7 @@ function ZoneScreen({
           {entry.zone === "arena" && <ArenaHud client={client} />}
           <AnnounceBanner client={client} />
           {hud.dead && entry.zone !== "arena" && (
-            <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} travelling={travelling} />
+            <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} vip={bag?.vip ?? 0} travelling={travelling} />
           )}
         </>
       )}

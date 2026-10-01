@@ -3,21 +3,24 @@ import { problemText } from "./BagPanel";
 import { locale, t } from "./lang";
 import { DEATH_XP_SHARE, REVIVE_HP_SHARE, reviveCost } from "../game/account/level";
 import type { WorldClient } from "../net/worldClient";
+import { freeRevive } from "../game/account/premium";
 
 
 
 // Fallen: what it cost, and the two ways up: back in the village for nothing, or here for gold.
-export function DeathPanel({ client, level, lostXp, gold, travelling }: {
+export function DeathPanel({ client, level, lostXp, gold, vip, travelling }: {
   client: WorldClient;
   level: number;
   lostXp: number;
   // Null until the bag has loaded.
   gold: number | null;
+  // The account's VIP rank: from VIP 4 rising here costs nothing.
+  vip: number;
   travelling: boolean;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const cost = reviveCost(level);
+  const cost = freeRevive(vip) ? 0 : reviveCost(level);
   const short = gold !== null && gold < cost;
   return (
     <div className="pain fallen">

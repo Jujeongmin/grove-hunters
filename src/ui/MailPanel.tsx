@@ -27,11 +27,13 @@ function words(mail: Mail): { title: string; body: string | null } {
     };
   }
   if (mail.kind === "monthly_pass") return { title: t("mail.pass"), body: t("mail.passBody") };
+  if (mail.kind === "vip_daily") return { title: t("mail.vipDaily", { n: Number(mail.params.vip) || 0 }), body: t("mail.vipDailyBody") };
   const thing = marketThing(mail);
   if (mail.kind === "gift" || !thing) return { title: t("mail.gift"), body: null };
   const item = thing.n > 1 ? `${itemName(thing.id)} ×${thing.n}` : gearName({ id: thing.id, plus: thing.plus });
   const price = typeof mail.params.price === "number" ? mail.params.price : 0;
-  if (mail.kind === "market_sold") return { title: t("mail.marketSold", { item }), body: t("mail.marketSoldBody", { price, fee: marketFee(price) }) };
+  const fee = typeof mail.params.fee === "number" ? mail.params.fee : marketFee(price);
+  if (mail.kind === "market_sold") return { title: t("mail.marketSold", { item }), body: t("mail.marketSoldBody", { price, fee }) };
   if (mail.kind === "market_bought") return { title: t("mail.marketBought", { item }), body: t("mail.marketBoughtBody", { price }) };
   return { title: t("mail.marketReturned", { item }), body: t("mail.marketReturnedBody") };
 }

@@ -6,6 +6,7 @@ import { CHAT_MAX } from "../game/world/chat";
 import type { ChatLine, WorldClient } from "../net/worldClient";
 import { announceText } from "./announceText";
 import { settings } from "./settings";
+import { VIP_MIGHT } from "../game/account/premium";
 
 // Open, it shows this many to scroll back through.
 const OPEN_LINES = 30;
@@ -128,7 +129,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
         <div className="chat-log" ref={log} onClick={open ? undefined : () => setOpen(true)}>
           {shown.map((l) => (
             <p key={`${l.guild ? "g" : "c"}${l.id}`} className={[l.mine ? "mine" : "", l.guild ? "guild" : "", l.system ? "system" : ""].join(" ").trim() || undefined}>
-              {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}{(l.vip ?? 0) > 0 && <span className="vip-mark">VIP {l.vip}</span>}<b>{l.name}</b> {l.text}
+              {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}{(l.vip ?? 0) > 0 && <span className="vip-mark">VIP {l.vip}</span>}<b className={(l.vip ?? 0) >= VIP_MIGHT ? "vip-gold" : undefined}>{l.name}</b> {l.text}
             </p>
           ))}
         </div>

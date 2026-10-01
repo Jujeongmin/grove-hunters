@@ -68,8 +68,10 @@ import {
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
-import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, vipOfAccount } from "./premium";
-import { huntBonus, premiumView, protectCost, readPremium, vipOf, type PremiumView } from "../../src/game/account/premium";
+import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, payVipDay, roomOf, vipOfAccount } from "./premium";
+import {
+  freeRevive, huntBonus, pieceLimit, premiumView, protectCost, readPremium, vipEnhance, vipOf, type PremiumView,
+} from "../../src/game/account/premium";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
 import type { GroveView } from "../../src/game/world/grove";
@@ -217,18 +219,19 @@ async function drawMounts(account: string, n: number, cost: number): Promise<{ v
   return { view, pulls };
 }
 
-async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
+async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>>; vip: number }> {
   const state = await $global.getUserState(account);
+  const vip = vipOf(readPremium(state).vipPoints);
   // VIP rank's own mounts come with the rank.
-  const owned = [...new Set([...ownedMounts(state.mounts), ...vipMounts(vipOf(readPremium(state).vipPoints))])];
+  const owned = [...new Set([...ownedMounts(state.mounts), ...vipMounts(vip)])];
   const picked = readMountId(state.mount);
-  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars) };
+  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars), vip };
 }
 
 // A character with its account's picked mount and its stars, which add to its every fight (see mounts.ts).
-async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null; mountStars: number }> {
-  const { selected, stars } = await accountMounts(account);
-  return { ...character, mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0 };
+async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null; mountStars: number; vip: number }> {
+  const { selected, stars, vip } = await accountMounts(account);
+  return { ...character, mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip };
 }
 
 // Who a moment happened to, as an announcement names them: the character played and its server.
@@ -299,7 +302,7 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
     if (account !== $sender.account) await $asset.transfer(account, GOLD, pay.gold);
   }
   const next = await updateActive(account, (c) => ({
-    ...loot(c, pay.items, Math.random, newUid), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
+    ...loot(c, pay.items, Math.random, newUid, pieceLimit(vip)), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
     daily: countDaily(c.daily, pay.felled, Date.now()),
   }));
   if (pay.xp > 0) await writeRanking(account, next, vip, combatPower(await mounted(account, next)));
@@ -361,8 +364,8 @@ async function bagView(character: Character): Promise<BagView> {
     job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
     ...(await (async () => {
-      const { selected, stars } = await accountMounts($sender.account);
-      return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0 };
+      const { selected, stars, vip } = await accountMounts($sender.account);
+      return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip };
     })()),
   };
 }
@@ -508,15 +511,16 @@ function listingView(listing: Listing, account: string): ListingView {
 // One letter out of the mailbox and into your hands. Items need a character to carry them (and room in its bag); gold and
 // gems go to the account.
 async function claimLetter(account: string, id: string): Promise<void> {
+  const room = await roomOf(account);
   await takeMail(
     account, id, Date.now(),
     async (mail) => {
-      if (mail.items.length > 0 && !mailFits(await playing(account), mail)) throw new RuleViolation("bag_full");
+      if (mail.items.length > 0 && !mailFits(await playing(account), mail, room)) throw new RuleViolation("bag_full");
     },
     async (mail) => {
       if (mail.items.length > 0) {
         await updateActive(account, (c) => {
-          return receiveMail(c, mail.items, newUid);
+          return receiveMail(c, mail.items, newUid, room);
         });
       }
       if (mail.gems > 0) await changeGems(account, mail.gems);
@@ -1119,6 +1123,7 @@ export class Server {
     const account = $sender.account;
     const character = await playing(account);
     await payPassDay(account, Date.now());
+    await payVipDay(account, Date.now());
     const spot = returnSpot(character.spot);
     const level = levelOf(character.xp).level;
     const channel = await channelToEnter(account, character);
@@ -1324,7 +1329,8 @@ export class Server {
     if (slot !== "weapon" && slot !== "armor") throw new RuleViolation("unavailable");
     const account = $sender.account;
     await playing(account);
-    const next = await updateActive(account, (c) => unequipSlot(c, slot as Slot));
+    const room = await roomOf(account);
+    const next = await updateActive(account, (c) => unequipSlot(c, slot as Slot, room));
     await refreshFighter(next);
     return bagView(next);
   }
@@ -1364,7 +1370,8 @@ export class Server {
     if (listed === null) throw new RuleViolation("unavailable");
     const account = $sender.account;
     const bought = [{ id: item, n }];
-    if (!fits(await playing(account), bought, false)) throw new RuleViolation("bag_full");
+    const room = await roomOf(account);
+    if (!fits(await playing(account), bought, false, room)) throw new RuleViolation("bag_full");
     // The village's herbalist, once built, sells potions cheaper on this server.
     const price = ITEMS[item].kind === "potion"
       ? Math.round(listed * potionPriceFactor(await villageOf((await readAccountWorld(account)).id)))
@@ -1373,7 +1380,7 @@ export class Server {
     if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost);
     try {
-      return bagView(await updateActive(account, (c) => give(c, bought, false, newUid)));
+      return bagView(await updateActive(account, (c) => give(c, bought, false, newUid, room)));
     } catch (error) {
       await $asset.mint(GOLD, cost);
       throw error;
@@ -1424,6 +1431,7 @@ export class Server {
     if (!cost) throw new RuleViolation("max_plus");
     if (countOf(current, "stone") < cost.stones) throw new RuleViolation("no_item");
     if (!(await $asset.has(GOLD, cost.gold))) throw new RuleViolation("not_enough_gold");
+    const vip = await vipOfAccount(account);
     const shield = protect === true ? protectCost(cost.to) : null;
     if (protect === true && shield === null) throw new RuleViolation("unavailable");
     if (shield !== null) await changeGems(account, -shield);
@@ -1440,7 +1448,7 @@ export class Server {
         const worn = c.gear[slot];
         if (worn?.uid !== piece.uid || worn.plus !== cost.to - 1) throw new RuleViolation("unavailable");
         const paid = spend(c, [{ id: "stone", n: cost.stones }]);
-        outcome = rollEnhance(cost, Math.random(), Math.random());
+        outcome = rollEnhance({ ...cost, success: Math.min(1, cost.success + vipEnhance(vip)) }, Math.random(), Math.random());
         if (outcome === "broken" && shield !== null) outcome = "fail";
         if (outcome === "success") return { ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } } };
         if (outcome === "fail") return paid;
@@ -1469,13 +1477,14 @@ export class Server {
     const made = [{ id: recipe.makes, n: recipe.n }];
     const trade = slotOf(recipe.makes) !== null && Math.random() < TRADE_CRAFT_CHANCE;
     if (!hasMaterials(allStacks(current), recipe)) throw new RuleViolation("no_item");
-    if (!fits(current, made, trade)) throw new RuleViolation("bag_full");
+    const room = await roomOf(account);
+    if (!fits(current, made, trade, room)) throw new RuleViolation("bag_full");
     if (!(await $asset.has(GOLD, recipe.gold))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, recipe.gold);
     try {
       return bagView(await updateActive(account, (c) => {
         const paid = spend(c, recipe.needs.map((need) => ({ id: need.item, n: need.n })));
-        return give(paid, made, trade, newUid);
+        return give(paid, made, trade, newUid, room);
       }));
     } catch (error) {
       await $asset.mint(GOLD, recipe.gold);
@@ -1540,13 +1549,14 @@ export class Server {
     const account = $sender.account;
     await playing(account);
     await requireNpc("elder");
+    const room = await roomOf(account);
     let paid = 0;
     const next = await updateActive(account, (c) => {
       if (!questDone(c.quest)) throw new RuleViolation("quest_unfinished");
       const quest = QUESTS[c.quest.index];
       paid = quest.gold;
       return {
-        ...give(c, quest.items, false, newUid),
+        ...give(c, quest.items, false, newUid, room),
         xp: c.xp + quest.xp,
         quest: { index: c.quest.index + 1, count: 0 },
       };
@@ -1563,11 +1573,12 @@ export class Server {
     if (!quest) throw new RuleViolation("unavailable");
     const account = $sender.account;
     await playing(account);
+    const room = await roomOf(account);
     const next = await updateActive(account, (c) => {
       const today = dailyToday(c.daily, Date.now());
       if ((today.counts[quest.id] ?? 0) < quest.count || today.claimed.includes(quest.id)) throw new RuleViolation("quest_unfinished");
       return {
-        ...give(c, quest.items, false, newUid),
+        ...give(c, quest.items, false, newUid, room),
         daily: { ...today, claimed: [...today.claimed, quest.id] },
       };
     });
@@ -1582,9 +1593,10 @@ export class Server {
     const { roomId } = currentChannel();
     const character = await playing(account);
     if ((await $room.getMyState()).dead !== true) throw new RuleViolation("unavailable");
-    const cost = reviveCost(levelOf(character.xp).level);
-    if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
-    await $asset.burn(GOLD, cost);
+    // VIP 4 and above rise for nothing.
+    const cost = freeRevive(await vipOfAccount(account)) ? 0 : reviveCost(levelOf(character.xp).level);
+    if (cost > 0 && !(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
+    if (cost > 0) await $asset.burn(GOLD, cost);
     const now = Date.now();
     const stood = await withRoomLock(roomId, async () => {
       const mine = await $room.getMyState();

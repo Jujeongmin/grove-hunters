@@ -1,3 +1,4 @@
+import { MAX_PIECES } from "./inventory";
 import { GEM_PRODUCTS } from "./mounts";
 
 // What money buys beyond the gems themselves (see docs/superpowers/specs/2026-10-01-free-to-play-design.md):
@@ -21,6 +22,49 @@ export const VIP_POINTS: readonly number[] = [100, 550, 1200, 3000, 6000, 12000,
 export const VIP_BONUS = 0.2;
 export const VIP_ANNOUNCE = 5;
 
+// What each rank gives beyond hunting's XP and gold. A rank keeps everything the ranks below it give;
+// of the daily gems and the enhancement odds, only the highest counts.
+//   1 the VIP mark by the name · 2 ten more pieces of gear in the bag · 3 gems every day (10, 30 from
+//   6, 50 from 9) · 4 rising where you fell for nothing · 5 a tenth more damage and health, and a
+//   golden name · 7 enhancing likelier by 5 points (10 from 9) · 8 no market fee · 10 its own mythic
+//   mount (see mounts.ts)
+export const VIP_BAG = 2;
+export const VIP_BAG_EXTRA = 10;
+export const VIP_FREE_REVIVE = 4;
+export const VIP_MIGHT = 5;
+export const VIP_MIGHT_SHARE = 0.1;
+export const VIP_NO_FEE = 8;
+// The ranks at which each perk comes, in order, for the table on the screen.
+export const VIP_PERK_AT: Readonly<Record<number, string>> = {
+  1: "mark", 2: "bag", 3: "daily10", 4: "revive", 5: "might", 6: "daily30", 7: "enhance5", 8: "noFee", 9: "daily50", 10: "mount",
+};
+
+export function pieceLimit(vip: number): number {
+  return MAX_PIECES + (vip >= VIP_BAG ? VIP_BAG_EXTRA : 0);
+}
+
+export function vipDailyGems(vip: number): number {
+  return vip >= 9 ? 50 : vip >= 6 ? 30 : vip >= 3 ? 10 : 0;
+}
+
+export function freeRevive(vip: number): boolean {
+  return vip >= VIP_FREE_REVIVE;
+}
+
+// The share more damage and health a rank adds.
+export function vipMight(vip: number): number {
+  return vip >= VIP_MIGHT ? VIP_MIGHT_SHARE : 0;
+}
+
+// Points added to every enhancement's chance of success.
+export function vipEnhance(vip: number): number {
+  return vip >= 9 ? 0.1 : vip >= 7 ? 0.05 : 0;
+}
+
+export function noMarketFee(vip: number): boolean {
+  return vip >= VIP_NO_FEE;
+}
+
 // Gems to keep a failed attempt at this + from breaking the gear (from +6, where breaking begins).
 export const PROTECT_GEMS: Readonly<Record<number, number>> = { 6: 20, 7: 30, 8: 50, 9: 80, 10: 120 };
 
@@ -31,6 +75,8 @@ export interface Premium {
   // When the monthly pass runs out (ms; 0 when there never was one), and the last day it paid.
   passUntil: number;
   passPaidDay: string | null;
+  // The last day the VIP rank's daily gems were sent.
+  vipPaidDay: string | null;
 }
 
 const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
@@ -44,6 +90,7 @@ export function readPremium(state: Record<string, unknown> | null | undefined): 
     firstBought: [...new Set(first)],
     passUntil: count(s.passUntil),
     passPaidDay: typeof s.passPaidDay === "string" ? s.passPaidDay : null,
+    vipPaidDay: typeof s.vipPaidDay === "string" ? s.vipPaidDay : null,
   };
 }
 

@@ -1,11 +1,13 @@
 import {
-  LISTING_MS, MAX_LISTINGS, costOf, readBuyCount, readListing, sellerGets, type Listing, type Shelf,
+  LISTING_MS, MAX_LISTINGS, costOf, marketFee, readBuyCount, readListing, type Listing, type Shelf,
 } from "../../src/game/account/market";
+import { noMarketFee } from "../../src/game/account/premium";
 import type { MailItem } from "../../src/game/account/mail";
 import type { GearPiece, ItemId } from "../../src/game/account/items";
 import { RuleViolation } from "../../src/game/world/types";
 import { MAIL_COLLECTION, sendMail } from "./mail";
 import { changeGems } from "./store";
+import { vipOfAccount } from "./premium";
 
 // One row per listing, on every server at once. A listing changes hands only under its own lock, so
 // two buyers (or a buyer and the seller calling it off) can never both have the same things: each
@@ -34,9 +36,9 @@ function goods(listing: Pick<Listing, "item" | "piece" | "n">): MailItem[] {
   return listing.piece ? [{ id: listing.piece.id, n: 1, piece: listing.piece }] : [{ id: listing.item, n: listing.n, trade: true }];
 }
 
-// Words for a market letter: what it was about, how many, and for how much in all.
-function about(listing: Pick<Listing, "item" | "plus">, n: number, total: number): Record<string, string | number> {
-  return { item: listing.item, plus: listing.plus, n, price: total };
+// Words for a market letter: what it was about, how many, for how much in all, and the fee kept.
+function about(listing: Pick<Listing, "item" | "plus">, n: number, total: number, fee?: number): Record<string, string | number> {
+  return { item: listing.item, plus: listing.plus, n, price: total, ...(fee !== undefined ? { fee } : {}) };
 }
 
 // A listing's row as it is kept (prices by the one, marked so; see readListing).
@@ -115,6 +117,8 @@ export async function buyListing(buyer: string, id: string, rawCount: unknown, n
     const count = readBuyCount(rawCount ?? 1, listing);
     if (count === null) throw new RuleViolation("too_many");
     const total = costOf(listing, count);
+    // VIP 8 and above sell without the fee.
+    const fee = noMarketFee(await vipOfAccount(listing.seller)) ? 0 : marketFee(total);
     await changeGems(buyer, -total);
     const { id: _, ...kept } = listing;
     const left = listing.n - count;
@@ -124,7 +128,7 @@ export async function buyListing(buyer: string, id: string, rawCount: unknown, n
       else await $global.deleteCollectionItem(MARKET_COLLECTION, id);
       const bought = { ...listing, n: count };
       sent = [
-        await sendMail(listing.seller, { kind: "market_sold", gold: 0, gems: sellerGets(total), items: [], params: about(listing, count, total) }, now),
+        await sendMail(listing.seller, { kind: "market_sold", gold: 0, gems: total - fee, items: [], params: about(listing, count, total, fee) }, now),
         await sendMail(buyer, { kind: "market_bought", gold: 0, gems: 0, items: goods(bought), params: about(listing, count, total) }, now),
       ];
     } catch (error) {

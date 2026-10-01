@@ -3,7 +3,9 @@ import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL10, PULL10_COST, PULL_COST, mountBonus, mountsOfTier,
   type MountId, type MountTier,
 } from "../game/account/mounts";
-import { PASS_DAYS, PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_PRODUCT, PASS_XP, VIP_ANNOUNCE, VIP_BONUS, VIP_POINTS } from "../game/account/premium";
+import {
+  PASS_DAYS, PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_PRODUCT, PASS_XP, VIP_ANNOUNCE, VIP_BONUS, VIP_PERK_AT, VIP_POINTS,
+} from "../game/account/premium";
 import type { ModelLibrary } from "../game/assets/ModelLibrary";
 import type { PlayerClass } from "../game/combat/classes";
 import { publicUrl } from "../game/assets/publicUrl";
@@ -333,11 +335,12 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                           <td><b className="vip-mark">VIP {rank}</b></td>
                           <td>{need.toLocaleString(locale())}</td>
                           <td>
-                            {t("mount.vipBonus", { n: Math.round(rank * VIP_BONUS * 100) })}
-                            {rank >= VIP_ANNOUNCE && <> · {t("mount.vipAnnounced")}</>}
+                            <b className="stable-vip-perk">{t(`mount.vipPerk.${VIP_PERK_AT[rank]}` as Key)}</b>
                             {MOUNT_IDS.filter((id) => MOUNTS[id].vipOnly === rank).map((id) => (
-                              <b key={id} className="stable-vip-gift"> · {t("mount.vipGift", { name: mountName(id) })}</b>
+                              <b key={id} className="stable-vip-gift"> {mountName(id)}</b>
                             ))}
+                            <br />
+                            <small>{t("mount.vipBonus", { n: Math.round(rank * VIP_BONUS * 100) })}{rank === VIP_ANNOUNCE && <> · {t("mount.vipAnnounced")}</>}</small>
                           </td>
                         </tr>
                       );

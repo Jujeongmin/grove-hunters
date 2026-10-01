@@ -6,7 +6,7 @@ import { give, putPiece, type Inventory, type MakeUid } from "./inventory";
 // per account, the same on every server and character; what a letter carries goes to the character
 // that takes it, its gold and gems to the account.
 
-export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss" | "monthly_pass";
+export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss" | "monthly_pass" | "vip_daily";
 
 // What a letter carries: n of an item, given new (gear as new pieces; trade: whether it may be
 // traded), or one whole piece of gear as it was (from the market, its + and all).
@@ -30,7 +30,7 @@ export const MAIL_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 // The mailbox shows the newest this many.
 export const MAILBOX_SHOWN = 50;
 
-const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss", "monthly_pass"];
+const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss", "monthly_pass", "vip_daily"];
 
 const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
 
@@ -78,19 +78,19 @@ export function daysLeft(mail: Pick<Mail, "at">, now: number): number {
 }
 
 // What a letter carries, into a character's things: all of it, or nothing (bag_full).
-export function receiveMail<I extends Inventory>(inv: I, items: readonly MailItem[], makeUid: MakeUid): I {
+export function receiveMail<I extends Inventory>(inv: I, items: readonly MailItem[], makeUid: MakeUid, room?: number): I {
   let next = inv;
   for (const item of items) {
-    next = item.piece ? putPiece(next, item.piece) : give(next, [{ id: item.id, n: item.n }], item.trade === true, makeUid);
+    next = item.piece ? putPiece(next, item.piece, room) : give(next, [{ id: item.id, n: item.n }], item.trade === true, makeUid, room);
   }
   return next;
 }
 
 // Whether everything a letter carries fits the bag (no stack past MAX_STACK, no gear past
 // MAX_PIECES). One that does not is left in the mailbox rather than half taken.
-export function mailFits(inv: Inventory, mail: Pick<Mail, "items">): boolean {
+export function mailFits(inv: Inventory, mail: Pick<Mail, "items">, room?: number): boolean {
   try {
-    receiveMail(inv, mail.items, () => "fit");
+    receiveMail(inv, mail.items, () => "fit", room);
     return true;
   } catch {
     return false;

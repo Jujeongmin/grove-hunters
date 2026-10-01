@@ -1,6 +1,7 @@
 import { FrameGovernor } from "./frameGovernor";
 import * as THREE from "three";
 import { mountObject } from "./mountLooks";
+import { VIP_MIGHT } from "../account/premium";
 import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
 import { ITEMS, POTION_GAP_MS } from "../account/items";
@@ -1189,7 +1190,11 @@ export class WorldView {
         this.others.set(other.account, entry);
       }
       const vip = other.look.vip ? `VIP${other.look.vip} · ` : "";
-      entry.actor.label(settings().showNames ? `${vip}Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "");
+      entry.actor.label(
+        settings().showNames ? `${vip}Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "",
+        // VIP 5 and above: the name in gold.
+        (other.look.vip ?? 0) >= VIP_MIGHT ? "#ffd36a" : undefined,
+      );
       entry.actor.path = readJob(other.look.job);
       this.applyMount(entry.actor, other.riding);
       entry.actor.sync(other.pose, "active", dt);

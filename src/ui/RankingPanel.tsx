@@ -7,6 +7,7 @@ import type { PlayerClass } from "../game/combat/classes";
 import { className, gearName, jobName, serverName } from "./names";
 import type { JobId } from "../game/combat/jobs";
 import { usePages } from "./Pager";
+import { VIP_MIGHT } from "../game/account/premium";
 
 // Lines of the board on one page.
 const BOARD_PER_PAGE = 8;
@@ -115,7 +116,7 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                     onKeyDown={(e) => e.key === "Enter" && setPicked(row)}
                   >
                     <span className="rank">{board === "power" && rows.indexOf(row) === 0 ? "👑" : rows.indexOf(row) + 1}</span>
-                    <span className="who">{(row.vip ?? 0) > 0 && <b className="vip-mark">VIP {row.vip}</b>}{row.nickname ?? t("common.noName")}</span>
+                    <span className={`who${(row.vip ?? 0) >= VIP_MIGHT ? " vip-gold" : ""}`}>{(row.vip ?? 0) > 0 && <b className="vip-mark">VIP {row.vip}</b>}{row.nickname ?? t("common.noName")}</span>
                     <span className="note">{classText(row.playerClass, row.job)}</span>
                     <span className="note">{board === "power" ? (row.power ?? 0).toLocaleString() : `Lv ${row.level}`}</span>
                   </li>
