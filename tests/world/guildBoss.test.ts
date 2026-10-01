@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ARENA_ROOMS, BROOD_COUNT, GUILD_BOSSES, HP_PER_MEMBER, MIN_MEMBERS, TOP_GEAR, arenaRoomId, bossMax, bossOfWeek, castPattern,
-  finalGear, nextPattern, patternGap, ranking, readArenaRoom, stageOf,
+  finalGear, leagueOrder, nextPattern, patternGap, ranking, readArenaRoom, stageOf,
 } from "../../src/game/world/guildBoss";
 import { inShape } from "../../src/game/world/telegraphs";
 
@@ -93,5 +93,16 @@ describe("guild boss", () => {
     const angry = castPattern("guild_yeti", 1, boss, prey, 0, true, Math.random, "y").telegraphs;
     expect(angry.length).toBe(calm.length + 2);
     expect(angry[0].hitAt).toBeLessThan(calm[0].hitAt);
+  });
+
+  it("orders the league: felled first, the sooner the higher, then by share of health", () => {
+    const rows = [
+      { guild: "a", damage: 50, max: 100, killedAt: null },
+      { guild: "b", damage: 200, max: 200, killedAt: 20 },
+      { guild: "c", damage: 90, max: 300, killedAt: null },
+      { guild: "d", damage: 100, max: 100, killedAt: 10 },
+      { guild: "e", damage: 50, max: 100, killedAt: null },
+    ];
+    expect(leagueOrder(rows).map((r) => r.guild)).toEqual(["d", "b", "a", "e", "c"]);
   });
 });

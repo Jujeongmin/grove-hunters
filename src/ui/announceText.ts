@@ -23,6 +23,8 @@ export function announceText(a: Announcement): string {
     }
     case "guild_boss":
       return t("announce.guildBoss", { guild: String(p.guild ?? ""), boss: t(`boss.${String(p.boss)}` as Key) });
+    case "guild_week":
+      return t("announce.guildWeek", { guild: String(p.guild ?? "") });
     case "power_top":
       return t("announce.powerTop", { ...who, n: (Number(p.power) || 0).toLocaleString() });
     case "vip":

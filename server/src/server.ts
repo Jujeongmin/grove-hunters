@@ -15,9 +15,11 @@ import { NEWS, readNewsId } from "../../src/game/news";
 import { mailFits, receiveMail, type Mail } from "../../src/game/account/mail";
 import { openMailbox, takeMail } from "./mail";
 import {
-  ARENA_LEVEL, ARENA_MS, ARENA_ROOMS, ARENA_SEATS, arenaRoomId, currentWeek, readArenaRoom,
+  ARENA_LEVEL, ARENA_MS, ARENA_ROOMS, ARENA_SEATS, arenaRoomId, currentWeek, readArenaRoom, type LeagueView,
 } from "../../src/game/world/guildBoss";
-import { bossView, enterWeek, findWeek, type BossView } from "./guildBoss";
+import {
+  bossView, enterWeek, findWeek, leagueView, settleLeague, type BossView,
+} from "./guildBoss";
 import { noteArenaDamage, tickArena } from "./arena";
 import { announce, announcementsSince } from "./announce";
 import { ANNOUNCE_PLUS, type Announcement } from "../../src/game/world/announce";
@@ -685,6 +687,20 @@ export class Server {
   }
 
   // The boss tab: this week's boss and the guild's progress on it, and how full each boss room is.
+  // The week's league across every guild, and last week's: paid first, if it has not been yet.
+  async guildLeague(): Promise<{ now: LeagueView; last: LeagueView }> {
+    const account = $sender.account;
+    const character = await playing(account);
+    const guild = await guildOf(account, character);
+    const now = Date.now();
+    const week = currentWeek(now);
+    await settleLeague(week - 1, now);
+    return {
+      now: await leagueView(week, guild?.id ?? null, character.id),
+      last: await leagueView(week - 1, guild?.id ?? null, character.id),
+    };
+  }
+
   async guildBoss(): Promise<BossView & { rooms: number[]; endsAt: number }> {
     const account = $sender.account;
     const character = await playing(account);

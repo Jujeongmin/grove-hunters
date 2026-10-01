@@ -17,6 +17,7 @@ import { readTelegraphs, type Telegraph } from "../game/world/telegraphs";
 import type { GuildBossType } from "../game/world/guildBoss";
 import type { Announcement } from "../game/world/announce";
 import type { PremiumView } from "../game/account/premium";
+import type { LeagueView } from "../game/world/guildBoss";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
@@ -526,6 +527,11 @@ export class WorldClient {
   // guild's boss rooms, and back out to where you stood. Null once there, or the problem.
   guildBoss(): Promise<GuildBossView | { problem: string }> {
     return this.tryCall("guildBoss", []);
+  }
+
+  // The week's league across every guild, and last week's.
+  guildLeague(): Promise<{ now: LeagueView; last: LeagueView } | { problem: string }> {
+    return this.tryCall("guildLeague", []);
   }
 
   async enterArena(n: number): Promise<string | null> {

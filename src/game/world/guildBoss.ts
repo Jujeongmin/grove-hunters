@@ -182,3 +182,32 @@ export function patternGap(rage: boolean, random: () => number): number {
   const gap = GAP_MS[0] + random() * (GAP_MS[1] - GAP_MS[0]);
   return Math.round(gap * (rage ? RAGE_GAP : 1));
 }
+
+// The week's league across every guild: a guild that felled its boss stands above one that has not,
+// the sooner the higher; the rest by the share of its boss's health taken (each boss's health is sized
+// to its guild, so a small guild stands as fair a chance as a big one). Players across every guild by
+// their damage. When a week is over, the first three guilds' members and the first three players are
+// paid gems by mail, and the first guild is told to every server.
+export const LEAGUE_SHOWN = 10;
+export const LEAGUE_GUILD_GEMS: readonly number[] = [300, 150, 80];
+export const LEAGUE_PLAYER_GEMS: readonly number[] = [200, 100, 50];
+
+export interface LeagueGuild { guild: string; damage: number; max: number; killedAt: number | null }
+
+export function leagueOrder<T extends LeagueGuild>(rows: readonly T[]): T[] {
+  const share = (r: LeagueGuild) => (r.max > 0 ? r.damage / r.max : 0);
+  return [...rows].sort((a, b) => {
+    if ((a.killedAt !== null) !== (b.killedAt !== null)) return a.killedAt !== null ? -1 : 1;
+    if (a.killedAt !== null && b.killedAt !== null && a.killedAt !== b.killedAt) return a.killedAt - b.killedAt;
+    return share(b) - share(a) || a.guild.localeCompare(b.guild);
+  });
+}
+
+// A week's league as the screen shows it: the guilds in order (each with the share of its boss taken),
+// the caller's guild's place, and the players across every guild by damage.
+export interface LeagueView {
+  week: number;
+  guilds: { name: string; share: number; killed: boolean; mine: boolean }[];
+  myGuildRank: number | null;
+  players: { name: string; guild: string; damage: number; mine: boolean }[];
+}

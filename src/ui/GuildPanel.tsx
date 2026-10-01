@@ -6,7 +6,7 @@ import {
 import { readClass } from "../game/combat/classes";
 import { readZone } from "../game/world/zones";
 import type { GuildBossView, GuildCall, WorldClient } from "../net/worldClient";
-import { ARENA_SEATS } from "../game/world/guildBoss";
+import { ARENA_SEATS, LEAGUE_GUILD_GEMS, LEAGUE_PLAYER_GEMS, type LeagueView } from "../game/world/guildBoss";
 import { problemText } from "./BagPanel";
 import { locale, t, type Key } from "./lang";
 import { className, jobLabel, serverName, zoneName } from "./names";
@@ -290,6 +290,21 @@ function MemberActions({ member, role, busy, act, ask }: {
 // and how full they are, and who has done the most.
 function BossTab({ client, onEntered }: { client: WorldClient; onEntered: () => void }) {
   const [boss, setBoss] = useState<GuildBossView | null>(null);
+  // Which board shows: the guild's own damage, every guild's, or every player's (this week or last).
+  const [board, setBoard] = useState<"mine" | "guilds" | "players">("mine");
+  const [lastWeek, setLastWeek] = useState(false);
+  const [league, setLeague] = useState<{ now: LeagueView; last: LeagueView } | null>(null);
+  useEffect(() => {
+    if (board === "mine" || league) return;
+    let live = true;
+    void client.guildLeague().then((r) => {
+      if (live && !("problem" in r)) setLeague(r);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, board, league]);
+  const shown = league ? (lastWeek ? league.last : league.now) : null;
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -345,8 +360,19 @@ function BossTab({ client, onEntered }: { client: WorldClient; onEntered: () => 
         </ul>
       )}
       {problem && <p className="smith-note bad">{problem}</p>}
-      <h3>{t("boss.ranking")}</h3>
-      {boss.ranking.length === 0 ? (
+      <div className="smith-tabs boss-board-tabs">
+        {(["mine", "guilds", "players"] as const).map((b) => (
+          <button key={b} type="button" className={`text-button${board === b ? " on" : ""}`} onClick={() => setBoard(b)}>
+            {t(`boss.board.${b}` as Key)}
+          </button>
+        ))}
+        {board !== "mine" && (
+          <button type="button" className="text-button boss-board-week" onClick={() => setLastWeek((v) => !v)}>
+            {t(lastWeek ? "boss.lastWeek" : "boss.thisWeek")}
+          </button>
+        )}
+      </div>
+      {board === "mine" && (boss.ranking.length === 0 ? (
         <p className="note">{t("boss.noRanking")}</p>
       ) : (
         <ol className="boss-ranking">
@@ -357,7 +383,36 @@ function BossTab({ client, onEntered }: { client: WorldClient; onEntered: () => 
             </li>
           ))}
         </ol>
-      )}
+      ))}
+      {board !== "mine" && !league && <p className="note">{t("common.loading")}</p>}
+      {board === "guilds" && shown && (shown.guilds.length === 0 ? (
+        <p className="note">{t("boss.noRanking")}</p>
+      ) : (
+        <>
+          <ol className="boss-ranking">
+            {shown.guilds.map((g, i) => (
+              <li key={i} className={g.mine ? "mine" : ""}>
+                <span>{i === 0 ? "👑" : `${i + 1}.`} {g.name}</span>
+                <span>{g.killed ? t("boss.killed") : `${Math.floor(g.share * 100)}%`}</span>
+              </li>
+            ))}
+          </ol>
+          {shown.myGuildRank !== null && <p className="note">{t("boss.myGuildRank", { n: shown.myGuildRank })}</p>}
+        </>
+      ))}
+      {board === "players" && shown && (shown.players.length === 0 ? (
+        <p className="note">{t("boss.noRanking")}</p>
+      ) : (
+        <ol className="boss-ranking">
+          {shown.players.map((p, i) => (
+            <li key={i} className={p.mine ? "mine" : ""}>
+              <span>{i + 1}. {p.name} <em className="note">&lt;{p.guild}&gt;</em></span>
+              <span>{p.damage.toLocaleString(locale())}</span>
+            </li>
+          ))}
+        </ol>
+      ))}
+      {board !== "mine" && <p className="note">{t("boss.leagueNote", { g1: LEAGUE_GUILD_GEMS[0], p1: LEAGUE_PLAYER_GEMS[0] })}</p>}
       <p className="note">{t("boss.mine", { n: boss.myDamage.toLocaleString(locale()) })}</p>
       <p className="note">{t("boss.stages")}</p>
     </div>

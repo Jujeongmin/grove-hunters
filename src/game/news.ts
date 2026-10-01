@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-01-plus15-league",
+    date: "2026-10-01",
+    text: {
+      ko: {
+        title: "강화 +15 · 길드 보스 주간 순위",
+        lines: [
+          "장비 강화가 +15까지 열렸어요. +11부터는 한 단계가 두 배의 힘을 주지만, 성공은 드물고 파괴는 잦아요(보석으로 파괴 방지 가능).",
+          "길드 보스 탭에 모든 길드의 주간 순위가 생겼어요. 보스를 처치한 길드가 먼저(빠를수록 위), 나머지는 깎은 체력 비율 순이에요.",
+          "주가 끝나면 1·2·3위 길드원 전원에게 보석 300·150·80, 피해량 1·2·3위에게 보석 200·100·50을 우편으로 보내요.",
+        ],
+      },
+      en: {
+        title: "Enhancing to +15 · the guild boss league",
+        lines: [
+          "Gear now enhances up to +15. From +11 each step is worth twice as much, but successes are rare and breaks common (gems can protect).",
+          "The guild boss tab now ranks every guild by the week: guilds that felled their boss first (the sooner the higher), the rest by the share of its health taken.",
+          "When the week ends, every member of the first three guilds gets 300, 150 or 80 gems, and the three who did the most damage 200, 100 or 50, by mail.",
+        ],
+      },
+      ja: {
+        title: "強化+15・ギルドボス週間ランキング",
+        lines: [
+          "装備強化が+15まで開放。+11からは1段階が2倍の力になりますが、成功は稀で破壊が多くなります（宝石で破壊防止可能）。",
+          "ギルドボスタブに全ギルドの週間ランキングが登場。ボスを倒したギルドが先（早いほど上）、残りは削った体力の割合順です。",
+          "週が終わると1・2・3位ギルドの全員に宝石300・150・80、ダメージ1・2・3位に宝石200・100・50をメールで送ります。",
+        ],
+      },
+      "zh-Hant": {
+        title: "強化+15・公會首領週排行",
+        lines: [
+          "裝備強化開放至+15。從+11起每一階的效果加倍，但成功稀少、損壞頻繁（可用寶石防止損壞）。",
+          "公會首領分頁新增所有公會的週排行。擊敗首領的公會在前（越快越前），其餘依削減的體力比例排序。",
+          "每週結束時，前三名公會的全體成員獲得寶石300・150・80，傷害前三名獲得寶石200・100・50，以郵件發送。",
+        ],
+      },
+      "zh-Hans": {
+        title: "强化+15・公会首领周排行",
+        lines: [
+          "装备强化开放至+15。从+11起每一阶的效果加倍，但成功稀少、损坏频繁（可用宝石防止损坏）。",
+          "公会首领分页新增所有公会的周排行。击败首领的公会在前（越快越前），其余按削减的体力比例排序。",
+          "每周结束时，前三名公会的全体成员获得宝石300・150・80，伤害前三名获得宝石200・100・50，以邮件发送。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-01-vip-perks",
     date: "2026-10-01",
     text: {

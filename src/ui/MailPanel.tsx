@@ -27,6 +27,12 @@ function words(mail: Mail): { title: string; body: string | null } {
     };
   }
   if (mail.kind === "monthly_pass") return { title: t("mail.pass"), body: t("mail.passBody") };
+  if (mail.kind === "guild_league") {
+    const place = Number(mail.params.place) || 1;
+    return mail.params.who === "guild"
+      ? { title: t("mail.leagueGuild", { n: place }), body: t("mail.leagueGuildBody", { guild: String(mail.params.guild ?? ""), n: place }) }
+      : { title: t("mail.leaguePlayer", { n: place }), body: t("mail.leaguePlayerBody", { n: place }) };
+  }
   if (mail.kind === "vip_daily") return { title: t("mail.vipDaily", { n: Number(mail.params.vip) || 0 }), body: t("mail.vipDailyBody") };
   const thing = marketThing(mail);
   if (mail.kind === "gift" || !thing) return { title: t("mail.gift"), body: null };

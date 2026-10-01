@@ -1,5 +1,6 @@
 import {
-  GUILD_BOSSES, RANKING_SHOWN, STAGE_REWARDS, bossMax, bossOfWeek, finalGear, ranking, stageOf, type GuildBossType, type Hitter,
+  GUILD_BOSSES, LEAGUE_GUILD_GEMS, LEAGUE_PLAYER_GEMS, LEAGUE_SHOWN, RANKING_SHOWN, STAGE_REWARDS, bossMax, bossOfWeek, finalGear,
+  leagueOrder, ranking, stageOf, type GuildBossType, type Hitter, type LeagueView,
 } from "../../src/game/world/guildBoss";
 import { dailyDay } from "../../src/game/account/quests";
 import type { Guild } from "../../src/game/account/guild";
@@ -21,6 +22,8 @@ export interface BossWeek {
   max: number;
   damage: number;
   stagesPaid: number;
+  // When its health ran out (null while it stands), for the league's order.
+  killedAt: number | null;
   // Everyone who went in this week: the day they last did, and whose they are.
   entries: Record<string, { account: string; name: string; day: string }>;
   hitters: Record<string, Hitter>;
@@ -50,6 +53,7 @@ export function readBossWeek(row: unknown): BossWeek | null {
   if (!boss || num(r.max) <= 0) return null;
   return {
     id: r.__id, guild: r.guild, week: r.week, boss, max: num(r.max), damage: num(r.damage), stagesPaid: Math.min(4, num(r.stagesPaid)),
+    killedAt: typeof r.killedAt === "number" && r.killedAt > 0 ? r.killedAt : null,
     entries: readPeople(r.entries, (e) => (typeof e.account === "string" && typeof e.name === "string" && typeof e.day === "string"
       ? { account: e.account, name: e.name, day: e.day } : null)),
     hitters: readPeople(r.hitters, (h) => (typeof h.account === "string" && typeof h.name === "string"
@@ -77,7 +81,8 @@ export async function enterWeek(guild: Guild, characterId: string, account: stri
     let w = await findWeek(guild.id, week);
     if (!w) {
       const fresh = {
-        guild: guild.id, week, boss: bossOfWeek(week), max: bossMax(guild.members.length), damage: 0, stagesPaid: 0, entries: {}, hitters: {},
+        guild: guild.id, week, boss: bossOfWeek(week), max: bossMax(guild.members.length), damage: 0, stagesPaid: 0, killedAt: null,
+        entries: {}, hitters: {},
       };
       const row = await $global.addCollectionItem(GUILD_BOSS_COLLECTION, fresh);
       w = { id: (row as { __id: string }).__id, ...fresh };
@@ -107,7 +112,8 @@ export async function addDamage(guildId: string, week: number, by: Record<string
     }
     const damage = Math.min(w.max, w.damage + added);
     const reached = stageOf(damage, w.max);
-    const next: BossWeek = { ...w, damage, hitters, stagesPaid: Math.max(w.stagesPaid, reached) };
+    const killedAt = w.killedAt ?? (damage >= w.max ? now : null);
+    const next: BossWeek = { ...w, damage, hitters, stagesPaid: Math.max(w.stagesPaid, reached), killedAt };
     await writeWeek(next);
     for (let stage = w.stagesPaid + 1; stage <= reached; stage++) await payStage(next, stage, now);
     if (w.stagesPaid < STAGE_REWARDS.length && reached >= STAGE_REWARDS.length) {
@@ -155,4 +161,60 @@ export function bossView(w: BossWeek | null, guild: Guild, characterId: string, 
     ranking: ranked.slice(0, RANKING_SHOWN).map((h) => ({ name: h.name, damage: h.damage, mine: h.characterId === characterId })),
     myDamage: w?.hitters[characterId]?.damage ?? 0,
   };
+}
+
+// --- The week's league ------------------------------------------------------------------------
+
+// One row per week once its league has been paid.
+export const LEAGUE_COLLECTION = "guildBossLeague";
+// The most rows of a week read to rank it.
+const LEAGUE_READ = 500;
+
+async function weekRows(week: number): Promise<BossWeek[]> {
+  const rows = await $global.getCollectionItems(GUILD_BOSS_COLLECTION, { filters: [{ field: "week", operator: "==", value: week }], limit: LEAGUE_READ });
+  return (rows as unknown[]).map((r) => readBossWeek(r)).filter((w): w is BossWeek => w !== null);
+}
+
+// A week's league: the guilds in order (top LEAGUE_SHOWN, with the caller's guild's place), and the
+// players across every guild by damage.
+export async function leagueView(week: number, myGuild: string | null, myCharacter: string | null): Promise<LeagueView> {
+  const rows = leagueOrder(await weekRows(week));
+  const names = new Map<string, string>();
+  for (const r of rows.slice(0, LEAGUE_SHOWN)) names.set(r.guild, (await readGuildById(r.guild))?.name ?? "");
+  const players = rows.flatMap((r) => Object.entries(r.hitters).map(([characterId, h]) => ({ characterId, guild: r.guild, ...h })))
+    .sort((a, b) => b.damage - a.damage)
+    .slice(0, LEAGUE_SHOWN);
+  for (const p of players) if (!names.has(p.guild)) names.set(p.guild, (await readGuildById(p.guild))?.name ?? "");
+  const rank = myGuild ? rows.findIndex((r) => r.guild === myGuild) : -1;
+  return {
+    week,
+    guilds: rows.slice(0, LEAGUE_SHOWN).map((r) => ({
+      name: names.get(r.guild) ?? "", share: r.max > 0 ? r.damage / r.max : 0, killed: r.killedAt !== null, mine: r.guild === myGuild,
+    })),
+    myGuildRank: rank < 0 ? null : rank + 1,
+    players: players.map((p) => ({ name: p.name, guild: names.get(p.guild) ?? "", damage: p.damage, mine: p.characterId === myCharacter })),
+  };
+}
+
+// Pays a week that is over, once: gems by mail to every member of its first three guilds (as they
+// stand when it is paid) and to its first three players, and the first guild told to every server.
+export async function settleLeague(week: number, now: number): Promise<void> {
+  await $lock("gboss-league", async () => {
+    const done = await $global.getCollectionItems(LEAGUE_COLLECTION, { filters: [{ field: "week", operator: "==", value: week }], limit: 1 });
+    if (done.length > 0) return;
+    await $global.addCollectionItem(LEAGUE_COLLECTION, { week, at: now });
+    const rows = leagueOrder(await weekRows(week)).filter((r) => r.damage > 0);
+    for (let i = 0; i < Math.min(rows.length, LEAGUE_GUILD_GEMS.length); i++) {
+      const guild = await readGuildById(rows[i].guild);
+      if (!guild) continue;
+      for (const m of guild.members) {
+        await sendMail(m.account, { kind: "guild_league", gold: 0, gems: LEAGUE_GUILD_GEMS[i], items: [], params: { place: i + 1, guild: guild.name, who: "guild" } }, now);
+      }
+      if (i === 0) await announce("guild_week", { guild: guild.name }, now).catch(() => undefined);
+    }
+    const players = rows.flatMap((r) => Object.values(r.hitters)).sort((a, b) => b.damage - a.damage);
+    for (let i = 0; i < Math.min(players.length, LEAGUE_PLAYER_GEMS.length); i++) {
+      await sendMail(players[i].account, { kind: "guild_league", gold: 0, gems: LEAGUE_PLAYER_GEMS[i], items: [], params: { place: i + 1, who: "player" } }, now);
+    }
+  });
 }

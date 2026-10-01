@@ -1652,6 +1652,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-vip-table tr.past { opacity: 0.55; }
 .stable-vip-gift { color: #ff9ae6; font-weight: 700; }
 .stable-vip-perk { color: #ffe08a; }
+.boss-board-tabs { flex-wrap: wrap; }
+.boss-board-week { margin-left: auto; font-size: 11px; }
 .stable-vip-table small { font-size: 10px; color: var(--ink-dim); }
 /* VIP 5 and above: the name in gold. */
 .vip-gold, .chat-log b.vip-gold { color: #ffd36a !important; text-shadow: 0 0 6px rgba(255, 211, 106, 0.6); }
