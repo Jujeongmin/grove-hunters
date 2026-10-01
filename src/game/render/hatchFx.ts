@@ -5,7 +5,7 @@ import * as THREE from "three";
 // The rarer the mount, the more of it. Everything here is its own (geometry, materials, textures) and
 // goes with dispose().
 
-export type Grandeur = 0 | 1 | 2 | 3 | 4;
+export type Grandeur = 0 | 1 | 2 | 3 | 4 | 5;
 
 const GRAVITY = 9;
 const SPARK_GRAVITY = 1.6;
@@ -60,7 +60,7 @@ export class HatchFx {
   private readonly rings: Ring[] = [];
   private readonly textures: THREE.Texture[] = [];
 
-  // At the egg's middle, this high over the pedestal; grandeur 0 (basic) to 4 (legendary).
+  // At the egg's middle, this high over the pedestal; grandeur 0 (basic) to 4 (legendary) and 5 (mythic).
   constructor(color: number, grandeur: Grandeur, eggY: number) {
     const tint = new THREE.Color(color);
 
@@ -95,7 +95,7 @@ export class HatchFx {
       at.set([0, eggY, 0], i * 3);
       this.sparkV.set([Math.cos(a) * speed * (1 - up * 0.6), 1 + up * (3 + grandeur * 0.6), Math.sin(a) * speed * (1 - up * 0.6)], i * 3);
       // Mostly the tier's colour, some white; the legendary's are shot through with gold.
-      const c = Math.random() < 0.25 ? white : grandeur === 4 && Math.random() < 0.4 ? gold : tint;
+      const c = Math.random() < 0.25 ? white : grandeur >= 4 && Math.random() < 0.4 ? gold : tint;
       colors.set([c.r, c.g, c.b], i * 3);
     }
     const geometry = new THREE.BufferGeometry();

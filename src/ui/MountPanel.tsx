@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL_COST, mountBonus, mountsOfTier,
+  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL10, PULL10_COST, PULL_COST, mountBonus, mountsOfTier,
   type MountId, type MountTier,
 } from "../game/account/mounts";
-import { PASS_DAYS, PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_PRODUCT, PASS_XP, VIP_BONUS } from "../game/account/premium";
+import { PASS_DAYS, PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_PRODUCT, PASS_XP, VIP_ANNOUNCE, VIP_BONUS, VIP_POINTS } from "../game/account/premium";
 import type { ModelLibrary } from "../game/assets/ModelLibrary";
 import type { PlayerClass } from "../game/combat/classes";
 import { publicUrl } from "../game/assets/publicUrl";
@@ -12,7 +12,7 @@ import type { Costume } from "../game/render/costumes";
 import { MountStage, tierKey } from "../game/render/MountStage";
 import { playCue } from "../game/audio/sfx";
 import { buyProduct, onAnyShopClosed, productPrice } from "../net/shop";
-import type { MountsView, WorldClient } from "../net/worldClient";
+import type { MountPull, MountsView, WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
@@ -56,6 +56,9 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
   const canvas = useRef<HTMLCanvasElement>(null);
   const stage = useRef<MountStage | null>(null);
   const [portraits, setPortraits] = useState<Partial<Record<MountId, string>>>({});
+  // A ten-draw's ten, listed under the egg; and whether the VIP ranks are spread out in the shop.
+  const [pulls, setPulls] = useState<MountPull[]>([]);
+  const [vipTable, setVipTable] = useState(false);
 
   const refresh = useCallback(() => client.mounts().then((v) => {
     if (v) setView(v);
@@ -114,28 +117,32 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
     void poll();
   }), [refresh, view?.gems]);
 
-  const hatch = () => {
+  // One draw or ten: the egg hatches into the best of them, and a ten-draw lists all ten.
+  const hatch = (ten: boolean) => {
     setBusy(true);
     setNote(null);
     setHatched(null);
+    setPulls([]);
     stage.current?.showEgg();
-    void client.pullMount().then(async (r) => {
+    void client.pullMount(ten).then(async (r) => {
       if ("problem" in r) {
         setBusy(false);
         setNote({ text: problemText(r.problem)!, tone: "bad" });
         return;
       }
+      const best = bestPull(r.pulls);
       // The egg hatches on the stage's frames; a hidden page draws none, so the answer never waits long.
       if (stage.current) {
-        await Promise.race([stage.current.hatchInto(r.mount, (moment) => playCue(moment === "knock" ? "click" : "skill")), new Promise((done) => setTimeout(done, HATCH_WAIT_MS))]);
+        await Promise.race([stage.current.hatchInto(best.mount, (moment) => playCue(moment === "knock" ? "click" : "skill")), new Promise((done) => setTimeout(done, HATCH_WAIT_MS))]);
         stage.current?.finishHatch();
       }
       setBusy(false);
       setView(r);
-      setLooking(r.mount);
-      setHatched({ mount: r.mount, repeat: r.repeat, star: r.star });
+      setLooking(best.mount);
+      setHatched({ mount: best.mount, repeat: best.repeat, star: best.star });
+      setPulls(ten ? r.pulls : []);
       setHatchCount((n) => n + 1);
-      playCue(r.repeat && r.star === null ? "gold" : "levelup");
+      playCue(best.repeat && best.star === null ? "gold" : "levelup");
     });
   };
   const ride = (id: MountId) => {
@@ -211,7 +218,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                 ? view?.selected === shown
                   ? <span className="stable-riding">{t("mount.riding")}</span>
                   : <button type="button" className="brush-button small" onClick={() => ride(shown)}>{t("mount.pick")}</button>
-                : <span className="stable-locked">{shown === BASE_MOUNT ? t("mount.fullGame") : t("mount.notOwned")}</span>)}
+                : <span className="stable-locked">{t("mount.notOwned")}</span>)}
             </div>
           )}
         </section>
@@ -241,10 +248,32 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
           {tab === "hatch" && (
             <>
               <p className="stable-lede">{t("mount.hatchLede")}</p>
-              <button type="button" className="stable-hatch" disabled={busy || !view || gems < PULL_COST} onClick={hatch}>
-                <span>{t("mount.hatch")}</span>
-                <small><img src={iconFor("ui_gem") ?? undefined} alt="" />{PULL_COST}</small>
-              </button>
+              <div className="stable-hatches">
+                <button type="button" className="stable-hatch" disabled={busy || !view || gems < PULL_COST} onClick={() => hatch(false)}>
+                  <span>{t("mount.hatch")}</span>
+                  <small><img src={iconFor("ui_gem") ?? undefined} alt="" />{PULL_COST}</small>
+                </button>
+                <button type="button" className="stable-hatch ten" disabled={busy || !view || gems < PULL10_COST} onClick={() => hatch(true)}>
+                  <span>{t("mount.hatch10", { n: PULL10 })}</span>
+                  <small><img src={iconFor("ui_gem") ?? undefined} alt="" />{PULL10_COST}</small>
+                  <em>{t("mount.hatch10Note")}</em>
+                </button>
+              </div>
+              {view && (
+                <p className="stable-pity">
+                  {t("mount.pity", { legendary: view.pity.legendary, mythic: view.pity.mythic })}
+                </p>
+              )}
+              {pulls.length > 0 && (
+                <ul className="stable-pulls">
+                  {pulls.map((p, i) => (
+                    <li key={i} className={`tier-${tierKey(p.mount)}${p.repeat && p.star === null ? " repeat" : ""}`}>
+                      <b>{mountName(p.mount)}</b>
+                      <small>{p.star !== null ? `★${p.star}` : p.repeat ? `+${p.refund}` : t("mount.newBadge")}</small>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {hatched && (
                 <p className={`stable-result tier-${tierKey(hatched.mount)}`}>
                   {hatched.star !== null
@@ -278,8 +307,8 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
           {tab === "shop" && (
             <>
               {view && (
-                // VIP: the rank, what it adds, and how far the next one is.
-                <div className="stable-vip">
+                // VIP: the rank, what it adds, and how far the next one is; tapped, every rank and what it gives.
+                <div className="stable-vip" role="button" tabIndex={0} onClick={() => setVipTable((v) => !v)}>
                   <b className="vip-mark">VIP {view.premium.vip}</b>
                   <span>{t("mount.vipBonus", { n: Math.round(view.premium.vip * VIP_BONUS * 100) })}</span>
                   {view.premium.nextVipAt !== null && (
@@ -288,7 +317,30 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                       <em>{t("mount.vipNext", { have: view.premium.vipPoints.toLocaleString(locale()), need: view.premium.nextVipAt.toLocaleString(locale()) })}</em>
                     </span>
                   )}
+                  <small className="stable-vip-more">{t(vipTable ? "mount.vipHide" : "mount.vipShow")}</small>
                 </div>
+              )}
+              {view && vipTable && (
+                <table className="stable-vip-table">
+                  <thead>
+                    <tr><th>VIP</th><th>{t("mount.vipNeed")}</th><th>{t("mount.vipPerks")}</th></tr>
+                  </thead>
+                  <tbody>
+                    {VIP_POINTS.map((need, i) => {
+                      const rank = i + 1;
+                      return (
+                        <tr key={rank} className={rank === view.premium.vip ? "mine" : rank < view.premium.vip ? "past" : undefined}>
+                          <td><b className="vip-mark">VIP {rank}</b></td>
+                          <td>{need.toLocaleString(locale())}</td>
+                          <td>
+                            {t("mount.vipBonus", { n: Math.round(rank * VIP_BONUS * 100) })}
+                            {rank >= VIP_ANNOUNCE && <> · {t("mount.vipAnnounced")}</>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
               <div className="stable-packs">
                 {Object.entries(GEM_PRODUCTS).map(([productId, n]) => {
@@ -336,6 +388,13 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
       </div>
     </div>
   );
+}
+
+// The pull a ten-draw shows on the egg: a new mount before a repeat, the rarer the better.
+const TIER_ORDER = ["common", "rare", "epic", "legendary", "mythic"];
+function bestPull(pulls: readonly MountPull[]): MountPull {
+  const score = (p: MountPull) => TIER_ORDER.indexOf(tierKey(p.mount)) * 2 + (p.repeat ? 0 : 1);
+  return pulls.reduce((best, p) => (score(p) > score(best) ? p : best));
 }
 
 // A mount's stars as five marks, the earned ones filled.

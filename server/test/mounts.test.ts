@@ -1,4 +1,6 @@
-import { BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, PULL_COST, mountBonus } from "../../src/game/account/mounts";
+import {
+  BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, mountBonus,
+} from "../../src/game/account/mounts";
 import { maxHpAt } from "../../src/game/world/monsters";
 import { enterAs, errorOf, makeCharacter } from "./helpers";
 
@@ -53,11 +55,11 @@ describe("the mount draw", () => {
     await enterAs(server, "test-a");
     await server.$onItemPurchased({ account: "test-a", purchaseId: "g-9", productId: "gems-1200", quantity: 1 });
     server.connect({ account: "test-a" });
-    await drawing(0.999, () => server.pullMount());
+    await drawing(0.995, () => server.pullMount());
     await server.selectMount("dragon");
     const told = await server.announcements(0);
     expect(told.map((a: any) => [a.kind, a.params.mount, a.params.name])).toEqual([["mount_legendary", "dragon", "별기수"]]);
-    for (let s = 1; s <= MAX_STARS; s++) await drawing(0.999, () => server.pullMount());
+    for (let s = 1; s <= MAX_STARS; s++) await drawing(0.995, () => server.pullMount());
     const hp = (await $room.getMyState()).maxHp;
     expect(hp).toBe(maxHpAt(1) + mountBonus("dragon", MAX_STARS).hp);
     expect(mountBonus("dragon", MAX_STARS).power).toBeCloseTo(mountBonus("dragon").power * 2);
@@ -83,11 +85,34 @@ describe("the mount draw", () => {
     expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus(BASE_MOUNT).hp);
     await server.$onItemPurchased({ account: "test-a", purchaseId: "g-3", productId: "gems-100", quantity: 1 });
     server.connect({ account: "test-a" });
-    expect(await drawing(0.999, () => server.pullMount())).toMatchObject({ mount: "dragon", repeat: false });
+    expect(await drawing(0.995, () => server.pullMount())).toMatchObject({ mount: "dragon", repeat: false });
     const before = (await server.getBag()).mount;
     expect(before).toBe(BASE_MOUNT);
     await server.selectMount("dragon");
     expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus("dragon").hp);
     expect((await server.getBag()).mount).toBe("dragon");
+  });
+});
+
+describe("ten at once, and the pity", () => {
+  test("ten draws for PULL10_COST, the last rare when nine were common; the pity counts down", async (server) => {
+    await $global.updateUserState(BUYER, { gems: 2000 });
+    server.connect({ account: BUYER });
+    const ten = await drawing(0, () => server.pullMount10());
+    expect(ten.pulls.length).toBe(PULL10);
+    expect(ten.pulls.map((p: any) => p.mount)).toEqual([...Array(9).fill("pig"), "panda"]);
+    // The pig: new, five stars, then three back as gems.
+    expect(ten.gems).toBe(2000 - PULL10_COST + 3 * DUPLICATE_REFUND);
+    expect(ten.pity).toEqual({ legendary: PITY - PULL10, mythic: MYTHIC_PITY - PULL10 });
+    await $global.updateUserState(BUYER, { gems: PULL10_COST - 1 });
+    expect(await errorOf(drawing(0, () => server.pullMount10()))).toContain("not_enough_gems");
+  });
+
+  test("the hundredth draw without a legendary is one", async (server) => {
+    await $global.updateUserState(BUYER, { gems: 500, pity: { legendary: PITY - 1, mythic: 0 } });
+    server.connect({ account: BUYER });
+    const pulled = await drawing(0, () => server.pullMount());
+    expect(pulled.mount).toBe("elder_glub");
+    expect(pulled.pity.legendary).toBe(PITY);
   });
 });

@@ -47,7 +47,7 @@ import { TALK_RANGE, TALK_SLACK, npcSpot, npcsIn, type NpcRole } from "../../src
 import { CHARACTERS_PER_WORLD, GUILDLESS, characterView, type Character } from "../../src/game/account/characters";
 import { readPurchaseEvent } from "../../src/game/account/purchase";
 import { readClass } from "../../src/game/combat/classes";
-import { rankOf, type RankDetail, type RankingView } from "../../src/game/account/ranking";
+import { rankOf, type RankDetail, type RankingView, type RankRow } from "../../src/game/account/ranking";
 import { enhanceCost, hasMaterials, readRecipe, rollEnhance, type EnhanceOutcome } from "../../src/game/account/forge";
 import { parseNickname, type AccountView } from "../../src/game/account/nickname";
 import { readWorld } from "../../src/game/account/worlds";
@@ -59,7 +59,8 @@ import {
 } from "../../src/game/world/zones";
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
-  DUPLICATE_REFUND, MAX_STARS, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, readStars, rollMount, tierOf, type MountId,
+  BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MOUNTS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, gemsFor, ownedMounts, readMountId, readPity, readStars,
+  rollMounts, tierOf, type MountId, type Pity,
 } from "../../src/game/account/mounts";
 import {
   channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, markSeen,
@@ -160,10 +161,60 @@ interface Pay {
 // is no longer yours).
 interface MountsView {
   gems: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>>; premium: PremiumView;
+  // Draws left until a legendary, and a mythic, is certain (천장).
+  pity: Pity;
 }
 async function mountsView(account: string): Promise<MountsView> {
   const { owned, selected, stars } = await accountMounts(account);
-  return { gems: await readGems(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()) };
+  const since = readPity((await $global.getUserState(account)).pity);
+  const pity = { legendary: PITY - since.legendary, mythic: MYTHIC_PITY - since.mythic };
+  return { gems: await readGems(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()), pity };
+}
+
+// One draw's outcome: the mount, whether it was owned already, the star it reached (a repeat below
+// MAX_STARS), and gems back (a repeat past it).
+interface Pull { mount: MountId; repeat: boolean; star: number | null; refund: number }
+
+// `n` draws for `cost` gems, under the account's mount lock: each new mount kept, each repeat a
+// star (or past MAX_STARS, gems back), the count toward the pity kept. A new legendary and a ★5 are
+// told to everyone; the picked mount growing makes you stronger at once.
+async function drawMounts(account: string, n: number, cost: number): Promise<{ view: MountsView; pulls: Pull[] }> {
+  const pulls = await $lock(`mounts:${account}`, async () => {
+    await changeGems(account, -cost);
+    const state = await $global.getUserState(account);
+    const rolled = rollMounts(n, readPity(state.pity), Math.random);
+    const owned = ownedMounts(state.mounts);
+    const stars = readStars(state.mountStars);
+    const out: Pull[] = [];
+    let refund = 0;
+    for (const mount of rolled.mounts) {
+      if (!owned.includes(mount)) {
+        owned.push(mount);
+        out.push({ mount, repeat: false, star: null, refund: 0 });
+      } else if ((stars[mount] ?? 0) < MAX_STARS) {
+        stars[mount] = (stars[mount] ?? 0) + 1;
+        out.push({ mount, repeat: true, star: stars[mount]!, refund: 0 });
+      } else {
+        refund += DUPLICATE_REFUND;
+        out.push({ mount, repeat: true, star: null, refund: DUPLICATE_REFUND });
+      }
+    }
+    await $global.updateUserState(account, { mounts: owned.filter((id) => id !== BASE_MOUNT), mountStars: stars, pity: rolled.since });
+    if (refund > 0) await changeGems(account, refund);
+    return out;
+  });
+  const now = Date.now();
+  for (const p of pulls) {
+    const tier = tierOf(p.mount);
+    if (!p.repeat && (tier === "legendary" || tier === "mythic")) {
+      await announce(tier === "mythic" ? "mount_mythic" : "mount_legendary", { ...(await announcedAs(account)), mount: p.mount }, now);
+    }
+    if (p.star === MAX_STARS) await announce("mount_star5", { ...(await announcedAs(account)), mount: p.mount }, now);
+  }
+  const view = await mountsView(account);
+  // A first mount is picked on its own, and a star on the picked one makes you stronger.
+  if (pulls.some((p) => !p.repeat || (p.star !== null && view.selected === p.mount))) await refreshMounted(account);
+  return { view, pulls };
 }
 
 async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
@@ -250,7 +301,7 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
     ...loot(c, pay.items, Math.random, newUid), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
     daily: countDaily(c.daily, pay.felled, Date.now()),
   }));
-  if (pay.xp > 0) await writeRanking(account, next, vip);
+  if (pay.xp > 0) await writeRanking(account, next, vip, combatPower(await mounted(account, next)));
   const levelled = levelOf(next.xp).level > levelOf(next.xp - pay.xp).level;
   const stats = fightStats(await mounted(account, next));
   await withRoomLock(roomId, async () => {
@@ -318,9 +369,12 @@ async function bagView(character: Character): Promise<BagView> {
 // After a change of gear or class: the room carries your new health, what your gear and class add,
 // and the look others see.
 async function refreshFighter(character: Character): Promise<void> {
+  // Gear or a mount changed 전투력: the boards hear of it, and of a new first place.
+  const fighter = await mounted($sender.account, character);
+  await writeRanking($sender.account, character, await vipOfAccount($sender.account), combatPower(fighter), true);
   const roomId = $sender.roomId;
   if (!roomId || !readChannelRoom(roomId)) return;
-  const stats = fightStats(await mounted($sender.account, character));
+  const stats = fightStats(fighter);
   await withRoomLock(roomId, async () => {
     const mine = await $room.getMyState();
     const hp = Math.min(typeof mine.hp === "number" ? mine.hp : stats.maxHp, stats.maxHp);
@@ -914,13 +968,16 @@ export class Server {
     const account = $sender.account;
     const { active } = await readProfile(account);
     const xp = active?.xp ?? 0;
-    const board = await Promise.all((await readRanking()).map(async (row) => {
+    const filled = (rows: RankRow[]) => Promise.all(rows.map(async (row) => {
       if (row.playerClass) return row;
       const character = (await readProfile(row.account)).characters.find((c) => c.id === row.id);
       return character ? { ...row, playerClass: character.playerClass, job: character.job } : row;
     }));
+    const board = await filled(await readRanking("xp"));
+    const powerBoard = await filled(await readRanking("power"));
     return {
       xp, level: levelOf(xp), rank: active ? rankOf(board, active.id) : null, board, power: active ? combatPower(await mounted(account, active)) : 0,
+      powerBoard, powerRank: active ? rankOf(powerBoard, active.id) : null,
     };
   }
 
@@ -928,8 +985,8 @@ export class Server {
   // the board can be looked up.
   async getRankDetail(rawId: unknown): Promise<RankDetail> {
     const id = requireText(rawId);
-    const board = await readRanking();
-    const row = board.find((r) => r.id === id);
+    const board = await readRanking("xp");
+    const row = board.find((r) => r.id === id) ?? (await readRanking("power")).find((r) => r.id === id);
     if (!row) throw new RuleViolation("unavailable");
     const character = (await readProfile(row.account)).characters.find((c) => c.id === id);
     if (!character) throw new RuleViolation("unavailable");
@@ -993,31 +1050,15 @@ export class Server {
   // One draw for PULL_COST gems: a mount to keep, or, if already owned, DUPLICATE_REFUND gems back.
   // A repeat of one owned already breaks through: a star more (see mounts.ts), and only past MAX_STARS
   // gems back. `star` is the star it reached (null for a new mount or gems back).
-  async pullMount(): Promise<MountsView & { mount: MountId; repeat: boolean; star: number | null }> {
-    const account = $sender.account;
-    const pulled = await $lock(`mounts:${account}`, async () => {
-      await changeGems(account, -PULL_COST);
-      const mount = rollMount(Math.random);
-      const state = await $global.getUserState(account);
-      const drawn = ownedMounts(state.mounts);
-      const repeat = drawn.includes(mount);
-      let star: number | null = null;
-      if (repeat) {
-        const stars = readStars(state.mountStars);
-        const was = stars[mount] ?? 0;
-        if (was < MAX_STARS) {
-          star = was + 1;
-          await $global.updateUserState(account, { mountStars: { ...stars, [mount]: star } });
-        } else await changeGems(account, DUPLICATE_REFUND);
-      } else await $global.updateUserState(account, { mounts: [...drawn, mount] });
-      return { ...(await mountsView(account)), mount, repeat, star };
-    });
-    const now = Date.now();
-    if (!pulled.repeat && tierOf(pulled.mount) === "legendary") await announce("mount_legendary", { ...(await announcedAs(account)), mount: pulled.mount }, now);
-    if (pulled.star === MAX_STARS) await announce("mount_star5", { ...(await announcedAs(account)), mount: pulled.mount }, now);
-    // A first mount is picked on its own, and a star on the picked one makes you stronger.
-    if (!pulled.repeat || (pulled.star !== null && pulled.selected === pulled.mount)) await refreshMounted(account);
-    return pulled;
+  async pullMount(): Promise<MountsView & Pull & { pulls: Pull[] }> {
+    const { view, pulls } = await drawMounts($sender.account, 1, PULL_COST);
+    return { ...view, ...pulls[0], pulls };
+  }
+
+  // Ten draws at once for PULL10_COST, one of them rare or better (see rollMounts).
+  async pullMount10(): Promise<MountsView & { pulls: Pull[] }> {
+    const { view, pulls } = await drawMounts($sender.account, PULL10, PULL10_COST);
+    return { ...view, pulls };
   }
 
   // The announcements to every server after `since` (ms), oldest first.

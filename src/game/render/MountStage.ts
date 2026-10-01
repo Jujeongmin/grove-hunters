@@ -5,7 +5,7 @@ import type { PlayerClass } from "../combat/classes";
 import type { Costume } from "./costumes";
 import { HatchFx, type Grandeur } from "./hatchFx";
 import { HEROES } from "./heroes";
-import { MOUNT_LOOKS } from "./mountLooks";
+import { MOUNT_LOOKS, mountObject } from "./mountLooks";
 import { PLAYER_HEIGHT, PlayerActor } from "./PlayerActor";
 import { QUALITY, settings } from "../../ui/settings";
 import { skinnedHeight } from "./skinned";
@@ -19,7 +19,7 @@ import { skinnedHeight } from "./skinned";
 export type TierKey = MountTier | "base";
 export type HatchMoment = "knock" | "burst";
 export const TIER_COLORS: Record<TierKey, number> = {
-  base: 0xe8c98a, common: 0xcfc6b4, rare: 0x7fc4ff, epic: 0xc792ff, legendary: 0xffcf5a,
+  base: 0xe8c98a, common: 0xcfc6b4, rare: 0x7fc4ff, epic: 0xc792ff, legendary: 0xffcf5a, mythic: 0xff5ad2,
 };
 export const tierKey = (id: MountId): TierKey => MOUNTS[id].tier ?? "base";
 
@@ -32,7 +32,7 @@ const BURST_AT = 2.35;
 const BURST_SECONDS = 0.22;
 // How far the camera leans in by the burst (a share of the way to the egg).
 const LEAN = 0.22;
-const GRANDEUR: Record<TierKey, Grandeur> = { base: 0, common: 1, rare: 2, epic: 3, legendary: 4 };
+const GRANDEUR: Record<TierKey, Grandeur> = { base: 0, common: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
 // The cracks' warm light before a rare egg shows its colour.
 const CRACK_LIGHT = 0xffe7b0;
 const EGG_Y = 0.54;
@@ -50,7 +50,7 @@ interface Lone { object: THREE.Object3D; mixer: THREE.AnimationMixer; pop: numbe
 function loneMount(library: ModelLibrary, id: MountId, shadowed: boolean): Lone {
   const look = MOUNT_LOOKS[id];
   const model = library.get(MOUNTS[id].model);
-  const object = library.instance(MOUNTS[id].model);
+  const object = mountObject(library, id);
   object.scale.setScalar((PLAYER_HEIGHT * look.height) / skinnedHeight(object));
   object.userData.scale = object.scale.x;
   object.updateMatrixWorld(true);
@@ -192,7 +192,7 @@ export class MountStage {
     this.rider.object.visible = true;
     if (this.riderMount !== id) {
       this.riderMount = id;
-      this.rider.setMount({ id, object: this.library.instance(MOUNTS[id].model), clips: this.library.get(MOUNTS[id].model).animations });
+      this.rider.setMount({ id, object: mountObject(this.library, id), clips: this.library.get(MOUNTS[id].model).animations });
     }
   }
 
@@ -291,7 +291,7 @@ export class MountStage {
   private tint(tier: TierKey): void {
     this.rim.emissive.setHex(TIER_COLORS[tier]);
     this.glow.color.setHex(TIER_COLORS[tier]);
-    this.glowBase = tier === "legendary" ? 3 : tier === "epic" ? 2 : tier === "rare" ? 1.4 : 0.4;
+    this.glowBase = tier === "mythic" ? 4 : tier === "legendary" ? 3 : tier === "epic" ? 2 : tier === "rare" ? 1.4 : 0.4;
   }
 
   private loop = (): void => {

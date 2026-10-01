@@ -65,7 +65,12 @@ export interface MountsView {
   stars: Partial<Record<MountId, number>>;
   // VIP, first purchases and the monthly pass (see premium.ts).
   premium: PremiumView;
+  // Draws left until a legendary, and a mythic, is certain (천장).
+  pity: { legendary: number; mythic: number };
 }
+
+// One draw's outcome: the mount, whether it was owned already, the star it reached, gems back.
+export interface MountPull { mount: MountId; repeat: boolean; star: number | null; refund: number }
 
 // You in a fight, as the server keeps it.
 export interface Vitals {
@@ -632,9 +637,10 @@ export class WorldClient {
     return this.noteGems(await this.transport.call<MountsView>("getMounts").catch(() => null));
   }
 
-  async pullMount(): Promise<(MountsView & { mount: MountId; repeat: boolean; star: number | null }) | { problem: string }> {
+  // One draw, or ten at once (`ten`).
+  async pullMount(ten = false): Promise<(MountsView & { pulls: MountPull[] }) | { problem: string }> {
     try {
-      const pulled = this.noteGems(await this.transport.call<MountsView & { mount: MountId; repeat: boolean; star: number | null }>("pullMount"));
+      const pulled = this.noteGems(await this.transport.call<MountsView & { pulls: MountPull[] }>(ten ? "pullMount10" : "pullMount"));
       // A new mount may be the picked one now, and the picked one adds to 전투력.
       void this.refreshBag();
       return pulled;

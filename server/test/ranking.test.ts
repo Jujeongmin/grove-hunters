@@ -59,4 +59,19 @@ describe("ranking", () => {
     expect(detail.world).toBe("w1");
     expect(await errorOf(server.getRankDetail("nobody"))).toContain("unavailable");
   });
+
+  test("a board by 전투력 too; taking its first place is told to every server", async (server) => {
+    await makeCharacter(server, "test-a", "먼저센자");
+    await giveXp("test-a", 500);
+    await server.selectMount("deer");
+    await makeCharacter(server, "test-b", "나중센자");
+    await giveXp("test-b", 500_000);
+    await server.selectMount("deer");
+    server.connect({ account: "test-b" });
+    const view = await server.getRanking();
+    expect(view.powerBoard.map((r: any) => r.nickname)).toEqual(["나중센자", "먼저센자"]);
+    expect(view.powerRank).toBe(1);
+    const told = (await server.announcements(0)).filter((a: any) => a.kind === "power_top");
+    expect(told.map((a: any) => a.params.name)).toEqual(["나중센자"]);
+  });
 });

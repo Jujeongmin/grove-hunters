@@ -13,6 +13,8 @@ export function announceText(a: Announcement): string {
   switch (a.kind) {
     case "mount_legendary":
       return t("announce.legendary", { ...who, mount: mountName });
+    case "mount_mythic":
+      return t("announce.mythic", { ...who, mount: mountName });
     case "mount_star5":
       return t("announce.star5", { ...who, mount: mountName });
     case "enhance": {
@@ -21,6 +23,8 @@ export function announceText(a: Announcement): string {
     }
     case "guild_boss":
       return t("announce.guildBoss", { guild: String(p.guild ?? ""), boss: t(`boss.${String(p.boss)}` as Key) });
+    case "power_top":
+      return t("announce.powerTop", { ...who, n: (Number(p.power) || 0).toLocaleString() });
     case "vip":
       return t("announce.vip", { ...who, n: Number(p.vip) || 0 });
   }

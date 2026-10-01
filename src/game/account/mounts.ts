@@ -2,13 +2,14 @@
 // the deer; the rest come from the draw, paid for in gems, which are only ever bought (the Verse8
 // shop's gem products). All the numbers live here.
 
-export type MountTier = "common" | "rare" | "epic" | "legendary";
+export type MountTier = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type MountId =
   | "deer"
   | "pig" | "chicken" | "penguin" | "cat" | "dog" | "pigeon"
   | "panda" | "crab" | "armabee" | "glub" | "squidle"
   | "yeti" | "drake" | "hywirl" | "alpaking" | "queen_armabee"
-  | "elder_glub" | "alpaking_emperor" | "dragon";
+  | "elder_glub" | "alpaking_emperor" | "dragon"
+  | "golden_dragon" | "void_emperor";
 
 export interface Mount {
   model: string;
@@ -18,12 +19,14 @@ export interface Mount {
   speed: number;
   // Flies a little off the ground instead of walking.
   flies?: boolean;
+  // A model worn in other colours: its own colours mixed toward `tint`, and a glow of it (0 to 1).
+  dye?: { tint: number; glow: number };
 }
 
 // Every account's own mount.
 export const BASE_MOUNT: MountId = "deer";
 
-const TIER_SPEED: Record<MountTier, number> = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6 };
+const TIER_SPEED: Record<MountTier, number> = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6, mythic: 1.75 };
 
 export const MOUNTS: Record<MountId, Mount> = {
   deer: { model: "mnt_deer", tier: null, speed: 1.2 },
@@ -46,6 +49,9 @@ export const MOUNTS: Record<MountId, Mount> = {
   elder_glub: { model: "mnt_glub_evolved", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
   alpaking_emperor: { model: "mnt_alpaking_evolved", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
   dragon: { model: "mnt_dragon", tier: "legendary", speed: TIER_SPEED.legendary, flies: true },
+  // Above legendary: the legendaries' own models in new colours, glowing.
+  golden_dragon: { model: "mnt_dragon", tier: "mythic", speed: TIER_SPEED.mythic, flies: true, dye: { tint: 0xffc83a, glow: 0.35 } },
+  void_emperor: { model: "mnt_alpaking_evolved", tier: "mythic", speed: TIER_SPEED.mythic, flies: true, dye: { tint: 0x7a3cff, glow: 0.4 } },
 };
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
 
@@ -58,6 +64,7 @@ const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
   rare: { power: 0.2, hp: 60 },
   epic: { power: 0.25, hp: 80 },
   legendary: { power: 0.3, hp: 100 },
+  mythic: { power: 0.4, hp: 140 },
 };
 export function mountBonus(id: MountId | null | undefined, stars = 0): MountBonus {
   if (!id) return { power: 0, hp: 0 };
@@ -89,9 +96,18 @@ export const GACHA_ODDS: readonly { tier: MountTier; chance: number }[] = [
   { tier: "common", chance: 0.6 },
   { tier: "rare", chance: 0.3 },
   { tier: "epic", chance: 0.09 },
-  { tier: "legendary", chance: 0.01 },
+  { tier: "legendary", chance: 0.009 },
+  { tier: "mythic", chance: 0.001 },
 ];
 export const PULL_COST = 100;
+// Ten at once, for less than ten alone; and among them at least one rare or better.
+export const PULL10 = 10;
+export const PULL10_COST = 900;
+// The draw that would be the PITY-th since the last legendary (or better) is a legendary or better,
+// and the MYTHIC_PITY-th since the last mythic is a mythic (천장). How many draws an account has made
+// since each is kept on the account.
+export const PITY = 100;
+export const MYTHIC_PITY = 500;
 // A mount already at MAX_STARS, drawn again, comes back as this many gems.
 export const DUPLICATE_REFUND = 30;
 
@@ -120,8 +136,10 @@ export function mountsOfTier(tier: MountTier): MountId[] {
   return MOUNT_IDS.filter((id) => MOUNTS[id].tier === tier);
 }
 
-// One draw. random gives numbers in [0, 1).
-export function rollMount(random: () => number): MountId {
+const TIER_RANK: Record<MountTier, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+
+// One draw, no lower than `least`. random gives numbers in [0, 1).
+export function rollMount(random: () => number, least: MountTier = "common"): MountId {
   const r = random();
   let edge = 0;
   let tier: MountTier = GACHA_ODDS[GACHA_ODDS.length - 1].tier;
@@ -132,8 +150,38 @@ export function rollMount(random: () => number): MountId {
       break;
     }
   }
+  if (TIER_RANK[tier] < TIER_RANK[least]) tier = least;
   const pool = mountsOfTier(tier);
   return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
+}
+
+// The draws since the last legendary (or better) and since the last mythic, as saved.
+export interface Pity { legendary: number; mythic: number }
+
+export function readPity(raw: unknown): Pity {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const count = (v: unknown, cap: number) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? Math.min(v, cap - 1) : 0);
+  // Saved before mythics: a plain number, the count toward a legendary.
+  if (typeof raw === "number") return { legendary: count(raw, PITY), mythic: 0 };
+  return { legendary: count(r.legendary, PITY), mythic: count(r.mythic, MYTHIC_PITY) };
+}
+
+// `n` draws made in a row after `since`: the MYTHIC_PITY-th since a mythic is a mythic, the PITY-th
+// since a legendary is a legendary or better, and a ten-draw's last is rare or better when the nine
+// before it were all common. Answers the mounts and the counts after them.
+export function rollMounts(n: number, since: Pity, random: () => number): { mounts: MountId[]; since: Pity } {
+  const mounts: MountId[] = [];
+  let { legendary, mythic } = since;
+  for (let i = 0; i < n; i++) {
+    const floor = n >= PULL10 && i === n - 1 && mounts.every((m) => tierOf(m) === "common");
+    const least: MountTier = mythic + 1 >= MYTHIC_PITY ? "mythic" : legendary + 1 >= PITY ? "legendary" : floor ? "rare" : "common";
+    const mount = rollMount(random, least);
+    mounts.push(mount);
+    const tier = tierOf(mount);
+    legendary = tier === "legendary" || tier === "mythic" ? 0 : legendary + 1;
+    mythic = tier === "mythic" ? 0 : mythic + 1;
+  }
+  return { mounts, since: { legendary, mythic } };
 }
 
 // What an account can ride: everyone's own, and what it drew (saved on the account).

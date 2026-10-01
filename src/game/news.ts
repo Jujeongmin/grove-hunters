@@ -17,6 +17,62 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-01-mythic",
+    date: "2026-10-01",
+    text: {
+      ko: {
+        title: "신화 탈것 · 10연속 부화 · 천장 · 전투력 랭킹",
+        lines: [
+          "전설 위 신화 등급이 생겼어요: 황금 용, 심연의 황제 (확률 0.1%).",
+          "10연속 부화는 보석 900개(10% 할인)이고 희귀 이상 1개를 보장해요.",
+          "천장: 100회 안에 전설 이상이 없으면 다음은 전설 확정, 500회 안에 신화가 없으면 다음은 신화 확정이에요.",
+          "랭킹에 전투력 탭이 생겼어요. 전투력 1위를 차지하면 모든 서버에 알려져요.",
+          "보석 상점의 VIP 막대를 누르면 등급별 혜택을 볼 수 있어요.",
+        ],
+      },
+      en: {
+        title: "Mythic mounts, hatch ten, pity, a power board",
+        lines: [
+          "A mythic tier above legendary: the Golden Dragon and the Void Emperor (0.1%).",
+          "Hatch ten for 900 gems (10% off), with a rare or better promised.",
+          "Pity: no legendary or better in 100 draws makes the next one legendary; no mythic in 500 makes the next one mythic.",
+          "The ranking has a power board; taking its first place is told to every server.",
+          "Tap the VIP bar in the gem shop to see every rank's perks.",
+        ],
+      },
+      ja: {
+        title: "神話の乗り物・10連ふ化・天井・戦闘力ランキング",
+        lines: [
+          "伝説の上に神話ランクが登場：黄金の竜、深淵の皇帝（確率0.1%）。",
+          "10連ふ化は宝石900個（10%オフ）、レア以上1つ確定。",
+          "天井：100回以内に伝説以上が出なければ次は伝説確定、500回以内に神話が出なければ次は神話確定。",
+          "ランキングに戦闘力タブが追加。戦闘力1位になると全サーバーに告知されます。",
+          "宝石ショップのVIPバーを押すとランク別特典が見られます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "神話坐騎、10連孵化、保底、戰鬥力排行",
+        lines: [
+          "傳說之上新增神話等級：黃金龍、深淵皇帝（機率0.1%）。",
+          "10連孵化需寶石900個（9折），保底稀有以上1個。",
+          "保底：100次內沒有傳說以上，下一次必為傳說；500次內沒有神話，下一次必為神話。",
+          "排行新增戰鬥力分頁，登上戰鬥力第一會全服公告。",
+          "點擊寶石商店的VIP條可查看各等級福利。",
+        ],
+      },
+      "zh-Hans": {
+        title: "神话坐骑、10连孵化、保底、战斗力排行",
+        lines: [
+          "传说之上新增神话等级：黄金龙、深渊皇帝（概率0.1%）。",
+          "10连孵化需宝石900个（9折），保底稀有以上1个。",
+          "保底：100次内没有传说以上，下一次必为传说；500次内没有神话，下一次必为神话。",
+          "排行新增战斗力分页，登上战斗力第一会全服公告。",
+          "点击宝石商店的VIP条可查看各等级福利。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-01-premium",
     date: "2026-10-01",
     text: {

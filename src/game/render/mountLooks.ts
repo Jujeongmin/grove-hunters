@@ -1,4 +1,6 @@
-import type { MountId } from "../account/mounts";
+import * as THREE from "three";
+import { MOUNTS, type MountId } from "../account/mounts";
+import type { ModelLibrary } from "../assets/ModelLibrary";
 
 // How each mount is drawn under its rider: its height (as a share of the rider's), where its back is
 // (as a share of its own height), how far forward the rider sits (metres, +z is its head), and the
@@ -35,4 +37,34 @@ export const MOUNT_LOOKS: Record<MountId, MountLook> = {
   yeti: { height: 0.66, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
   drake: { height: 0.75, seat: 0.97, forward: -0.2, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
   dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
+  golden_dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
+  void_emperor: { height: 0.95, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
 };
+
+// How much of a dyed mount's own colour gives way to its dye.
+const DYE_MIX = 0.6;
+
+// A mount's model, ready to place: its library copy, and for a dyed one (the mythics) its own
+// materials in the dye's colours, glowing with it.
+export function mountObject(library: ModelLibrary, id: MountId): THREE.Object3D {
+  const object = library.instance(MOUNTS[id].model);
+  const dye = MOUNTS[id].dye;
+  if (!dye) return object;
+  const tint = new THREE.Color(dye.tint);
+  object.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const recolour = (m: THREE.Material) => {
+      // Its own copy: the library's materials are shared with the undyed mount.
+      const own = m.clone() as THREE.Material & { color?: THREE.Color; emissive?: THREE.Color; emissiveIntensity?: number };
+      own.color?.lerp(tint, DYE_MIX);
+      if (own.emissive) {
+        own.emissive.copy(tint);
+        own.emissiveIntensity = dye.glow;
+      }
+      return own;
+    };
+    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(recolour) : recolour(mesh.material);
+  });
+  return object;
+}

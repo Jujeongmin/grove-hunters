@@ -7,8 +7,9 @@ import {
   GUILDLESS, characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
 } from "../../src/game/account/characters";
 import { DEFAULT_WORLD, readWorld, type World } from "../../src/game/account/worlds";
+import { announce } from "./announce";
 import type { PurchaseEvent } from "../../src/game/account/purchase";
-import { RANKING_SIZE, rankRows, type RankRow } from "../../src/game/account/ranking";
+import { RANKING_SIZE, rankRows, type Board, type RankRow } from "../../src/game/account/ranking";
 import { COSTUMES, costumeById } from "../../src/game/render/costumes";
 import { readClass } from "../../src/game/combat/classes";
 import { readSlot } from "../../src/game/combat/skills";
@@ -29,12 +30,20 @@ const RANKING_READ = RANKING_SIZE * 5;
 
 // Writes a character's line on the board. Called whenever its XP, its name or its advanced class changes; a character
 // with no XP yet leaves no row behind.
-export async function writeRanking(account: string, character: Character, vip = 0): Promise<void> {
+// The line kept for a character on the boards. With `power` changed by gear or a mount (`crown`), a
+// character that takes 전투력's first place from another is told to every server.
+export async function writeRanking(account: string, character: Character, vip = 0, power = 0, crown = false): Promise<void> {
   if (character.xp <= 0) return;
   const row: RankRow = {
     id: character.id, account, nickname: character.name, xp: character.xp, level: levelOf(character.xp).level,
-    playerClass: character.playerClass, job: character.job, vip,
+    playerClass: character.playerClass, job: character.job, vip, power,
   };
+  if (crown && power > 0) {
+    const [top] = await readRanking("power");
+    if (top && top.id !== character.id && power > (top.power ?? 0)) {
+      await announce("power_top", { name: character.name, world: character.world, power }, Date.now()).catch(() => undefined);
+    }
+  }
   const [stored] = await $global.getCollectionItems(RANKING_COLLECTION, {
     filters: [{ field: "id", operator: "==", value: character.id }],
     limit: 1,
@@ -45,9 +54,9 @@ export async function writeRanking(account: string, character: Character, vip = 
 
 // The board, best first. The store sorts before it cuts, or a board longer than RANKING_READ would
 // be read from wherever the store happened to start.
-export async function readRanking(): Promise<RankRow[]> {
-  const items = await $global.getCollectionItems(RANKING_COLLECTION, { orderBy: [{ field: "xp", direction: "desc" }], limit: RANKING_READ });
-  return rankRows(items as unknown as RankRow[]);
+export async function readRanking(board: Board = "xp"): Promise<RankRow[]> {
+  const items = await $global.getCollectionItems(RANKING_COLLECTION, { orderBy: [{ field: board, direction: "desc" }], limit: RANKING_READ });
+  return rankRows(items as unknown as RankRow[], board);
 }
 
 // Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought;

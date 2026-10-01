@@ -17,7 +17,12 @@ export interface RankRow {
   job?: JobId | null;
   // The account's VIP rank when the line was written; missing on older lines.
   vip?: number;
+  // Its 전투력 when the line was written; missing on lines from before it was kept.
+  power?: number;
 }
+
+// The two boards: by experience, and by 전투력.
+export type Board = "xp" | "power";
 
 // How many lines the board shows.
 export const RANKING_SIZE = 20;
@@ -28,15 +33,18 @@ function isRow(value: unknown): value is RankRow {
   return typeof row.id === "string" && typeof row.account === "string" && [row.xp, row.level].every((n) => typeof n === "number" && Number.isFinite(n));
 }
 
-// Most XP first; between equals, the account, so the order never wobbles.
-export function rankRows(rows: readonly RankRow[]): RankRow[] {
+// Most XP (or 전투력) first; between equals, the character's id, so the order never wobbles.
+export function rankRows(rows: readonly RankRow[], board: Board = "xp"): RankRow[] {
+  const key = (row: RankRow) => (board === "power" ? row.power ?? 0 : row.xp);
   return rows
     .filter((row) => isRow(row) && row.xp > 0)
-    .map(({ id, account, nickname, xp, level, playerClass, job, vip }) => ({
+    .map(({ id, account, nickname, xp, level, playerClass, job, vip, power }) => ({
       id, account, nickname, xp, level, playerClass: readClass(playerClass) ?? undefined, job: readJob(job),
       vip: typeof vip === "number" && Number.isInteger(vip) && vip > 0 ? vip : 0,
+      power: typeof power === "number" && Number.isFinite(power) && power > 0 ? Math.round(power) : 0,
     }))
-    .sort((a, b) => b.xp - a.xp || a.id.localeCompare(b.id))
+    .filter((row) => key(row) > 0)
+    .sort((a, b) => key(b) - key(a) || a.id.localeCompare(b.id))
     // Two first writes at once can leave a character two rows: the best one stands.
     .filter((row, i, all) => all.findIndex((other) => other.id === row.id) === i)
     .slice(0, RANKING_SIZE);
@@ -55,8 +63,10 @@ export interface RankingView {
   // Where you sit on the board, or null while you are not on it.
   rank: number | null;
   board: RankRow[];
-  // Your character's 전투력 (0 without one).
+  // Your character's 전투력 (0 without one), the board by it, and your place on that one.
   power: number;
+  powerBoard: RankRow[];
+  powerRank: number | null;
 }
 
 // What tapping a line of the board shows: the character in full.

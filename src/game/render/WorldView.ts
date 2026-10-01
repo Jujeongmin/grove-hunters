@@ -1,5 +1,6 @@
 import { FrameGovernor } from "./frameGovernor";
 import * as THREE from "three";
+import { mountObject } from "./mountLooks";
 import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
 import { ITEMS, POTION_GAP_MS } from "../account/items";
@@ -558,7 +559,7 @@ export class WorldView {
       }
       return;
     }
-    actor.setMount({ id, object: library.instance(model), clips: library.get(model).animations });
+    actor.setMount({ id, object: mountObject(library, id), clips: library.get(model).animations });
   }
 
   // The models, for the mounts panel's stage.

@@ -1472,6 +1472,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable .tier-rare { --tier: #7fc4ff; }
 .stable .tier-epic { --tier: #d59bff; }
 .stable .tier-legendary { --tier: #ffd36a; }
+.stable .tier-mythic { --tier: #ff6ad8; }
 
 /* The beam. */
 .stable-bar {
@@ -1614,7 +1615,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   content: ""; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
   background: #8fe08a; box-shadow: 0 0 6px #8fe08a;
 }
-.stable-card.tier-legendary:not(.locked) { animation: stable-shine 2.4s ease-in-out infinite; }
+.stable-card.tier-legendary:not(.locked), .stable-card.tier-mythic:not(.locked) { animation: stable-shine 2.4s ease-in-out infinite; }
 @keyframes stable-shine { 50% { box-shadow: inset 0 -3px 0 var(--tier), 0 0 14px rgba(255, 211, 106, 0.5); } }
 
 /* The hatch button: warm, big, the gem price under the word. */
@@ -1625,6 +1626,30 @@ button.hud-prompt:hover { color: #ffe0b0; }
   box-shadow: 0 4px 0 #6b4b1e, 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 22px rgba(255, 200, 110, 0.3);
 }
 .stable-hatch span { font: 400 20px var(--font-logo); letter-spacing: 0.06em; }
+/* One draw and ten, side by side; the ten-draw in gold, with what it promises. */
+.stable-hatches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stable-hatches .stable-hatch { width: 100%; min-width: 0; padding: 8px 10px 7px; border-radius: 24px; }
+.stable-hatches .stable-hatch span { font-size: 17px; }
+.stable-hatch.ten { border-color: #ffd36a; }
+.stable-hatch em { font-style: normal; font-size: 10px; color: #ffe08a; }
+.stable-pity { margin: 0; text-align: center; font: 600 12px var(--font-head); color: #ffe08a; }
+/* A ten-draw's ten, two rows of five, each in its tier's colour. */
+.stable-pulls { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.stable-pulls li {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 2px; border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--tier) 60%, transparent); background: color-mix(in srgb, var(--tier) 14%, rgba(14, 11, 9, 0.8));
+}
+.stable-pulls li b { font: 400 10px var(--font-head); color: var(--tier); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.stable-pulls li small { font-size: 9px; color: var(--ink-dim); }
+.stable-pulls li.repeat { opacity: 0.65; }
+/* Every VIP rank: what it needs and gives; the reader's own lit. */
+.stable-vip { cursor: pointer; }
+.stable-vip-more { margin-left: auto; font-size: 10px; color: var(--ink-dim); }
+.stable-vip-table { width: 100%; border-collapse: collapse; font-size: 11px; color: var(--ink); }
+.stable-vip-table th { font: 600 10px var(--font-head); color: var(--ink-dim); text-align: left; padding: 2px 4px; }
+.stable-vip-table td { padding: 2px 4px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.stable-vip-table tr.mine td { background: rgba(255, 211, 106, 0.14); }
+.stable-vip-table tr.past { opacity: 0.55; }
 .stable-hatch small { display: flex; align-items: center; gap: 4px; font: 400 14px var(--font-head); }
 .stable-hatch small img { width: 18px; height: 18px; image-rendering: pixelated; }
 .stable-hatch:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #6b4b1e, 0 4px 10px rgba(0, 0, 0, 0.5); }
@@ -1727,6 +1752,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
   100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1); }
 }
 /* The legendary's name shimmers gold and white. */
+/* The mythic's: pink, gold and white. */
+.stable-burst.tier-mythic:not(.repeat) .stable-banner b {
+  background: linear-gradient(100deg, #ff6ad8 15%, #ffe08a 35%, #fff 50%, #ffe08a 65%, #ff6ad8 85%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 3px 0 #0e0906) drop-shadow(0 0 18px rgba(255, 106, 216, 0.8));
+  animation: stable-shimmer 1s linear infinite;
+}
 .stable-burst.tier-legendary:not(.repeat) .stable-banner b {
   background: linear-gradient(100deg, #ffcf5a 20%, #fff8e0 40%, #ffcf5a 60%) 0 0 / 250% 100%;
   -webkit-background-clip: text; background-clip: text; color: transparent;
