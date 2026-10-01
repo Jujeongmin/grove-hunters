@@ -94,7 +94,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
 
   // The announcements to every server, as lines of the channel's chat (the game's, not a player's).
   const told = settings().showAnnouncements ? announced.map((a, i) => ({
-    id: -1 - i, account: "", name: "📢", text: announceText(a), at: a.at, heardAt: a.heardAt, mine: false, guild: false, system: true,
+    id: -1 - i, account: "", name: "📢", text: announceText(a), at: a.at, heardAt: a.heardAt, mine: false, guild: false, system: true, vip: 0,
   })) : [];
   const channel = [...lines.map((l) => ({ ...l, guild: false, system: false })), ...told].sort((a, b) => a.heardAt - b.heardAt);
   // Closed, the latest of the channel's and the guild's lines.
@@ -128,7 +128,7 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
         <div className="chat-log" ref={log} onClick={open ? undefined : () => setOpen(true)}>
           {shown.map((l) => (
             <p key={`${l.guild ? "g" : "c"}${l.id}`} className={[l.mine ? "mine" : "", l.guild ? "guild" : "", l.system ? "system" : ""].join(" ").trim() || undefined}>
-              {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}<b>{l.name}</b> {l.text}
+              {l.guild && !open && <span className="chat-guild-tag">[{t("chat.guild")}]</span>}{(l.vip ?? 0) > 0 && <span className="vip-mark">VIP {l.vip}</span>}<b>{l.name}</b> {l.text}
             </p>
           ))}
         </div>

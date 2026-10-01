@@ -102,7 +102,7 @@ export function RankingPanel({ onClose, account, load, loadDetail }: RankingPane
                     onKeyDown={(e) => e.key === "Enter" && setPicked(row)}
                   >
                     <span className="rank">{view.board.indexOf(row) + 1}</span>
-                    <span className="who">{row.nickname ?? t("common.noName")}</span>
+                    <span className="who">{(row.vip ?? 0) > 0 && <b className="vip-mark">VIP {row.vip}</b>}{row.nickname ?? t("common.noName")}</span>
                     <span className="note">{classText(row.playerClass, row.job)}</span>
                     <span className="note">Lv {row.level}</span>
                   </li>

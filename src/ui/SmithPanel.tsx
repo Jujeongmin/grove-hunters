@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials } from "../game/account/forge";
+import { protectCost } from "../game/account/premium";
 import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
 import { TRADE_CRAFT_CHANCE, allStacks } from "../game/account/inventory";
 import { iconFor } from "../game/render/icons";
@@ -23,6 +24,8 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   const [note, setNote] = useState<{ text: string; tone: "good" | "bad" } | null>(null);
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState<Enhancing | null>(null);
+  // Attempts that could break the gear are protected with gems while this is on.
+  const [protect, setProtect] = useState(false);
   const stones = bag ? (bag.bag.stone ?? 0) + (bag.bagTrade.stone ?? 0) : 0;
   const stacks = bag ? allStacks(bag) : {};
 
@@ -32,10 +35,11 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
     const worn = bag?.gear[slot];
     const cost = worn ? enhanceCost(worn.id, worn.plus) : null;
     if (!worn || !cost) return;
+    const shielded = protect && protectCost(cost.to) !== null;
     setBusy(true);
     setNote(null);
     setShow({ item: worn.id, name: itemName(worn.id), from: worn.plus, to: cost.to, outcome: null });
-    void Promise.all([client.enhance(slot), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
+    void Promise.all([client.enhance(slot, shielded), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
       setBusy(false);
       if ("outcome" in r) {
         setShow((s) => s && { ...s, outcome: r.outcome });
@@ -80,6 +84,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                 );
               }
               const cost = enhanceCost(worn.id, worn.plus);
+              const shield = cost && protect ? protectCost(cost.to) : null;
               return (
                 <div key={slot} className="bag-row smith-row">
                   <span className="bag-slot">{slotLabel(slot)}</span>
@@ -88,14 +93,17 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                   {cost ? (
                     <>
                       <button
-                        type="button" className="text-button" disabled={busy || stones < cost.stones || bag.gold < cost.gold}
+                        type="button" className="text-button"
+                        disabled={busy || stones < cost.stones || bag.gold < cost.gold || (shield !== null && bag.gems < shield)}
                         onClick={() => enhance(slot)}
                       >
                         {t("forge.enhance")}
                       </button>
                       <span className="bag-blurb">
                         {t("forge.chance", { to: cost.to, pct: percent(cost.success) })}
-                        {cost.breaks > 0 && <em className="smith-risk"> · {t("forge.breakRisk", { pct: percent(cost.breaks) })}</em>}
+                        {cost.breaks > 0 && (shield !== null
+                          ? <em className="smith-safe"> · {t("forge.protected", { n: shield })}</em>
+                          : <em className="smith-risk"> · {t("forge.breakRisk", { pct: percent(cost.breaks) })}</em>)}
                         {" "}· {t("common.gold", { n: cost.gold.toLocaleString(locale()) })} · {t("forge.stones", { n: cost.stones })}
                       </span>
                     </>
@@ -105,6 +113,14 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                 </div>
               );
             })}
+            <label className="smith-protect">
+              <input type="checkbox" checked={protect} onChange={(e) => setProtect(e.target.checked)} />
+              <span>{t("forge.protect", { n: BREAK_FROM })}</span>
+              <span className="smith-protect-gems">
+                <img src={iconFor("ui_gem") ?? undefined} alt="" draggable={false} />
+                {bag.gems.toLocaleString(locale())}
+              </span>
+            </label>
             <p className="note">{t("forge.note", { n: BREAK_FROM })}</p>
           </div>
         )}

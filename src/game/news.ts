@@ -17,6 +17,57 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-01-premium",
+    date: "2026-10-01",
+    text: {
+      ko: {
+        title: "VIP · 월정액 · 첫 구매 2배 · 파괴 방지",
+        lines: [
+          "보석 상품마다 첫 구매는 보석이 2배예요.",
+          "보석을 살수록 VIP 등급(1~10)이 올라요. 등급마다 사냥 경험치·골드 +2%, 이름 옆에 VIP 표시가 붙어요.",
+          "월정액: 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 50개(우편), 기간 중 경험치 +10%.",
+          "대장간에서 +6 이상 강화할 때 보석으로 파괴를 막을 수 있어요.",
+        ],
+      },
+      en: {
+        title: "VIP, the monthly pass, first purchase ×2, protection",
+        lines: [
+          "Each gem pack's first purchase gives double gems.",
+          "The more gems you buy, the higher your VIP rank (1-10): +2% hunting XP and gold a rank, and a VIP mark by your name.",
+          "Monthly pass: 300 gems now, 50 more on your first visit each day for 30 days (by mail), and +10% XP while it lasts.",
+          "At the smith, gems can keep enhancements at +6 and up from breaking your gear.",
+        ],
+      },
+      ja: {
+        title: "VIP・月額パス・初回2倍・破壊防止",
+        lines: [
+          "宝石商品ごとに初回購入は宝石2倍です。",
+          "宝石を買うほどVIPランク（1〜10）が上がります。ランクごとに狩りの経験値・ゴールド+2%、名前の横にVIPマークが付きます。",
+          "月額パス：すぐに宝石300個、30日間毎日最初のログインで宝石50個（郵便）、期間中は経験値+10%。",
+          "鍛冶屋で+6以上の強化時、宝石で破壊を防げます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "VIP、月卡、首購2倍、防破壞",
+        lines: [
+          "每種寶石商品首次購買可得2倍寶石。",
+          "買越多寶石，VIP等級（1~10）越高。每級狩獵經驗與金幣+2%，名字旁會顯示VIP標記。",
+          "月卡：立得寶石300個，30天內每天首次登入得寶石50個（郵件），期間經驗+10%。",
+          "在鐵匠處強化+6以上時，可用寶石防止裝備被破壞。",
+        ],
+      },
+      "zh-Hans": {
+        title: "VIP、月卡、首购2倍、防破坏",
+        lines: [
+          "每种宝石商品首次购买可得2倍宝石。",
+          "买越多宝石，VIP等级（1~10）越高。每级狩猎经验与金币+2%，名字旁会显示VIP标记。",
+          "月卡：立得宝石300个，30天内每天首次登录得宝石50个（邮件），期间经验+10%。",
+          "在铁匠处强化+6以上时，可用宝石防止装备被破坏。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-01-free",
     date: "2026-10-01",
     text: {

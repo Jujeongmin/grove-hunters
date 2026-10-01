@@ -6,7 +6,7 @@ import { give, putPiece, type Inventory, type MakeUid } from "./inventory";
 // per account, the same on every server and character; what a letter carries goes to the character
 // that takes it, its gold and gems to the account.
 
-export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss";
+export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss" | "monthly_pass";
 
 // What a letter carries: n of an item, given new (gear as new pieces; trade: whether it may be
 // traded), or one whole piece of gear as it was (from the market, its + and all).
@@ -30,7 +30,7 @@ export const MAIL_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 // The mailbox shows the newest this many.
 export const MAILBOX_SHOWN = 50;
 
-const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss"];
+const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss", "monthly_pass"];
 
 const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
 

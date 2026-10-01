@@ -1283,6 +1283,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .smith-tabs .on { color: var(--ember); text-decoration: underline; }
 .smith-row .bag-blurb { flex-basis: 100%; }
 .smith-risk { color: var(--blood); font-style: normal; }
+.smith-safe { color: #9dffb0; font-style: normal; }
+/* Protecting attempts from breaking: a box to tick, and the gems there are to spend. */
+.smith-protect { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.smith-protect input { accent-color: #ffd36a; }
+.smith-protect-gems { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 12px var(--font-head); color: #bff0ff; }
+.smith-protect-gems img { width: 16px; height: 16px; image-rendering: pixelated; }
 .smith-short { color: var(--blood); }
 .smith-note { font: 700 15px var(--font-head); margin: 8px 0; }
 .smith-note.good { color: #8fe08a; }
@@ -1639,7 +1645,20 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-odds small { font-size: 11px; color: var(--ink-dim); }
 
 /* Gem packs: the gem art in a pool of blue light, the bonus on a red ribbon, the price on gold. */
-.stable-packs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stable-packs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stable-pack small { font-size: 10px; line-height: 1.3; color: var(--ink-dim); text-align: center; }
+.stable-pack .stable-first-gets { color: #ffd36a; }
+.stable-pack.pass { border-color: rgba(255, 211, 106, 0.55); background: radial-gradient(circle at 50% 38%, rgba(255, 211, 106, 0.2), transparent 62%), linear-gradient(180deg, #2a2030, #15101b); }
+.stable-pack.pass b { color: #ffe08a; }
+.stable-pass-left { color: #9dffb0 !important; }
+.stable-bonus.first { background: #d4a017; color: #1a120c; }
+/* VIP: the rank in gold, what it adds, and a bar to the next. */
+.stable-vip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(255, 211, 106, 0.08); border: 1px solid rgba(255, 211, 106, 0.3); font-size: 12px; color: var(--ink); }
+.stable-vip-next { position: relative; flex: 1; min-width: 140px; height: 16px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.stable-vip-next i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #b8860b, #ffd36a); }
+.stable-vip-next em { position: relative; display: block; text-align: center; font: 700 10px/16px var(--font-head); font-style: normal; color: #fff; text-shadow: 0 1px 1px #000; }
+/* A VIP rank by a name: chat, the ranking, over the head. */
+.vip-mark { font: 800 11px var(--font-head); color: #1a120c; background: linear-gradient(180deg, #ffe7a8, #d4a017); border-radius: 4px; padding: 0 5px; margin-right: 4px; }
 .stable-pack {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px;
   cursor: pointer; color: var(--ink); border-radius: 8px; overflow: hidden;

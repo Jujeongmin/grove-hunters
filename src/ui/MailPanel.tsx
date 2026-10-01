@@ -26,6 +26,7 @@ function words(mail: Mail): { title: string; body: string | null } {
       body: stage >= 4 ? t("mail.guildBossSlain", { boss }) : t("mail.guildBossBody", { boss, pct: stage * 25 }),
     };
   }
+  if (mail.kind === "monthly_pass") return { title: t("mail.pass"), body: t("mail.passBody") };
   const thing = marketThing(mail);
   if (mail.kind === "gift" || !thing) return { title: t("mail.gift"), body: null };
   const item = thing.n > 1 ? `${itemName(thing.id)} ×${thing.n}` : gearName({ id: thing.id, plus: thing.plus });

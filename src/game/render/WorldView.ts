@@ -1187,7 +1187,8 @@ export class WorldView {
         entry = { actor, key };
         this.others.set(other.account, entry);
       }
-      entry.actor.label(settings().showNames ? `Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "");
+      const vip = other.look.vip ? `VIP${other.look.vip} · ` : "";
+      entry.actor.label(settings().showNames ? `${vip}Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "");
       entry.actor.path = readJob(other.look.job);
       this.applyMount(entry.actor, other.riding);
       entry.actor.sync(other.pose, "active", dt);

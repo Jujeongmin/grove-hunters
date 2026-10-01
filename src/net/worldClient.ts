@@ -16,6 +16,7 @@ import { NEWS } from "../game/news";
 import { readTelegraphs, type Telegraph } from "../game/world/telegraphs";
 import type { GuildBossType } from "../game/world/guildBoss";
 import type { Announcement } from "../game/world/announce";
+import type { PremiumView } from "../game/account/premium";
 import type { Mail } from "../game/account/mail";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
@@ -62,6 +63,8 @@ export interface MountsView {
   selected: MountId | null;
   // Each mount's stars (★0 not listed; see mounts.ts).
   stars: Partial<Record<MountId, number>>;
+  // VIP, first purchases and the monthly pass (see premium.ts).
+  premium: PremiumView;
 }
 
 // You in a fight, as the server keeps it.
@@ -116,7 +119,8 @@ function readChatMessage(raw: unknown): ChatMessage | null {
   const m = raw as Record<string, unknown> | null;
   if (!m || typeof m !== "object" || typeof m.account !== "string" || typeof m.name !== "string") return null;
   const text = readChat(m.text);
-  return text === null ? null : { account: m.account, name: m.name, text, at: num(m.at) };
+  const vip = typeof m.vip === "number" && Number.isInteger(m.vip) && m.vip > 0 ? m.vip : 0;
+  return text === null ? null : { account: m.account, name: m.name, text, at: num(m.at), ...(vip > 0 ? { vip } : {}) };
 }
 
 // What an attack or skill did, as the server answers it: what it hit and felled, and what that paid.
@@ -152,6 +156,7 @@ function readLook(raw: unknown): ZoneLook | null {
   return {
     name: l.name, costume: l.costume, playerClass: l.playerClass, level: typeof l.level === "number" ? l.level : 1,
     job: typeof l.job === "string" ? l.job : null, guild: typeof l.guild === "string" ? l.guild : null,
+    vip: typeof l.vip === "number" && Number.isInteger(l.vip) && l.vip > 0 ? l.vip : 0,
   };
 }
 
@@ -655,11 +660,14 @@ export class WorldClient {
   }
 
   // The smith: enhancing what is worn in a slot (the outcome, or why it was refused) and making things.
-  async enhance(slot: Slot): Promise<{ outcome: EnhanceOutcome } | { problem: string }> {
+  // With `protect`, a failure at +6 and above never breaks the gear, for gems (see premium.ts).
+  async enhance(slot: Slot, protect = false): Promise<{ outcome: EnhanceOutcome } | { problem: string }> {
     if (this.current.phase !== "in") return { problem: "unavailable" };
     try {
-      const { outcome, bag } = await this.transport.call<{ outcome: EnhanceOutcome; bag: BagView }>("enhanceGear", [slot]);
+      const { outcome, bag } = await this.transport.call<{ outcome: EnhanceOutcome; bag: BagView }>("enhanceGear", [slot, protect]);
       this.set({ bag });
+      // The gems it took show on the wallet at once.
+      if (protect) void this.refreshBag();
       return { outcome };
     } catch (error) {
       return { problem: errorCode(error) };

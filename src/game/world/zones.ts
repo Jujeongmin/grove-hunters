@@ -291,4 +291,6 @@ export interface ZoneLook {
   learned?: boolean;
   // Its guild's name, shown after its name.
   guild?: string | null;
+  // The account's VIP rank (see premium.ts), 0 for none.
+  vip?: number;
 }

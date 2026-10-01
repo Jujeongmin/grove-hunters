@@ -21,7 +21,8 @@ describe("gems", () => {
     expect(await server.$onItemPurchased(gems("g-1", "gems-550"))).toEqual({ success: true, code: "granted" });
     expect(await server.$onItemPurchased(gems("g-1", "gems-550"))).toEqual({ success: true, code: "already_granted" });
     server.connect({ account: BUYER });
-    expect((await server.getMounts()).gems).toBe(550);
+    // The pack's first purchase comes doubled (see premium.test.ts).
+    expect((await server.getMounts()).gems).toBe(1100);
   });
 });
 
@@ -29,6 +30,8 @@ describe("the mount draw", () => {
   test("costs gems, gives a mount to keep; a repeat breaks through a star, and past ★5 comes back as gems", async (server) => {
     server.connect({ account: BUYER });
     expect(await errorOf(server.pullMount())).toContain("not_enough_gems");
+    // Bought before, so these come without the first purchase's double.
+    await $global.updateUserState(BUYER, { firstBought: ["gems-100"] });
     await server.$onItemPurchased(gems("g-2", "gems-100", 10));
     server.connect({ account: BUYER });
     const first = await drawing(0, () => server.pullMount());
@@ -63,7 +66,7 @@ describe("the mount draw", () => {
     expect(await server.announcements(all[all.length - 1].at)).toEqual([]);
   });
 
-  test("the full game comes with its own, and only an owned mount can be picked", async (server) => {
+  test("everyone has the deer, and only an owned mount can be picked", async (server) => {
     await makeCharacter(server, "test-a", "기수");
     expect((await server.getMounts()).owned).toEqual([BASE_MOUNT]);
     expect(await errorOf(server.selectMount("dragon"))).toContain("no_mount");

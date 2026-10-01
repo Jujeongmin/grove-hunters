@@ -15,6 +15,8 @@ export interface RankRow {
   // Its class and advanced class; missing on lines written before they were kept.
   playerClass?: PlayerClass;
   job?: JobId | null;
+  // The account's VIP rank when the line was written; missing on older lines.
+  vip?: number;
 }
 
 // How many lines the board shows.
@@ -30,8 +32,9 @@ function isRow(value: unknown): value is RankRow {
 export function rankRows(rows: readonly RankRow[]): RankRow[] {
   return rows
     .filter((row) => isRow(row) && row.xp > 0)
-    .map(({ id, account, nickname, xp, level, playerClass, job }) => ({
+    .map(({ id, account, nickname, xp, level, playerClass, job, vip }) => ({
       id, account, nickname, xp, level, playerClass: readClass(playerClass) ?? undefined, job: readJob(job),
+      vip: typeof vip === "number" && Number.isInteger(vip) && vip > 0 ? vip : 0,
     }))
     .sort((a, b) => b.xp - a.xp || a.id.localeCompare(b.id))
     // Two first writes at once can leave a character two rows: the best one stands.

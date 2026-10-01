@@ -3,6 +3,7 @@ import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL_COST, mountBonus, mountsOfTier,
   type MountId, type MountTier,
 } from "../game/account/mounts";
+import { PASS_DAYS, PASS_GEMS_DAILY, PASS_GEMS_NOW, PASS_PRODUCT, PASS_XP, VIP_BONUS } from "../game/account/premium";
 import type { ModelLibrary } from "../game/assets/ModelLibrary";
 import type { PlayerClass } from "../game/combat/classes";
 import { publicUrl } from "../game/assets/publicUrl";
@@ -96,9 +97,9 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
     }
   }, [tab, looking, ready, view, hatched]);
 
-  // A gem pack bought: poll until the gems are in.
+  // A gem pack or the pass bought: poll until the gems are in.
   useEffect(() => onAnyShopClosed((productId, purchased) => {
-    if (!purchased || !(productId in GEM_PRODUCTS)) return;
+    if (!purchased || !(productId in GEM_PRODUCTS || productId === PASS_PRODUCT)) return;
     const before = view?.gems ?? 0;
     const started = Date.now();
     setWaiting(true);
@@ -276,23 +277,55 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
 
           {tab === "shop" && (
             <>
-              <p className="stable-lede">{t("mount.shopLede")}</p>
+              {view && (
+                // VIP: the rank, what it adds, and how far the next one is.
+                <div className="stable-vip">
+                  <b className="vip-mark">VIP {view.premium.vip}</b>
+                  <span>{t("mount.vipBonus", { n: Math.round(view.premium.vip * VIP_BONUS * 100) })}</span>
+                  {view.premium.nextVipAt !== null && (
+                    <span className="stable-vip-next">
+                      <i style={{ width: `${Math.round((view.premium.vipPoints / view.premium.nextVipAt) * 100)}%` }} />
+                      <em>{t("mount.vipNext", { have: view.premium.vipPoints.toLocaleString(locale()), need: view.premium.nextVipAt.toLocaleString(locale()) })}</em>
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="stable-packs">
                 {Object.entries(GEM_PRODUCTS).map(([productId, n]) => {
                   const price = productPrice(productId);
                   const bonus = price ? Math.round((n / price / BASE_RATE - 1) * 100) : 0;
+                  const first = view !== null && !view.premium.firstBought.includes(productId);
                   return (
                     <button
                       key={productId} type="button" className="stable-pack" disabled={!VERSE || waiting}
                       onClick={() => VERSE && buyProduct(VERSE, productId)}
                     >
-                      {bonus > 0 && <span className="stable-bonus">{t("mount.bonus", { n: bonus })}</span>}
+                      {first
+                        ? <span className="stable-bonus first">{t("mount.first2x")}</span>
+                        : bonus > 0 && <span className="stable-bonus">{t("mount.bonus", { n: bonus })}</span>}
                       <img src={publicUrl(`assets/ui/shop/${productId}.png`)} alt="" />
                       <b>{t("mount.pack", { n: n.toLocaleString(locale()) })}</b>
+                      {first && <small className="stable-first-gets">{t("mount.firstGets", { n: (n * 2).toLocaleString(locale()) })}</small>}
                       <span className="stable-price">{price !== null ? `${price.toLocaleString(locale())} VX` : "—"}</span>
                     </button>
                   );
                 })}
+                {(() => {
+                  const price = productPrice(PASS_PRODUCT);
+                  const left = view?.premium.passDaysLeft ?? 0;
+                  return (
+                    <button
+                      type="button" className="stable-pack pass" disabled={!VERSE || waiting}
+                      onClick={() => VERSE && buyProduct(VERSE, PASS_PRODUCT)}
+                    >
+                      <img src={publicUrl(`assets/ui/shop/${PASS_PRODUCT}.png`)} alt="" />
+                      <b>{t("mount.pass")}</b>
+                      <small>{t("mount.passWhat", { now: PASS_GEMS_NOW, daily: PASS_GEMS_DAILY, days: PASS_DAYS, xp: Math.round(PASS_XP * 100) })}</small>
+                      {left > 0 && <small className="stable-pass-left">{t("mount.passLeft", { n: left })}</small>}
+                      <span className="stable-price">{price !== null ? `${price.toLocaleString(locale())} VX` : "—"}</span>
+                    </button>
+                  );
+                })()}
               </div>
               {waiting && <p className="stable-hint">{t("mount.gemsComing")}</p>}
               <p className="stable-hint">{t("mount.shopNote")}</p>

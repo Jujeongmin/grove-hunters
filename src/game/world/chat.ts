@@ -15,6 +15,8 @@ export interface ChatMessage {
   name: string;
   text: string;
   at: number;
+  // The speaker's VIP rank, when they have one.
+  vip?: number;
 }
 
 // A line fit to say: control characters out, runs of spaces made one, trimmed; null when nothing is

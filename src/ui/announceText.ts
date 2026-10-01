@@ -21,5 +21,7 @@ export function announceText(a: Announcement): string {
     }
     case "guild_boss":
       return t("announce.guildBoss", { guild: String(p.guild ?? ""), boss: t(`boss.${String(p.boss)}` as Key) });
+    case "vip":
+      return t("announce.vip", { ...who, n: Number(p.vip) || 0 });
   }
 }

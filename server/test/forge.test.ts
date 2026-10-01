@@ -1,4 +1,5 @@
 import { RECIPES, enhanceCost } from "../../src/game/account/forge";
+import { protectCost } from "../../src/game/account/premium";
 import { TRADE_CRAFT_CHANCE } from "../../src/game/account/inventory";
 import { ITEMS } from "../../src/game/account/items";
 import { enterAs, errorOf, makeCharacter, toNpc } from "./helpers";
@@ -73,6 +74,30 @@ describe("the smith", () => {
     expect(broken.outcome).toBe("broken");
     expect(broken.bag.gear.weapon).toBeNull();
     expect(broken.bag.pieces).toEqual([]);
+  });
+
+  test("protected with gems, a failure from +6 never breaks the piece; below +6 there is nothing to protect", async (server) => {
+    await atTheForge(server, 40, 50000);
+    await $global.updateUserState("test-a", { gems: 25 });
+    expect(await errorOf(server.enhanceGear("weapon", true))).toContain("unavailable");
+    await updateActive("test-a", (c) => ({ ...c, gear: { ...c.gear, weapon: weapon(5) } }));
+    // A failed roll and a breaking one: protected, it only fails, and the gems are spent.
+    const real = Math.random;
+    const rolls = [0.99, 0];
+    Math.random = () => rolls.shift() ?? 0.99;
+    let kept: any;
+    try {
+      kept = await server.enhanceGear("weapon", true);
+    } finally {
+      Math.random = real;
+    }
+    expect(kept.outcome).toBe("fail");
+    expect(kept.bag.gear.weapon).toEqual(weapon(5));
+    expect(kept.bag.gems).toBe(25 - protectCost(6)!);
+    // Not enough gems left for another: refused, and nothing is spent.
+    const gold = kept.bag.gold;
+    expect(await errorOf(server.enhanceGear("weapon", true))).toContain("not_enough_gems");
+    expect((await server.getBag()).gold).toBe(gold);
   });
 
   test("wants what it costs, and works anywhere", async (server) => {

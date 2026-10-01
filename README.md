@@ -37,7 +37,9 @@ Vite + React + TypeScript + Three.js. (Verse8 GitLab 저장소 이름 `traitor-h
   영구히 짓는다. 건물마다 서버 전체 혜택(물약 할인, 경험치, 쓰러질 때 손실 절반, 미니맵 보스 표시)과 상위 기부자 이름.
 - **편의**: 자동 전투와 자동 물약, 절전 화면과 화면 켜짐 유지, 접히는 메뉴 버튼, 마우스나 손가락만으로 되는 조작, 설정 패널.
 - **결제**: 게임 전체가 무료(모든 구역·직업, 레벨 제한 없음, 사슴 탈것). 파는 것은 보석(`gems-100`·`gems-550`·`gems-1200`,
-  `src/game/account/mounts.ts`)이고, 보석은 탈것 뽑기와 거래소에 쓴다. 설계: `docs/superpowers/specs/2026-10-01-free-to-play-design.md`.
+  `src/game/account/mounts.ts`)과 월정액(`monthly-pass`)이고, 보석은 탈것 뽑기·거래소·강화 파괴 방지에 쓴다. 보석 상품마다 첫 구매
+  2배, 산 보석으로 VIP 1~10(등급마다 사냥 경험치·골드 +2%, 이름 옆 표시, VIP 5부터 전체 공지), 월정액은 즉시 300 + 30일간 매일 50
+  보석과 경험치 +10%(`src/game/account/premium.ts`). 설계: `docs/superpowers/specs/2026-10-01-free-to-play-design.md`.
 
 조작: 마우스만으로 전부 된다. 왼쪽 아래 가상 패드나 WASD(방향키)로 이동, 화면을 끌어 시점(마우스는 잠그지 않는다), 클릭이나
 공격 버튼으로 공격, 오른쪽 버튼 막기. 키보드 단축키: Space 점프, 1~4 스킬, Q 물약, E 대화, J 퀘스트 수행, Enter 채팅,

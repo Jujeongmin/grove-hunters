@@ -62,11 +62,13 @@ import {
   DUPLICATE_REFUND, MAX_STARS, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, readStars, rollMount, tierOf, type MountId,
 } from "../../src/game/account/mounts";
 import {
-  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, readGems, markSeen,
+  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, markSeen,
   pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
+import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, vipOfAccount } from "./premium";
+import { huntBonus, premiumView, protectCost, vipOf, type PremiumView } from "../../src/game/account/premium";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
 import { combatPower, fightStats } from "../../src/game/combat/power";
 import type { GroveView } from "../../src/game/world/grove";
@@ -156,10 +158,12 @@ interface Pay {
 
 // Your gems, the mounts you own and the one you ride (the first you own if none was picked, or it
 // is no longer yours).
-interface MountsView { gems: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }
+interface MountsView {
+  gems: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>>; premium: PremiumView;
+}
 async function mountsView(account: string): Promise<MountsView> {
   const { owned, selected, stars } = await accountMounts(account);
-  return { gems: await readGems(account), owned, selected, stars };
+  return { gems: await readGems(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()) };
 }
 
 async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
@@ -229,7 +233,12 @@ async function fallen(account: string, roomId: string): Promise<void> {
 async function payHunter(account: string, roomId: string, paid: Pay): Promise<void> {
   // The village's training ground, once built, adds to every hunt's XP on this server.
   const here = readChannelRoom(roomId);
-  const pay = here ? { ...paid, xp: Math.round(paid.xp * huntXpFactor(await villageOf(here.world))) } : paid;
+  // VIP ranks and the monthly pass add to it too.
+  const premium = await accountPremium(account);
+  const bonus = huntBonus(premium, Date.now());
+  const vip = vipOf(premium.vipPoints);
+  const village = here ? huntXpFactor(await villageOf(here.world)) : 1;
+  const pay = { ...paid, xp: Math.round(paid.xp * village * bonus.xp), gold: Math.round(paid.gold * bonus.gold) };
   // Another character picked since (another tab): the hunt was not its.
   if (!(await stillPlaying(account))) return;
   // Verse8 mints only to the caller; another hunter's gold is minted here, then handed over.
@@ -241,14 +250,14 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
     ...loot(c, pay.items, Math.random, newUid), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
     daily: countDaily(c.daily, pay.felled, Date.now()),
   }));
-  if (pay.xp > 0) await writeRanking(account, next);
+  if (pay.xp > 0) await writeRanking(account, next, vip);
   const levelled = levelOf(next.xp).level > levelOf(next.xp - pay.xp).level;
   const stats = fightStats(await mounted(account, next));
   await withRoomLock(roomId, async () => {
     await $room.updateUserState(
       account,
       {
-        look: zoneLook(next), xp: next.xp, ...(levelled ? { maxHp: stats.maxHp, hp: stats.maxHp } : {}),
+        look: zoneLook(next, vip), xp: next.xp, ...(levelled ? { maxHp: stats.maxHp, hp: stats.maxHp } : {}),
         payout: { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, xp: pay.xp, gold: pay.gold, items: pay.items },
       },
       { returnState: false },
@@ -316,7 +325,7 @@ async function refreshFighter(character: Character): Promise<void> {
     const mine = await $room.getMyState();
     const hp = Math.min(typeof mine.hp === "number" ? mine.hp : stats.maxHp, stats.maxHp);
     await $room.updateMyState(
-      { maxHp: stats.maxHp, hp, gear: stats.gear, look: zoneLook(character), xp: character.xp },
+      { maxHp: stats.maxHp, hp, gear: stats.gear, look: zoneLook(character, await vipOfAccount($sender.account)), xp: character.xp },
       { returnState: false },
     );
   });
@@ -429,7 +438,7 @@ async function arriveInArena(account: string): Promise<{ x: number; z: number; g
   const { maxHp, gear } = fightStats(await mounted(account, character));
   await $room.updateMyState({
     pose: { x: at.x, z: at.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
-    characterId: character.id, riding: null, look: zoneLook(character), savedAt: now,
+    characterId: character.id, riding: null, look: zoneLook(character, await vipOfAccount(account)), savedAt: now,
     xp: character.xp, maxHp, gear, hp: maxHp, dead: false, arenaUntil: pass.until, timeUp: false,
   });
   return { x: at.x, z: at.z, grove: null };
@@ -967,9 +976,12 @@ export class Server {
   async $onItemPurchased(raw: unknown): Promise<{ success: boolean; code: string }> {
     const event = readPurchaseEvent(raw);
     if (!event) return { success: false, code: "invalid_event" };
-    const gems = gemsFor(event.productId, event.quantity);
-    if (gems === null) return { success: false, code: "unknown_product" };
-    const granted = await $lock(`purchase:${event.purchaseId}`, () => grantGems(event, gems));
+    const now = Date.now();
+    let grant: () => Promise<boolean>;
+    if (isPassProduct(event.productId)) grant = () => grantPass(event, now);
+    else if (gemsFor(event.productId, event.quantity) !== null) grant = () => grantGemPack(event, now);
+    else return { success: false, code: "unknown_product" };
+    const granted = await $lock(`purchase:${event.purchaseId}`, grant);
     return { success: true, code: granted ? "granted" : "already_granted" };
   }
 
@@ -1064,6 +1076,7 @@ export class Server {
   async enterWorld(): Promise<ZoneEntry> {
     const account = $sender.account;
     const character = await playing(account);
+    await payPassDay(account, Date.now());
     const spot = returnSpot(character.spot);
     const level = levelOf(character.xp).level;
     const channel = await channelToEnter(account, character);
@@ -1122,7 +1135,7 @@ export class Server {
       characterId: character.id,
       // Every room is come into on foot.
       riding: null,
-      look: zoneLook(character),
+      look: zoneLook(character, await vipOfAccount(account)),
       savedAt: now,
       xp: character.xp, maxHp, gear, ...vitals,
     });
@@ -1189,7 +1202,8 @@ export class Server {
     if (!chatAllowed(said, now)) throw new RuleViolation("too_fast");
     await $room.updateMyState({ chatAt: [...said.filter((t) => now - t < CHAT_WINDOW_MS), now] }, { returnState: false });
     const name = typeof mine.look?.name === "string" ? mine.look.name : "";
-    const message: ChatMessage = { account: $sender.account, name, text, at: now };
+    const vip = typeof mine.look?.vip === "number" ? mine.look.vip : 0;
+    const message: ChatMessage = { account: $sender.account, name, text, at: now, ...(vip > 0 ? { vip } : {}) };
     await $room.broadcastToRoom("chat", message);
     return message;
   }
@@ -1355,7 +1369,9 @@ export class Server {
 
   // Enhances what you wear in a slot by one + (from the forge in the menu, anywhere): the gold and 강화석 are spent whatever
   // happens; a failure on the way to +6 and above may break the piece (see forge.ts).
-  async enhanceGear(rawSlot: unknown): Promise<{ outcome: EnhanceOutcome; bag: BagView }> {
+  // With `protect`, an attempt at +6 or above also costs protectCost gems, and a failure never breaks
+  // the gear.
+  async enhanceGear(rawSlot: unknown, protect?: unknown): Promise<{ outcome: EnhanceOutcome; bag: BagView }> {
     if (rawSlot !== "weapon" && rawSlot !== "armor") throw new RuleViolation("unavailable");
     const slot: Slot = rawSlot;
     const account = $sender.account;
@@ -1366,7 +1382,15 @@ export class Server {
     if (!cost) throw new RuleViolation("max_plus");
     if (countOf(current, "stone") < cost.stones) throw new RuleViolation("no_item");
     if (!(await $asset.has(GOLD, cost.gold))) throw new RuleViolation("not_enough_gold");
-    await $asset.burn(GOLD, cost.gold);
+    const shield = protect === true ? protectCost(cost.to) : null;
+    if (protect === true && shield === null) throw new RuleViolation("unavailable");
+    if (shield !== null) await changeGems(account, -shield);
+    try {
+      await $asset.burn(GOLD, cost.gold);
+    } catch (error) {
+      if (shield !== null) await changeGems(account, shield);
+      throw error;
+    }
     let outcome: EnhanceOutcome = "fail";
     try {
       const next = await updateActive(account, (c) => {
@@ -1375,6 +1399,7 @@ export class Server {
         if (worn?.uid !== piece.uid || worn.plus !== cost.to - 1) throw new RuleViolation("unavailable");
         const paid = spend(c, [{ id: "stone", n: cost.stones }]);
         outcome = rollEnhance(cost, Math.random(), Math.random());
+        if (outcome === "broken" && shield !== null) outcome = "fail";
         if (outcome === "success") return { ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } } };
         if (outcome === "fail") return paid;
         return { ...paid, gear: { ...c.gear, [slot]: null } };
@@ -1387,6 +1412,7 @@ export class Server {
       return { outcome, bag: await bagView(next) };
     } catch (error) {
       await $asset.mint(GOLD, cost.gold);
+      if (shield !== null) await changeGems(account, shield);
       throw error;
     }
   }

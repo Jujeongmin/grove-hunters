@@ -2,7 +2,7 @@
 // +8 and past, a guild boss slain), told at the top of everyone's screen and in their chat. The
 // server writes one where it happens; clients ask for the new ones every ANNOUNCE_POLL_MS.
 
-export type AnnounceKind = "mount_legendary" | "mount_star5" | "enhance" | "guild_boss";
+export type AnnounceKind = "mount_legendary" | "mount_star5" | "enhance" | "guild_boss" | "vip";
 
 export interface Announcement {
   id: string;
@@ -21,7 +21,7 @@ export const ANNOUNCE_PLUS = 8;
 // How long each shows at the top of the screen.
 export const ANNOUNCE_SHOW_MS = 6_000;
 
-const KINDS: readonly AnnounceKind[] = ["mount_legendary", "mount_star5", "enhance", "guild_boss"];
+const KINDS: readonly AnnounceKind[] = ["mount_legendary", "mount_star5", "enhance", "guild_boss", "vip"];
 
 export function readAnnouncement(row: unknown): Announcement | null {
   const r = row as Record<string, unknown> | null;

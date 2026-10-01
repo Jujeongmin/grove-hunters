@@ -29,11 +29,11 @@ const RANKING_READ = RANKING_SIZE * 5;
 
 // Writes a character's line on the board. Called whenever its XP, its name or its advanced class changes; a character
 // with no XP yet leaves no row behind.
-export async function writeRanking(account: string, character: Character): Promise<void> {
+export async function writeRanking(account: string, character: Character, vip = 0): Promise<void> {
   if (character.xp <= 0) return;
   const row: RankRow = {
     id: character.id, account, nickname: character.name, xp: character.xp, level: levelOf(character.xp).level,
-    playerClass: character.playerClass, job: character.job,
+    playerClass: character.playerClass, job: character.job, vip,
   };
   const [stored] = await $global.getCollectionItems(RANKING_COLLECTION, {
     filters: [{ field: "id", operator: "==", value: character.id }],
@@ -52,7 +52,7 @@ export async function readRanking(): Promise<RankRow[]> {
 
 // Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought;
 // should it fail, the receipt is taken back so the platform's retry grants it then.
-async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promise<boolean> {
+export async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promise<boolean> {
   const seen = await $global.getCollectionItems(PURCHASES_COLLECTION, {
     filters: [{ field: "purchaseId", operator: "==", value: event.purchaseId }],
     limit: 1,
@@ -67,13 +67,6 @@ async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promis
     throw error;
   }
   return true;
-}
-
-// Gems onto the buyer's account, once per receipt.
-export function grantGems(event: PurchaseEvent, gems: number): Promise<boolean> {
-  return onceper(event, async () => {
-    await changeGems(event.account, gems);
-  });
 }
 
 // An account's gems (kept in its global user state; see mounts.ts).
@@ -332,11 +325,11 @@ export async function friendChannels(account: string, world: string): Promise<nu
 }
 
 // What the others in a zone see of a character: name, class, costume and level.
-export function zoneLook(c: Character): ZoneLook {
+export function zoneLook(c: Character, vip = 0): ZoneLook {
   // The advanced class goes out as its id, not its name: every client says it in its own language.
   return {
     name: c.name, costume: c.costume, playerClass: c.playerClass, level: levelOf(c.xp).level, job: c.job,
-    learned: skillLearned(c.tutorial, 0), guild: c.guild?.name ?? null,
+    learned: skillLearned(c.tutorial, 0), guild: c.guild?.name ?? null, vip,
   };
 }
 
