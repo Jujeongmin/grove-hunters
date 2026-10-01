@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { BREAK_FROM, RECIPES, enhanceCost, rollEnhance } from "../../src/game/account/forge";
-import { ITEMS, MAX_PLUS, gearStats, sellPrice } from "../../src/game/account/items";
+import { ITEMS, MAX_PLUS, PLUS_POWER, gearStats, sellPrice } from "../../src/game/account/items";
 import { gearName, itemName } from "../../src/ui/names";
 import { MONSTERS } from "../../src/game/world/monsters";
 
 describe("enhancing", () => {
-  it("gets dearer and riskier the higher it goes, and stops at +10", () => {
+  it("gets dearer and riskier the higher it goes, and stops at +15", () => {
     let last = enhanceCost("weapon_2", 0)!;
     expect(last).toMatchObject({ to: 1, success: 1, breaks: 0 });
     for (let plus = 1; plus < MAX_PLUS; plus++) {
@@ -18,6 +18,14 @@ describe("enhancing", () => {
     expect(enhanceCost("weapon_2", MAX_PLUS)).toBeNull();
     // Better gear costs more to enhance.
     expect(enhanceCost("weapon_5", 3)!.gold).toBeGreaterThan(enhanceCost("weapon_1", 3)!.gold);
+  });
+
+  it("past +10 each + counts twice", () => {
+    const at = (plus: number) => gearStats({ weapon: { uid: "w", id: "weapon_2", plus, trade: false }, armor: null }).power;
+    expect(at(10) - at(9)).toBeCloseTo(PLUS_POWER);
+    expect(at(11) - at(10)).toBeCloseTo(2 * PLUS_POWER);
+    expect(at(15) - at(0)).toBeCloseTo(20 * PLUS_POWER);
+    expect(enhanceCost("weapon_2", 14)).toMatchObject({ to: 15, success: 0.02 });
   });
 
   it("succeeds, fails or breaks by its rolls", () => {

@@ -1,13 +1,15 @@
 import { ITEMS, MAX_PLUS, type Bag, type ItemId } from "./items";
 
-// The forge (in the menu, anywhere; the village smith opens it too): enhancing worn gear (+1 to +10)
+// The forge (in the menu, anywhere; the village smith opens it too): enhancing worn gear (+1 to +15)
 // and making gear and potions from what monsters drop. The server rolls every attempt; these tables
 // are what it and the forge's screen go by.
 
 // The chance of reaching each + (index 1 is +1), and, for a failure on the way to +6 and above, the
 // chance the gear breaks and is lost. Below +6 a failure only costs what was spent.
-const SUCCESS = [0, 1, 0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2];
-const BREAK = [0, 0, 0, 0, 0, 0, 0.1, 0.15, 0.2, 0.25, 0.3];
+// +11 to +15 are the long climb at the top: rare successes and likely breaks (see protectCost and the
+// VIP ranks' odds in premium.ts).
+const SUCCESS = [0, 1, 0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.15, 0.1, 0.07, 0.04, 0.02];
+const BREAK = [0, 0, 0, 0, 0, 0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.5];
 // From this + on, a failure may break the gear.
 export const BREAK_FROM = 6;
 
@@ -21,7 +23,7 @@ export interface EnhanceCost {
   breaks: number;
 }
 
-// What going from `plus` to the next + costs for a piece of gear, and its odds; null at +10.
+// What going from `plus` to the next + costs for a piece of gear, and its odds; null at MAX_PLUS.
 export function enhanceCost(id: ItemId, plus: number): EnhanceCost | null {
   const to = plus + 1;
   if (to > MAX_PLUS) return null;

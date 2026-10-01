@@ -1,7 +1,7 @@
 import { RECIPES, enhanceCost } from "../../src/game/account/forge";
 import { protectCost } from "../../src/game/account/premium";
 import { TRADE_CRAFT_CHANCE } from "../../src/game/account/inventory";
-import { ITEMS } from "../../src/game/account/items";
+import { ITEMS, MAX_PLUS } from "../../src/game/account/items";
 import { enterAs, errorOf, makeCharacter, toNpc } from "./helpers";
 import { readProfile, updateActive } from "../src/store";
 
@@ -106,7 +106,7 @@ describe("the smith", () => {
     await updateActive("test-a", (c) => ({ ...c, bag: { ...c.bag, stone: 5 } }));
     expect(await errorOf(server.enhanceGear("weapon"))).toContain("not_enough_gold");
     expect(await errorOf(server.enhanceGear("armor"))).toContain("unavailable");
-    await updateActive("test-a", (c) => ({ ...c, gear: { ...c.gear, weapon: weapon(10) } }));
+    await updateActive("test-a", (c) => ({ ...c, gear: { ...c.gear, weapon: weapon(MAX_PLUS) } }));
     expect(await errorOf(server.enhanceGear("weapon"))).toContain("max_plus");
     // Away from the smith it works all the same.
     await toNpc(server, "merchant");

@@ -93,7 +93,9 @@ export interface GearPiece { uid: string; id: ItemId; plus: number; trade: boole
 // What a character wears, a piece in each slot.
 export interface Gear { weapon: GearPiece | null; armor: GearPiece | null }
 
-export const MAX_PLUS = 10;
+export const MAX_PLUS = 15;
+// Past this + each one counts twice (+11 to +15, the hardest to reach, give the most).
+export const PLUS_DOUBLED_FROM = 10;
 // What each + adds: a weapon's share of damage; armour's health and share of each blow stopped.
 export const PLUS_POWER = 0.04;
 export const PLUS_HP = 12;
@@ -140,11 +142,16 @@ export function addItem(bag: Bag, id: ItemId, n: number): Bag {
 // What the worn gear adds up to in a fight.
 export interface GearStats { power: number; hp: number; guard: number }
 
+// What a piece's + is worth in steps of PLUS_POWER (and the rest): one a +, two a + past +10.
+export function plusSteps(plus: number): number {
+  return Math.min(plus, PLUS_DOUBLED_FROM) + 2 * Math.max(0, plus - PLUS_DOUBLED_FROM);
+}
+
 export function gearStats(gear: Gear): GearStats {
   const out = { power: 0, hp: 0, guard: 0 };
-  if (gear.weapon) out.power += ITEMS[gear.weapon.id].power + gear.weapon.plus * PLUS_POWER;
+  if (gear.weapon) out.power += ITEMS[gear.weapon.id].power + plusSteps(gear.weapon.plus) * PLUS_POWER;
   if (gear.armor) {
-    const n = gear.armor.plus;
+    const n = plusSteps(gear.armor.plus);
     out.hp += ITEMS[gear.armor.id].hp + n * PLUS_HP;
     out.guard += ITEMS[gear.armor.id].guard + n * PLUS_GUARD;
   }

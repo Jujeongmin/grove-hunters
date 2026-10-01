@@ -23,7 +23,7 @@ describe("items", () => {
     // Gear kinds are pieces now, never counted in the bag.
     expect(readBag({ potion_small: 2, nothing: 3, potion_big: -1, weapon_1: 2, stone: 1.5 })).toEqual({ potion_small: 2 });
     expect(readPiece({ uid: "x", id: "weapon_1", plus: 3, trade: true })).toEqual({ uid: "x", id: "weapon_1", plus: 3, trade: true });
-    expect(readPiece({ uid: "x", id: "weapon_1", plus: 30 })).toEqual({ uid: "x", id: "weapon_1", plus: 10, trade: false });
+    expect(readPiece({ uid: "x", id: "weapon_1", plus: 30 })).toEqual({ uid: "x", id: "weapon_1", plus: 15, trade: false });
     expect(readPiece({ uid: "x", id: "potion_small" })).toBeNull();
     expect(readPiece({ id: "weapon_1" })).toBeNull();
     expect(slotOf("armor_3")).toBe("armor");

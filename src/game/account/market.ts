@@ -1,4 +1,4 @@
-import { ITEMS, MAX_STACK, readItemId, readPiece, slotOf, type GearPiece, type ItemId, type Slot } from "./items";
+import { ITEMS, MAX_PLUS, MAX_STACK, readItemId, readPiece, slotOf, type GearPiece, type ItemId, type Slot } from "./items";
 
 // The market, shared by every server: tradable gear (one piece, its + and all) and tradable materials
 // (a heap, priced by the one, from which a buyer takes as many as they like) for gems, the ones the
@@ -108,7 +108,7 @@ export function readFilter(raw: unknown): MarketFilter {
   const f = (raw ?? {}) as Record<string, unknown>;
   const shelf: Shelf = f.shelf === "weapon" || f.shelf === "armor" || f.shelf === "material" ? f.shelf : "weapon";
   const item = readItemId(f.item);
-  const minPlus = typeof f.minPlus === "number" && Number.isInteger(f.minPlus) ? Math.max(0, Math.min(10, f.minPlus)) : 0;
+  const minPlus = typeof f.minPlus === "number" && Number.isInteger(f.minPlus) ? Math.max(0, Math.min(MAX_PLUS, f.minPlus)) : 0;
   const page = typeof f.page === "number" && Number.isInteger(f.page) && f.page >= 0 ? Math.min(f.page, 1000) : 0;
   return { shelf, item: item && shelfOf(item) === shelf ? item : null, minPlus, page };
 }

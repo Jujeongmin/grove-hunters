@@ -66,7 +66,9 @@ export function noMarketFee(vip: number): boolean {
 }
 
 // Gems to keep a failed attempt at this + from breaking the gear (from +6, where breaking begins).
-export const PROTECT_GEMS: Readonly<Record<number, number>> = { 6: 20, 7: 30, 8: 50, 9: 80, 10: 120 };
+export const PROTECT_GEMS: Readonly<Record<number, number>> = {
+  6: 20, 7: 30, 8: 50, 9: 80, 10: 120, 11: 200, 12: 300, 13: 500, 14: 800, 15: 1200,
+};
 
 export interface Premium {
   vipPoints: number;

@@ -12,7 +12,7 @@ import { gearName, itemName } from "./names";
 
 type Tab = "buy" | "sell" | "mine";
 const SHELVES: readonly Shelf[] = ["weapon", "armor", "material"];
-const MIN_PLUS = [0, 3, 5, 7, 9];
+const MIN_PLUS = [0, 3, 5, 7, 9, 11, 13];
 
 // What a listing is called: gear with its +, a heap of material with how many are left (or `n`).
 function listingName(l: Pick<ListingView, "item" | "piece" | "n">, n = l.n): string {

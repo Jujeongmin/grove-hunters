@@ -53,7 +53,7 @@ describe("market", () => {
 
   it("reads a filter, keeping the item to its shelf", () => {
     expect(readFilter(undefined)).toEqual({ shelf: "weapon", item: null, minPlus: 0, page: 0 });
-    expect(readFilter({ shelf: "armor", item: "weapon_1", minPlus: 30, page: -1 })).toEqual({ shelf: "armor", item: null, minPlus: 10, page: 0 });
+    expect(readFilter({ shelf: "armor", item: "weapon_1", minPlus: 30, page: -1 })).toEqual({ shelf: "armor", item: null, minPlus: 15, page: 0 });
     expect(readFilter({ shelf: "material", item: "silk", page: 2 })).toEqual({ shelf: "material", item: "silk", minPlus: 0, page: 2 });
   });
 
