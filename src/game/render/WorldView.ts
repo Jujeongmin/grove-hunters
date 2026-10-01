@@ -155,8 +155,8 @@ export interface WorldHud {
   channel: number;
   // Where you stand and which way you look, for the map.
   me: { x: number; z: number; yaw: number };
-  // A locked portal needs the full game or, failing that, a level.
-  portal: { to: string; locked: boolean; needLevel: number | null } | null;
+  // The portal you stand at, and the level it asks for when yours is under it.
+  portal: { to: string; needLevel: number | null } | null;
   // The four slots of the bar (keys 1 to 4): the skill each holds, or null while empty.
   skills: ({ skill: number; readyInMs: number; cooldownMs: number; level: number; open: boolean } | null)[];
   blocking: boolean;
@@ -195,8 +195,6 @@ export interface WorldViewOptions {
   playerClass: PlayerClass;
   costume: Costume;
   name: string;
-  // Whether the paid zones are open to you, so a locked portal can say so before you try it.
-  owned: boolean;
   onProgress?: (done: number, total: number) => void;
   // Walking into a portal asks to go through.
   onTravel: (to: ZoneId) => void;
@@ -431,9 +429,7 @@ export class WorldView {
     if (way.kind === "nowhere") {
       note(t("note.notHere"));
     } else if (way.kind === "locked") {
-      note(way.why === "paid"
-        ? t("note.questPaid", { zone: zoneName(way.zone) })
-        : t("note.questLevel", { zone: zoneName(way.zone), n: ZONES[way.zone].minLevel }));
+      note(t("note.questLevel", { zone: zoneName(way.zone), n: ZONES[way.zone].minLevel }));
     } else if (way.kind === "here") {
       if (trip.kind === "elder") {
         const elder = npcsIn(this.options.entry.zone).find((n) => n.role === "elder");
@@ -464,7 +460,6 @@ export class WorldView {
 
   // Whether you may go into a zone, as its portal will judge it.
   private entryTo(zone: ZoneId): Entry {
-    if (ZONES[zone].paid && !this.options.owned) return "paid";
     if (levelOf(this.client.state.me?.xp ?? 0).level < ZONES[zone].minLevel) return "level";
     return "open";
   }
@@ -1268,7 +1263,7 @@ export class WorldView {
     const model = this.library!.get(PORTAL_MODEL).scene;
     const width = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).x;
     for (const portal of this.portals) {
-      const locked = (ZONES[portal.to].paid && !this.options.owned) || levelOf(this.client.state.me?.xp ?? 0).level < ZONES[portal.to].minLevel;
+      const locked = levelOf(this.client.state.me?.xp ?? 0).level < ZONES[portal.to].minLevel;
       const ring = paintPortal(model.clone(true));
       ring.scale.setScalar((PORTAL_RADIUS * 2) / width);
       ring.position.set(portal.x, 0, portal.z);
@@ -1279,9 +1274,7 @@ export class WorldView {
       this.portalGlows.push(glow);
       const label = createLabel(2.6);
       label.position.set(portal.x, 3.3, portal.z);
-      const why = ZONES[portal.to].paid && !this.options.owned
-        ? t("portal.needsFull")
-        : locked ? t("portal.needsLevel", { n: ZONES[portal.to].minLevel }) : "";
+      const why = locked ? t("portal.needsLevel", { n: ZONES[portal.to].minLevel }) : "";
       setLabel(label, `${zoneName(portal.to)}${why}`, locked ? "#ffb08a" : "#bff0ff");
       this.scene.add(ring, glow, label);
     }
@@ -1311,7 +1304,7 @@ export class WorldView {
       me: { x: this.pose.x, z: this.pose.z, yaw: this.yaw },
       portal: near && near.d <= PORTAL_REARM + 2
         ? {
-          to: zoneName(near.portal.to), locked: ZONES[near.portal.to].paid && !this.options.owned,
+          to: zoneName(near.portal.to),
           needLevel: level.level < ZONES[near.portal.to].minLevel ? ZONES[near.portal.to].minLevel : null,
         }
         : null,

@@ -41,8 +41,6 @@ import { DonatePanel } from "./DonatePanel";
 import { hazeHint, weekOf, type GroveView } from "../game/world/grove";
 import type { NpcId } from "../game/world/npcs";
 import { MapPanel, MinimapCorner } from "./Minimap";
-import { FREE_UNTIL, UpgradePanel, type UpgradeReason } from "./UpgradePanel";
-import type { Offer } from "../game/account/purchase";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
@@ -57,9 +55,6 @@ interface WorldScreenProps {
   playerClass: PlayerClass;
   costume: Costume;
   name: string;
-  owned: boolean;
-  // The purchase, so the locked portal and the menu can open it where the wall is met.
-  purchase: { offer: Offer; state: "idle" | "confirming" | "late"; buy: (() => void) | null };
   // Your friends, for the channel list to show who is on which.
   friends: FriendsView | null;
   onExit: () => void;
@@ -68,7 +63,6 @@ interface WorldScreenProps {
 // Why a portal turned you away. The codes the server sends for travel are its own, so they are
 // named here rather than shared with the bag's.
 const TRAVEL_PROBLEM: Record<string, Key> = {
-  not_owned: "problem.not_owned",
   zone_full: "problem.zone_full",
   channel_full: "problem.channel_full",
   not_near: "problem.not_near_portal",
@@ -86,7 +80,7 @@ function enterProblem(error: string | null): string {
 
 // The world: enters on mount, shows the zone you are in (one WorldView per zone and channel), and
 // takes you through portals.
-export function WorldScreen({ client, playerClass, costume, name, owned, purchase, friends, onExit }: WorldScreenProps) {
+export function WorldScreen({ client, playerClass, costume, name, friends, onExit }: WorldScreenProps) {
   // Weapons are drawn as this character's class wields them, in every panel below (see icons.ts).
   setIconClass(playerClass);
   const [state, setState] = useState<WorldState>(client.state);
@@ -131,8 +125,6 @@ export function WorldScreen({ client, playerClass, costume, name, owned, purchas
       playerClass={playerClass}
       costume={costume}
       name={name}
-      owned={owned}
-      purchase={purchase}
       friends={friends}
       travelling={state.phase === "travelling"}
       bag={state.bag}
@@ -170,7 +162,7 @@ const HAZE_HINT_MS = 12_000;
 const PROBLEM_MS = 3000;
 
 function ZoneScreen({
-  entry, client, playerClass, costume, name, owned, purchase, friends, travelling, bag, problem, trip, onProblem, onExit,
+  entry, client, playerClass, costume, name, friends, travelling, bag, problem, trip, onProblem, onExit,
 }: ZoneScreenProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<WorldView | null>(null);
@@ -183,10 +175,6 @@ function ZoneScreen({
   const [panel, setPanel] = useState<Panel | null>(null);
   // The quest just finished, shown once as a panel in the middle of the screen.
   const [finished, setFinished] = useState<number | null>(null);
-  // The purchase panel, and why it opened; null while it is closed. Once the panel has said its
-  // piece about the free fields running out, it does not say it again this session.
-  const [upgrade, setUpgrade] = useState<UpgradeReason | null>(null);
-  const shown = useRef(false);
   const lastQuest = useRef<{ index: number; done: boolean } | null>(null);
   useEffect(() => {
     if (!bag) return;
@@ -265,7 +253,7 @@ function ZoneScreen({
 
   useEffect(() => {
     const next = new WorldView(host.current!, client, {
-      entry, playerClass, costume, name, owned,
+      entry, playerClass, costume, name,
       trip: trip.current,
       onTrip: (next) => {
         trip.current = next;
@@ -374,8 +362,8 @@ function ZoneScreen({
     client.markNewsRead();
     setNewsUnread(0);
   }, [panel, client]);
-  const open = useRef({ panel, menu, upgrade, talkingTo });
-  open.current = { panel, menu, upgrade, talkingTo };
+  const open = useRef({ panel, menu, talkingTo });
+  open.current = { panel, menu, talkingTo };
   // A talk ends: the camera goes back over your shoulder and the HUD returns.
   const endTalk = () => {
     view.current?.endDialogue();
@@ -392,10 +380,6 @@ function ZoneScreen({
     id: string; label: string; key: string; code: string; act: () => void; on: boolean; pinned?: boolean; dot?: boolean;
   }[] = [
     { id: "map", label: t("menu.map"), key: "N", code: "KeyN", act: () => toggle("map"), on: panel === "map" },
-    ...(owned ? [] : [{
-      id: "upgrade", label: t("menu.upgrade"), key: "V", code: "KeyV",
-      act: () => setUpgrade({ kind: "menu" }), on: upgrade !== null, pinned: true,
-    }]),
     { id: "ranking", label: t("menu.ranking"), key: "O", code: "KeyO", act: () => toggle("ranking"), on: panel === "ranking" },
     { id: "quests", label: t("menu.quests"), key: "L", code: "KeyL", act: () => toggle("quests"), on: panel === "quests" },
     { id: "skills", label: t("menu.skills"), key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
@@ -422,11 +406,6 @@ function ZoneScreen({
       {item.dot && <i className="hud-dot" />}
     </button>
   );
-  // The locked portal you are standing at, if any: the key handler below is bound once, so it reads
-  // this rather than closing over the HUD.
-  const lockedPortal = useRef<string | null>(null);
-  lockedPortal.current = hud?.portal?.locked ? hud.portal.to : null;
-
   // C opens the channel list, like tapping the zone's name at the top.
   const toggleRef = useRef(toggle);
   toggleRef.current = toggle;
@@ -467,8 +446,7 @@ function ZoneScreen({
     const onKey = (e: KeyboardEvent) => {
       if (typing(e)) return;
       if (e.key === "Escape") {
-        if (open.current.upgrade) setUpgrade(null);
-        else if (open.current.talkingTo) endTalkRef.current();
+        if (open.current.talkingTo) endTalkRef.current();
         else if (open.current.menu) setMenu(false);
         else if (open.current.panel) setPanel(null);
         else setMenuOpen(false);
@@ -486,44 +464,11 @@ function ZoneScreen({
         toggleRef.current("channels");
         return;
       }
-      // E at a locked portal: nobody is there to talk to, so it opens what the portal asks for.
-      if (e.code === "KeyE" && lockedPortal.current) {
-        setUpgrade({ kind: "portal", zone: lockedPortal.current });
-        return;
-      }
       keys.current.find((item) => item.code === e.code)?.act();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  // Bought: the panel has done its work and steps aside.
-  useEffect(() => {
-    if (owned) setUpgrade(null);
-  }, [owned]);
-
-  // The free fields stop at FREE_UNTIL, so the moment a character reaches it is the moment to say
-  // what lies past it — once per character, kept in this browser. A character that was already past
-  // it when it first got here (another machine, cleared storage, or a level earned before any of
-  // this shipped) is told plainly instead of congratulated on a level it passed long ago.
-  const level = hud?.level ?? 0;
-  const wasUnder = useRef<boolean | null>(null);
-  useEffect(() => {
-    if (owned || level === 0) return;
-    const under = level < FREE_UNTIL;
-    const climbed = wasUnder.current === true && !under;
-    wasUnder.current = under;
-    if (under || shown.current) return;
-    const key = `groveHunters.upgradeShown.${client.account}.${name}`;
-    shown.current = true;
-    try {
-      if (window.localStorage.getItem(key)) return;
-      window.localStorage.setItem(key, String(level));
-    } catch {
-      // A browser that will not keep it: the ref above still holds it to this one session.
-    }
-    setUpgrade(climbed ? { kind: "level", level } : { kind: "menu" });
-  }, [owned, level, client, name]);
 
   const showProblem = problem && now - problem.at < PROBLEM_MS;
   return (
@@ -607,22 +552,11 @@ function ZoneScreen({
             <div className="hud-prompt band">{t("world.talk", { name: hud.npc.name, role: hud.npc.role })}</div>
           )}
           {hud.portal && (
-            hud.portal.locked
-              ? (
-                <button
-                  type="button" className="hud-prompt band locked-portal"
-                  onClick={() => setUpgrade({ kind: "portal", zone: hud.portal!.to })}
-                >
-                  {t("world.portalLocked", { zone: hud.portal.to, how: touch ? t("world.portalLocked.tap") : "(E)" })}
-                </button>
-              )
-              : (
-                <div className="hud-prompt band">
-                  {hud.portal.needLevel
-                    ? t("world.portalLevel", { zone: hud.portal.to, n: hud.portal.needLevel })
-                    : t("world.portalTo", { zone: hud.portal.to })}
-                </div>
-              )
+            <div className="hud-prompt band">
+              {hud.portal.needLevel
+                ? t("world.portalLevel", { zone: hud.portal.to, n: hud.portal.needLevel })
+                : t("world.portalTo", { zone: hud.portal.to })}
+            </div>
           )}
           {showProblem && <div className="hud-error band">{problem.text}</div>}
           {hud.blocking && <div className="hud-shield band">{t("world.blocking")}</div>}
@@ -692,7 +626,7 @@ function ZoneScreen({
       )}
       {panel === "mounts" && (
         <MountPanel
-          client={client} owned={owned} library={view.current?.models ?? null} playerClass={playerClass} costume={costume}
+          client={client} library={view.current?.models ?? null} playerClass={playerClass} costume={costume}
           onClose={() => setPanel(null)}
         />
       )}
@@ -742,12 +676,6 @@ function ZoneScreen({
         <QuestCompleteBanner index={finished} inVillage={inVillage} onClose={() => setFinished(null)} />
       )}
       {tutorial.finished && <TutorialDoneBanner onClose={tutorial.clearFinished} />}
-      {upgrade && (
-        <UpgradePanel
-          reason={upgrade} offer={purchase.offer} state={purchase.state} onBuy={purchase.buy}
-          onClose={() => setUpgrade(null)}
-        />
-      )}
       {panel === "map" && hud && (
         <MapPanel
           zone={hud.zoneId} me={hud.me} onClose={() => setPanel(null)}

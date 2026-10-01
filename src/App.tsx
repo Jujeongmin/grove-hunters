@@ -12,7 +12,7 @@ import { ModelGallery, galleryEnabled } from "./ui/ModelGallery";
 import { WorldScreen } from "./ui/WorldScreen";
 import { useAccount } from "./ui/useAccount";
 import { useFriends } from "./ui/useFriends";
-import { usePurchase } from "./ui/usePurchase";
+import { useShop } from "./ui/useShop";
 import { useKeyboardFreeze } from "./ui/useKeyboardFreeze";
 import { useUiScale } from "./ui/useUiScale";
 import { t, useLang } from "./ui/lang";
@@ -33,7 +33,7 @@ export default function App() {
     [connected, server, joinRoom, leaveRoom],
   );
   const { view, failed, pickWorld, checkName, create, select, remove, refresh } = useAccount(transport);
-  const purchase = usePurchase(transport, refresh);
+  useShop(transport);
   const friends = useFriends(transport);
   const world = useMemo(() => (transport ? new WorldClient(transport) : null), [transport]);
 
@@ -57,8 +57,6 @@ export default function App() {
           playerClass={readClass(active.playerClass) ?? "warrior"}
           costume={costumeById(active.costume) ?? COSTUMES[0]}
           name={active.name}
-          owned={view.owned}
-          purchase={purchase}
           friends={friends.view}
           onExit={() => {
             setInWorld(false);
@@ -84,9 +82,6 @@ export default function App() {
         onDelete={remove}
         loadRanking={transport ? () => loadRanking(transport) : null}
         loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
-        onBuy={purchase.buy}
-        purchase={purchase.state}
-        offer={purchase.offer}
         friends={friends.client}
         friendsView={friends.view}
         onStart={() => setInWorld(true)}

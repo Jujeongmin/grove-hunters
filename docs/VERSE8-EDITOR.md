@@ -69,24 +69,12 @@ git restore --staged public/assets
 `VITE_AGENT8_VERSE=`(빈 값)를 두고 `npm run dev -- --mode offline`으로 띄운다(`.claude/launch.json`의 `grove-hunters-offline`).
 이 파일은 `.git/info/exclude`로 로컬에서만 무시한다.
 
-## 할인해서 팔기
+## 파는 것
 
-게임 화면의 할인 문구는 **Verse8 상품이 실제로 그렇게 팔릴 때만** 뜬다. 코드에 정가를 적어두는 곳은 없다.
-정가 1000 VX짜리를 500 VX에 파는 할인을 열려면, 대시보드에서 `full-game` 상품에 이렇게 한다.
-
-1. 상품 가격을 **실제로 받을 값**(예: 500)으로 둔다.
-2. 상품 `metadata`에 JSON을 넣는다.
-
-```json
-{ "listPrice": 1000 }
-```
-
-그러면 구매 패널에 `50% 할인 · 1̶0̶0̶0̶ ̶V̶X̶`가 뜨고, 가격 버튼은 500 VX가 된다. 기간 표시는 없다(상시 할인).
-`listPrice`가 지금 가격보다 크지 않거나, 숫자가 아니거나, `metadata`가 JSON이 아니면 할인 표시는 그냥
-사라지고 가격만 남는다(`readOffer`, `tests/account/offer.test.ts`).
-
-**`listPrice`에는 실제로 받아 온 값만 적는다.** 받은 적 없는 가격을 정가처럼 보이게 하는 것은 표시광고법이
-금지하는 거짓 할인이고, 스토어 심사에서도 걸린다. 1000 VX를 정가로 쓰려면 먼저 그 값으로 팔아야 한다.
+게임은 전부 무료이고 VX Shop에서는 보석만 판다(`gems-100`·`gems-550`·`gems-1200`, 2단계에 `monthly-pass`).
+Product ID는 `src/game/account/mounts.ts`의 `GEM_PRODUCTS`와 철자까지 같아야 하고, 상품 이름·설명은 `docs/STORE.md`에 있다.
+정식판(`full-game`)은 2026-10-01에 없앴다. 할인 표시를 다시 만든다면, 받아 온 적 없는 가격을 정가처럼 보이게 하는
+것은 표시광고법이 금지하는 거짓 할인이라는 점을 지킨다.
 
 ## 저장한 데이터는 모두 공개다
 

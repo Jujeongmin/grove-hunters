@@ -21,8 +21,6 @@ describe("finding the way to a quest", () => {
   });
 
   it("says what stands in the way when the field is shut to you", () => {
-    const shut = (zone: string): Entry => (zone === "forest2" ? "paid" : "open");
-    expect(questWay("village", ["forest2"], shut)).toEqual({ kind: "locked", zone: "forest2", why: "paid" });
     const low = (zone: string): Entry => (zone === "forest3" ? "level" : "open");
     expect(questWay("forest1", ["forest3"], low)).toEqual({ kind: "locked", zone: "forest3", why: "level" });
   });

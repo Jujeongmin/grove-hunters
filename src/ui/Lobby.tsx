@@ -16,8 +16,6 @@ import type { FriendsClient } from "../net/friends";
 import { GAME_TITLE } from "./brand";
 import { ClassPanel } from "./ClassPanel";
 import { DeleteCharacterPanel } from "./DeleteCharacterPanel";
-import { UpgradePanel } from "./UpgradePanel";
-import type { Offer } from "../game/account/purchase";
 import { FriendsPanel } from "./FriendsPanel";
 import { NicknamePanel } from "./NicknamePanel";
 import { RankingPanel } from "./RankingPanel";
@@ -40,11 +38,6 @@ interface LobbyProps {
   onDelete: (id: string, typedName: string) => Promise<void>;
   loadRanking: (() => Promise<RankingView>) | null;
   loadRankDetail: ((id: string) => Promise<RankDetail>) | null;
-  // Opens Verse8's purchase dialog; null when there is no shop.
-  onBuy: (() => void) | null;
-  purchase: "idle" | "confirming" | "late";
-  // What the shop is asking, and what it is marked down from when the product says so.
-  offer: Offer;
   friends: FriendsClient | null;
   friendsView: FriendsView | null;
   // Into the world with the active character.
@@ -59,7 +52,7 @@ type Step = "title" | "world" | "characters" | "class" | "name" | "look";
 type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
-  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, onBuy, purchase, offer,
+  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail,
   friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -70,15 +63,8 @@ export function Lobby({
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
-  // The purchase panel: what the full game opens, and the button that buys it. Once bought, it has
-  // done its work and steps aside.
-  const [upgrade, setUpgrade] = useState(false);
   // Asking to delete the picked character.
   const [deleting, setDeleting] = useState(false);
-  const bought = view?.owned === true;
-  useEffect(() => {
-    if (bought) setUpgrade(false);
-  }, [bought]);
   // The character being made: its class, name and look until it is saved.
   const [draftClass, setDraftClass] = useState<PlayerClass | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -250,16 +236,8 @@ export function Lobby({
             <button type="button" className="brush-button" onClick={start} disabled={leaving || !active}>{t("lobby.start")}</button>
             <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>{t("menu.ranking")}</button>
             <button type="button" className="brush-button" onClick={() => setStep("world")}>{t("lobby.changeServer")}</button>
-            {view && !view.owned && onBuy && (
-              <button type="button" className="brush-button buy-button" onClick={() => setUpgrade(true)}>
-                {t("buy.buy", { price: offer.price })}
-              </button>
-            )}
             {guest && <p className="note guest-note">{t("lobby.guestNote")}</p>}
             {!active && <p className="note">{t("lobby.noCharacter")}</p>}
-            {view && !view.owned && <p className="note">{t("lobby.freeNote")}</p>}
-            {purchase === "confirming" && <p className="note">{t("buy.confirming")}</p>}
-            {purchase === "late" && <p className="note">{t("buy.late")}</p>}
           </nav>
         )}
 
@@ -268,8 +246,6 @@ export function Lobby({
             picked={draftClass}
             onPick={setDraftClass}
             onBack={() => setStep("characters")}
-            owned={view?.owned === true}
-            onBuy={onBuy ? () => setUpgrade(true) : null}
             onConfirm={(c) => {
               setDraftClass(c);
               setStep("name");
@@ -311,12 +287,6 @@ export function Lobby({
         )}
         {deleting && active && (
           <DeleteCharacterPanel id={active.id} name={active.name} onDelete={onDelete} onClose={() => setDeleting(false)} />
-        )}
-        {upgrade && (
-          <UpgradePanel
-            reason={{ kind: "menu" }} offer={offer} state={purchase} onBuy={onBuy}
-            onClose={() => setUpgrade(false)}
-          />
         )}
         {sheet === "settings" && <SettingsPanel onClose={() => setSheet("none")} />}
         {sheet === "ranking" && <RankingPanel account={account} load={loadRanking} loadDetail={loadRankDetail} onClose={() => setSheet("none")} />}

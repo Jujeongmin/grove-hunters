@@ -9,8 +9,8 @@ import { ZONES, ZONE_IDS, type ZoneId } from "./zones";
 // The screen keeps it from one zone's view to the next.
 export type QuestTrip = { kind: "hunt"; types: MonsterType[] } | { kind: "elder" };
 
-// Whether you may walk into a zone: open, or shut until the full game or a level.
-export type Entry = "open" | "paid" | "level";
+// Whether you may walk into a zone: open, or shut until a level.
+export type Entry = "open" | "level";
 
 export type QuestWay =
   // The monsters live in this zone: hunt here.
@@ -18,7 +18,7 @@ export type QuestWay =
   // Through the portal to `next`, on the way to `goal`.
   | { kind: "go"; next: ZoneId; goal: ZoneId }
   // The nearest field with them is shut to you, and why.
-  | { kind: "locked"; zone: ZoneId; why: "paid" | "level" }
+  | { kind: "locked"; zone: ZoneId; why: "level" }
   | { kind: "nowhere" };
 
 export function zonesWith(types: readonly MonsterType[]): ZoneId[] {
@@ -53,5 +53,5 @@ export function questWay(from: ZoneId, goals: readonly ZoneId[], entry: (zone: Z
   // Shut out: name the first shut zone on the shortest way regardless.
   const shut = shortestWay(from, goals, () => true)?.find((zone) => entry(zone) !== "open");
   if (!shut) return { kind: "nowhere" };
-  return { kind: "locked", zone: shut, why: entry(shut) as "paid" | "level" };
+  return { kind: "locked", zone: shut, why: "level" };
 }

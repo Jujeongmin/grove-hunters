@@ -45,8 +45,8 @@ import {
 import { ADVANCE_LEVEL, JOBS, readJob } from "../../src/game/combat/jobs";
 import { TALK_RANGE, TALK_SLACK, npcSpot, npcsIn, type NpcRole } from "../../src/game/world/npcs";
 import { CHARACTERS_PER_WORLD, GUILDLESS, characterView, type Character } from "../../src/game/account/characters";
-import { FULL_GAME_PRODUCT, readPurchaseEvent } from "../../src/game/account/purchase";
-import { isFreeClass, readClass } from "../../src/game/combat/classes";
+import { readPurchaseEvent } from "../../src/game/account/purchase";
+import { readClass } from "../../src/game/combat/classes";
 import { rankOf, type RankDetail, type RankingView } from "../../src/game/account/ranking";
 import { enhanceCost, hasMaterials, readRecipe, rollEnhance, type EnhanceOutcome } from "../../src/game/account/forge";
 import { parseNickname, type AccountView } from "../../src/game/account/nickname";
@@ -62,8 +62,8 @@ import {
   DUPLICATE_REFUND, MAX_STARS, MOUNTS, PULL_COST, gemsFor, ownedMounts, readMountId, readStars, rollMount, tierOf, type MountId,
 } from "../../src/game/account/mounts";
 import {
-  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, grantPurchase, readGems, markSeen,
-  ownsFullGame, pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
+  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, grantGems, readGems, markSeen,
+  pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
@@ -112,7 +112,7 @@ async function accountView(account: string): Promise<AccountView> {
   const here = characters.filter((c) => c.world === world);
   const mine = active && active.world === world ? characterView(active) : null;
   return {
-    account, owned: await ownsFullGame(account), world: readWorld(state.world)?.id ?? null,
+    account, world: readWorld(state.world)?.id ?? null,
     characters: here.map(characterView), active: mine,
     nickname: mine?.name ?? null, xp: mine?.xp ?? 0, level: mine?.level ?? levelOf(0),
     playerClass: mine?.playerClass ?? null, costume: mine?.costume ?? null,
@@ -130,7 +130,6 @@ async function playing(account: string): Promise<Character> {
 // Puts your character in `zone` of `channel` and keeps (x, z) as its spot. The client then joins
 // the room and calls arrive, which puts you there.
 async function enter(account: string, character: Character, zone: ZoneId, x: number, z: number, channel: number): Promise<ZoneEntry> {
-  if (ZONES[zone].paid && !(await ownsFullGame(account))) throw new RuleViolation("not_owned");
   if (levelOf(character.xp).level < ZONES[zone].minLevel) throw new RuleViolation("too_low");
   await saveSpot(account, { zone, x, z });
   await writeWhereabouts(account, { world: character.world, zone, channel });
@@ -165,7 +164,7 @@ async function mountsView(account: string): Promise<MountsView> {
 
 async function accountMounts(account: string): Promise<{ owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>> }> {
   const state = await $global.getUserState(account);
-  const owned = ownedMounts(state.mounts, await ownsFullGame(account));
+  const owned = ownedMounts(state.mounts);
   const picked = readMountId(state.mount);
   return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars) };
 }
@@ -664,8 +663,7 @@ export class Server {
     const character = await playing(account);
     const spot = returnSpot(character.spot);
     const channel = readChannel(pass?.channel) ?? await channelToEnter(account, character);
-    const owned = await ownsFullGame(account);
-    if (spot && spot.zone !== "arena" && (!ZONES[spot.zone].paid || owned) && levelOf(character.xp).level >= ZONES[spot.zone].minLevel) {
+    if (spot && spot.zone !== "arena" && levelOf(character.xp).level >= ZONES[spot.zone].minLevel) {
       return enter(account, character, spot.zone, spot.x, spot.z, channel);
     }
     const home = zoneLayout(START_ZONE).playerSpawn;
@@ -849,7 +847,6 @@ export class Server {
     const picked = readClass(playerClass);
     const look = costumeById(costume);
     if (!picked || !look) throw new RuleViolation("unavailable");
-    if (!isFreeClass(picked) && !(await ownsFullGame(account))) throw new RuleViolation("not_owned");
     const world = (await readAccountWorld(account)).id;
     await withProfileLock(account, async () => {
       const { characters } = await readProfile(account);
@@ -971,9 +968,8 @@ export class Server {
     const event = readPurchaseEvent(raw);
     if (!event) return { success: false, code: "invalid_event" };
     const gems = gemsFor(event.productId, event.quantity);
-    if (event.productId !== FULL_GAME_PRODUCT && gems === null) return { success: false, code: "unknown_product" };
-    const granted = await $lock(`purchase:${event.purchaseId}`, () =>
-      gems === null ? grantPurchase(event) : grantGems(event, gems));
+    if (gems === null) return { success: false, code: "unknown_product" };
+    const granted = await $lock(`purchase:${event.purchaseId}`, () => grantGems(event, gems));
     return { success: true, code: granted ? "granted" : "already_granted" };
   }
 
@@ -991,7 +987,7 @@ export class Server {
       await changeGems(account, -PULL_COST);
       const mount = rollMount(Math.random);
       const state = await $global.getUserState(account);
-      const drawn = ownedMounts(state.mounts, false);
+      const drawn = ownedMounts(state.mounts);
       const repeat = drawn.includes(mount);
       let star: number | null = null;
       if (repeat) {
@@ -1069,10 +1065,9 @@ export class Server {
     const account = $sender.account;
     const character = await playing(account);
     const spot = returnSpot(character.spot);
-    const owned = await ownsFullGame(account);
     const level = levelOf(character.xp).level;
     const channel = await channelToEnter(account, character);
-    if (spot && (!ZONES[spot.zone].paid || owned) && level >= ZONES[spot.zone].minLevel) {
+    if (spot && level >= ZONES[spot.zone].minLevel) {
       return enter(account, character, spot.zone, spot.x, spot.z, channel);
     }
     const home = zoneLayout(START_ZONE).playerSpawn;

@@ -1,6 +1,6 @@
-// Mounts: ridden anywhere at a mount's speed, off again on attacking or being hit. The full game
-// comes with one; the rest come from the draw, paid for in gems, which are only ever bought (the
-// Verse8 shop's gem products). All the numbers live here.
+// Mounts: ridden anywhere at a mount's speed, off again on attacking or being hit. Every account has
+// the deer; the rest come from the draw, paid for in gems, which are only ever bought (the Verse8
+// shop's gem products). All the numbers live here.
 
 export type MountTier = "common" | "rare" | "epic" | "legendary";
 export type MountId =
@@ -12,7 +12,7 @@ export type MountId =
 
 export interface Mount {
   model: string;
-  // null: the full game's own, never drawn.
+  // null: everyone's own, never drawn.
   tier: MountTier | null;
   // Times walking speed.
   speed: number;
@@ -20,7 +20,7 @@ export interface Mount {
   flies?: boolean;
 }
 
-// The full game's own mount.
+// Every account's own mount.
 export const BASE_MOUNT: MountId = "deer";
 
 const TIER_SPEED: Record<MountTier, number> = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6 };
@@ -136,9 +136,8 @@ export function rollMount(random: () => number): MountId {
   return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))];
 }
 
-// What an account can ride: what it drew (saved on the account), and the full game's own.
-export function ownedMounts(drawn: unknown, ownsFullGame: boolean): MountId[] {
+// What an account can ride: everyone's own, and what it drew (saved on the account).
+export function ownedMounts(drawn: unknown): MountId[] {
   const list = Array.isArray(drawn) ? drawn.map(readMountId).filter((id): id is MountId => id !== null) : [];
-  const out = ownsFullGame ? [BASE_MOUNT, ...list] : list;
-  return [...new Set(out)];
+  return [...new Set([BASE_MOUNT, ...list])];
 }

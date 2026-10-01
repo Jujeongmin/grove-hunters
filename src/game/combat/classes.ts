@@ -4,14 +4,6 @@ export type PlayerClass = "warrior" | "ranger" | "wizard" | "cleric" | "rogue" |
 
 export const CLASSES: readonly PlayerClass[] = ["warrior", "ranger", "wizard", "cleric", "rogue", "monk"];
 
-// The classes anyone can make; the other four come with the full game. Characters made before
-// this rule keep their class.
-export const FREE_CLASSES: readonly PlayerClass[] = ["warrior", "ranger"];
-
-export function isFreeClass(c: PlayerClass): boolean {
-  return FREE_CLASSES.includes(c);
-}
-
 export interface Weapon {
   damage: number;
   intervalMs: number;

@@ -23,7 +23,7 @@ html:lang(ko), html:lang(ja), html:lang(zh-Hant), html:lang(zh-Hans) { word-brea
 /* A sentence that ends with one stray word on its own line reads as a mistake. The lines of the
    game's short notes are evened out instead; a language whose sentence is longer than Korean's
    then breaks in the middle rather than leaving a tail. */
-.note, .hint, .class-locked-note, .upgrade-list span, .skill-row-text, .quest-reward {
+.note, .hint, .skill-row-text, .quest-reward {
   text-wrap: balance;
 }
 body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -492,45 +492,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .map-key.portal { background: #7fd4ff; }
 .map-key.npc { background: #9fd6ff; }
 .map-key.me { background: #fff; }
-/* The one thing on sale, shown where the free game stops: at a locked portal, the moment the free
-   fields run out, and from the menu. */
-.upgrade-panel { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: rgba(4, 3, 2, 0.72); }
-.upgrade-sheet {
-  position: relative; isolation: isolate; box-sizing: border-box;
-  width: min(660px, 94%); max-height: 94%; overflow-y: auto;
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 24px 10px;
-  text-align: center;
-}
-/* A plain black sheet, like the maps'. */
-.upgrade-sheet::before {
-  content: "";
-  position: absolute; inset: 0; z-index: -1;
-  background: rgba(0, 0, 0, 0.85);
-}
-.upgrade-sheet h2 { margin: 0; font: 800 21px var(--font-head); color: var(--ember); text-shadow: var(--shadow); }
-.upgrade-lead { margin: 0; font-size: 13px; color: var(--ink); }
-.upgrade-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; width: 100%; }
-.upgrade-list li { display: flex; flex-direction: column; gap: 1px; }
-.upgrade-list b { font: 700 14px var(--font-head); color: #ffd36a; }
-.upgrade-list span { font-size: 12px; color: var(--ink-dim); }
-.upgrade-list li.big b { font-size: 16px; color: var(--ember); }
-.upgrade-list li.big span { font-size: 13px; color: var(--ink); }
-.upgrade-classes { width: 100%; display: flex; flex-direction: column; gap: 4px; }
-.upgrade-classes b { font: 700 14px var(--font-head); color: #ffd36a; }
-.upgrade-class-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-.upgrade-class { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 74px; }
-.upgrade-class img { width: 26px; height: 26px; image-rendering: pixelated; }
-.upgrade-class em { font: 700 12px var(--font-head); font-style: normal; }
-.upgrade-class i { font-style: normal; font-size: 10px; white-space: nowrap; color: var(--ink-dim); }
-/* A sale, only ever shown when the Verse8 product itself is marked down (see readOffer). */
-.upgrade-sale { margin: 0 0 -4px; display: flex; align-items: baseline; gap: 8px; }
-.upgrade-sale b {
-  font: 800 14px var(--font-head); color: #2e1c06; background: linear-gradient(180deg, #ffd98a, #f0a93c);
-  padding: 2px 8px; border-radius: 4px;
-}
-.upgrade-sale s { font-size: 13px; color: var(--ink-dim); }
-.upgrade-sheet .brush-button { margin-top: 2px; min-width: 240px; padding: 12px 36px; }
-/* The one button that asks for money: gold instead of the dark brush the rest of the UI uses. A
+/* A button that asks for money: gold instead of the dark brush the rest of the UI uses. A
    sheen crosses it quickly and then rests, the way light moves over a struck coin when it turns —
    a slow constant drag reads cheap, a short pass with a long pause reads like metal. */
 .buy-cta {
@@ -579,8 +541,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
 @media (prefers-reduced-motion: reduce) {
   .buy-cta, .buy-cta::after { animation: none; }
 }
-.upgrade-sheet .text-button { margin-top: -4px; font-size: 13px; color: var(--ink); opacity: 0.75; }
-.upgrade-sheet .text-button:hover { opacity: 1; }
 /* Talking to a village NPC. */
 /* Something new behind a menu button: a small red dot in its top-left corner. */
 .hud-dot {
@@ -1148,8 +1108,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .world-card b { font: 700 16px var(--font-head); }
 .class-tab.locked { opacity: 0.7; }
-.class-lock { width: 14px; height: 14px; margin: -2px 3px -2px -3px; vertical-align: middle; image-rendering: pixelated; }
-.class-locked-note { font-size: 13px; color: var(--ember); line-height: 1.5; }
 .world-card span { font-size: 12px; color: var(--ink-dim); }
 .world-card:hover:not(:disabled) { border-color: var(--ember); background: rgba(255, 179, 90, 0.1); }
 .world-card.picked { border-color: rgba(255, 179, 90, 0.5); }
@@ -1233,7 +1191,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .class-info .class-path-name { display: flex; flex-direction: column; font-size: 11px; line-height: 1.25; color: var(--ink-dim); }
 .class-path-name b { font: 700 14px var(--font-head); color: var(--ink); }
 .class-path .class-skill { display: flex; flex-direction: column; padding: 3px 6px; font-size: 11px; line-height: 1.3; }
-.class-info .class-locked-note { font-size: 11px; line-height: 1.35; }
 .class-info .wardrobe-start { margin-top: auto; padding-top: 8px; padding-bottom: 8px; }
 .class-info > .note { font-size: 11px; }
 

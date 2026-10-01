@@ -33,7 +33,7 @@ describe("the mount draw", () => {
     server.connect({ account: BUYER });
     const first = await drawing(0, () => server.pullMount());
     expect(first).toMatchObject({ mount: "pig", repeat: false, gems: 1000 - PULL_COST, star: null });
-    expect((await server.getMounts()).owned).toEqual(["pig"]);
+    expect((await server.getMounts()).owned).toEqual(["deer", "pig"]);
     const again = await drawing(0, () => server.pullMount());
     // No gems back: a star instead.
     expect([again.repeat, again.star, again.gems]).toEqual([true, 1, 1000 - 2 * PULL_COST]);
@@ -42,7 +42,7 @@ describe("the mount draw", () => {
     const past = await drawing(0, () => server.pullMount());
     expect([past.star, past.gems]).toEqual([null, 1000 - (MAX_STARS + 2) * PULL_COST + DUPLICATE_REFUND]);
     expect((await server.getMounts()).stars).toEqual({ pig: MAX_STARS });
-    expect((await server.getMounts()).owned).toEqual(["pig"]);
+    expect((await server.getMounts()).owned).toEqual(["deer", "pig"]);
   });
 
   test("the picked mount's stars add to the fight, and the big moments are told to everyone", async (server) => {

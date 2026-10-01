@@ -26,8 +26,6 @@ export function parseNickname(raw: unknown): Nickname {
 
 export interface AccountView {
   account: string;
-  // Bought the full game (the paid zones and levels).
-  owned: boolean;
   // The server picked when you last started (see worlds.ts); null if you never picked one.
   world: string | null;
   // Your characters on that server, and the one you play (null until you pick or make one).

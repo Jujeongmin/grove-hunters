@@ -36,10 +36,9 @@ describe("mounts", () => {
     expect(seen.has(BASE_MOUNT)).toBe(false);
   });
 
-  it("a player owns what they drew, and the full game's own once they own the full game", () => {
-    expect(ownedMounts(["pig", "nope", "pig"], false)).toEqual(["pig"]);
-    expect(ownedMounts(["pig"], true)).toEqual([BASE_MOUNT, "pig"]);
-    expect(ownedMounts(null, false)).toEqual([]);
+  it("a player owns everyone's own mount and what they drew", () => {
+    expect(ownedMounts(["pig", "nope", "pig"])).toEqual([BASE_MOUNT, "pig"]);
+    expect(ownedMounts(null)).toEqual([BASE_MOUNT]);
     expect(readMountId("dragon")).toBe("dragon");
     expect(readMountId("horse")).toBeNull();
   });

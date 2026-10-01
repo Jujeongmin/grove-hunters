@@ -4,7 +4,7 @@ import { npcSpot } from "../../src/game/world/npcs";
 
 export const PLAYERS = ["test-a", "test-b", "test-c", "test-d"];
 
-// Every test seat owns the full game, so its deer is the picked mount and adds this to each fight.
+// Every account has the deer, so it is the picked mount and adds this to each fight.
 export const STEED = mountBonus(BASE_MOUNT);
 
 export async function errorOf(promise: Promise<unknown>): Promise<string> {

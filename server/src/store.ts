@@ -7,7 +7,7 @@ import {
   GUILDLESS, characterMap, legacyMatchXp, readCharacters, readSpot, type Character, type Spot,
 } from "../../src/game/account/characters";
 import { DEFAULT_WORLD, readWorld, type World } from "../../src/game/account/worlds";
-import { playsFree, type PurchaseEvent } from "../../src/game/account/purchase";
+import type { PurchaseEvent } from "../../src/game/account/purchase";
 import { RANKING_SIZE, rankRows, type RankRow } from "../../src/game/account/ranking";
 import { COSTUMES, costumeById } from "../../src/game/render/costumes";
 import { readClass } from "../../src/game/combat/classes";
@@ -50,10 +50,6 @@ export async function readRanking(): Promise<RankRow[]> {
   return rankRows(items as unknown as RankRow[]);
 }
 
-export async function ownsFullGame(account: string): Promise<boolean> {
-  return playsFree(account) || (await $global.getUserState(account)).ownsFullGame === true;
-}
-
 // Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought;
 // should it fail, the receipt is taken back so the platform's retry grants it then.
 async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promise<boolean> {
@@ -71,13 +67,6 @@ async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promis
     throw error;
   }
   return true;
-}
-
-// Unlocks the game, once per receipt.
-export function grantPurchase(event: PurchaseEvent): Promise<boolean> {
-  return onceper(event, async () => {
-    await $global.updateUserState(event.account, { ownsFullGame: true });
-  });
 }
 
 // Gems onto the buyer's account, once per receipt.

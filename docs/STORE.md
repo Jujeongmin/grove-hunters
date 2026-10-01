@@ -1,7 +1,7 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-09-30): 직업 6개(무료 2), 전직 12종(Lv10), 사냥터 7곳 + 보스 2, 퀘스트 21개, 서버마다 채널 10개(채널당 10명), 정식판 500 VX.
+숫자는 코드 기준(2026-10-01): 직업 6개, 전직 12종(Lv10), 사냥터 7곳 + 보스 2, 퀘스트 21개, 서버마다 채널 10개(채널당 10명), 전부 무료(보석 판매).
 
 ## 제목
 
@@ -50,9 +50,9 @@ PC는 마우스만으로, 모바일은 손가락만으로 플레이합니다. �
 자동 전투 버튼을 누르면 가까운 몬스터를 찾아 싸우고, 스킬과 물약을 알아서 씁니다. 퀘스트를 누르면 목표로 찾아갑니다.
 스킬 칸 설정은 계정에 저장되어 PC와 모바일 어디서든 그대로입니다.
 
-■ 무료로 즐기기 / 정식판
-전사와 궁수, 초록숲 마을과 숲 필드 1은 무료입니다.
-정식판(500 VX)을 구매하면 마법사·성직자·도적·무도가 4개 직업과 숲 필드 2, 깊은 숲, 버섯왕의 공터가 열립니다.
+■ 전부 무료
+6개 직업과 모든 지역을 무료로 즐길 수 있습니다. 처음부터 사슴 탈것도 함께합니다.
+보석으로 탈것을 뽑고, 거래소에서 다른 플레이어와 장비와 재료를 사고팔 수 있습니다.
 ```
 
 English:
@@ -87,21 +87,27 @@ A new character gets a first skill and potions from the elder and learns to set 
 Turn on auto-battle to find and fight nearby monsters, using skills and potions for you. Tap a quest to head for it.
 Your skill bar is saved to your account, the same on PC and mobile.
 
-■ Free to play / Full game
-Warrior and Ranger, Grove Village and Forest Field 1 are free.
-The full game (500 VX) unlocks the Wizard, Cleric, Rogue and Monk and Forest Field 2, the Deep Forest and the Mushroom King's Clearing.
+■ Free to play
+All six classes and every region are free, and a deer to ride comes with every account.
+Spend gems to draw mounts, and trade gear and materials with other players at the market.
 ```
 
 ## 태그
 
 RPG, MMORPG, Multiplayer, 3D, Action, Fantasy, Adventure, Co-op
 
-## 정식판 상품 (Product)
+## 상품 (Products)
 
-- Product ID: `full-game` (src/game/account/purchase.ts와 같아야 함)
-- 가격: 500 VX
-- 이름: 정식판 / Full Game
-- 설명: 마법사·성직자·도적·무도가 직업과 숲 필드 2, 깊은 숲, 버섯왕의 공터를 엽니다. / Unlocks the Wizard, Cleric, Rogue and Monk classes and Forest Field 2, the Deep Forest and the Mushroom King's Clearing.
+Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/account/mounts.ts). 상품 이미지는 바탕화면의
+`grove-hunters-store-images` 폴더(256×256, 파일 이름이 Product ID)에 있다. 상품마다 계정당 첫 구매는 보석 2배다
+(2단계, `docs/superpowers/specs/2026-10-01-free-to-play-design.md`).
+
+| Product ID | 이름 | 설명 |
+|---|---|---|
+| `gems-100` | 보석 100개 / 100 Gems | 탈것 뽑기 한 번 분량의 보석. 첫 구매는 2배. / Enough for one mount draw. Double on your first purchase. |
+| `gems-550` | 보석 550개 / 550 Gems | 보석 한 주머니. 첫 구매는 2배. / A pouch of gems. Double on your first purchase. |
+| `gems-1200` | 보석 1,200개 / 1,200 Gems | 보석이 가득한 상자. 첫 구매는 2배. / A chest full of gems. Double on your first purchase. |
+| `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 50개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 50 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
 
 ## 릴리스 노트 (이번 업데이트)
 

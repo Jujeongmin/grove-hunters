@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-01-free",
+    date: "2026-10-01",
+    text: {
+      ko: {
+        title: "이제 게임 전체가 무료예요",
+        lines: [
+          "모든 지역(숲·버섯왕의 공터·설산)과 6개 직업을 누구나 즐길 수 있어요. 지역마다 필요한 레벨만 있어요.",
+          "모든 계정에 사슴 탈것이 기본으로 생겼어요.",
+          "보석으로 탈것을 뽑고, 거래소에서 다른 사람과 장비·재료를 사고팔 수 있어요.",
+        ],
+      },
+      en: {
+        title: "The whole game is free now",
+        lines: [
+          "Every region (the forest, the Mushroom King's Clearing, the snow) and all six classes are open to everyone; each region only asks for a level.",
+          "Every account has a deer to ride.",
+          "Draw mounts with gems, and trade gear and materials with others at the market.",
+        ],
+      },
+      ja: {
+        title: "ゲーム全体が無料になりました",
+        lines: [
+          "すべての地域（森・キノコ王の広場・雪山）と6つの職業を誰でも遊べます。地域ごとに必要なレベルだけがあります。",
+          "すべてのアカウントにシカの乗り物が付きました。",
+          "宝石で乗り物を引き、取引所で他のプレイヤーと装備・素材を売買できます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "整個遊戲現在完全免費",
+        lines: [
+          "所有地區（森林、蘑菇王空地、雪山）與6個職業人人都能玩，各地區只有等級要求。",
+          "所有帳號都有鹿坐騎。",
+          "用寶石抽坐騎，也能在交易所與其他玩家買賣裝備與材料。",
+        ],
+      },
+      "zh-Hans": {
+        title: "整个游戏现在完全免费",
+        lines: [
+          "所有地区（森林、蘑菇王空地、雪山）与6个职业人人都能玩，各地区只有等级要求。",
+          "所有账号都有鹿坐骑。",
+          "用宝石抽坐骑，也能在交易所与其他玩家买卖装备与材料。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-09-30-market-each",
     date: "2026-09-30",
     text: {

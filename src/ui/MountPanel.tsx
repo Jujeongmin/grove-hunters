@@ -33,7 +33,6 @@ const tierName = (tier: MountTier | "base") => t(`mount.tier.${tier}` as Key);
 
 interface MountPanelProps {
   client: WorldClient;
-  owned: boolean;
   library: ModelLibrary | null;
   playerClass: PlayerClass;
   costume: Costume;
@@ -43,7 +42,7 @@ interface MountPanelProps {
 // The stable, over the whole screen: a stage where your hero rides the mount you look at, and three
 // tabs beside it: your mounts (pick the one to ride), the egg hatchery (the draw, with its odds in
 // full, as Korean law requires of paid draws) and the gem shop.
-export function MountPanel({ client, owned: ownsFullGame, library, playerClass, costume, onClose }: MountPanelProps) {
+export function MountPanel({ client, library, playerClass, costume, onClose }: MountPanelProps) {
   const [tab, setTab] = useState<Tab>("stable");
   const [view, setView] = useState<MountsView | null>(null);
   const [looking, setLooking] = useState<MountId>(BASE_MOUNT);
@@ -235,7 +234,6 @@ export function MountPanel({ client, owned: ownsFullGame, library, playerClass, 
               </div>
               <p className="stable-hint">{t("mount.statsNote")}</p>
               <p className="stable-hint">{t("mount.rideHint")}</p>
-              {!ownsFullGame && <p className="stable-hint">{t("mount.baseNote", { name: mountName(BASE_MOUNT) })}</p>}
             </>
           )}
 

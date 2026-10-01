@@ -25,8 +25,6 @@ export interface ZonePortal {
 export interface Zone {
   id: ZoneId;
   region: Region;
-  // Needs the full game bought.
-  paid: boolean;
   // The level a character needs to go in.
   minLevel: number;
   // # forest, . ground, P where you appear when nothing else says, O a portal, Z a monster's spot,
@@ -85,77 +83,77 @@ const BOSS_PORTALS: readonly ZonePortal[] = [{ to: "forest2", side: "S", at: 15 
 // of meadow and groves between walls of forest, the village a little smaller.
 export const ZONES: Record<ZoneId, Zone> = {
   village: {
-    id: "village", region: "grove", paid: false, minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
+    id: "village", region: "grove", minLevel: 1, portals: VILLAGE_PORTALS, houses: VILLAGE_HOUSES,
     map: fieldMap({
       cols: 34, rows: 26, seed: 3, spawn: [14, 13], portals: VILLAGE_PORTALS,
       monsters: 0, groves: 5, edge: 2, props: "cBHcBc", houses: [...VILLAGE_HOUSES, ...VILLAGE_SITES],
     }),
   },
   forest1: {
-    id: "forest1", region: "grove", paid: false, minLevel: 1, portals: FOREST1_PORTALS,
+    id: "forest1", region: "grove", minLevel: 1, portals: FOREST1_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 11, spawn: [5, 18], portals: FOREST1_PORTALS,
       monsters: 24, groves: 16, edge: 3, props: "cBccB",
     }),
   },
   forest2: {
-    id: "forest2", region: "grove", paid: true, minLevel: 10, portals: FOREST2_PORTALS,
+    id: "forest2", region: "grove", minLevel: 10, portals: FOREST2_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 29, spawn: [5, 17], portals: FOREST2_PORTALS,
       monsters: 26, groves: 20, edge: 3, props: "cBcH",
     }),
   },
   forest3: {
-    id: "forest3", region: "grove", paid: true, minLevel: 25, portals: FOREST3_PORTALS,
+    id: "forest3", region: "grove", minLevel: 25, portals: FOREST3_PORTALS,
     map: fieldMap({
       cols: 54, rows: 40, seed: 61, spawn: [5, 20], portals: FOREST3_PORTALS,
       monsters: 28, groves: 26, edge: 4, props: "cBcHc",
     }),
   },
   boss: {
-    id: "boss", region: "grove", paid: true, minLevel: 25, portals: BOSS_PORTALS,
+    id: "boss", region: "grove", minLevel: 25, portals: BOSS_PORTALS,
     map: fieldMap({
       cols: 30, rows: 30, seed: 47, spawn: [15, 25], portals: BOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
     }),
   },
   arena: {
-    id: "arena", region: "grove", paid: false, minLevel: 10, portals: [],
+    id: "arena", region: "grove", minLevel: 10, portals: [],
     map: fieldMap({
       cols: 18, rows: 18, seed: 83, spawn: [9, 14], portals: [],
       monsters: 0, boss: [9, 7], groves: 0, edge: 3, props: "",
     }),
   },
   outpost: {
-    id: "outpost", region: "snow", paid: true, minLevel: 38, portals: OUTPOST_PORTALS, houses: OUTPOST_HOUSES,
+    id: "outpost", region: "snow", minLevel: 38, portals: OUTPOST_PORTALS, houses: OUTPOST_HOUSES,
     map: fieldMap({
       cols: 30, rows: 24, seed: 101, spawn: [14, 12], portals: OUTPOST_PORTALS,
       monsters: 0, groves: 4, edge: 2, props: "cBc", houses: OUTPOST_HOUSES,
     }),
   },
   snow1: {
-    id: "snow1", region: "snow", paid: true, minLevel: 40, portals: SNOW1_PORTALS,
+    id: "snow1", region: "snow", minLevel: 40, portals: SNOW1_PORTALS,
     map: fieldMap({
       cols: 50, rows: 36, seed: 113, spawn: [5, 18], portals: SNOW1_PORTALS,
       monsters: 26, groves: 18, edge: 3, props: "cBcc",
     }),
   },
   snow2: {
-    id: "snow2", region: "snow", paid: true, minLevel: 47, portals: SNOW2_PORTALS,
+    id: "snow2", region: "snow", minLevel: 47, portals: SNOW2_PORTALS,
     map: fieldMap({
       cols: 52, rows: 38, seed: 127, spawn: [5, 18], portals: SNOW2_PORTALS,
       monsters: 28, groves: 22, edge: 3, props: "cBH",
     }),
   },
   snow3: {
-    id: "snow3", region: "snow", paid: true, minLevel: 54, portals: SNOW3_PORTALS,
+    id: "snow3", region: "snow", minLevel: 54, portals: SNOW3_PORTALS,
     map: fieldMap({
       cols: 54, rows: 40, seed: 131, spawn: [5, 20], portals: SNOW3_PORTALS,
       monsters: 28, groves: 26, edge: 4, props: "cBc",
     }),
   },
   snowboss: {
-    id: "snowboss", region: "snow", paid: true, minLevel: 55, portals: SNOWBOSS_PORTALS,
+    id: "snowboss", region: "snow", minLevel: 55, portals: SNOWBOSS_PORTALS,
     map: fieldMap({
       cols: 30, rows: 30, seed: 139, spawn: [15, 25], portals: SNOWBOSS_PORTALS,
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",

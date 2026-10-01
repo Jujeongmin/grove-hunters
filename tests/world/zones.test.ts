@@ -118,10 +118,8 @@ describe("zones", () => {
     }
   });
 
-  it("keeps the village and the first field free", () => {
+  it("starts in the village; the guild's arena has no portal", () => {
     expect(START_ZONE).toBe("village");
-    // (The guild's arena is reached only from the guild, never by a portal: nothing to buy.)
-    expect(ZONE_IDS.filter((z) => !ZONES[z].paid)).toEqual(["village", "forest1", "arena"]);
     expect(ZONES.arena.portals).toEqual([]);
   });
 

@@ -173,12 +173,9 @@ describe("portals", () => {
     expect(await errorOf(server.travel("moon"))).toContain("no_zone");
   });
 
-  test("the second field needs the full game and level 10", async (server) => {
+  test("the second field is free to all, from level 10", async (server) => {
     await makeCharacter(server, BUYER, "구매자");
     const field = await through(server, BUYER, await enterAs(server, BUYER), "forest1");
-    expect(await errorOf(through(server, BUYER, field, "forest2"))).toContain("not_owned");
-    await server.$onItemPurchased({ account: BUYER, purchaseId: 6, productId: "full-game", quantity: 1 });
-    server.connect({ account: BUYER, roomId: field.roomId });
     expect(await errorOf(through(server, BUYER, field, "forest2"))).toContain("too_low");
     await giveXp(BUYER, 20_000);
     server.connect({ account: BUYER, roomId: field.roomId });

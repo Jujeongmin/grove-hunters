@@ -1,6 +1,5 @@
-import { CLASSES, WEAPONS, isFreeClass, type PlayerClass } from "../game/combat/classes";
+import { CLASSES, WEAPONS, type PlayerClass } from "../game/combat/classes";
 import { t } from "./lang";
-import { iconFor } from "../game/render/icons";
 import { classBlurb, className, jobBlurb, jobName, pathSkillBlurb, pathSkillName, skillBlurb, skillName, weaponName } from "./names";
 import { CLASS_SKILLS, JOB_SKILLS } from "../game/combat/skills";
 import { ADVANCE_LEVEL, jobsOf } from "../game/combat/jobs";
@@ -10,28 +9,22 @@ interface ClassPanelProps {
   onPick: (c: PlayerClass) => void;
   onConfirm: (c: PlayerClass) => void;
   onBack: () => void;
-  // Whether the full game is bought: without it only the free classes can be made.
-  owned: boolean;
-  // Opens the purchase, when it can be made from here.
-  onBuy: (() => void) | null;
 }
 
 // Picking a class for a new character: the six heroes stand in a row behind this panel; clicking
 // one (or its name here) shows what it does: its own skill, and the two paths it can advance along
 // with the two skills each brings.
-export function ClassPanel({ picked, onPick, onConfirm, onBack, owned, onBuy }: ClassPanelProps) {
+export function ClassPanel({ picked, onPick, onConfirm, onBack }: ClassPanelProps) {
   const info = picked ? { weapon: WEAPONS[picked], skill: CLASS_SKILLS[picked] } : null;
-  const locked = (c: PlayerClass) => !owned && !isFreeClass(c);
   return (
     <div className="class-screen">
       <div className="class-tabs">
         {CLASSES.map((c) => (
           <button
             key={c} type="button"
-            className={`class-tab${c === picked ? " picked" : ""}${locked(c) ? " locked" : ""}`}
+            className={`class-tab${c === picked ? " picked" : ""}`}
             onClick={() => onPick(c)}
           >
-            {locked(c) && <img className="class-lock" src={iconFor("ui_lock") ?? undefined} alt={t("buy.title")} />}
             {className(c)}
           </button>
         ))}
@@ -75,17 +68,8 @@ export function ClassPanel({ picked, onPick, onConfirm, onBack, owned, onBuy }: 
                 </div>
               ))}
             </div>
-            {locked(picked) ? (
-              <>
-                <p className="class-locked-note">{t("class.lockedNote")}</p>
-                {onBuy && <button type="button" className="brush-button wardrobe-start" onClick={onBuy}>{t("buy.short")}</button>}
-              </>
-            ) : (
-              <>
-                <button type="button" className="brush-button wardrobe-start" onClick={() => onConfirm(picked)}>{t("class.confirm")}</button>
-                <p className="note">{t("class.onceNote")}</p>
-              </>
-            )}
+            <button type="button" className="brush-button wardrobe-start" onClick={() => onConfirm(picked)}>{t("class.confirm")}</button>
+            <p className="note">{t("class.onceNote")}</p>
           </>
         ) : (
           <p className="note">{t("class.pickHint")}</p>
