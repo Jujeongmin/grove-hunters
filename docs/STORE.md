@@ -1,7 +1,10 @@
 # 스토어 페이지 문구 (Verse8)
 
 Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 문구. 게임 내용이 바뀌면 같이 고친다.
-숫자는 코드 기준(2026-10-01): 직업 6개, 전직 12종(Lv10), 사냥터 7곳 + 보스 2, 퀘스트 21개, 서버마다 채널 10개(채널당 10명), 전부 무료(보석 판매).
+숫자는 코드 기준(2026-10-02): 직업 6개, 전직 12종(Lv10, 갈래마다 스킬 3개·마지막은 Lv40), 마을 2곳(초록숲 마을·설산 전초기지),
+사냥터 6곳(숲 3·설산 3) + 보스 구역 2곳(버섯왕·빙하의 황제), 메인 퀘스트 21개(숲 13·설산 8) + 일일 퀘스트 6개,
+길드 보스 3종(주마다 교대), 강화 +15, 탈것 23종(사슴 기본, 뽑기 21종, VIP 10 전용 1종), 서버마다 채널 10개(채널당 10명),
+전부 무료(보석 판매).
 
 ## 제목
 
@@ -11,10 +14,10 @@ Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 
 ## 짧은 소개 (카드·미리보기용)
 
 한국어:
-> 친구와 함께 숲의 몬스터를 사냥하세요. 레벨을 올리고, 장비를 모으고, Lv10에 전직해 새 스킬을 익히고 버섯왕에게 도전하는 웹 MMORPG.
+> 친구와 함께 숲과 설산의 몬스터를 사냥하세요. Lv10에 전직하고, 장비를 +15까지 강화하고, 길드와 함께 보스에 도전하는 무료 웹 MMORPG.
 
 English:
-> Hunt the forest's monsters with your friends. Level up, gather gear, advance your class at Lv 10 for new skills and take on the Mushroom King in this browser MMORPG.
+> Hunt the monsters of the forest and the snow with your friends. Advance your class at Lv 10, enhance your gear to +15 and take on bosses with your guild in this free browser MMORPG.
 
 ## 설명 (Description)
 
@@ -22,74 +25,106 @@ English:
 
 ```
 초록숲 마을에서 모험이 시작됩니다.
-마을 사람들의 부탁을 받아 숲으로 나가 몬스터를 사냥하고, 레벨을 올리고, 더 깊은 숲으로 나아가세요.
+마을 사람들의 부탁을 받아 숲으로 나가 몬스터를 사냥하고, 레벨을 올리고, 깊은 숲을 지나 설산까지 나아가세요.
 
 ■ 6가지 직업
 전사, 궁수, 마법사, 성직자, 도적, 무도가. 직업마다 무기와 공격 방식, 첫 스킬이 다릅니다.
-Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 3개를 익힙니다(마지막은 Lv40). (총 12종)
+Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의 스킬 3개를 익힙니다(마지막은 Lv40의 가장 강한 한 방). (총 12종)
+
+■ 숲에서 설산까지
+초록숲 마을, 숲 필드 1·2, 깊은 숲, 버섯왕의 공터. 깊은 숲 동쪽 너머에는 설산 전초기지와 설산 기슭·얼음 협곡·만년설 봉우리(Lv40~60)가 펼쳐집니다.
+촌장과 대장 브란의 메인 퀘스트 21개를 따라가고, 사냥터마다 일일 퀘스트를 받으세요.
+
+■ 보스
+버섯왕의 공터에는 버섯왕이, 빙하의 제단에는 빙하의 황제가 기다립니다.
+바닥에 공격 표시가 뜨면 막지 말고 피하세요. 표시가 다 차는 순간 그 안에 있던 사람에게 떨어집니다.
 
 ■ 함께하는 사냥
 서버마다 채널 10개, 채널당 10명. 친구가 어느 채널에 있는지 보고 바로 옮겨 갈 수 있습니다.
 몬스터의 보상은 가장 많이 싸운 사람에게, 퀘스트 카운트는 함께 때린 모두에게 올라갑니다.
-채팅으로 대화하고, 친구를 맺고, 랭킹에서 겨뤄 보세요.
+채팅으로 대화하고, 친구를 맺고, 레벨과 전투력 랭킹에서 겨뤄 보세요.
 
-■ 성장
-몬스터를 잡아 경험치와 골드를 얻고, 장비와 물약을 모으세요.
-마을 상인에게서 장비를 사고팔고, 촌장의 퀘스트 13개를 따라가며 보상을 받습니다.
+■ 길드와 길드 보스
+모든 서버를 아우르는 길드(최대 30명)를 만들거나 들어가세요. 길드 채팅, 길드원 위치, 머리 위 길드 이름이 생깁니다.
+길드 보스는 한 주 동안 길드 전체가 함께 깎습니다. 서버와 채널이 달라도 같은 방(최대 6명)에서 싸우고,
+모든 길드가 주간 순위를 다퉈 상위 길드와 피해량 상위 플레이어가 보석을 받습니다.
 
-■ 보스, 버섯왕
-숲 깊은 곳의 공터에는 버섯왕이 기다립니다. 땅을 내려치는 공격을 피하고, 불러내는 호위병을 막아 내세요.
+■ 장비와 거래소
+몬스터를 잡아 경험치와 골드, 장비와 재료를 모으세요. 장비는 한 점마다 강화 수치가 따로 붙습니다.
+대장간에서 +15까지 강화하고(+11부터 한 단계가 두 배의 힘), 재료로 장비를 만드세요.
+거래 가능한 장비와 재료는 모든 서버 공용 거래소에서 보석으로 사고팔고, 대금과 물건은 우편으로 받습니다.
+
+■ 탈것
+처음부터 사슴을 타고 다닙니다. 알을 부화시켜 일반부터 신화까지 탈것을 모으고, 같은 탈것이 또 나오면 별(★5까지)이 올라 더 강해집니다.
+등급별 확률을 그대로 공개하고, 천장(전설 100회·신화 500회)이 있습니다.
 
 ■ 함께 숲을 되살리기
 서버의 모두가 잡은 몬스터가 한 주 동안 숲을 정화합니다. 단계마다 꽃이 피고 하늘이 맑아지며, 끝까지 정화하면 정화의 수호자가 나타납니다.
 정화로 열린 터에 재료와 골드를 모아 약초상·훈련소·여관·망루를 지으면, 서버 전체가 그 혜택을 영원히 누립니다. 가장 많이 도운 이름은 건물 위에 남습니다.
 
 ■ 편한 조작
-PC는 마우스만으로, 모바일은 손가락만으로 플레이합니다. 가상 패드로 걷고, 화면을 끌어 둘러보고, 버튼으로 싸웁니다.
+PC는 마우스만으로(WASD 이동도 됩니다), 모바일은 손가락만으로 플레이합니다. 가상 패드로 걷고, 화면을 끌어 둘러보고, 버튼으로 싸웁니다.
 처음 만든 캐릭터는 촌장에게 첫 기술과 물약을 받으며 스킬 등록과 자동 사용을 차근차근 익힙니다.
-자동 전투 버튼을 누르면 가까운 몬스터를 찾아 싸우고, 스킬과 물약을 알아서 씁니다. 퀘스트를 누르면 목표로 찾아갑니다.
+자동 전투 버튼을 누르면 가까운 몬스터를 찾아 싸우고, 스킬과 물약을 알아서 씁니다. 퀘스트를 누르면 포털을 넘어서라도 목표로 찾아갑니다.
 스킬 칸 설정은 계정에 저장되어 PC와 모바일 어디서든 그대로입니다.
 
 ■ 전부 무료
-6개 직업과 모든 지역을 무료로 즐길 수 있습니다. 처음부터 사슴 탈것도 함께합니다.
-보석으로 탈것을 뽑고, 거래소에서 다른 플레이어와 장비와 재료를 사고팔 수 있습니다.
+6개 직업과 모든 지역을 레벨 제한 없이 무료로 즐길 수 있습니다(지역마다 필요한 레벨만 있습니다).
+보석은 탈것 부화, 거래소, 강화 파괴 방지에 씁니다. 보석 상품마다 첫 구매는 2배이고, 보석을 살수록 VIP 등급(1~10)과 혜택이 올라갑니다.
+월정액은 30일 동안 매일 보석과 경험치 +10%를 드립니다.
 ```
 
 English:
 
 ```
 Your adventure begins in Grove Village.
-Take on the villagers' requests, head into the forest to hunt monsters, level up and push deeper into the woods.
+Take on the villagers' requests, head into the forest to hunt monsters, level up and push on through the Deep Forest to the snow.
 
 ■ Six classes
 Warrior, Ranger, Wizard, Cleric, Rogue and Monk, each with its own weapon, fighting style and first skill.
-At Lv 10 each class advances down one of two paths and learns that path's three skills, the last at Lv 40 (12 paths in all).
+At Lv 10 each class advances down one of two paths and learns that path's three skills, the last and strongest at Lv 40 (12 paths in all).
+
+■ From the forest to the snow
+Grove Village, Forest Fields 1 and 2, the Deep Forest and the Mushroom King's Clearing. Past the Deep Forest's east edge lie the Snow Outpost, the Snowy Foothills, the Ice Canyon and the Everfrost Peaks (Lv 40-60).
+Follow 21 main quests from the elder and Captain Bran, and take a daily quest in every hunting field.
+
+■ Bosses
+The Mushroom King waits in his clearing, and the Glacier Emperor at the Glacier Altar.
+When a mark appears on the ground, don't block: step out. The blow lands on whoever is still inside when it fills.
 
 ■ Hunt together
 Ten channels per server, ten players each. See which channel your friends are on and hop over to them.
 A monster's rewards go to whoever fought it hardest, and everyone who hit it counts it toward their quest.
-Chat, make friends and climb the rankings.
+Chat, make friends and climb the level and power rankings.
 
-■ Grow stronger
-Earn XP and gold from monsters and collect gear and potions.
-Trade with the village merchant and follow the elder's thirteen quests for rewards.
+■ Guilds and guild bosses
+Found or join a guild of up to 30 that spans every server, with guild chat, guildmates' whereabouts and your guild's name over your head.
+The whole guild wears its boss down over the week, fighting in rooms of six whatever their server or channel,
+and every guild competes in a weekly league: the top guilds and top damage dealers earn gems.
 
-■ The Mushroom King
-Deep in the forest the Mushroom King waits in his clearing. Dodge his ground slam and hold off the guards he calls.
+■ Gear and the market
+Earn XP, gold, gear and materials from monsters. Every piece of gear carries its own enhancement.
+Enhance up to +15 at the smith (from +11 each step is worth twice as much) and craft gear from materials.
+Trade tradable gear and materials for gems at the market shared by every server; payments and purchases arrive by mail.
+
+■ Mounts
+A deer to ride from the very start. Hatch eggs for mounts from common to mythic; a repeat raises its stars (up to ★5) and its power.
+The odds of every tier are shown as they are, with pity at 100 draws for legendary and 500 for mythic.
 
 ■ Bring the grove back together
 Every monster anyone on the server fells cleanses the grove for the week. Flowers bloom and the skies clear as it goes, and at the end the Grove Guardian appears.
 Pool materials and gold on the sites it opens to raise a herbalist, a training ground, an inn and a watchtower: their perks are the whole server's for good, and the top givers' names stand over them.
 
 ■ Easy controls
-Play with just a mouse on PC, or just your fingers on mobile: walk with the on-screen pad, drag to look, fight with the buttons.
+Play with just a mouse on PC (or walk with WASD), or just your fingers on mobile: walk with the on-screen pad, drag to look, fight with the buttons.
 A new character gets a first skill and potions from the elder and learns to set up the skill bar and auto-use step by step.
-Turn on auto-battle to find and fight nearby monsters, using skills and potions for you. Tap a quest to head for it.
+Turn on auto-battle to find and fight nearby monsters, using skills and potions for you. Tap a quest to head for it, through portals if need be.
 Your skill bar is saved to your account, the same on PC and mobile.
 
 ■ Free to play
-All six classes and every region are free, and a deer to ride comes with every account.
-Spend gems to draw mounts, and trade gear and materials with other players at the market.
+All six classes and every region are free, with no level cap (each region only asks for a level).
+Gems hatch mounts, trade at the market and protect gear from breaking. Each gem pack's first purchase is doubled, and buying gems raises your VIP rank (1-10) and its perks.
+The monthly pass brings gems every day and +10% XP for 30 days.
 ```
 
 ## 태그
@@ -109,26 +144,30 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 | `gems-1200` | 보석 1,200개 / 1,200 Gems | 보석이 가득한 상자. 첫 구매는 2배. / A chest full of gems. Double on your first purchase. |
 | `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 50개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 50 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
 
-## 릴리스 노트 (이번 업데이트)
+## 릴리스 노트 (이번 업데이트, 2026-10-01)
 
 한국어:
 
 ```
-- 숲과 마을이 새로워졌습니다: 진짜 나무 숲, 흙길과 풀밭, 마을의 집들, 멀리 보이는 성채
-- 상인과 촌장이 마을 집 앞으로 이사했습니다
-- 채널 채팅이 생겼습니다 (PC는 Enter)
-- 몬스터 보상은 가장 많이 싸운 사람에게, 퀘스트는 한 대만 때려도 카운트됩니다
-- 스킬 칸 설정이 계정에 저장됩니다
-- 채널 인원이 10명으로 바뀌었습니다
+- 이제 게임 전체가 무료입니다: 모든 지역과 6개 직업, 모든 계정에 사슴 탈것
+- 보석 상품마다 첫 구매 2배, 보석을 살수록 오르는 VIP 1~10 (등급마다 사냥 경험치·골드 +20%와 고유 혜택, VIP 10 전용 신화 탈것)
+- 월정액: 즉시 보석 300개, 30일 동안 매일 보석 50개, 기간 중 경험치 +10%
+- 대장간 강화가 +15까지 열리고, +6 이상은 보석으로 파괴를 막을 수 있습니다
+- 신화 탈것, 10연속 부화(희귀 이상 보장), 천장(전설 100회·신화 500회)
+- 랭킹에 전투력 탭이 생겼습니다
+- 길드 보스 주간 순위: 모든 길드가 겨루고, 상위 길드와 피해량 상위 플레이어에게 보석
+- 가방·상점·대장간·거래소·우편·길드·랭킹이 전체 화면으로 열립니다
 ```
 
 English:
 
 ```
-- A new look for the forest and the village: a real forest, dirt paths and meadows, village houses and a castle on the far hills
-- The merchant and the elder moved to the doors of the village's houses
-- Channel chat (Enter on PC)
-- A monster's rewards go to whoever fought it hardest; a single hit counts toward your quest
-- Your skill bar is saved to your account
-- Channels now hold 10 players
+- The whole game is free: every region, all six classes, and a deer for every account
+- Each gem pack's first purchase is doubled, and buying gems raises your VIP rank 1-10 (+20% hunting XP and gold a rank, a perk for each, and a mythic mount of VIP 10's own)
+- Monthly pass: 300 gems now, 50 gems a day for 30 days, and +10% XP while it lasts
+- Enhancing goes up to +15, and gems can keep attempts at +6 and up from breaking your gear
+- Mythic mounts, hatch ten (a rare or better promised), and pity at 100 draws for legendary and 500 for mythic
+- A power board in the ranking
+- The guild boss league: every guild competes by the week, and the top guilds and damage dealers earn gems
+- The bag, shop, smith, market, mail, guild and ranking open full-screen
 ```
