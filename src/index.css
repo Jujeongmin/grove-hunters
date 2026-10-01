@@ -576,12 +576,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The news, mail, market and guild panels keep to the smallest stage (800x450): a column never
    taller than the stage, a compact title, and only what is inside scrolls (the lists, never the
    buttons under them). */
-.news-panel, .mail-panel, .market-panel, .guild-panel {
+.news-panel, .mail-panel, .market-panel {
   display: flex; flex-direction: column; min-height: 0; max-height: calc(100% - 20px); padding: 14px 18px; box-sizing: border-box;
 }
-.news-panel > *, .mail-panel > *, .market-panel > *, .guild-panel > * { flex-shrink: 0; }
-.news-panel h2, .mail-panel h2, .market-panel h2, .guild-panel h2 { margin: 0; font-size: 20px; }
-.news-panel > .news-list, .mail-panel > .mail-list, .market-panel > .market-tab, .guild-panel > .guild-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.news-panel > *, .mail-panel > *, .market-panel > * { flex-shrink: 0; }
+.news-panel h2, .mail-panel h2, .market-panel h2 { margin: 0; font-size: 20px; }
+.news-panel > .news-list, .mail-panel > .mail-list, .market-panel > .market-tab { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .market-tab .market-list { overflow: visible; }
 /* A letter's tradable goods glow blue, as in the bag. */
 .mail-thing.trade { color: #7fe0ff; }
@@ -635,7 +635,43 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .market-form .brush-button.small { padding: 6px 16px; font-size: 13px; }
 .market-note { margin: 0; font-size: 12px; color: var(--ink-dim); text-align: center; }
 /* Guilds: finding and founding one, or your guild's notice, members and applications. */
-.guild-panel { width: min(560px, 96%); gap: 8px; }
+/* The guild opens over the whole screen, like the stable: a bar with the guild's name, its tabs and a
+   close button, and under it one column (no wider than reads well) where only the body scrolls. */
+.guild-screen {
+  position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(90, 60, 30, 0.35), transparent 70%), #0a0806;
+  animation: stable-in 0.2s ease-out;
+}
+.guild-bar {
+  display: flex; align-items: center; gap: 14px; flex: none; min-height: 50px;
+  padding: 6px max(12px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, #3a2a1c, #2a1d13 60%, #1a120c);
+  border-bottom: 2px solid #0e0906; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+.guild-bar h2 {
+  margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 800 20px var(--font-head); color: #f3d99a; text-shadow: 0 2px 0 #0e0906;
+}
+.guild-tabs { display: flex; gap: 6px; }
+.guild-tab {
+  padding: 6px 16px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
+  border: 1px solid #0e0906; border-radius: 8px; background: linear-gradient(180deg, #4a3624, #36271a);
+}
+.guild-tab:hover { color: var(--ink); }
+.guild-tab.on { color: #1a120c; background: linear-gradient(180deg, #f3d99a, #d9b86a); border-color: #7a5a2a; }
+.guild-close {
+  margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: var(--ink);
+  font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
+}
+.guild-close:hover { border-color: #d9b86a; }
+.guild-tab:focus-visible, .guild-close:focus-visible { outline: 2px solid #d9b86a; outline-offset: 2px; }
+.guild-panel {
+  flex: 1 1 auto; min-height: 0; width: 100%; max-width: 760px; margin: 0 auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.guild-panel > * { flex-shrink: 0; }
+.guild-panel > .guild-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .guild-body { display: flex; flex-direction: column; gap: 6px; }
 .guild-body h3 { margin: 4px 0 0; font: 700 14px var(--font-head); }
 .guild-body > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }

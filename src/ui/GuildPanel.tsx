@@ -60,20 +60,23 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
   const ask = (text: string, run: () => void) => setAsking({ text, run });
 
   return (
-    <div className="menu-modal" onClick={onClose}>
-      <div className="solid-panel guild-panel" onClick={(e) => e.stopPropagation()}>
+    <div className="guild-screen" role="dialog">
+      <header className="guild-bar">
         <h2>{view?.guild ? view.guild.name : t("guild.title")}</h2>
-        {!view && <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>}
-        {view && !view.guild && <NoGuild client={client} view={view} busy={busy} act={act} />}
         {view?.guild && (
-          <div className="smith-tabs">
+          <nav className="guild-tabs">
             {(["members", "boss"] as const).map((id) => (
-              <button key={id} type="button" className={`text-button${tab === id ? " on" : ""}`} onClick={() => setTab(id)}>
+              <button key={id} type="button" className={`guild-tab${tab === id ? " on" : ""}`} onClick={() => setTab(id)}>
                 {t(id === "boss" ? "guild.tab.boss" : "guild.tab.members")}
               </button>
             ))}
-          </div>
+          </nav>
         )}
+        <button type="button" className="guild-close" onClick={onClose} aria-label={t("common.close")}>✕</button>
+      </header>
+      <div className="guild-panel">
+        {!view && <p className="note">{failed ? t("guild.failed") : t("common.loading")}</p>}
+        {view && !view.guild && <NoGuild client={client} view={view} busy={busy} act={act} />}
         {view?.guild && tab === "members" && <InGuild view={view} busy={busy} act={act} ask={ask} />}
         {view?.guild && tab === "boss" && <BossTab client={client} onEntered={onClose} />}
         {asking && (
@@ -86,7 +89,6 @@ export function GuildPanel({ client, onBadge, onClose }: GuildPanelProps) {
           </div>
         )}
         {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}
-        <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );
