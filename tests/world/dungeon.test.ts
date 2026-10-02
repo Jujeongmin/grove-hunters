@@ -26,20 +26,20 @@ describe("the Trial Dungeon", () => {
     expect(waveFor(2, 4)).toEqual({ count: 8, hpScale: 2.2 });
   });
 
-  it("starts with fewer the longer the oldest has waited", () => {
+  it("seeks four players for 30 seconds, then starts with whoever is there", () => {
     expect(startSize(0)).toBe(DUNGEON_SIZE);
-    expect(startSize(30_000)).toBe(3);
-    expect(startSize(60_000)).toBe(2);
-    expect(startSize(90_000)).toBe(1);
+    expect(startSize(29_999)).toBe(DUNGEON_SIZE);
+    expect(startSize(30_000)).toBe(1);
   });
 
   it("matches whole groups, oldest first, never past four, and only as many as the wait allows", () => {
     const now = 100_000;
     // Four at once: a match at any time.
     expect(pickGroups([group("a", now), group("b", now - 1, 3)], now)?.map((g) => g.id)).toEqual(["b", "a"]);
-    // Two after a few seconds: not yet; after a minute: yes.
+    // Two after a few seconds: not yet; after 30 seconds: yes (mercenaries fill the rest).
     expect(pickGroups([group("a", now - 5_000), group("b", now - 4_000)], now)).toBeNull();
-    expect(pickGroups([group("a", now - 61_000), group("b", now - 4_000)], now)?.length).toBe(2);
+    expect(pickGroups([group("a", now - 31_000), group("b", now - 4_000)], now)?.length).toBe(2);
+    expect(pickGroups([group("a", now - 31_000)], now)?.length).toBe(1);
     // A party of three and two singles: the party and the oldest single make four; the other waits.
     expect(pickGroups([group("s1", now - 3_000), group("p", now - 2_000, 3), group("s2", now - 1_000)], now)?.map((g) => g.id)).toEqual(["s1", "p"]);
     // A group that does not fit is passed over, not split.
@@ -57,7 +57,7 @@ describe("the Trial Dungeon", () => {
   it("names its rooms after the match, and reads a run back", () => {
     expect(readDungeonRoom(dungeonRoomId("m1"))).toEqual({ matchId: "m1" });
     expect(readDungeonRoom("w1-forest1-1")).toBeNull();
-    expect(readRun({ match: "m1", bracket: "low", size: 2, wave: 1, status: "running", startedAt: 1, endsAt: 2 })?.clearMs).toBeNull();
+    expect(readRun({ match: "m1", bracket: "low", size: 2, wave: 1, status: "running", startedAt: 1, endsAt: 2 })).toMatchObject({ clearMs: null, mercs: 0 });
     expect(readRun({ match: "m1", bracket: "nope", wave: 1, status: "running", startedAt: 1, endsAt: 2 })).toBeNull();
   });
 });

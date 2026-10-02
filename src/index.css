@@ -1939,3 +1939,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .dungeon-banner .brush-button.small { padding: 6px 14px; font-size: 13px; }
 .dungeon-hud .arena-top { gap: 10px; }
+/* The dungeon's mercenaries under its bar: each with its class and health. */
+.dungeon-mercs { display: flex; flex-direction: column; gap: 3px; margin: 4px 0 0; padding: 0; list-style: none; }
+.dungeon-mercs li { display: grid; grid-template-columns: minmax(0, 1fr) 80px; align-items: center; gap: 6px; font-size: 11px; color: #9fd8ff; }
+.dungeon-mercs li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dungeon-mercs li.down { opacity: 0.4; }

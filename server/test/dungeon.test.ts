@@ -57,7 +57,7 @@ async function wait(server: any, players: [string, string][], ms: number): Promi
 }
 
 describe("the Trial Dungeon", () => {
-  test("alone: straight in, two waves and the boss, then the clear's reward by mail and a run used", async (server) => {
+  test("alone: straight in with three mercenaries, two waves and the boss, then the clear's reward by mail and a run used", async (server) => {
     const field = await hunter(server, "test-a", "던전왕");
     server.connect({ account: "test-a", roomId: field });
     const view = await server.soloDungeon();
@@ -66,16 +66,18 @@ describe("the Trial Dungeon", () => {
     const room = await goIn(server, "test-a", field);
     await server.simulateTick(room, 200);
     const first = await runOf(server, "test-a", room);
-    expect(first).toMatchObject({ bracket: "low", size: 1, wave: 1, status: "running" });
-    const { monsters } = await $room.getRoomState(["monsters"]);
-    expect(Object.values(monsters).filter((m: any) => m.alive).length).toBe(4);
+    expect(first).toMatchObject({ bracket: "low", size: 4, mercs: 3, wave: 1, status: "running" });
+    const { monsters, mercs } = await $room.getRoomState(["monsters", "mercs"]);
+    expect(Object.values(monsters).filter((m: any) => m.alive).length).toBe(7);
+    // A healer among them, as the player is a warrior.
+    expect(Object.values(plain(mercs)).map((m: any) => m.playerClass)).toContain("cleric");
     for (let wave = 2; wave <= WAVES + 1; wave++) {
       await clearRoom(server, "test-a", room);
       expect((await runOf(server, "test-a", room)).wave).toBe(wave);
     }
     const boss = (await $room.getRoomState(["monsters"])).monsters.boss;
     expect(boss.type).toBe(BRACKETS[0].boss);
-    expect(boss.maxHp).toBe(Math.round(BRACKETS[0].bossHp * 0.4));
+    expect(boss.maxHp).toBe(BRACKETS[0].bossHp);
     await clearRoom(server, "test-a", room);
     const done = await runOf(server, "test-a", room);
     expect(done.status).toBe("cleared");
@@ -99,15 +101,15 @@ describe("the Trial Dungeon", () => {
     expect((await server.queueDungeon()).queued === null).toBe(false);
     server.connect({ account: "test-b", roomId: fb });
     expect((await server.queueDungeon()).match).toBeNull();
-    await wait(server, [["test-a", fa], ["test-b", fb]], 61_000);
+    await wait(server, [["test-a", fa], ["test-b", fb]], 31_000);
     // A minute on, two are enough.
-    const matched = await later(61_000, async () => {
+    const matched = await later(31_000, async () => {
       server.connect({ account: "test-a", roomId: fa });
       return server.dungeonState();
     });
     expect(plain(matched.match.names).sort()).toEqual(["매칭둘둘", "매칭하나"].sort());
     expect(matched.match.started).toBe(false);
-    await later(61_000, async () => {
+    await later(31_000, async () => {
       server.connect({ account: "test-a", roomId: fa });
       await server.readyDungeon();
       server.connect({ account: "test-b", roomId: fb });
@@ -117,7 +119,7 @@ describe("the Trial Dungeon", () => {
     const rb = await goIn(server, "test-b", fb);
     expect(ra).toBe(rb);
     await server.simulateTick(ra, 200);
-    expect((await runOf(server, "test-a", ra)).size).toBe(2);
+    expect((await runOf(server, "test-a", ra))).toMatchObject({ size: 4, mercs: 2 });
   });
 
   test("a match starts with those who said yes in time; the rest are let go", async (server) => {
@@ -127,13 +129,13 @@ describe("the Trial Dungeon", () => {
     await server.queueDungeon();
     server.connect({ account: "test-b", roomId: fb });
     await server.queueDungeon();
-    await wait(server, [["test-a", fa], ["test-b", fb]], 61_000);
-    await later(61_000, async () => {
+    await wait(server, [["test-a", fa], ["test-b", fb]], 31_000);
+    await later(31_000, async () => {
       server.connect({ account: "test-a", roomId: fa });
       await server.dungeonState();
       await server.readyDungeon();
     });
-    const after = await later(61_000 + READY_MS + 1, async () => {
+    const after = await later(31_000 + READY_MS + 1, async () => {
       server.connect({ account: "test-a", roomId: fa });
       const a = await server.dungeonState();
       server.connect({ account: "test-b", roomId: fb });

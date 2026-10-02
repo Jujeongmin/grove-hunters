@@ -43,7 +43,7 @@ Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의
 서버마다 채널 10개, 채널당 10명. 친구가 어느 채널에 있는지 보고 바로 옮겨 갈 수 있습니다.
 몬스터의 보상은 가장 많이 싸운 사람에게, 퀘스트 카운트는 함께 때린 모두에게 올라갑니다.
 최대 4명이 파티를 맺으면 같은 구역에서 잡은 몬스터의 경험치와 골드를 함께 나눕니다.
-시련의 던전에서는 모든 서버의 비슷한 레벨끼리 자동으로 모여 웨이브와 보스를 깨고 보상을 받습니다.
+시련의 던전에서는 모든 서버의 비슷한 레벨끼리 자동으로 모여 웨이브와 보스를 깨고 보상을 받습니다. 사람이 모자라면 용병 AI가 함께 싸웁니다.
 채팅으로 대화하고, 친구를 맺고, 레벨과 전투력 랭킹에서 겨뤄 보세요.
 
 ■ 길드와 길드 보스
@@ -102,7 +102,7 @@ When a mark appears on the ground, don't block: step out. The blow lands on whoe
 Ten channels per server, ten players each. See which channel your friends are on and hop over to them.
 A monster's rewards go to whoever fought it hardest, and everyone who hit it counts it toward their quest.
 Form a party of up to four to share the XP and gold of what you fell together in a zone.
-In the Trial Dungeon, players of like level from every server are matched to clear waves and a boss for rewards.
+In the Trial Dungeon, players of like level from every server are matched to clear waves and a boss for rewards; mercenary AI fills any empty seats.
 Chat, make friends and climb the level and power rankings.
 
 ■ Guilds and guild bosses

@@ -6,6 +6,7 @@ import type { WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
 import { FullScreen } from "./FullScreen";
 import { t, type Key } from "./lang";
+import { className } from "./names";
 
 export function clock(ms: number): string {
   const left = Math.max(0, Math.ceil(ms / 1000));
@@ -149,6 +150,16 @@ export function DungeonHud({ client }: { client: WorldClient }) {
           </div>
         ) : (
           <p className="arena-hint">{t("dungeon.left", { n: left })}</p>
+        )}
+        {Object.keys(s.mercs).length > 0 && (
+          <ul className="dungeon-mercs">
+            {Object.entries(s.mercs).map(([id, m]) => (
+              <li key={id} className={m.dead ? "down" : undefined}>
+                <span>{t("merc.tag")} {m.name} · {className(m.playerClass)}</span>
+                <span className="hud-bar hp party-hp"><i style={{ width: `${Math.round(Math.max(0, Math.min(1, m.hp / m.maxHp)) * 100)}%` }} /></span>
+              </li>
+            ))}
+          </ul>
         )}
         {!over && <button type="button" className="text-button arena-leave" disabled={leaving} onClick={leave}>{t("dungeon.leave")}</button>}
       </div>

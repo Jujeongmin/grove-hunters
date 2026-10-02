@@ -1,9 +1,11 @@
 import {
-  DAILY_RUNS, DUNGEON_MS, QUEUE_STALE_MS, READY_MS, WAVES, bossHpFor, bracketById, bracketOf, clearReward, dungeonRoomId, pickGroups,
+  DAILY_RUNS, DUNGEON_MS, DUNGEON_SIZE, QUEUE_STALE_MS, READY_MS, WAVES, bossHpFor, bracketById, bracketOf, clearReward, dungeonRoomId, pickGroups,
   readDungeonRoom, readRun, waveFor, type Bracket, type BracketId, type DungeonRun, type DungeonView,
 } from "../../src/game/world/dungeon";
 import type { Character } from "../../src/game/account/characters";
 import { levelOf } from "../../src/game/account/level";
+import { fightStats } from "../../src/game/combat/power";
+import { makeMercs, readMercs, type Mate, type Merc } from "../../src/game/world/mercenary";
 import { dailyDay } from "../../src/game/account/quests";
 import { MONSTERS, type MonsterState } from "../../src/game/world/monsters";
 import { zoneLayout } from "../../src/game/world/zones";
@@ -320,14 +322,30 @@ export async function tickDungeon(roomId: string, delta: number, now: number): P
     const match = await readMatchById(place.matchId);
     if (!match || match.startedAt === null) return;
     const bracket = bracketById(match.bracket)!;
+    // Empty seats are taken by mercenaries about as strong as the players.
+    const mates: Mate[] = [];
+    for (const m of match.members) {
+      const { characters } = await readProfile(m.account);
+      const c = characters.find((x) => x.id === m.characterId);
+      if (!c) continue;
+      const stats = fightStats(c);
+      mates.push({ playerClass: c.playerClass, level: levelOf(c.xp).level, maxHp: stats.maxHp, power: stats.gear.power, guard: stats.gear.guard });
+    }
+    const seats = Math.max(0, DUNGEON_SIZE - match.members.length);
+    const mercs = makeMercs(mates, seats, zoneLayout("dungeon").playerSpawn, Math.random);
     const started: DungeonRun = {
-      match: match.id, bracket: bracket.id, size: match.members.length, wave: 1, status: "running", startedAt: now,
+      match: match.id, bracket: bracket.id, size: match.members.length + seats, mercs: seats, wave: 1, status: "running", startedAt: now,
       endsAt: match.startedAt + DUNGEON_MS, clearMs: null,
     };
-    await withRoomLock(roomId, () => $room.updateRoomState({ dungeon: started, monsters: spawn(bracket, 1, started.size, now), telegraphs: [] }));
+    await withRoomLock(roomId, () => $room.updateRoomState({ dungeon: started, mercs, monsters: spawn(bracket, 1, started.size, now), telegraphs: [] }));
     run = started;
   }
-  await withRoomLock(roomId, () => tickRoom("dungeon", delta, now));
+  await withRoomLock(roomId, async () => {
+    const mercs: Record<string, Merc> = JSON.parse(JSON.stringify(readMercs((await $room.getRoomState(["mercs"])).mercs)));
+    const before = JSON.stringify(mercs);
+    await tickRoom("dungeon", delta, now, Object.keys(mercs).length > 0 ? mercs : undefined);
+    if (JSON.stringify(mercs) !== before) await $room.updateRoomState({ mercs }, { returnState: false });
+  });
   if (run.status !== "running") return;
   const accounts: string[] = (await $room.getRoomState([])).$users ?? [];
   const users: Record<string, unknown>[] = accounts.length > 0 ? await $room.getUserStates(accounts, ["dead"]) : [];

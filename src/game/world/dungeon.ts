@@ -45,10 +45,9 @@ export const READY_MS = 15_000;
 export const QUEUE_STALE_MS = 15_000;
 // The screen asks how things stand this often while queued or matched.
 export const DUNGEON_POLL_MS = 3_000;
-// The oldest group waiting this long lets a match start with this few: the longer the wait, the fewer.
-export const START_AFTER: readonly { waited: number; size: number }[] = [
-  { waited: 90_000, size: 1 }, { waited: 60_000, size: 2 }, { waited: 30_000, size: 3 },
-];
+// Players are sought for this long; then a match starts with whoever is there, mercenaries taking
+// the empty seats (see mercenary.ts). Going in at once fills them at once.
+export const MERC_AFTER_MS = 30_000;
 // A clear this fast pays FAST_GOLD more gold; the day's first clear brings FIRST_GEMS.
 export const FAST_MS = 150_000;
 export const FAST_GOLD = 0.5;
@@ -77,9 +76,10 @@ export function waveFor(wave: number, n: number): { count: number; hpScale: numb
   return { count: (wave === 1 ? 3 : 4) + size(n), hpScale: 1 + 0.4 * (size(n) - 1) };
 }
 
-// The fewest a match may start with, when its oldest group has waited `waited`.
+// The fewest players a match may start with, when its oldest group has waited `waited`: four, until
+// mercenaries may fill the rest.
 export function startSize(waited: number): number {
-  return START_AFTER.find((s) => waited >= s.waited)?.size ?? DUNGEON_SIZE;
+  return waited >= MERC_AFTER_MS ? 1 : DUNGEON_SIZE;
 }
 
 export interface QueuedGroup { id: string; at: number; size: number }
@@ -123,7 +123,9 @@ export type DungeonStatus = "running" | "cleared" | "failed";
 export interface DungeonRun {
   match: string;
   bracket: BracketId;
+  // Everyone it was sized for: the players and the mercenaries filling the empty seats.
   size: number;
+  mercs: number;
   // 1 and 2 are the waves; WAVES + 1 is the boss.
   wave: number;
   status: DungeonStatus;
@@ -137,7 +139,8 @@ export function readRun(raw: unknown): DungeonRun | null {
   if (!r || typeof r.match !== "string" || !bracketById(r.bracket) || typeof r.wave !== "number" || typeof r.startedAt !== "number"
     || typeof r.endsAt !== "number" || (r.status !== "running" && r.status !== "cleared" && r.status !== "failed")) return null;
   return {
-    match: r.match, bracket: r.bracket as BracketId, size: typeof r.size === "number" ? r.size : 1, wave: r.wave, status: r.status,
+    match: r.match, bracket: r.bracket as BracketId, size: typeof r.size === "number" ? r.size : 1, mercs: typeof r.mercs === "number" ? r.mercs : 0,
+    wave: r.wave, status: r.status,
     startedAt: r.startedAt, endsAt: r.endsAt, clearMs: typeof r.clearMs === "number" ? r.clearMs : null,
   };
 }

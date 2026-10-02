@@ -23,6 +23,7 @@ import type { AttendanceView } from "../game/account/attendance";
 import type { AchievementsView } from "../game/account/achievements";
 import type { PartyCandidate, PartyState } from "../game/account/party";
 import { readRun, type DungeonRun, type DungeonView } from "../game/world/dungeon";
+import { readMercs, type Merc } from "../game/world/mercenary";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
 import type { MatchTransport } from "./transport";
@@ -62,6 +63,9 @@ export interface OtherPlayer {
   // Their health as the room has it (a party member's bar), when it says.
   hp: number | null;
   maxHp: number | null;
+  // A Trial Dungeon mercenary (see mercenary.ts), and whether it has fallen.
+  merc?: boolean;
+  dead?: boolean;
 }
 
 // Your gems and mounts, as the server keeps them (see mounts.ts).
@@ -107,8 +111,9 @@ export interface WorldState {
   telegraphs: Telegraph[];
   // In a guild boss room: the boss's full health for the week (its hp is what is left of it).
   arenaMax: number | null;
-  // In a Trial Dungeon room: how its run stands (see dungeon.ts).
+  // In a Trial Dungeon room: how its run stands (see dungeon.ts), and its mercenaries.
   dungeon: DungeonRun | null;
+  mercs: Record<string, Merc>;
   me: Vitals | null;
   // Your gold, bag and gear; null until the server has said.
   bag: BagView | null;
@@ -209,7 +214,7 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // and your own pose going out to them.
 export class WorldClient {
   private current: WorldState = {
-    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
   };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
@@ -876,7 +881,7 @@ export class WorldClient {
     this.users = [];
     this.lastPose = null;
     this.payoutSeen = undefined;
-    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, me: null, error: null });
+    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, error: null });
     void this.refreshBag();
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
@@ -890,6 +895,8 @@ export class WorldClient {
         if (arena && typeof arena.max === "number" && arena.max !== this.current.arenaMax) this.set({ arenaMax: arena.max });
         const run = (state as { dungeon?: unknown }).dungeon;
         if (run !== undefined) this.set({ dungeon: readRun(run) });
+        const mercs = (state as { mercs?: unknown }).mercs;
+        if (mercs !== undefined) this.set({ mercs: readMercs(mercs) });
         this.refreshOthers();
       }),
       this.transport.onRoomMessage(entry.roomId, "chat", (message) => this.heard(message)),
@@ -915,12 +922,20 @@ export class WorldClient {
       if (!look || !isPose(user.pose)) continue;
       const p = user.pose;
       others.push({
-        account, look, riding: readMountId(user.riding),
+        account, look, riding: readMountId(user.riding), dead: user.dead === true,
         hp: typeof user.hp === "number" ? user.hp : null, maxHp: typeof user.maxHp === "number" ? user.maxHp : null,
         pose: {
           x: p.x, z: p.z, yaw: p.yaw, y: readJumpY(p.y), block: p.block === true, swing: readSwing(p.swing), skill: readSwing(p.skill),
           slot: readSlot(p.slot) ?? 0,
         },
+      });
+    }
+    // A dungeon's mercenaries walk among them, as the room has them.
+    for (const [id, m] of Object.entries(this.current.mercs)) {
+      others.push({
+        account: `merc:${id}`, merc: true, dead: m.dead, riding: null, hp: m.hp, maxHp: m.maxHp,
+        look: { name: m.name, costume: m.costume, playerClass: m.playerClass, level: m.level, job: null },
+        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, block: false, swing: readSwing(m.swing), skill: readSwing(m.skill), slot: 0 },
       });
     }
     this.set({ others, me });

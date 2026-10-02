@@ -11,6 +11,7 @@ import {
 } from "../../src/game/world/monsters";
 import { RANGE_SLACK, RuleViolation, isPose, type Pose } from "../../src/game/world/types";
 import { zoneLayout, type ZoneId } from "../../src/game/world/zones";
+import { stepMercs, type Ally, type Merc } from "../../src/game/world/mercenary";
 
 // Hunting, all decided here: the monsters of a channel live in its room state and move on every room
 // tick; your health, and when your next attack and skill are allowed, live in your room user state.
@@ -102,7 +103,10 @@ async function writeMonsters(monsters: Record<string, MonsterState>): Promise<vo
 // One room tick: monsters move and swing, blows land on players (a raised guard facing the monster
 // stops part of it), marked attacks land on whoever is still inside them (no guard helps: only
 // stepping out), and players out of a fight heal a little. Answers who fell in it.
-export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Promise<string[]> {
+// A Trial Dungeon room's mercenaries (see mercenary.ts) come too: they act first (out of marks, a
+// cleric's heal, their blows), then the monsters hunt and strike them like players. Their state is
+// changed in place for the caller to keep.
+export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs?: Record<string, Merc>): Promise<string[]> {
   const state = await $room.getRoomState(["monsters", "regenAt", "telegraphs"]);
   const accounts: string[] = state.$users;
   if (accounts.length === 0) return [];
@@ -120,6 +124,35 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   for (const [account, f] of fighters) if (f.pose && !f.dead && !safe.has(account)) prey.push({ account, x: f.pose.x, z: f.pose.z });
 
   const marks = readTelegraphs(state.telegraphs);
+  const healed = new Set<string>();
+  if (mercs) {
+    const dt = Math.min(deltaMs, MAX_TICK_MS) / 1000;
+    const players = [...fighters.values()].filter((f) => f.pose && !f.dead).map((f) => ({ x: f.pose!.x, z: f.pose!.z }));
+    const allies: Ally[] = [
+      ...[...fighters].filter(([, f]) => f.pose).map(([id, f]) => ({ id, x: f.pose!.x, z: f.pose!.z, hp: f.hp, maxHp: f.maxHp, dead: f.dead })),
+      ...Object.entries(mercs).map(([id, m]) => ({ id: `merc:${id}`, x: m.x, z: m.z, hp: m.hp, maxHp: m.maxHp, dead: m.dead })),
+    ];
+    stepMercs(mercs, monsters, marks, allies, players, zoneLayout(zone), dt, now);
+    for (const a of allies) {
+      const f = fighters.get(a.id);
+      if (f && a.hp !== f.hp) {
+        f.hp = a.hp;
+        healed.add(a.id);
+      }
+      const merc = a.id.startsWith("merc:") ? mercs[a.id.slice(5)] : undefined;
+      if (merc) merc.hp = a.hp;
+    }
+    // The monsters see them as fighters like any other.
+    for (const [id, m] of Object.entries(mercs)) {
+      const key = `merc:${id}`;
+      fighters.set(key, {
+        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, block: false, swing: 0, skill: 0, slot: 0 } as Pose, playerClass: m.playerClass, job: null,
+        level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0 }, learned: true,
+        hitAt: m.hitAt, strikeReadyAt: 0,
+      });
+      if (!m.dead) prey.push({ account: key, x: m.x, z: m.z });
+    }
+  }
   const hits = stepMonsters(monsters, prey, zoneLayout(zone), Math.min(deltaMs, MAX_TICK_MS) / 1000, now, marks);
   const struck = resolveTelegraphs(marks, prey.map((p) => ({ ...p, maxHp: fighters.get(p.account)!.maxHp })), now);
   const hurt = new Set<string>();
@@ -151,12 +184,23 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   }
   const regen = now >= (typeof state.regenAt === "number" ? state.regenAt : 0);
   for (const [account, f] of fighters) {
+    if (account.startsWith("merc:")) {
+      // A mercenary's health is kept by the caller with the rest of it; it heals out of a fight too.
+      const m = mercs![account.slice(5)];
+      m.hp = !hurt.has(account) && regen && !f.dead && f.hp < f.maxHp && now - f.hitAt >= CALM_MS
+        ? Math.min(f.maxHp, f.hp + Math.ceil(f.maxHp * REGEN_SHARE)) : f.hp;
+      m.dead = f.dead;
+      m.hitAt = f.hitAt;
+      continue;
+    }
     if (hurt.has(account)) {
       // A blow takes a rider off the mount.
       await $room.updateUserState(account, { hp: f.hp, dead: f.dead, hitAt: f.hitAt, riding: null }, { returnState: false });
     } else if (regen && !f.dead && f.hp < f.maxHp && now - f.hitAt >= CALM_MS) {
       const hp = Math.min(f.maxHp, f.hp + Math.ceil(f.maxHp * REGEN_SHARE));
       await $room.updateUserState(account, { hp }, { returnState: false });
+    } else if (healed.has(account)) {
+      await $room.updateUserState(account, { hp: f.hp }, { returnState: false });
     }
   }
   // Written only when something changed (or they were just spawned): most ticks of a quiet room write nothing.
@@ -165,7 +209,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number): Prom
   if (JSON.stringify(struck.left) !== JSON.stringify(readTelegraphs(state.telegraphs))) {
     await $room.updateRoomState({ telegraphs: struck.left }, { returnState: false });
   }
-  return fell;
+  return fell.filter((account) => !account.startsWith("merc:"));
 }
 
 // What one blow or skill did: the monsters it hit and felled. Each felled one comes with everyone

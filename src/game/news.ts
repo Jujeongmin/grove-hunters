@@ -17,6 +17,47 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-02-mercs",
+    date: "2026-10-02",
+    text: {
+      ko: {
+        title: "던전 용병",
+        lines: [
+          "시련의 던전 매칭이 30초 안에 4명을 못 채우면, 모인 사람끼리 출발하고 빈자리는 [용병] AI가 채워요. '혼자 입장'도 용병 3명과 함께예요.",
+          "용병은 내 파티 수준에 맞춘 능력치로 싸우고, 바닥 공격 표시를 피하고, 성직자 용병은 체력이 낮은 사람을 회복해 줘요. 보상은 가져가지 않아요.",
+        ],
+      },
+      en: {
+        title: "Dungeon mercenaries",
+        lines: [
+          "If a Trial Dungeon match can't find four within 30 seconds, it starts with whoever is there and [Merc] AI companions fill the empty seats. Entering alone brings three mercenaries too.",
+          "Mercenaries fight at about your party's strength, step out of marked attacks, and a cleric mercenary heals whoever is hurt. They take no reward.",
+        ],
+      },
+      ja: {
+        title: "ダンジョンの傭兵",
+        lines: [
+          "試練のダンジョンのマッチングで30秒以内に4人そろわなければ、集まった人で出発し、空いた席は[傭兵]AIが埋めます。「ひとりで入場」も傭兵3人と一緒です。",
+          "傭兵はパーティーに合わせた強さで戦い、床の攻撃表示を避け、聖職者の傭兵は体力の低い人を回復します。報酬は受け取りません。",
+        ],
+      },
+      "zh-Hant": {
+        title: "地下城傭兵",
+        lines: [
+          "試煉地下城配對在30秒內湊不齊4人時，就由已到的人出發，空位由[傭兵]AI補上。「單人進入」也會帶著3名傭兵。",
+          "傭兵會以符合隊伍的能力作戰、躲避地面攻擊標示，聖職者傭兵會治療體力低的人。傭兵不拿獎勵。",
+        ],
+      },
+      "zh-Hans": {
+        title: "地下城佣兵",
+        lines: [
+          "试炼地下城匹配在30秒内凑不齐4人时，就由已到的人出发，空位由[佣兵]AI补上。“单人进入”也会带着3名佣兵。",
+          "佣兵会以符合队伍的能力作战、躲避地面攻击标示，圣职者佣兵会治疗体力低的人。佣兵不拿奖励。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-02-dungeon",
     date: "2026-10-02",
     text: {
@@ -25,7 +66,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "메뉴의 '던전'(6)에서 매칭을 시작하면 모든 서버에서 비슷한 레벨끼리 최대 4명이 모여요. 매칭되면 15초 안에 '입장'을 눌러요.",
           "웨이브 2번과 보스(초급 장로 글럽·중급 설산 예티·상급 고대 드래곤)를 5분 안에 깨면 골드·강화석·장비(40%)를 우편으로 받아요. 2분 30초 안이면 골드 +50%, 그날 첫 클리어는 보석 30개.",
-          "기다릴수록 적은 인원으로도 출발하고(인원이 적으면 몬스터도 약해져요), '혼자 입장'이나 파티장의 '파티와 바로 입장'도 있어요. 하루 3번.",
+          "30초 안에 4명이 모이지 않으면 모인 사람끼리 출발하고 빈자리는 [용병] AI가 채워요. '혼자 입장'이나 파티장의 '파티와 바로 입장'도 있어요. 하루 3번.",
         ],
       },
       en: {
@@ -33,7 +74,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "Find a match from 'Dungeon' (6) in the menu: up to four players of like level from every server come together. Press 'Enter' within 15 seconds once matched.",
           "Clear two waves and a boss (Novice: Elder Glub, Adept: Snowpeak Yeti, Master: Ancient Dragon) within 5 minutes for gold, whetstones and a 40% chance of gear by mail. Under 2:30 adds 50% gold; the day's first clear brings 30 gems.",
-          "The longer the wait, the fewer it starts with (fewer players, weaker monsters); you can also enter alone, or as a leader with your party. Three runs a day.",
+          "If four aren't found within 30 seconds, it starts with whoever is there and [Merc] AI companions fill the empty seats; you can also enter alone, or as a leader with your party. Three runs a day.",
         ],
       },
       ja: {
@@ -41,7 +82,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "メニューの「ダンジョン」（6）でマッチングを始めると、全サーバーから近いレベルの最大4人が集まります。マッチングしたら15秒以内に「入場」を押しましょう。",
           "ウェーブ2回とボス（初級 長老グラブ・中級 雪山イエティ・上級 古代ドラゴン）を5分以内に倒すと、ゴールド・強化石・装備（40%）が郵便で届きます。2分30秒以内ならゴールド+50%、その日最初のクリアは宝石30個。",
-          "待つほど少ない人数でも出発し（人数が少ないとモンスターも弱くなります）、「ひとりで入場」やリーダーの「パーティーで入場」もあります。1日3回。",
+          "30秒以内に4人そろわなければ集まった人で出発し、空いた席は[傭兵]AIが埋めます。「ひとりで入場」やリーダーの「パーティーで入場」もあります。1日3回。",
         ],
       },
       "zh-Hant": {
@@ -49,7 +90,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "在選單的「地下城」（6）開始配對，就會從所有伺服器集合等級相近的最多4人。配對成功後請在15秒內按下「進入」。",
           "在5分鐘內擊敗2波怪物和首領（初級 長老咕嚕・中級 雪山雪怪・高級 遠古巨龍），可透過郵件獲得金幣、強化石與裝備（40%）。2分30秒內通關金幣+50%，當天首次通關獲得寶石30個。",
-          "等待越久，越少人數也會出發（人數越少怪物越弱），也可以「單人進入」或由隊長「與隊伍進入」。每天3次。",
+          "30秒內湊不齊4人時，就由已到的人出發，空位由[傭兵]AI補上。也可以「單人進入」或由隊長「與隊伍進入」。每天3次。",
         ],
       },
       "zh-Hans": {
@@ -57,7 +98,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "在菜单的“地下城”（6）开始匹配，就会从所有服务器集合等级相近的最多4人。匹配成功后请在15秒内按下“进入”。",
           "在5分钟内击败2波怪物和首领（初级 长老咕噜・中级 雪山雪怪・高级 远古巨龙），可通过邮件获得金币、强化石与装备（40%）。2分30秒内通关金币+50%，当天首次通关获得宝石30个。",
-          "等待越久，越少人数也会出发（人数越少怪物越弱），也可以“单人进入”或由队长“与队伍进入”。每天3次。",
+          "30秒内凑不齐4人时，就由已到的人出发，空位由[佣兵]AI补上。也可以“单人进入”或由队长“与队伍进入”。每天3次。",
         ],
       },
     },

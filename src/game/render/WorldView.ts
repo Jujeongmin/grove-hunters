@@ -1193,14 +1193,16 @@ export class WorldView {
         this.others.set(other.account, entry);
       }
       const vip = other.look.vip ? `VIP${other.look.vip} · ` : "";
+      // A mercenary says so before its name, in its own colour.
+      const tag = other.merc ? `${t("merc.tag")} ` : "";
       entry.actor.label(
-        settings().showNames ? `${vip}Lv${other.look.level} ${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "",
+        settings().showNames ? `${vip}Lv${other.look.level} ${tag}${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "",
         // VIP 5 and above: the name in gold.
-        (other.look.vip ?? 0) >= VIP_MIGHT ? "#ffd36a" : undefined,
+        other.merc ? "#9fd8ff" : (other.look.vip ?? 0) >= VIP_MIGHT ? "#ffd36a" : undefined,
       );
       entry.actor.path = readJob(other.look.job);
       this.applyMount(entry.actor, other.riding);
-      entry.actor.sync(other.pose, "active", dt);
+      entry.actor.sync(other.pose, other.merc && other.dead ? "dead" : "active", dt);
       entry.actor.fadeLabel(this.camera.position.distanceTo(entry.actor.object.position));
     }
     for (const [account, entry] of this.others) {
