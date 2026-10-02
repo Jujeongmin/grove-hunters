@@ -762,6 +762,8 @@ function ZoneScreen({
           }}
         />
       )}
+      {/* Every panel loaded on demand (lazy, above) must be drawn in here: one outside suspends with no
+          boundary to catch it, and that takes the whole game down. */}
       <Suspense fallback={null}>
         {panel === "mounts" && (
           <MountPanel
@@ -771,7 +773,8 @@ function ZoneScreen({
         )}
         {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
         {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
-        </Suspense>
+        {panel === "rewards" && <RewardsPanel client={client} tab={rewardsTab} onClaimable={setClaimable} onClose={() => setPanel(null)} />}
+      </Suspense>
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
       {panel === "dungeon" && (
@@ -785,7 +788,6 @@ function ZoneScreen({
           onChanged={() => pollParty.current()} onClose={() => setPanel(null)}
         />
       )}
-      {panel === "rewards" && <RewardsPanel client={client} tab={rewardsTab} onClaimable={setClaimable} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (
         <DonatePanel
