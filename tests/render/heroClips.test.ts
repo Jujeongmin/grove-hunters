@@ -26,6 +26,13 @@ describe("hero clips", () => {
     }
   });
 
+  it("sound like what they hold: fists for the monk, a staff for the cleric, a blade for the rest up close", () => {
+    expect(HEROES.monk.swingCue).toBe("punch");
+    expect(HEROES.cleric.swingCue).toBe("staff");
+    expect(HEROES.warrior.swingCue).toBe("swing");
+    expect(HEROES.rogue.swingCue).toBe("swing");
+  });
+
   it("give the melee classes more than one swing to chain", () => {
     for (const c of ["warrior", "rogue", "monk", "cleric"] as const) expect(HEROES[c].attacks.length).toBeGreaterThan(1);
   });

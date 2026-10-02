@@ -4,3 +4,6 @@ art-src/
 # Converted Unity Asset Store models: the EULA forbids redistributing them outside the game.
 public/assets/models/*.glb
 public/assets/ui/
+# Mixkit sound effects: their licence allows them in the game but not handed out on their own.
+public/assets/sfx/punch.ogg
+public/assets/sfx/staff.ogg

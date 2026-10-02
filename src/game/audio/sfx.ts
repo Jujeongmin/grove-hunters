@@ -8,6 +8,9 @@ import { publicUrl } from "../assets/publicUrl";
 // above the menus.
 const CUES = {
   swing: { file: "swing.ogg", level: 0.2 },
+  // The monk's fists and the cleric's staff (Mixkit, see the provenance notes): not a blade's ring.
+  punch: { file: "punch.ogg", level: 0.22 },
+  staff: { file: "staff.ogg", level: 0.24 },
   arrow: { file: "arrow.wav", level: 0.27 },
   bolt: { file: "bolt.ogg", level: 3.3 },
   skill: { file: "skill.ogg", level: 1.35 },
@@ -73,7 +76,7 @@ export function playCue(cue: Cue): void {
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     // A little higher or lower each time, so a sound heard over and over does not drone.
-    if (cue === "swing" || cue === "arrow") source.playbackRate.value = 0.94 + Math.random() * 0.12;
+    if (cue === "swing" || cue === "punch" || cue === "staff" || cue === "arrow") source.playbackRate.value = 0.94 + Math.random() * 0.12;
     const gain = ctx.createGain();
     gain.gain.value = level;
     source.connect(gain).connect(ctx.destination);

@@ -128,6 +128,8 @@ WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대�
 | `enhance_fail.ogg` | stones_01.ogg | 80 CC0 RPG SFX | rubberduck | https://opengameart.org/content/80-cc0-rpg-sfx |
 | `enhance_break.ogg` | stones_03.ogg | 80 CC0 RPG SFX | rubberduck | https://opengameart.org/content/80-cc0-rpg-sfx |
 | `potion.wav` | inventory/bubble2.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
+| `punch.ogg` | Martial arts fast punch (#2047) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/punch/ — Mixkit License(게임 안 사용 무료, 단독 재배포 금지). 2026-10-02 사용자가 후보 페이지에서 고름. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `staff.ogg` | Short wind swoosh (#1461) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/swoosh/ — 위와 같은 조건, 성직자 지팡이 공격. develop에만 |
 | `gold.wav` | inventory/coin.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `click.wav` | interface/interface1.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `cloth.wav` (창 열기·닫기) | inventory/cloth.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |

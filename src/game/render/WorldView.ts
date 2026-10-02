@@ -1083,7 +1083,7 @@ export class WorldView {
       this.swings += 1;
       this.getOff();
       const shot = HEROES[c].shot;
-      playCue(shot ?? "swing");
+      playCue(shot ?? HEROES[c].swingCue);
       if (target) void this.client.strike(target, yaw);
     }
     if (now - Math.max(...this.lastSkillAt) < SKILL_GAP_MS) return yaw;

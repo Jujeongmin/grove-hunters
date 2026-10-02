@@ -21,20 +21,23 @@ export interface HeroRig {
   gear: readonly string[];
   // What flies out on an attack (ranged classes), and how far.
   shot: ShotKind | null;
+  // What an attack up close sounds like: a blade, the monk's fists or the cleric's staff.
+  swingCue: "swing" | "punch" | "staff";
   reach: number;
   // The colour of the ring of light a skill leaves at the hero's feet.
   ringColor: number;
 }
 
-type Clips = Omit<HeroRig, "playerClass" | "shot" | "reach" | "ringColor">;
+type Clips = Omit<HeroRig, "playerClass" | "shot" | "swingCue" | "reach" | "ringColor">;
 
 const SHOTS: Partial<Record<PlayerClass, ShotKind>> = { ranger: "arrow", wizard: "bolt" };
+const SWING_CUES: Partial<Record<PlayerClass, "punch" | "staff">> = { monk: "punch", cleric: "staff" };
 const RING_COLOR: Record<PlayerClass, number> = {
   warrior: 0xffd27a, ranger: 0x9be37a, wizard: 0xff7a3a, cleric: 0x9df2ff, rogue: 0xb07aff, monk: 0xffe9a8,
 };
 
 function rig(c: PlayerClass, clips: Clips): HeroRig {
-  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
+  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, swingCue: SWING_CUES[c] ?? "swing", reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
 }
 
 // What a skill shows: the ring of light it leaves (size and colour), and how far the one long shot of
