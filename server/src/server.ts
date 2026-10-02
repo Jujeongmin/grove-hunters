@@ -13,7 +13,7 @@ import {
 import { readControls, type Controls } from "../../src/game/account/controls";
 import { NEWS, readNewsId } from "../../src/game/news";
 import { mailFits, receiveMail, type Mail } from "../../src/game/account/mail";
-import { openMailbox, takeMail } from "./mail";
+import { countMail, openMailbox, takeMail } from "./mail";
 import {
   ARENA_LEVEL, ARENA_MS, ARENA_ROOMS, ARENA_SEATS, arenaRoomId, currentWeek, readArenaRoom, type LeagueView,
 } from "../../src/game/world/guildBoss";
@@ -99,8 +99,11 @@ import {
 // A new piece of gear's id.
 const newUid = () => `g-${token(10)}`;
 
-// How often a walking character's spot is saved to the account (the room keeps the live pose).
-const SAVE_SPOT_MS = 5_000;
+// How often, at most, a walking character's spot is saved to the account (the room keeps the live pose;
+// leaving the room saves it too), and how far it must have gone since the last save. Each save rewrites
+// the account's characters, so it is kept rare.
+const SAVE_SPOT_MS = 30_000;
+const SAVE_SPOT_MOVED = 1;
 
 function requireText(value: unknown): string {
   if (typeof value !== "string" || value.length === 0 || value.length > 128) throw new RuleViolation("unavailable");
@@ -749,7 +752,7 @@ export class Server {
 
   // How many letters wait (the menu's dot).
   async mailCount(): Promise<{ count: number }> {
-    return { count: (await openMailbox($sender.account, Date.now())).length };
+    return { count: await countMail($sender.account, Date.now()) };
   }
 
   // Takes one letter: its gold and gems onto the account, its items into the character you play.
@@ -1435,9 +1438,12 @@ export class Server {
     const saved = await writeZonePose(zone, raw, now, last, mount ? MOUNTS[mount].speed : 1);
     const savedAt = mine.savedAt;
     // A boss room is never where you come back to.
-    if (place.kind === "channel" && now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {
+    const savedAtX = typeof mine.savedX === "number" ? mine.savedX : Infinity;
+    const savedAtZ = typeof mine.savedZ === "number" ? mine.savedZ : Infinity;
+    const movedSince = Math.hypot(saved.x - savedAtX, saved.z - savedAtZ);
+    if (place.kind === "channel" && movedSince >= SAVE_SPOT_MOVED && now - (typeof savedAt === "number" ? savedAt : 0) >= SAVE_SPOT_MS) {
       await saveSpot($sender.account, { zone, x: saved.x, z: saved.z });
-      await $room.updateMyState({ savedAt: now }, { returnState: false });
+      await $room.updateMyState({ savedAt: now, savedX: saved.x, savedZ: saved.z }, { returnState: false });
     }
   }
 

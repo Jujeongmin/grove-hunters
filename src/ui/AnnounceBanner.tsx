@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { ANNOUNCE_POLL_MS, ANNOUNCE_SHOW_MS, type Announcement } from "../game/world/announce";
 import type { WorldClient } from "../net/worldClient";
 import { announceText } from "./announceText";
@@ -6,7 +6,7 @@ import { settings } from "./settings";
 
 // The announcements to every server, one at a time in a gold band at the top of the screen for a few
 // seconds each (they also go into the chat). New ones are asked for every ANNOUNCE_POLL_MS.
-export function AnnounceBanner({ client }: { client: WorldClient }) {
+function AnnounceBannerView({ client }: { client: WorldClient }) {
   const [queue, setQueue] = useState<Announcement[]>([]);
   useEffect(() => {
     let live = true;
@@ -34,3 +34,6 @@ export function AnnounceBanner({ client }: { client: WorldClient }) {
     </div>
   );
 }
+
+// Its props never change while the world is up, so the HUD's updates pass it by.
+export const AnnounceBanner = memo(AnnounceBannerView);

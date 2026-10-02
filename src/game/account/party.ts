@@ -11,8 +11,9 @@ export const PARTY_MAX = 4;
 export const PARTY_BONUS = 0.1;
 // An invitation holds this long.
 export const INVITE_MS = 60_000;
-// The screen asks for the party this often.
+// The screen asks for the party this often while in one or invited; otherwise less often.
 export const PARTY_POLL_MS = 10_000;
+export const PARTY_POLL_IDLE_MS = 20_000;
 // A member away this long is let go when the party is next read.
 export const PARTY_OFFLINE_MS = 10 * 60_000;
 

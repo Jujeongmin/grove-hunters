@@ -98,7 +98,7 @@ async function pruned(party: Party, now: number): Promise<Party | null> {
 // What the screen polls: your party (members with level, class and where they are) and the
 // invitations waiting for you. Marks you as about.
 export async function partyStateOf(account: string, character: Character, now: number): Promise<PartyState & { partyId: string | null }> {
-  await markSeen(account, now);
+  // Being about is marked by the friends' heartbeat (every 30 seconds, everywhere); not again here.
   const found = await currentParty(account, character);
   const party = found ? await pruned(found, now) : null;
   const members = party ? await Promise.all(party.members.map(async (m) => {

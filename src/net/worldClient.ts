@@ -158,9 +158,10 @@ function readPayout(raw: unknown): (Payout & { id: string }) | null {
   return { id: p.id, xp: num(p.xp), gold: num(p.gold), items };
 }
 
-// Moving, your pose goes out this often; standing still, this often, so the others keep hearing you.
+// Moving, your pose goes out this often; standing still, only this often (nothing changed, so the room
+// needs nothing; it is a keepalive). Every pose is written to the room and sent to everyone in it.
 export const POSE_THROTTLE_MS = 100;
-export const IDLE_POSE_MS = 1000;
+export const IDLE_POSE_MS = 10_000;
 // Verse8 turns away more than 10 calls a second to one function, so no two poses leave closer than
 // this; a guard, attack or skill that comes sooner goes out with the next one.
 export const MIN_POSE_GAP_MS = 110;

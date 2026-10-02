@@ -55,6 +55,16 @@ export function openMailbox(account: string, now: number): Promise<Mail[]> {
   });
 }
 
+// How many letters wait, for the menu's dot: gifts due are delivered, but nothing is cleared (that is
+// for opening the mailbox), so asking often writes nothing.
+export async function countMail(account: string, now: number): Promise<number> {
+  await withMailLock(account, () => deliverGifts(account, now));
+  return (await rowsOf(account)).filter((row) => {
+    const mail = readMail(row);
+    return mail !== null && !mailExpired(mail, now);
+  }).length;
+}
+
 // Takes one letter: `check` refuses it before anything changes (the bag is full), then the row goes
 // and `grant` hands over what it carries; should that fail, the letter goes back in.
 export function takeMail(

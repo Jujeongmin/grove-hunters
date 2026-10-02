@@ -33,7 +33,7 @@ import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
 import { RewardsPanel, type RewardsTab } from "./RewardsPanel";
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
-import { PARTY_POLL_MS, type PartyState } from "../game/account/party";
+import { PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
 import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
 import { MarketPanel } from "./MarketPanel";
@@ -160,7 +160,7 @@ const QUEST_BANNER_MS = 4500;
 // How often the grove is read again while you play.
 const GROVE_REFRESH_MS = 60_000;
 // How often the mailbox is counted again while you play.
-const MAIL_REFRESH_MS = 60_000;
+const MAIL_REFRESH_MS = 120_000;
 // How long the haze's hint stays up unless tapped.
 const HAZE_HINT_MS = 12_000;
 // How long a refused portal's message stays up.
@@ -351,12 +351,13 @@ function ZoneScreen({
       if (next) setParty(next);
     });
   };
+  const partyBusy = !!party?.party || (party?.invites.length ?? 0) > 0;
   useEffect(() => {
     if (!ready) return;
     pollParty.current();
-    const timer = setInterval(() => pollParty.current(), PARTY_POLL_MS);
+    const timer = setInterval(() => pollParty.current(), partyBusy ? PARTY_POLL_MS : PARTY_POLL_IDLE_MS);
     return () => clearInterval(timer);
-  }, [ready]);
+  }, [ready, partyBusy]);
   // The Trial Dungeon: how things stand, asked every DUNGEON_POLL_MS while queued, matched or looking
   // at its screen (asking also works the queue through). A started match you said yes to takes you in.
   const [dungeon, setDungeon] = useState<DungeonView | null>(null);

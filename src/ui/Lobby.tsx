@@ -128,7 +128,8 @@ export function Lobby({
   };
 
   const startMaking = () => {
-    setDraftClass(null);
+    // The first class shown at once (its card filled in), rather than an empty panel to tap into.
+    setDraftClass("warrior");
     setDraftName("");
     setDraftCostume(COSTUMES[0]);
     setNotice(null);
@@ -139,10 +140,14 @@ export function Lobby({
     if (!draftClass || creating) return;
     setCreating(true);
     setNotice(null);
+    // A newcomer's first character goes straight into the world: marked before it is saved, since the
+    // account may show it (and the effect below run) before the save's answer comes back.
+    startWhenReady.current = characters.length === 0;
     try {
       await onCreate(draftName, draftClass, draftCostume.id);
       setStep("characters");
     } catch (error) {
+      startWhenReady.current = false;
       setNotice(nicknameProblem(error));
       // A name taken while you dressed goes back to the name step.
       setStep("name");
@@ -157,6 +162,22 @@ export function Lobby({
     if (scene.current) scene.current.enter(onStart);
     else onStart();
   };
+  // Set when a newcomer's first character is made: the game starts once the account shows it.
+  const startWhenReady = useRef(false);
+  useEffect(() => {
+    if (!startWhenReady.current || !active) return;
+    startWhenReady.current = false;
+    start();
+    // start reads the latest state each render; only a new active character matters here.
+  }, [active?.id]);
+  // A newcomer on a server with no characters goes straight to making one (once per visit, so going
+  // back from it leaves them on the list).
+  const madeOffer = useRef(false);
+  useEffect(() => {
+    if (step !== "characters" || !view || madeOffer.current) return;
+    madeOffer.current = true;
+    if (characters.length === 0) startMaking();
+  }, [step, view]);
 
   const server = readWorld(view?.world) ?? readWorld("w1");
   const shownWorld = server ? worldName(server.number) : "";

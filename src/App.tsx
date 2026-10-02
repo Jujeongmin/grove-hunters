@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useGameServer } from "@agent8/gameserver";
 import { readClass } from "./game/combat/classes";
 import { COSTUMES, costumeById } from "./game/render/costumes";
@@ -8,7 +8,6 @@ import { devLocalTransport } from "./net/devLocal";
 import { syncControls } from "./net/controlsSync";
 import { WorldClient } from "./net/worldClient";
 import { Lobby } from "./ui/Lobby";
-import { ModelGallery, galleryEnabled } from "./ui/ModelGallery";
 import { WorldScreen } from "./ui/WorldScreen";
 import { useAccount } from "./ui/useAccount";
 import { useFriends } from "./ui/useFriends";
@@ -18,6 +17,10 @@ import { useUiScale } from "./ui/useUiScale";
 import { t, useLang } from "./ui/lang";
 
 const ONLINE_AVAILABLE = Boolean(import.meta.env.VITE_AGENT8_VERSE);
+// The model gallery (development only, ?gallery): loaded only then, so it and its orbit controls stay
+// out of the game's bundle.
+const GALLERY = import.meta.env.DEV && new URLSearchParams(window.location.search).has("gallery");
+const ModelGallery = GALLERY ? lazy(() => import("./ui/ModelGallery").then((m) => ({ default: m.ModelGallery }))) : null;
 const DEV_LOCAL = devLocalTransport();
 
 export default function App() {
@@ -46,7 +49,7 @@ export default function App() {
   }, [world]);
 
   const rotate = <div className="rotate-hint">{t("rotate.hint")}</div>;
-  if (galleryEnabled()) return <ModelGallery />;
+  if (ModelGallery) return <Suspense fallback={null}><ModelGallery /></Suspense>;
   const active = view?.active ?? null;
   if (inWorld && world && view && active) {
     return (

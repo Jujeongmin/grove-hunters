@@ -18,5 +18,21 @@ export default defineConfig({
       ignored: ["**/.git/**", "**/node_modules/**", "**/public/assets/**", "**/art-src/**", "**/dist/**"],
     },
   },
-  build: { outDir: "dist", reportCompressedSize: false, chunkSizeWarningLimit: 5000 },
+  build: {
+    outDir: "dist", reportCompressedSize: false, chunkSizeWarningLimit: 5000,
+    // Fonts are fetched as files rather than written into the CSS as base64: the stylesheet blocks the
+    // first paint, and most of those subsets (and every .woff fallback) are never used.
+    assetsInlineLimit: (file: string) => (/\.woff2?$/.test(file) ? false : undefined),
+    rollupOptions: {
+      output: {
+        // Libraries in chunks of their own: a game update then leaves them cached in the browser.
+        advancedChunks: {
+          groups: [
+            { name: "three", test: /node_modules[\\/]three[\\/]/ },
+            { name: "react", test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
 });

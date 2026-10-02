@@ -199,8 +199,11 @@ export function Minimap({ zone, me, width, height, labels = false, onPick, bosse
       if (live) setLoaded((n) => n + 1);
     };
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    el.width = Math.max(1, Math.round(width * dpr));
-    el.height = Math.max(1, Math.round(height * dpr));
+    // Setting a canvas's size, even to the same, throws its pixels away and makes it anew: only when it changed.
+    const w = Math.max(1, Math.round(width * dpr));
+    const h = Math.max(1, Math.round(height * dpr));
+    if (el.width !== w) el.width = w;
+    if (el.height !== h) el.height = h;
     const model = minimapModel(zone);
     const fit = minimapFit(model, width, height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

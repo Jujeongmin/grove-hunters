@@ -11,10 +11,12 @@ import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import { MonsterActor } from "./MonsterActor";
 import { PlayerActor } from "./PlayerActor";
-import { GREEN_BLOB, MONSTER_MODELS } from "./monsterLooks";
+import { GREEN_BLOB } from "./monsterLooks";
 import { QUALITY, settings } from "../../ui/settings";
 
-const MENU_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ...MONSTER_MODELS])];
+// Only what the menu shows: the square, the heroes and its one slime (about 2.5 MB less before the first
+// picture; each zone fetches its own monsters).
+const MENU_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, GREEN_BLOB.model])];
 
 // Everything stands in the village square, facing the camera (yaw π faces +z).
 const FACING = Math.PI;
@@ -80,7 +82,7 @@ export class MenuScene {
     alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: SLIME_PATH.fromX, homeZ: SLIME_PATH.z,
   };
   private slimeWait = 2;
-  private entering: { t: number; done: () => void } | null = null;
+  private entering: { t: number; done: () => void; startedAt: number } | null = null;
   // 0 on the menu, 1 in the wardrobe; eased toward focusTarget.
   private focus = 0;
   private focusTarget = 0;
@@ -178,7 +180,14 @@ export class MenuScene {
 
   // Pushes the camera toward the square, then calls done.
   enter(done: () => void): void {
-    this.entering = { t: 0, done };
+    const entering = { t: 0, done, startedAt: performance.now() };
+    this.entering = entering;
+    // Frames may not come at all (a hidden tab draws none): the game starts on time regardless.
+    window.setTimeout(() => {
+      if (this.entering !== entering) return;
+      this.entering = null;
+      done();
+    }, ENTER_SECONDS * 1000 + 300);
   }
 
   dispose(): void {
@@ -274,7 +283,9 @@ export class MenuScene {
     this.camera.position.copy(this.home).lerp(LINEUP_CAMERA, this.rowView).lerp(this.pickCamera, this.pickView).lerp(WARDROBE_CAMERA, this.focus);
     this.look.copy(CAMERA_LOOK).lerp(LINEUP_LOOK, this.rowView).lerp(this.pickLook, this.pickView).lerp(WARDROBE_LOOK, this.focus);
     if (this.entering) {
-      this.entering.t += dt / ENTER_SECONDS;
+      // By the clock rather than by frames (whose step is capped): a slow device starts as soon.
+      const real = Math.min(1, (performance.now() - this.entering.startedAt) / 1000 / ENTER_SECONDS);
+      this.entering.t = Math.max(this.entering.t + dt / ENTER_SECONDS, real);
       const k = Math.min(1, this.entering.t) ** 2;
       this.camera.position.lerp(this.look, k * 0.75);
       if (this.entering.t >= 1) {

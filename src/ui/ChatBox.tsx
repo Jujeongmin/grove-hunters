@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { t } from "./lang";
 import type { Key } from "./strings/ko";
 import { typing } from "../game/render/FpsInput";
@@ -12,6 +12,8 @@ import { VIP_MIGHT } from "../game/account/premium";
 const OPEN_LINES = 30;
 // Guild chat is asked for this often: while its tab is open, and otherwise.
 const GUILD_POLL_OPEN_MS = 5_000;
+// In no guild, asked only this often (to notice joining one).
+const GUILD_POLL_NONE_MS = 5 * 60_000;
 const GUILD_POLL_MS = 30_000;
 
 const PROBLEM: Record<string, Key> = {
@@ -25,7 +27,7 @@ const PROBLEM: Record<string, Key> = {
 // anywhere; closing it (the button, Escape, or the focus leaving the box, as when a phone's keyboard is
 // put away) also clears the lines seen so far off the screen, and keeps what was typed for next time.
 // Open, it stands in the middle above the skill bar, off the pad.
-export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
+function ChatBoxView({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
   const [inGuild, setInGuild] = useState(client.state.inGuild);
@@ -48,9 +50,9 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
   const guildOpen = open && mode === "guild";
   useEffect(() => {
     void client.pollGuildChat();
-    const timer = setInterval(() => void client.pollGuildChat(), guildOpen ? GUILD_POLL_OPEN_MS : GUILD_POLL_MS);
+    const timer = setInterval(() => void client.pollGuildChat(), !inGuild ? GUILD_POLL_NONE_MS : guildOpen ? GUILD_POLL_OPEN_MS : GUILD_POLL_MS);
     return () => clearInterval(timer);
-  }, [client, guildOpen]);
+  }, [client, guildOpen, inGuild]);
   useEffect(() => {
     if (guildOpen) setGuildSeen(Date.now());
   }, [guildOpen, guildLines]);
@@ -187,3 +189,6 @@ export function ChatBox({ client, keyHints }: { client: WorldClient; keyHints: b
     </div>
   );
 }
+
+// Its props never change while the world is up, so the HUD's updates pass it by.
+export const ChatBox = memo(ChatBoxView);

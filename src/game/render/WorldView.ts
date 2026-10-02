@@ -82,6 +82,8 @@ const SKY_CEILING = 30;
 // Share of walking speed kept while the guard is up.
 const GUARD_WALK = 0.55;
 const HUD_INTERVAL_MS = 100;
+// A HUD that changed nothing still goes out this often (the screen's clocks ride on it).
+const HUD_HEARTBEAT_MS = 1000;
 // A portal only takes you once you have stepped this far clear of it (you arrive right beside one).
 const PORTAL_REARM = PORTAL_RADIUS + 0.8;
 // Auto-battle looks for monsters this close, and lets one go once it is this far.
@@ -111,6 +113,8 @@ const MARKER_ICONS: Record<NpcMarker, string> = {
 };
 // On a quest trip, a portal is walked this far into, well inside the ring that takes you through.
 const PORTAL_ARRIVE = 0.5;
+// A spot tapped on the map this close to a way out means the way out (the map is coarse).
+const MAP_PORTAL_SNAP = 8;
 // A route's corner counts as reached this close.
 const WAYPOINT_REACH = 1.2;
 // A heal is used on its own once health falls below this share.
@@ -487,7 +491,9 @@ export class WorldView {
       return;
     }
     this.setTrip(null);
-    this.walkGoal = { to, talk: null };
+    // A spot on (or right by) a way out is walked right into, so the map's portals take you on.
+    const portal = this.portals.find((p) => Math.hypot(p.x - to.x, p.z - to.z) <= MAP_PORTAL_SNAP);
+    this.walkGoal = portal ? { to: { x: portal.x, z: portal.z }, talk: null, portal: true } : { to, talk: null };
     this.auto = false;
     this.questSeek = null;
     this.route = null;
@@ -1292,6 +1298,9 @@ export class WorldView {
     }
   }
 
+  private lastHudKey = "";
+  private lastHudSentAt = 0;
+
   private emitHud(): void {
     const now = performance.now();
     if (now - this.lastHudAt < HUD_INTERVAL_MS) return;
@@ -1357,6 +1366,13 @@ export class WorldView {
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),
       notes: this.notes.map((n) => n.text),
     };
+    // The whole screen redraws on each one, so one that changes nothing (standing about, no cooldowns)
+    // is held back, though one still goes out every HUD_HEARTBEAT_MS.
+    const key = JSON.stringify(hud, (k, v) => (typeof v === "number" && (k === "x" || k === "z" || k === "yaw") ? Math.round(v * 10)
+      : typeof v === "number" && k === "readyInMs" ? Math.ceil(v / 100) : typeof v === "number" && k === "hurt" ? Math.round(v * 20) : v));
+    if (key === this.lastHudKey && now - this.lastHudSentAt < HUD_HEARTBEAT_MS) return;
+    this.lastHudKey = key;
+    this.lastHudSentAt = now;
     for (const listener of this.hudListeners) listener(hud);
   }
 

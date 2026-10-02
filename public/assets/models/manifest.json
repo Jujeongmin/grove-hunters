@@ -2,32 +2,32 @@
   "models": {
     "bld_house_long": {
       "url": "assets/models/bld_house_long.glb",
-      "bytes": 701440,
+      "bytes": 583448,
       "animations": []
     },
     "bld_house_small": {
       "url": "assets/models/bld_house_small.glb",
-      "bytes": 455236,
+      "bytes": 393160,
       "animations": []
     },
     "bld_house_tall": {
       "url": "assets/models/bld_house_tall.glb",
-      "bytes": 609044,
+      "bytes": 518440,
       "animations": []
     },
     "bld_tower": {
       "url": "assets/models/bld_tower.glb",
-      "bytes": 1099540,
+      "bytes": 525184,
       "animations": []
     },
     "fx_arrow": {
       "url": "assets/models/fx_arrow.glb",
-      "bytes": 13164,
+      "bytes": 8940,
       "animations": []
     },
     "fx_summon_circle": {
       "url": "assets/models/fx_summon_circle.glb",
-      "bytes": 136316,
+      "bytes": 80956,
       "animations": []
     },
     "hero_cleric": {
@@ -636,97 +636,97 @@
     },
     "pt_logs": {
       "url": "assets/models/pt_logs.glb",
-      "bytes": 53504,
+      "bytes": 36572,
       "animations": []
     },
     "pt_rock": {
       "url": "assets/models/pt_rock.glb",
-      "bytes": 16524,
+      "bytes": 13396,
       "animations": []
     },
     "pt_tree_stump": {
       "url": "assets/models/pt_tree_stump.glb",
-      "bytes": 21276,
+      "bytes": 19204,
       "animations": []
     },
     "sn_bush_flowers": {
       "url": "assets/models/sn_bush_flowers.glb",
-      "bytes": 149696,
+      "bytes": 120704,
       "animations": []
     },
     "sn_clover": {
       "url": "assets/models/sn_clover.glb",
-      "bytes": 59460,
+      "bytes": 57624,
       "animations": []
     },
     "sn_fern": {
       "url": "assets/models/sn_fern.glb",
-      "bytes": 63428,
+      "bytes": 59884,
       "animations": []
     },
     "sn_flowers": {
       "url": "assets/models/sn_flowers.glb",
-      "bytes": 109572,
+      "bytes": 105124,
       "animations": []
     },
     "sn_grass": {
       "url": "assets/models/sn_grass.glb",
-      "bytes": 8960,
+      "bytes": 6480,
       "animations": []
     },
     "sn_grass_wispy": {
       "url": "assets/models/sn_grass_wispy.glb",
-      "bytes": 21528,
+      "bytes": 13184,
       "animations": []
     },
     "sn_mushroom": {
       "url": "assets/models/sn_mushroom.glb",
-      "bytes": 35992,
+      "bytes": 33480,
       "animations": []
     },
     "sn_pebbles": {
       "url": "assets/models/sn_pebbles.glb",
-      "bytes": 26432,
+      "bytes": 24432,
       "animations": []
     },
     "sn_pine_1": {
       "url": "assets/models/sn_pine_1.glb",
-      "bytes": 188996,
+      "bytes": 133688,
       "animations": []
     },
     "sn_pine_3": {
       "url": "assets/models/sn_pine_3.glb",
-      "bytes": 227500,
+      "bytes": 159160,
       "animations": []
     },
     "sn_rock": {
       "url": "assets/models/sn_rock.glb",
-      "bytes": 33676,
+      "bytes": 29816,
       "animations": []
     },
     "sn_stepping": {
       "url": "assets/models/sn_stepping.glb",
-      "bytes": 68480,
+      "bytes": 47684,
       "animations": []
     },
     "sn_tree_1": {
       "url": "assets/models/sn_tree_1.glb",
-      "bytes": 338668,
+      "bytes": 230420,
       "animations": []
     },
     "sn_tree_2": {
       "url": "assets/models/sn_tree_2.glb",
-      "bytes": 298908,
+      "bytes": 208376,
       "animations": []
     },
     "sn_tree_3": {
       "url": "assets/models/sn_tree_3.glb",
-      "bytes": 231040,
+      "bytes": 161140,
       "animations": []
     },
     "sn_tree_4": {
       "url": "assets/models/sn_tree_4.glb",
-      "bytes": 237036,
+      "bytes": 169892,
       "animations": []
     }
   }

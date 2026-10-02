@@ -88,21 +88,8 @@ export class Effects {
   // A number that rises from (x, y, z) and fades: damage dealt, damage taken. Big numbers (skills)
   // start larger and pop.
   floatText(at: THREE.Vector3, text: string, color: string, big = false): void {
-    const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 64;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.font = `800 ${big ? 46 : 38}px system-ui, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.lineWidth = 7;
-    ctx.strokeStyle = "rgba(20, 12, 8, 0.9)";
-    ctx.strokeText(text, 64, 34);
-    ctx.fillStyle = color;
-    ctx.fillText(text, 64, 34);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
+    const texture = floatTexture(text, color, big);
+    if (!texture) return;
     const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
     const sprite = new THREE.Sprite(material);
     sprite.renderOrder = 20;
@@ -150,10 +137,50 @@ export class Effects {
 }
 
 // Its own material, and a number's own picture; the shared effect pictures and the arrow model stay.
+// A number's picture, drawn once per text, colour and size and kept for the next hit that says the
+// same (hits repeat a lot): a new canvas and texture upload per hit was the cost before.
+const FLOAT_KEEP = 96;
+const floatTextures = new Map<string, THREE.CanvasTexture>();
+
+function floatTexture(text: string, color: string, big: boolean): THREE.CanvasTexture | null {
+  const key = `${text}|${color}|${big ? 1 : 0}`;
+  const kept = floatTextures.get(key);
+  if (kept) {
+    // Most recently used last, so the oldest goes first when the cache is full.
+    floatTextures.delete(key);
+    floatTextures.set(key, kept);
+    return kept;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.font = `800 ${big ? 46 : 38}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = "rgba(20, 12, 8, 0.9)";
+  ctx.strokeText(text, 64, 34);
+  ctx.fillStyle = color;
+  ctx.fillText(text, 64, 34);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.userData.shared = true;
+  floatTextures.set(key, texture);
+  if (floatTextures.size > FLOAT_KEEP) {
+    const [oldest, gone] = floatTextures.entries().next().value as [string, THREE.CanvasTexture];
+    floatTextures.delete(oldest);
+    gone.dispose();
+  }
+  return texture;
+}
+
 function disposeMaterial(object: THREE.Object3D): void {
   const material = (object as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture | null };
   if (material && !Array.isArray(material)) {
-    if (material.map instanceof THREE.CanvasTexture) material.map.dispose();
+    // A kept number picture outlives the sprite that showed it.
+    if (material.map instanceof THREE.CanvasTexture && !material.map.userData.shared) material.map.dispose();
     material.dispose();
   }
 }
