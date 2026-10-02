@@ -64,7 +64,9 @@ interface WorldScreenProps {
   name: string;
   // Your friends, for the channel list to show who is on which.
   friends: FriendsView | null;
+  // Out to your characters, or all the way to the title.
   onExit: () => void;
+  onTitle: () => void;
 }
 
 // Why a portal turned you away. The codes the server sends for travel are its own, so they are
@@ -87,7 +89,7 @@ function enterProblem(error: string | null): string {
 
 // The world: enters on mount, shows the zone you are in (one WorldView per zone and channel), and
 // takes you through portals.
-export function WorldScreen({ client, playerClass, costume, name, friends, onExit }: WorldScreenProps) {
+export function WorldScreen({ client, playerClass, costume, name, friends, onExit, onTitle }: WorldScreenProps) {
   // Weapons are drawn as this character's class wields them, in every panel below (see icons.ts).
   setIconClass(playerClass);
   const [state, setState] = useState<WorldState>(client.state);
@@ -139,6 +141,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
       trip={trip}
       onProblem={(code) => setProblem({ text: t(TRAVEL_PROBLEM[code] ?? "problem.cannotTravel"), at: performance.now() })}
       onExit={onExit}
+      onTitle={onTitle}
     />
   );
 }
@@ -169,7 +172,7 @@ const HAZE_HINT_MS = 12_000;
 const PROBLEM_MS = 3000;
 
 function ZoneScreen({
-  entry, client, playerClass, costume, name, friends, travelling, bag, problem, trip, onProblem, onExit,
+  entry, client, playerClass, costume, name, friends, travelling, bag, problem, trip, onProblem, onExit, onTitle,
 }: ZoneScreenProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<WorldView | null>(null);
@@ -795,7 +798,7 @@ function ZoneScreen({
           }}
         />
       )}
-      {menu && <SettingsPanel onClose={() => setMenu(false)} onExit={onExit} />}
+      {menu && <SettingsPanel onClose={() => setMenu(false)} onExit={onExit} onTitle={onTitle} />}
       {panel === "bag" && (
         <BagPanel
           client={client} bag={bag} inVillage={inVillage} playerClass={playerClass} level={hud?.level ?? 1}

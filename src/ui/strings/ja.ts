@@ -32,7 +32,7 @@ export const ja: Bundle = {
   "settings.language": "言語",
   "settings.keysTab": "ショートカット",
   "settings.defaults": "初期設定",
-  "settings.exit": "メニューに戻る",
+  "settings.exit": "キャラクター選択へ",
 
   "keys.jump": "ジャンプ",
   "keys.click": "左クリック / 右クリック",
@@ -388,6 +388,7 @@ export const ja: Bundle = {
 
   "common.retry": "もう一度",
   "common.toMenu": "メニューへ",
+  "common.toTitle": "タイトルへ",
   "common.menu": "メニュー",
   "common.off2": "オフ",
 

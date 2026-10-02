@@ -35,7 +35,7 @@ export const ko = {
   "settings.language": "언어",
   "settings.keysTab": "단축키",
   "settings.defaults": "기본값",
-  "settings.exit": "메뉴로 나가기",
+  "settings.exit": "캐릭터 선택으로",
 
   "keys.jump": "점프",
   "keys.click": "좌클릭 / 우클릭",
@@ -397,6 +397,7 @@ export const ko = {
 
   "common.retry": "다시 시도",
   "common.toMenu": "메뉴로",
+  "common.toTitle": "타이틀로 가기",
   "common.menu": "메뉴",
   "common.off2": "꺼짐",
 

@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useGameServer } from "@agent8/gameserver";
 import { readClass } from "./game/combat/classes";
 import { COSTUMES, costumeById } from "./game/render/costumes";
-import { loadRankDetail, loadRanking, loadWorldLoads } from "./net/account";
+import { loadWorldLoads } from "./net/account";
 import { Verse8Transport } from "./net/verse8Transport";
 import { devLocalTransport } from "./net/devLocal";
 import { syncControls } from "./net/controlsSync";
@@ -74,6 +74,11 @@ export default function App() {
             setReturning(true);
             void refresh();
           }}
+          onTitle={() => {
+            setInWorld(false);
+            setReturning(false);
+            void refresh();
+          }}
         />
       </>
     );
@@ -94,9 +99,7 @@ export default function App() {
         onCreate={create}
         onSelect={select}
         onDelete={remove}
-        loadRanking={transport ? () => loadRanking(transport) : null}
         loadWorldLoads={transport ? () => loadWorldLoads(transport) : null}
-        loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
         friends={friends.client}
         friendsView={friends.view}
         onStart={() => {

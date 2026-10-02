@@ -32,7 +32,7 @@ export const zhHans: Bundle = {
   "settings.language": "语言",
   "settings.keysTab": "快捷键",
   "settings.defaults": "默认值",
-  "settings.exit": "回到菜单",
+  "settings.exit": "返回角色选择",
 
   "keys.jump": "跳跃",
   "keys.click": "左键 / 右键",
@@ -388,6 +388,7 @@ export const zhHans: Bundle = {
 
   "common.retry": "再试一次",
   "common.toMenu": "回到菜单",
+  "common.toTitle": "返回标题",
   "common.menu": "菜单",
   "common.off2": "关闭",
 

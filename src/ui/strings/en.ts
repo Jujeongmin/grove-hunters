@@ -32,7 +32,7 @@ export const en: Bundle = {
   "settings.language": "Language",
   "settings.keysTab": "Shortcuts",
   "settings.defaults": "Defaults",
-  "settings.exit": "Back to the menu",
+  "settings.exit": "Character select",
 
   "keys.jump": "Jump",
   "keys.click": "Left / right click",
@@ -388,6 +388,7 @@ export const en: Bundle = {
 
   "common.retry": "Try again",
   "common.toMenu": "To the menu",
+  "common.toTitle": "Back to title",
   "common.menu": "Menu",
   "common.off2": "Off",
 

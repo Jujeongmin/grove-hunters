@@ -46,8 +46,8 @@ const KEYS: [string, Key][] = [
 // The settings, in two columns: the language, sound (music and effects apart) and controls on the
 // left, the screen and what is shown over the world on the right; the keys to look up are a page of
 // their own. Everything applies at once and is kept in this browser.
-// `onExit`, in the world: back out to the menus.
-export function SettingsPanel({ onClose, onExit }: { onClose: () => void; onExit?: () => void }) {
+// `onExit` and `onTitle`, in the world: back out to your characters, or to the title.
+export function SettingsPanel({ onClose, onExit, onTitle }: { onClose: () => void; onExit?: () => void; onTitle?: () => void }) {
   const [values, setValues] = useState(settings());
   const [keys, setKeys] = useState(false);
   useEffect(() => onSettings(setValues), []);
@@ -134,6 +134,7 @@ export function SettingsPanel({ onClose, onExit }: { onClose: () => void; onExit
           </button>
           <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
           {onExit && <button type="button" className="text-button" onClick={onExit}>{t("settings.exit")}</button>}
+          {onTitle && <button type="button" className="text-button" onClick={onTitle}>{t("common.toTitle")}</button>}
         </div>
       </div>
     </div>

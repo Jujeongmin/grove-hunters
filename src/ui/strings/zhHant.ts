@@ -32,7 +32,7 @@ export const zhHant: Bundle = {
   "settings.language": "語言",
   "settings.keysTab": "快捷鍵",
   "settings.defaults": "預設值",
-  "settings.exit": "回到選單",
+  "settings.exit": "返回角色選擇",
 
   "keys.jump": "跳躍",
   "keys.click": "左鍵 / 右鍵",
@@ -388,6 +388,7 @@ export const zhHant: Bundle = {
 
   "common.retry": "再試一次",
   "common.toMenu": "回到選單",
+  "common.toTitle": "返回標題",
   "common.menu": "選單",
   "common.off2": "關閉",
 

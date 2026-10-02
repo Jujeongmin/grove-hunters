@@ -4,7 +4,6 @@ import { t } from "./lang";
 import { CHARACTERS_PER_WORLD } from "../game/account/characters";
 import type { FriendsView } from "../game/account/friends";
 import type { AccountView } from "../game/account/nickname";
-import type { RankDetail, RankingView } from "../game/account/ranking";
 import { readWorld } from "../game/account/worlds";
 import { playMusic } from "../game/audio/music";
 import { readClass, type PlayerClass } from "../game/combat/classes";
@@ -19,7 +18,6 @@ import { ClassPanel } from "./ClassPanel";
 import { DeleteCharacterPanel } from "./DeleteCharacterPanel";
 import { FriendsPanel } from "./FriendsPanel";
 import { NicknamePanel } from "./NicknamePanel";
-import { RankingPanel } from "./RankingPanel";
 import { SettingsPanel } from "./SettingsPanel";
 import { Wardrobe } from "./Wardrobe";
 import { WorldPicker } from "./WorldPicker";
@@ -42,10 +40,8 @@ interface LobbyProps {
   onSelect: (id: string) => Promise<void>;
   // Deletes a character for good, its name typed back to be sure.
   onDelete: (id: string, typedName: string) => Promise<void>;
-  loadRanking: (() => Promise<RankingView>) | null;
   // How many are about on each server, for the picker's crowd marks.
   loadWorldLoads: (() => Promise<Record<string, number>>) | null;
-  loadRankDetail: ((id: string) => Promise<RankDetail>) | null;
   friends: FriendsClient | null;
   friendsView: FriendsView | null;
   // Into the world with the active character.
@@ -57,10 +53,11 @@ interface LobbyProps {
 // title: the logo over the village, tap to go on. world: which server. characters: yours on that
 // server, to play or to make another. class, name, look: making a new one.
 type Step = "title" | "world" | "characters" | "class" | "name" | "look";
-type Sheet = "none" | "settings" | "ranking";
+// The ranking is only in the world (its menu), not here.
+type Sheet = "none" | "settings";
 
 export function Lobby({
-  account, view, accountFailed, online, connection, lost, onLostSeen, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, loadWorldLoads,
+  account, view, accountFailed, online, connection, lost, onLostSeen, onPickWorld, checkName, onCreate, onSelect, onDelete, loadWorldLoads,
   friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -275,8 +272,8 @@ export function Lobby({
               </button>
             )}
             <button type="button" className="brush-button" onClick={start} disabled={leaving || !active}>{t("lobby.start")}</button>
-            <button type="button" className="brush-button" onClick={() => setSheet("ranking")}>{t("menu.ranking")}</button>
             <button type="button" className="brush-button" onClick={() => setStep("world")}>{t("lobby.changeServer")}</button>
+            <button type="button" className="text-button" onClick={() => setStep("title")}>{t("common.toTitle")}</button>
             {guest && <p className="note guest-note">{t("lobby.guestNote")}</p>}
             {!active && <p className="note">{t("lobby.noCharacter")}</p>}
           </nav>
@@ -330,7 +327,6 @@ export function Lobby({
           <DeleteCharacterPanel id={active.id} name={active.name} onDelete={onDelete} onClose={() => setDeleting(false)} />
         )}
         {sheet === "settings" && <SettingsPanel onClose={() => setSheet("none")} />}
-        {sheet === "ranking" && <RankingPanel account={account} load={loadRanking} loadDetail={loadRankDetail} onClose={() => setSheet("none")} />}
       </div>
     </div>
   );
