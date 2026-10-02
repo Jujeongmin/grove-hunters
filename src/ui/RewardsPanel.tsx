@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ATTEND_DAYS, ATTEND_REWARDS, type AttendReward, type AttendanceView } from "../game/account/attendance";
 import { METRICS, type AchievementRow, type AchievementsView, type Metric } from "../game/account/achievements";
 import { iconFor } from "../game/render/icons";
+import { playCue } from "../game/audio/sfx";
 import type { WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
 import { FullScreen } from "./FullScreen";
@@ -132,7 +133,10 @@ function AchievementsTab({ client, onClaimable }: { client: WorldClient; onClaim
     const r = row ? await client.claimAchievement(row.id) : await client.claimAllAchievements();
     setBusy(false);
     if ("problem" in r) setNote(problemText(r.problem));
-    else setView(r);
+    else {
+      setView(r);
+      playCue("coins");
+    }
   };
   // Each metric's line shows the first goal not yet claimed (or its last, all claimed).
   const lines = METRICS.map((metric) => {

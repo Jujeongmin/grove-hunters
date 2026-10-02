@@ -31,6 +31,9 @@ describe("hero clips", () => {
     expect(HEROES.cleric.swingCue).toBe("staff");
     expect(HEROES.warrior.swingCue).toBe("swing");
     expect(HEROES.rogue.swingCue).toBe("swing");
+    // Their skills too: the bow, magic and healing their own, the rest the shared one.
+    expect([HEROES.ranger.skillCue, HEROES.wizard.skillCue, HEROES.cleric.skillCue]).toEqual(["skill_arrow", "skill_magic", "skill_heal"]);
+    expect([HEROES.warrior.skillCue, HEROES.rogue.skillCue, HEROES.monk.skillCue]).toEqual(["skill", "skill", "skill"]);
   });
 
   it("give the melee classes more than one swing to chain", () => {

@@ -23,21 +23,26 @@ export interface HeroRig {
   shot: ShotKind | null;
   // What an attack up close sounds like: a blade, the monk's fists or the cleric's staff.
   swingCue: "swing" | "punch" | "staff";
+  // What its skills sound like: the bow's, magic, healing, or the shared one for the rest.
+  skillCue: "skill" | "skill_arrow" | "skill_magic" | "skill_heal";
   reach: number;
   // The colour of the ring of light a skill leaves at the hero's feet.
   ringColor: number;
 }
 
-type Clips = Omit<HeroRig, "playerClass" | "shot" | "swingCue" | "reach" | "ringColor">;
+type Clips = Omit<HeroRig, "playerClass" | "shot" | "swingCue" | "skillCue" | "reach" | "ringColor">;
 
 const SHOTS: Partial<Record<PlayerClass, ShotKind>> = { ranger: "arrow", wizard: "bolt" };
 const SWING_CUES: Partial<Record<PlayerClass, "punch" | "staff">> = { monk: "punch", cleric: "staff" };
+const SKILL_CUES: Partial<Record<PlayerClass, "skill_arrow" | "skill_magic" | "skill_heal">> = {
+  ranger: "skill_arrow", wizard: "skill_magic", cleric: "skill_heal",
+};
 const RING_COLOR: Record<PlayerClass, number> = {
   warrior: 0xffd27a, ranger: 0x9be37a, wizard: 0xff7a3a, cleric: 0x9df2ff, rogue: 0xb07aff, monk: 0xffe9a8,
 };
 
 function rig(c: PlayerClass, clips: Clips): HeroRig {
-  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, swingCue: SWING_CUES[c] ?? "swing", reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
+  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, swingCue: SWING_CUES[c] ?? "swing", skillCue: SKILL_CUES[c] ?? "skill", reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
 }
 
 // What a skill shows: the ring of light it leaves (size and colour), and how far the one long shot of

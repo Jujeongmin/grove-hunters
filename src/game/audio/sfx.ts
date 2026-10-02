@@ -14,6 +14,15 @@ const CUES = {
   arrow: { file: "arrow.wav", level: 0.27 },
   bolt: { file: "bolt.ogg", level: 3.3 },
   skill: { file: "skill.ogg", level: 1.35 },
+  // The ranger's, the wizard's and the cleric's skills have their own (Mixkit; the player chose them,
+  // the long ones cut to a second and a half): an arrow's hit, ice, a healing spell.
+  skill_arrow: { file: "skill_arrow.ogg", level: 0.2 },
+  skill_magic: { file: "skill_magic.ogg", level: 0.36 },
+  skill_heal: { file: "skill_heal.ogg", level: 0.45 },
+  // Something to answer while another screen is up: a Trial Dungeon match, a party invitation.
+  notify: { file: "notify.ogg", level: 0.25 },
+  // Rewards and mail taken.
+  coins: { file: "coins.ogg", level: 0.23 },
   die: { file: "die.ogg", level: 0.32 },
   potion: { file: "potion.wav", level: 0.23 },
   gold: { file: "gold.wav", level: 0.28 },
@@ -27,8 +36,8 @@ const CUES = {
   quest: { file: "enhance_ok.wav", level: 0.33 },
   // Heard far more than any of them, so it sits under the loudness the others share.
   hurt: { file: "hurt.wav", level: 0.2 },
-  // A boss marks the ground: step out.
-  warn: { file: "bolt.ogg", level: 1.6 },
+  // A boss marks the ground: step out. A deep heartbeat (Mixkit), nothing like any attack's sound.
+  warn: { file: "warn.ogg", level: 0.23 },
   enhance_fail: { file: "enhance_fail.ogg", level: 0.66 },
   enhance_break: { file: "enhance_break.ogg", level: 0.6 },
 } as const;

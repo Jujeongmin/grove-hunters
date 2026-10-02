@@ -380,6 +380,14 @@ function ZoneScreen({
     });
   };
   const inDungeon = entry.zone === "dungeon";
+  // A match found, or a new invitation, chimes: it may come while you look at something else.
+  const matched = !!dungeon?.match || party?.dungeonMatch === true;
+  const invites = party?.invites.length ?? 0;
+  const heard = useRef({ matched: false, invites: 0 });
+  useEffect(() => {
+    if ((matched && !heard.current.matched && !inDungeon) || invites > heard.current.invites) playCue("notify");
+    heard.current = { matched, invites };
+  }, [matched, invites, inDungeon]);
   // A match your party's leader made shows up in the party's poll.
   const dungeonBusy = !!dungeon?.queued || !!dungeon?.match || panel === "dungeon" || party?.dungeonMatch === true;
   useEffect(() => {

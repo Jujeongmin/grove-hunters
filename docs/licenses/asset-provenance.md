@@ -130,6 +130,12 @@ WAV는 모노 22.05 kHz로 줄이고 앞뒤 무음을 잘랐고, OGG는 그대�
 | `potion.wav` | inventory/bubble2.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `punch.ogg` | Martial arts fast punch (#2047) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/punch/ — Mixkit License(게임 안 사용 무료, 단독 재배포 금지). 2026-10-02 사용자가 후보 페이지에서 고름. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
 | `staff.ogg` | Short wind swoosh (#1461) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/swoosh/ — 위와 같은 조건, 성직자 지팡이 공격. develop에만 |
+| `skill_arrow.ogg` | Metal arrow fast hit (#2770) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/arrow/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 궁수 스킬. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `skill_magic.ogg` | Icicles spell whoosh (#881) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/spell/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 마법사 스킬. 1.4초에서 페이드아웃. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `skill_heal.ogg` | Medium healing spell (#880) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/healing/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 성직자 스킬. 1.5초에서 페이드아웃. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `warn.ogg` | Deep heartbeat impact (#498) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/impact/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 보스 장판 경고. 1.6초에서 페이드아웃 (마법사 평타와 같던 bolt.ogg 대신). 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `notify.ogg` | Unlock game notification (#253) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/notification/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 던전 매칭·파티 초대 알림. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
+| `coins.ogg` | Clinking coins (#1993) | Mixkit 무료 효과음 | Mixkit | https://mixkit.co/free-sound-effects/coins/ — Mixkit License, 2026-10-02 사용자가 선택 페이지에서 고름. 보상·우편 받기. 앞뒤 무음을 자르고 모노 OGG로. develop에만 |
 | `gold.wav` | inventory/coin.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `click.wav` | interface/interface1.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |
 | `cloth.wav` (창 열기·닫기) | inventory/cloth.wav | RPG Sound Pack | artisticdude | https://opengameart.org/content/rpg-sound-pack |

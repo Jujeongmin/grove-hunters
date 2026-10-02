@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { daysLeft, giftById, marketThing, type Mail } from "../game/account/mail";
 import { marketFee } from "../game/account/market";
 import { iconFor } from "../game/render/icons";
+import { playCue } from "../game/audio/sfx";
 import { problemText } from "./BagPanel";
 import { lang, t, type Key } from "./lang";
 import { gearName, itemName } from "./names";
@@ -77,6 +78,7 @@ export function MailPanel({ client, onCount, onClose }: MailPanelProps) {
     setBusy(false);
     if ("mail" in r) setMail(r.mail);
     if (r.problem) setNote(problemText(r.problem));
+    else playCue("coins");
   };
   const now = Date.now();
 

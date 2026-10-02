@@ -1117,7 +1117,7 @@ export class WorldView {
     this.getOff();
     this.lastSlot = index;
     this.skills += 1;
-    playCue("skill");
+    playCue(HEROES[this.options.playerClass].skillCue);
     void this.client.useSkill(index, yaw).then((r) => {
       for (const id of r?.hit ?? []) this.skillHits.set(id, performance.now());
     });

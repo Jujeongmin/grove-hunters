@@ -7,3 +7,9 @@ public/assets/ui/
 # Mixkit sound effects: their licence allows them in the game but not handed out on their own.
 public/assets/sfx/punch.ogg
 public/assets/sfx/staff.ogg
+public/assets/sfx/skill_arrow.ogg
+public/assets/sfx/skill_magic.ogg
+public/assets/sfx/skill_heal.ogg
+public/assets/sfx/warn.ogg
+public/assets/sfx/notify.ogg
+public/assets/sfx/coins.ogg
