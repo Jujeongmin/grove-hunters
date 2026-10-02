@@ -702,6 +702,11 @@ export const ja: Bundle = {
   "server.note": "同じサーバーを選んだプレイヤー同士で出会います。フレンドと同じサーバーを選びましょう。",
   "server.entering": "入っています…",
   "server.recent": "最近プレイ",
+  "server.quiet": "快適",
+  "server.busy": "普通",
+  "server.full": "混雑",
+  "server.about": "{n}人接続中",
+  "server.recommended": "おすすめ",
   "server.failed": "サーバーを選べませんでした。少し待ってもう一度お試しください",
 
   "common.add": "追加",

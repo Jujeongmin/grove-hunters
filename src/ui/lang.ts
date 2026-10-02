@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { onSettings, settings, updateSettings } from "./settings";
 import { ko, type Bundle, type Key } from "./strings/ko";
 export type { Key };
-import { en } from "./strings/en";
-import { ja } from "./strings/ja";
-import { zhHant } from "./strings/zhHant";
-import { zhHans } from "./strings/zhHans";
 
 // The languages the game is written in (langs.ts). Korean is the one it was written in; the rest are
 // checked against it at compile time (see strings/ko.ts), so none of them can quietly fall behind.
@@ -21,7 +17,21 @@ export const LANGS: { id: Lang; name: string }[] = [
   { id: "zh-Hans", name: "简体中文" },
 ];
 
-const BUNDLES: Record<Lang, Bundle> = { ko, en, ja, "zh-Hant": zhHant, "zh-Hans": zhHans };
+// Korean ships with the game; every other language is fetched when it is the one in play (each is about
+// 45 kB), so no one downloads the four they do not read.
+const BUNDLES: Partial<Record<Lang, Bundle>> = { ko };
+const LOADERS: Record<Exclude<Lang, "ko">, () => Promise<Bundle>> = {
+  en: () => import("./strings/en").then((m) => m.en),
+  ja: () => import("./strings/ja").then((m) => m.ja),
+  "zh-Hant": () => import("./strings/zhHant").then((m) => m.zhHant),
+  "zh-Hans": () => import("./strings/zhHans").then((m) => m.zhHans),
+};
+
+// Fetches a language's lines if they are not here yet (the game starts once the one in play is).
+export async function loadLang(which: Lang = lang()): Promise<void> {
+  if (BUNDLES[which] || which === "ko") return;
+  BUNDLES[which] = await LOADERS[which]();
+}
 
 export function readLang(value: unknown): Lang | null {
   return LANGS.find((l) => l.id === value)?.id ?? null;
@@ -49,8 +59,9 @@ export function lang(): Lang {
   return readLang(settings().lang) ?? browserLang();
 }
 
+// Switches once the language's lines are here (Korean stays meanwhile).
 export function setLang(next: Lang): void {
-  updateSettings({ lang: next });
+  void loadLang(next).then(() => updateSettings({ lang: next }), () => updateSettings({ lang: next }));
 }
 
 // Kept on <html> so the browser hyphenates, spell-checks and picks fonts for the right language.
@@ -65,7 +76,7 @@ onSettings(tellTheDocument);
 // A language missing the line falls back to Korean, and a line missing everywhere shows its own key
 // rather than an empty space, so a gap is obvious instead of invisible.
 export function t(key: Key, holes?: Record<string, string | number>): string {
-  const line = BUNDLES[lang()][key] ?? ko[key] ?? key;
+  const line = BUNDLES[lang()]?.[key] ?? ko[key] ?? key;
   if (!holes) return line;
   return line.replace(/\{(\w+)\}/g, (whole, name: string) => {
     const filling = holes[name];

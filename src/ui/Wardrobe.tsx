@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { t } from "./lang";
 import { costumeName, partLabel, partOptionName } from "./names";
 import {
-  COSTUMES, PART_KEYS, randomCostume, withPart, type Costume, type PartKey,
+  COSTUMES, PARTS, PART_KEYS, randomCostume, withPart, type Costume, type PartKey, type PartOption,
 } from "../game/render/costumes";
 
 interface WardrobeProps {
@@ -101,11 +101,21 @@ function PartRows({ keys, costume, onPick }: { keys: PartKey[]; costume: Costume
           <li key={key}>
             <span className="wardrobe-part-label">{partLabel(key)}</span>
             <button type="button" className="wardrobe-arrow" aria-label={t("look.previous", { part: partLabel(key) })} onClick={() => onPick(withPart(costume, key, -1))}>‹</button>
-            <span className="wardrobe-part-value">{partOptionName(key, costume.parts[key])}</span>
+            <span className="wardrobe-part-value">
+              {/* A skin tone is a colour of its own: shown beside its name. */}
+              {skinSwatch(key, costume.parts[key]) && <i className="wardrobe-swatch" style={{ background: skinSwatch(key, costume.parts[key])! }} />}
+              {partOptionName(key, costume.parts[key])}
+            </span>
             <button type="button" className="wardrobe-arrow" aria-label={t("look.next", { part: partLabel(key) })} onClick={() => onPick(withPart(costume, key, 1))}>›</button>
           </li>
         );
       })}
     </ul>
   );
+}
+
+// The colour a skin option paints, as CSS (null for the pack's own and for every other part).
+function skinSwatch(key: PartKey, option: number): string | null {
+  const dye = key === "skin" ? (PARTS.skin.options[option] as PartOption | undefined)?.dye : undefined;
+  return dye?.kind === "skin" ? `rgb(${dye.rgb.join(",")})` : null;
 }

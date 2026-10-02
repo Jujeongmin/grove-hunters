@@ -711,6 +711,11 @@ export const ko = {
   "server.note": "같은 서버를 고른 플레이어끼리 만나요. 친구와 같은 서버를 골라 보세요.",
   "server.entering": "들어가는 중…",
   "server.recent": "최근 접속",
+  "server.quiet": "여유",
+  "server.busy": "보통",
+  "server.full": "혼잡",
+  "server.about": "{n}명 접속",
+  "server.recommended": "추천",
   "server.failed": "서버를 고르지 못했어요. 잠시 뒤 다시 시도해 주세요",
 
   "common.add": "추가",

@@ -2,22 +2,22 @@
   "models": {
     "bld_house_long": {
       "url": "assets/models/bld_house_long.glb",
-      "bytes": 583448,
+      "bytes": 514288,
       "animations": []
     },
     "bld_house_small": {
       "url": "assets/models/bld_house_small.glb",
-      "bytes": 393160,
+      "bytes": 358688,
       "animations": []
     },
     "bld_house_tall": {
       "url": "assets/models/bld_house_tall.glb",
-      "bytes": 518440,
+      "bytes": 464744,
       "animations": []
     },
     "bld_tower": {
       "url": "assets/models/bld_tower.glb",
-      "bytes": 525184,
+      "bytes": 522368,
       "animations": []
     },
     "fx_arrow": {
@@ -691,12 +691,12 @@
     },
     "sn_pine_1": {
       "url": "assets/models/sn_pine_1.glb",
-      "bytes": 133688,
+      "bytes": 83024,
       "animations": []
     },
     "sn_pine_3": {
       "url": "assets/models/sn_pine_3.glb",
-      "bytes": 159160,
+      "bytes": 87444,
       "animations": []
     },
     "sn_rock": {
@@ -711,22 +711,22 @@
     },
     "sn_tree_1": {
       "url": "assets/models/sn_tree_1.glb",
-      "bytes": 230420,
+      "bytes": 159948,
       "animations": []
     },
     "sn_tree_2": {
       "url": "assets/models/sn_tree_2.glb",
-      "bytes": 208376,
+      "bytes": 140952,
       "animations": []
     },
     "sn_tree_3": {
       "url": "assets/models/sn_tree_3.glb",
-      "bytes": 161140,
+      "bytes": 133308,
       "animations": []
     },
     "sn_tree_4": {
       "url": "assets/models/sn_tree_4.glb",
-      "bytes": 169892,
+      "bytes": 115408,
       "animations": []
     }
   }

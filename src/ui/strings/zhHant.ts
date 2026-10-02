@@ -702,6 +702,11 @@ export const zhHant: Bundle = {
   "server.note": "選同一台伺服器的玩家才會相遇。和朋友選同一台吧。",
   "server.entering": "進入中…",
   "server.recent": "最近遊玩",
+  "server.quiet": "空閒",
+  "server.busy": "普通",
+  "server.full": "擁擠",
+  "server.about": "{n}人在線",
+  "server.recommended": "推薦",
   "server.failed": "無法選擇伺服器。請稍後再試一次",
 
   "common.add": "新增",

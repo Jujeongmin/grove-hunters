@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "./lang";
 import { worldName } from "./names";
 import { WORLDS } from "../game/account/worlds";
@@ -8,12 +8,35 @@ interface WorldPickerProps {
   current: string | null;
   onPick: (id: string) => Promise<void>;
   onClose: () => void;
+  // How many are about on each server (none shown when it cannot be asked).
+  loadLoads: (() => Promise<Record<string, number>>) | null;
+}
+
+// A server's crowd, from how many are about: a channel holds ten and a server ten channels.
+function crowdKey(n: number): "server.quiet" | "server.busy" | "server.full" {
+  return n < 30 ? "server.quiet" : n < 70 ? "server.busy" : "server.full";
 }
 
 // The first step of starting: which server to play on. Picking one saves it and moves on.
-export function WorldPicker({ current, onPick, onClose }: WorldPickerProps) {
+export function WorldPicker({ current, onPick, onClose, loadLoads }: WorldPickerProps) {
   const [saving, setSaving] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [loads, setLoads] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    let live = true;
+    void loadLoads?.().then((next) => {
+      if (live) setLoads(next);
+    }, () => undefined);
+    return () => {
+      live = false;
+    };
+  }, [loadLoads]);
+  // For a newcomer (no server yet): the quietest server with someone about, so the first hunt is
+  // neither lonely nor crowded; with no one about anywhere, the first.
+  const about = (id: string) => loads?.[id] ?? 0;
+  const recommended = !current && loads
+    ? [...WORLDS].sort((a, b) => Number(about(a.id) === 0) - Number(about(b.id) === 0) || about(a.id) - about(b.id))[0]?.id ?? null
+    : null;
 
   const pick = async (id: string) => {
     if (saving) return;
@@ -38,7 +61,12 @@ export function WorldPicker({ current, onPick, onClose }: WorldPickerProps) {
             <li key={w.id}>
               <button type="button" className={`world-card${w.id === current ? " picked" : ""}`} onClick={() => void pick(w.id)} disabled={!!saving}>
                 <b>{worldName(w.number)}</b>
-                <span>{saving === w.id ? t("server.entering") : w.id === current ? t("server.recent") : ""}</span>
+                <span>{saving === w.id ? t("server.entering") : w.id === current ? t("server.recent") : w.id === recommended ? t("server.recommended") : ""}</span>
+                {loads && (
+                  <em className={`world-crowd ${crowdKey(about(w.id)).split(".")[1]}`}>
+                    {t(crowdKey(about(w.id)))} · {t("server.about", { n: about(w.id) })}
+                  </em>
+                )}
               </button>
             </li>
           ))}

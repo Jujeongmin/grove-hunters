@@ -72,6 +72,7 @@ import {
 } from "./store";
 import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, payVipDay, roomOf, vipOfAccount } from "./premium";
 import { attendanceOf, markAttendanceSeen, stampAttendance } from "./attendance";
+import { notePresence, worldLoads } from "./presence";
 import type { AttendanceView } from "../../src/game/account/attendance";
 import { achievementsOf, claimAchievement, claimAllAchievements } from "./achievements";
 import { NO_RECORD, recordFelled, type AchievementsView } from "../../src/game/account/achievements";
@@ -1209,9 +1210,16 @@ export class Server {
     const account = $sender.account;
     const now = Date.now();
     await markSeen(account, now);
+    // The heartbeat also keeps the server picker's crowd count (a write every two minutes at most).
+    await notePresence(account, now);
     const { lists } = await readFriendSide(account);
     const entries = (accounts: string[]) => Promise.all(accounts.map((a) => friendEntry(a, now)));
     return { friends: await entries(lists.friends), incoming: await entries(lists.incoming), outgoing: await entries(lists.outgoing) };
+  }
+
+  // How many are about on each server, for the server picker.
+  async worldLoads(): Promise<Record<string, number>> {
+    return worldLoads(Date.now());
   }
 
   async requestFriend(nickname: unknown): Promise<{ status: "requested" | "accepted" }> {

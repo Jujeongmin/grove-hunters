@@ -24,7 +24,7 @@ import {
 } from "../rules/movement";
 import { gridRoute, lineClear } from "../rules/pathing";
 import { groundAt, platformBlocks } from "../rules/platforms";
-import { chaseCamera } from "../rules/chaseCamera";
+import { CHASE, chaseCamera, shoulderFor } from "../rules/chaseCamera";
 import {
   BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
 } from "../world/monsters";
@@ -770,7 +770,9 @@ export class WorldView {
     this.syncMarks(state.telegraphs);
     this.effects.update(dt, this.camera);
     for (const glow of this.portalGlows) glow.rotation.y += dt * 0.6;
-    const cam = chaseCamera(this.pose, this.yaw, this.pitch, this.walls, SKY_CEILING);
+    // The shoulder eases over to the open side, so the camera never jumps.
+    this.shoulder += (shoulderFor(this.pose, this.yaw, this.walls) - this.shoulder) * (1 - Math.exp(-dt * 4));
+    const cam = chaseCamera(this.pose, this.yaw, this.pitch, this.walls, SKY_CEILING, this.shoulder);
     this.camera.position.set(cam.x, cam.y, cam.z);
     this.lod?.setNear(QUALITY[settings().quality].near);
     // Round the camera, and only the way it looks: half its view across, from its height and shape.
@@ -1299,6 +1301,7 @@ export class WorldView {
   }
 
   private lastHudKey = "";
+  private shoulder = CHASE.shoulder;
   private lastHudSentAt = 0;
 
   private emitHud(): void {

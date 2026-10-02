@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHASE, chaseCamera } from "../../src/game/rules/chaseCamera";
+import { CHASE, chaseCamera, shoulderFor } from "../../src/game/rules/chaseCamera";
 
 const open = () => false;
 const pose = { x: 10, z: 10, y: 0 };
@@ -37,5 +37,16 @@ describe("chaseCamera", () => {
     expect(cam.z).toBeLessThan(11.5);
     expect(cam.distance).toBeLessThan(CHASE.distance);
     expect(cam.distance).toBeGreaterThanOrEqual(CHASE.minDistance);
+  });
+});
+
+describe("the shoulder", () => {
+  it("is the right one in the open, the left beside a wall on the right, and none between two", () => {
+    const pose = { x: 10, z: 10 };
+    expect(shoulderFor(pose, 0, () => false)).toBe(CHASE.shoulder);
+    // Facing -z (yaw 0), the right is +x.
+    expect(shoulderFor(pose, 0, (x) => x > 11)).toBe(-CHASE.shoulder);
+    expect(shoulderFor(pose, 0, (x) => x > 11 || x < 9)).toBe(0);
+    expect(chaseCamera({ x: 10, z: 10 }, 0, 0, () => false, 4, -CHASE.shoulder).x).toBeCloseTo(10 - CHASE.shoulder);
   });
 });

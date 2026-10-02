@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useGameServer } from "@agent8/gameserver";
 import { readClass } from "./game/combat/classes";
 import { COSTUMES, costumeById } from "./game/render/costumes";
-import { loadRankDetail, loadRanking } from "./net/account";
+import { loadRankDetail, loadRanking, loadWorldLoads } from "./net/account";
 import { Verse8Transport } from "./net/verse8Transport";
 import { devLocalTransport } from "./net/devLocal";
 import { syncControls } from "./net/controlsSync";
@@ -84,6 +84,7 @@ export default function App() {
         onSelect={select}
         onDelete={remove}
         loadRanking={transport ? () => loadRanking(transport) : null}
+        loadWorldLoads={transport ? () => loadWorldLoads(transport) : null}
         loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
         friends={friends.client}
         friendsView={friends.view}

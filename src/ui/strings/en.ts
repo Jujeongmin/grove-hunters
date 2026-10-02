@@ -702,6 +702,11 @@ export const en: Bundle = {
   "server.note": "You meet the players who chose the same one. Pick the server your friends are on.",
   "server.entering": "Entering…",
   "server.recent": "Last played",
+  "server.quiet": "Quiet",
+  "server.busy": "Busy",
+  "server.full": "Crowded",
+  "server.about": "{n} online",
+  "server.recommended": "Recommended",
   "server.failed": "The server could not be chosen. Try again in a moment",
 
   "common.add": "Add",

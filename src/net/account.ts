@@ -43,6 +43,11 @@ export function nicknameProblem(error: unknown): string {
   return (PROBLEMS as readonly string[]).includes(code) ? t(`problem.${code}` as Key) : t("problem.saveFailed");
 }
 
+// How many are about on each server (by its id).
+export function loadWorldLoads(transport: MatchTransport): Promise<Record<string, number>> {
+  return transport.call<Record<string, number>>("worldLoads");
+}
+
 export function loadRanking(transport: MatchTransport): Promise<RankingView> {
   return transport.call<RankingView>("getRanking");
 }

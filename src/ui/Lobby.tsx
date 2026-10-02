@@ -37,6 +37,8 @@ interface LobbyProps {
   // Deletes a character for good, its name typed back to be sure.
   onDelete: (id: string, typedName: string) => Promise<void>;
   loadRanking: (() => Promise<RankingView>) | null;
+  // How many are about on each server, for the picker's crowd marks.
+  loadWorldLoads: (() => Promise<Record<string, number>>) | null;
   loadRankDetail: ((id: string) => Promise<RankDetail>) | null;
   friends: FriendsClient | null;
   friendsView: FriendsView | null;
@@ -52,7 +54,7 @@ type Step = "title" | "world" | "characters" | "class" | "name" | "look";
 type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
-  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail,
+  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, loadWorldLoads,
   friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -217,7 +219,7 @@ export function Lobby({
 
         {step === "world" && (
           <WorldPicker
-            current={view?.world ?? null}
+            current={view?.world ?? null} loadLoads={loadWorldLoads}
             onPick={async (id) => {
               await onPickWorld(id);
               setStep("characters");

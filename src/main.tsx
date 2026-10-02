@@ -9,15 +9,20 @@ import App from "./App";
 import "./index.css";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { installUiTheme } from "./ui/theme";
+import { loadLang } from "./ui/lang";
 
 installUiTheme();
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <GameServerProvider>
-        <App />
-      </GameServerProvider>
-    </ErrorBoundary>
-  </StrictMode>,
-);
+// The language in play first (Korean is already here; the others are fetched), then the game. Should
+// the fetch fail, the game starts in Korean all the same.
+void loadLang().catch(() => undefined).finally(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <GameServerProvider>
+          <App />
+        </GameServerProvider>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+});

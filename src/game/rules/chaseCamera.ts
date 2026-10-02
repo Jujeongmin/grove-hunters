@@ -16,13 +16,14 @@ export interface ChaseCamera {
 // looks down -z, positive pitch looks up). A wall behind the player pulls the camera in.
 export function chaseCamera(
   pose: { x: number; z: number; y?: number }, yaw: number, pitch: number, isSolid: SolidTest, ceilingY: number,
+  shoulder = CHASE.shoulder,
 ): ChaseCamera {
   const cosPitch = Math.cos(pitch);
   const forward = { x: -Math.sin(yaw) * cosPitch, y: Math.sin(pitch), z: -Math.cos(yaw) * cosPitch };
   const pivot = {
-    x: pose.x + Math.cos(yaw) * CHASE.shoulder,
+    x: pose.x + Math.cos(yaw) * shoulder,
     y: CHASE.height + (pose.y ?? 0),
-    z: pose.z - Math.sin(yaw) * CHASE.shoulder,
+    z: pose.z - Math.sin(yaw) * shoulder,
   };
   const back = { ox: pivot.x, oy: pivot.y, oz: pivot.z, dx: -forward.x, dy: -forward.y, dz: -forward.z };
   const clear = wallDistance(back, isSolid, CHASE.distance + CHASE.wallGap, ceilingY) - CHASE.wallGap;
@@ -33,4 +34,14 @@ export function chaseCamera(
     z: pivot.z - forward.z * distance,
     distance,
   };
+}
+
+// How far to the side the camera looks over: the right shoulder, unless a wall crowds that side (a
+// house beside you then fills half the screen) and the left is clear; with both crowded, straight behind.
+export function shoulderFor(pose: { x: number; z: number }, yaw: number, isSolid: SolidTest): number {
+  const right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
+  const crowded = (side: number) => [0.6, 1.2, 1.8].some((d) => isSolid(pose.x + right.x * side * d, pose.z + right.z * side * d));
+  if (!crowded(1)) return CHASE.shoulder;
+  if (!crowded(-1)) return -CHASE.shoulder;
+  return 0;
 }

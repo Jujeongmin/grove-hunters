@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { Suspense, lazy, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { combatPowerAt } from "../game/combat/power";
 import { typing } from "../game/render/FpsInput";
 import { ChatBox } from "./ChatBox";
@@ -31,17 +31,19 @@ import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
-import { RewardsPanel, type RewardsTab } from "./RewardsPanel";
+import type { RewardsTab } from "./RewardsPanel";
+// Screens opened now and then, fetched the first time they are (the stable brings its own 3D stage).
+const MountPanel = lazy(() => import("./MountPanel").then((m) => ({ default: m.MountPanel })));
+const MarketPanel = lazy(() => import("./MarketPanel").then((m) => ({ default: m.MarketPanel })));
+const GuildPanel = lazy(() => import("./GuildPanel").then((m) => ({ default: m.GuildPanel })));
+const RewardsPanel = lazy(() => import("./RewardsPanel").then((m) => ({ default: m.RewardsPanel })));
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
 import { PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
 import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
-import { MarketPanel } from "./MarketPanel";
-import { GuildPanel } from "./GuildPanel";
 import { ArenaHud } from "./ArenaHud";
 import { AnnounceBanner } from "./AnnounceBanner";
 import { unseenNews } from "../game/news";
-import { MountPanel } from "./MountPanel";
 import { DonatePanel } from "./DonatePanel";
 import { hazeHint, weekOf, type GroveView } from "../game/world/grove";
 import type { NpcId } from "../game/world/npcs";
@@ -757,15 +759,17 @@ function ZoneScreen({
           }}
         />
       )}
-      {panel === "mounts" && (
-        <MountPanel
-          client={client} library={view.current?.models ?? null} playerClass={playerClass} costume={costume}
-          onClose={() => setPanel(null)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {panel === "mounts" && (
+          <MountPanel
+            client={client} library={view.current?.models ?? null} playerClass={playerClass} costume={costume}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
+        {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
+        </Suspense>
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
-      {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
-      {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
       {panel === "dungeon" && (
         <DungeonPanel

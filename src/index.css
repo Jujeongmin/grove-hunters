@@ -1946,3 +1946,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .dungeon-mercs li { display: grid; grid-template-columns: minmax(0, 1fr) 80px; align-items: center; gap: 6px; font-size: 11px; color: #9fd8ff; }
 .dungeon-mercs li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dungeon-mercs li.down { opacity: 0.4; }
+/* A skin tone's colour beside its name in the wardrobe. */
+.wardrobe-swatch { display: inline-block; width: 11px; height: 11px; margin-right: 5px; vertical-align: -1px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25); }
+/* The server picker's crowd mark under each server's name. */
+.world-crowd { display: block; font-style: normal; font-size: 11px; color: var(--ink-dim); }
+.world-crowd.quiet { color: #9fd88a; }
+.world-crowd.busy { color: #f3d99a; }
+.world-crowd.full { color: #ff8a7a; }

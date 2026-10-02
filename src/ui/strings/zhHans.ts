@@ -702,6 +702,11 @@ export const zhHans: Bundle = {
   "server.note": "选同一台服务器的玩家才会相遇。和朋友选同一台吧。",
   "server.entering": "进入中…",
   "server.recent": "最近游玩",
+  "server.quiet": "空闲",
+  "server.busy": "普通",
+  "server.full": "拥挤",
+  "server.about": "{n}人在线",
+  "server.recommended": "推荐",
   "server.failed": "无法选择服务器。请稍后再试一次",
 
   "common.add": "添加",
