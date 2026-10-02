@@ -1006,7 +1006,7 @@ export const en: Bundle = {
   "mount.hatchTicket": "Hatch with a ticket",
   "mount.tickets": "{n} ticket(s)",
   "rewards.tickets": "{n} mount ticket(s)",
-  "attend.everyDay": "Every day also brings {n} mount ticket (hatch at the stable without gems)",
+  "attend.ticketDays": "Mount tickets come on days 4 and 7 of each week ({n} a sheet; hatch at the stable without gems)",
   "problem.no_ticket": "You have no mount ticket",
   "mount.skip": "Skip",
   "mount.skipHint": "Tap the screen to see the result now",

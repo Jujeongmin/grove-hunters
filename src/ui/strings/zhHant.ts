@@ -1006,7 +1006,7 @@ export const zhHant: Bundle = {
   "mount.hatchTicket": "用召喚券孵化",
   "mount.tickets": "召喚券{n}張",
   "rewards.tickets": "坐騎召喚券{n}張",
-  "attend.everyDay": "每天還會附贈坐騎召喚券{n}張（在馬廄無需寶石即可孵化）",
+  "attend.ticketDays": "坐騎召喚券在每週第4・7天發放（每張簽到簿{n}張，在馬廄無需寶石即可孵化）",
   "problem.no_ticket": "沒有召喚券",
   "mount.skip": "跳過動畫",
   "mount.skipHint": "點擊畫面即可立即查看結果",

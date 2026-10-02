@@ -1015,7 +1015,7 @@ export const ko = {
   "mount.hatchTicket": "소환권으로 부화",
   "mount.tickets": "소환권 {n}장",
   "rewards.tickets": "탈것 소환권 {n}장",
-  "attend.everyDay": "매일 탈것 소환권 {n}장이 함께 와요 (마구간에서 보석 없이 부화)",
+  "attend.ticketDays": "탈것 소환권은 매주 4·7일째에 와요 (한 장에 {n}장, 마구간에서 보석 없이 부화)",
   "problem.no_ticket": "소환권이 없어요",
   "mount.skip": "연출 스킵",
   "mount.skipHint": "화면을 누르면 바로 결과를 볼 수 있어요",

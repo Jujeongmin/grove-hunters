@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ATTEND_DAYS, ATTEND_REWARDS, ATTEND_TICKETS, type AttendReward, type AttendanceView } from "../game/account/attendance";
+import { ATTEND_DAYS, ATTEND_REWARDS, type AttendReward, type AttendanceView } from "../game/account/attendance";
 import { METRICS, type AchievementRow, type AchievementsView, type Metric } from "../game/account/achievements";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
@@ -70,7 +70,7 @@ function AttendanceTab({ client }: { client: WorldClient }) {
       <p className="attend-lead">{view.stampedToday ? t("attend.today", { n: view.stamps }) : t("attend.notYet")}</p>
       <p className="note attend-every">
         <img src={iconFor("ui_ticket") ?? undefined} alt="" draggable={false} />
-        {t("attend.everyDay", { n: ATTEND_TICKETS })}
+        {t("attend.ticketDays", { n: ATTEND_REWARDS.filter((r) => r.tickets > 0).length })}
       </p>
       <ol className="attend-grid">
         {Array.from({ length: ATTEND_DAYS }, (_, i) => {

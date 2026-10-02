@@ -44,11 +44,16 @@ describe("the attendance sheet", () => {
     expect(next[1].gems).toBe(ATTEND_REWARDS[1].gems);
   });
 
-  test("a box's mount ticket goes to the account, and hatches a mount at the stable without gems", async (server) => {
+  test("a ticket day's mount ticket goes to the account, and hatches a mount at the stable without gems", async (server) => {
     await makeCharacter(server, "test-a", "소환왕");
+    // Three boxes stamped before: today is the fourth, a ticket day.
+    await $global.updateUserState("test-a", { attendance: { stamps: 3, lastDay: "2000-01-01", total: 3 } });
     await enterAs(server, "test-a");
     const [letter] = await attendanceMail(server, "test-a");
-    expect(letter.tickets).toBe(ATTEND_REWARDS[0].tickets);
+    expect(letter.params.day).toBe(4);
+    expect(ATTEND_REWARDS[0].tickets).toBe(0);
+    expect(letter.tickets).toBe(ATTEND_REWARDS[3].tickets);
+    expect(letter.tickets).toBe(1);
     await server.claimMail(letter.id);
     expect((await server.getMounts()).tickets).toBe(1);
 

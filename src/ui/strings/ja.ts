@@ -1006,7 +1006,7 @@ export const ja: Bundle = {
   "mount.hatchTicket": "召喚券でふ化",
   "mount.tickets": "召喚券{n}枚",
   "rewards.tickets": "乗り物召喚券{n}枚",
-  "attend.everyDay": "毎日、乗り物召喚券{n}枚も届きます（厩舎で宝石なしでふ化）",
+  "attend.ticketDays": "乗り物召喚券は毎週4・7日目に届きます（1枚の出席簿で{n}枚、厩舎で宝石なしでふ化）",
   "problem.no_ticket": "召喚券がありません",
   "mount.skip": "演出スキップ",
   "mount.skipHint": "画面をタップするとすぐに結果が見られます",

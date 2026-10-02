@@ -1006,7 +1006,7 @@ export const zhHans: Bundle = {
   "mount.hatchTicket": "用召唤券孵化",
   "mount.tickets": "召唤券{n}张",
   "rewards.tickets": "坐骑召唤券{n}张",
-  "attend.everyDay": "每天还会附赠坐骑召唤券{n}张（在马厩无需宝石即可孵化）",
+  "attend.ticketDays": "坐骑召唤券在每周第4・7天发放（每张签到簿{n}张，在马厩无需宝石即可孵化）",
   "problem.no_ticket": "没有召唤券",
   "mount.skip": "跳过动画",
   "mount.skipHint": "点击画面即可立即查看结果",

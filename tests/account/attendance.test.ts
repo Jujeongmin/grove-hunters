@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  ATTEND_DAYS, ATTEND_REWARDS, ATTEND_TICKETS, NO_ATTENDANCE, attendanceView, readAttendance, stampToday,
+  ATTEND_DAYS, ATTEND_REWARDS, NO_ATTENDANCE, attendanceView, readAttendance, stampToday,
 } from "../../src/game/account/attendance";
 
 describe("attendance", () => {
-  it("has a reward and a mount ticket for every box, the most gems at the end of each week, and no potions", () => {
+  it("has a reward for every box, a mount ticket twice a week, the most gems at the end of each week, and no potions", () => {
     expect(ATTEND_REWARDS.length).toBe(ATTEND_DAYS);
-    expect(ATTEND_REWARDS.every((r) => r.tickets === ATTEND_TICKETS)).toBe(true);
+    expect(ATTEND_REWARDS.map((r, i) => (r.tickets > 0 ? i + 1 : 0)).filter(Boolean)).toEqual([4, 7, 11, 14, 18, 21, 25, 28]);
     for (const week of [0, 1, 2, 3]) {
       const days = ATTEND_REWARDS.slice(week * 7, week * 7 + 7);
       expect(Math.max(...days.map((r) => r.gems))).toBe(days[6].gems);

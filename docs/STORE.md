@@ -4,7 +4,7 @@ Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 
 숫자는 코드 기준(2026-10-02): 직업 6개, 전직 12종(Lv10, 갈래마다 스킬 3개·마지막은 Lv40), 마을 2곳(초록숲 마을·설산 전초기지),
 사냥터 6곳(숲 3·설산 3) + 보스 구역 2곳(버섯왕·빙하의 황제), 메인 퀘스트 21개(숲 13·설산 8) + 일일 퀘스트 6개,
 길드 보스 3종(주마다 교대), 강화 +15, 탈것 23종(사슴 기본, 뽑기 21종, VIP 10 전용 1종), 서버마다 채널 10개(채널당 10명),
-출석부 28일(매일 탈것 소환권), 업적 31개, 전부 무료(보석 판매).
+출석부 28일(주 2회 탈것 소환권), 업적 31개, 전부 무료(보석 판매).
 
 ## 제목
 
@@ -74,7 +74,7 @@ PC는 마우스만으로(WASD 이동도 됩니다), 모바일은 손가락만으
 월정액은 30일 동안 매일 보석과 경험치 +10%를 드립니다.
 
 ■ 출석부와 업적
-매일 처음 들어오면 출석부에 도장이 찍히고 탈것 소환권과 골드·보석·강화석을 받습니다. 빠진 날이 있어도 이어서 찍힙니다.
+매일 처음 들어오면 출석부에 도장이 찍히고 골드·보석·강화석을, 매주 두 번은 탈것 소환권도 받습니다. 빠진 날이 있어도 이어서 찍힙니다.
 레벨·퀘스트·사냥·보스·강화·탈것 수집 등 업적 31개를 채우고 보석을 받으세요.
 ```
 
@@ -131,7 +131,7 @@ Gems hatch mounts, trade at the market and protect gear from breaking. Each gem 
 The monthly pass brings gems every day and +10% XP for 30 days.
 
 ■ Attendance and achievements
-Your first visit each day stamps the attendance sheet for a mount ticket plus gold, gems or whetstones; missed days don't break it.
+Your first visit each day stamps the attendance sheet for gold, gems or whetstones, and twice a week a mount ticket; missed days don't break it.
 Meet 31 achievements, from levels, quests and bosses to enhancing and collecting mounts, for gems.
 ```
 
@@ -157,7 +157,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 한국어:
 
 ```
-- 출석부: 매일 첫 접속에 탈것 소환권 1장과 골드·보석·강화석 (7·14·21·28일째 보석 50·80·80·200)
+- 출석부: 매일 첫 접속에 골드·보석·강화석, 매주 4·7일째 탈것 소환권 (7·14·21·28일째 보석 50·80·80·200)
 - 업적 31개와 보석 보상, 모두 받기 (메뉴 '보상', PC는 V)
 - 마구간에서 소환권으로 부화, 부화 연출 스킵(화면 누르기 또는 '연출 스킵' 켜기)
 ```
@@ -178,7 +178,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 English:
 
 ```
-- Attendance sheet: a mount ticket plus gold, gems or whetstones on your first visit each day (50, 80, 80 and 200 gems on days 7, 14, 21 and 28)
+- Attendance sheet: gold, gems or whetstones on your first visit each day, and a mount ticket on days 4 and 7 of each week (50, 80, 80 and 200 gems on days 7, 14, 21 and 28)
 - 31 achievements with gem rewards, and Claim all (menu 'Rewards', V on PC)
 - Hatch with a ticket at the stable, and skip the hatch (tap the screen, or turn on Skip)
 ```

@@ -7,24 +7,24 @@ import type { ItemId } from "./items";
 
 export const ATTEND_DAYS = 28;
 
-// Every box brings this many mount tickets (소환권: a hatch at the stable without gems), besides its own
-// reward.
-export const ATTEND_TICKETS = 1;
+// Twice a week, on these days of each week (1 to 7), a box also brings a mount ticket (소환권: a hatch at
+// the stable without gems).
+export const TICKET_WEEKDAYS: readonly number[] = [4, 7];
 
 export interface AttendReward { gold: number; gems: number; tickets: number; items: { id: ItemId; n: number }[] }
 
-const gold = (n: number): AttendReward => ({ gold: n, gems: 0, tickets: ATTEND_TICKETS, items: [] });
-const gems = (n: number): AttendReward => ({ gold: 0, gems: n, tickets: ATTEND_TICKETS, items: [] });
-const stones = (n: number): AttendReward => ({ gold: 0, gems: 0, tickets: ATTEND_TICKETS, items: [{ id: "stone", n }] });
+const gold = (n: number): AttendReward => ({ gold: n, gems: 0, tickets: 0, items: [] });
+const gems = (n: number): AttendReward => ({ gold: 0, gems: n, tickets: 0, items: [] });
+const stones = (n: number): AttendReward => ({ gold: 0, gems: 0, tickets: 0, items: [{ id: "stone", n }] });
 
 // Box n's reward is ATTEND_REWARDS[n - 1]: gold, a few gems and 강화석 in turn, more gems at the end of
-// each week.
+// each week, and a ticket on the ticket days.
 export const ATTEND_REWARDS: readonly AttendReward[] = [
   gold(3000), gems(10), stones(5), gold(5000), gems(10), stones(10), gems(50),
   gold(8000), gems(15), stones(10), gold(10000), gems(15), stones(15), gems(80),
   gold(12000), gems(20), stones(15), gold(15000), gems(20), stones(20), gems(80),
   gold(20000), gems(25), stones(20), gold(25000), gems(25), stones(30), gems(200),
-];
+].map((reward, i) => (TICKET_WEEKDAYS.includes((i % 7) + 1) ? { ...reward, tickets: 1 } : reward));
 
 export interface Attendance {
   // Boxes stamped on the sheet in hand (0 to ATTEND_DAYS).
