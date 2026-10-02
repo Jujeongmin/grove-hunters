@@ -640,6 +640,11 @@ export const zhHans: Bundle = {
 
   "lobby.newCharacter": "新角色",
   "lobby.needServer": "需要连上 Verse8 服务器才能开始游戏。",
+  "conn.trying": "正在连接服务器…",
+  "conn.retrying": "与服务器的连接已断开，正在重新连接…",
+  "conn.failed": "无法连接服务器，请重新启动游戏。",
+  "conn.restart": "重新启动",
+  "conn.lost": "连接已断开，已返回标题画面。",
   "lobby.accountFailed": "无法读取账号资料。请刷新。",
   "lobby.accountLoading": "正在读取账号资料…",
   "lobby.loading": "正在加载村庄… {n}%",

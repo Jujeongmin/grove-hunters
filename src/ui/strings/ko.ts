@@ -649,6 +649,11 @@ export const ko = {
 
   "lobby.newCharacter": "새 캐릭터",
   "lobby.needServer": "게임은 Verse8 서버에 연결되어야 시작할 수 있어요.",
+  "conn.trying": "서버에 연결하는 중…",
+  "conn.retrying": "서버 연결이 끊겼어요. 다시 연결하는 중…",
+  "conn.failed": "서버에 연결하지 못했어요. 게임을 다시 실행해 주세요.",
+  "conn.restart": "다시 실행",
+  "conn.lost": "서버 연결이 끊겨 처음 화면으로 돌아왔어요.",
   "lobby.accountFailed": "계정 정보를 불러오지 못했어요. 새로고침해 주세요.",
   "lobby.accountLoading": "계정 정보를 불러오는 중…",
   "lobby.loading": "마을을 불러오는 중… {n}%",

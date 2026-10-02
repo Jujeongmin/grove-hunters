@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useGameServer } from "@agent8/gameserver";
 import { readClass } from "./game/combat/classes";
 import { COSTUMES, costumeById } from "./game/render/costumes";
@@ -6,6 +6,7 @@ import { loadRankDetail, loadRanking, loadWorldLoads } from "./net/account";
 import { Verse8Transport } from "./net/verse8Transport";
 import { devLocalTransport } from "./net/devLocal";
 import { syncControls } from "./net/controlsSync";
+import { connectionOf } from "./net/connection";
 import { WorldClient } from "./net/worldClient";
 import { Lobby } from "./ui/Lobby";
 import { WorldScreen } from "./ui/WorldScreen";
@@ -26,7 +27,10 @@ const DEV_LOCAL = devLocalTransport();
 export default function App() {
   const [inWorld, setInWorld] = useState(false);
   const [returning, setReturning] = useState(false);
-  const { server, connected, joinRoom, leaveRoom } = useGameServer();
+  const { server, connected, connectionStatus, joinRoom, leaveRoom } = useGameServer();
+  const connection = DEV_LOCAL ? "ready" : connectionOf({ available: ONLINE_AVAILABLE, connected, phase: connectionStatus?.phase });
+  // Thrown back to the menu by a dropped connection, to say so there.
+  const [lost, setLost] = useState(false);
   useUiScale();
   useKeyboardFreeze();
   // Read so the whole tree says itself again when the language changes.
@@ -43,9 +47,13 @@ export default function App() {
   // The bar's set-up follows the account.
   useEffect(() => (transport ? syncControls(transport) : undefined), [transport]);
 
-  // Losing the server takes you back to the menu.
+  // Losing the server takes you back to the menu, which says why.
+  const wasInWorld = useRef(false);
+  wasInWorld.current = inWorld;
   useEffect(() => {
-    if (!world) setInWorld(false);
+    if (world) return;
+    if (wasInWorld.current) setLost(true);
+    setInWorld(false);
   }, [world]);
 
   const rotate = <div className="rotate-hint">{t("rotate.hint")}</div>;
@@ -78,6 +86,9 @@ export default function App() {
         view={view}
         accountFailed={failed}
         online={!!transport}
+        connection={connection}
+        lost={lost}
+        onLostSeen={() => setLost(false)}
         onPickWorld={pickWorld}
         checkName={checkName}
         onCreate={create}
@@ -88,7 +99,10 @@ export default function App() {
         loadRankDetail={transport ? (id) => loadRankDetail(transport, id) : null}
         friends={friends.client}
         friendsView={friends.view}
-        onStart={() => setInWorld(true)}
+        onStart={() => {
+          setLost(false);
+          setInWorld(true);
+        }}
         returning={returning && !!view}
       />
     </>

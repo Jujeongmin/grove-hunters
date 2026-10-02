@@ -1953,3 +1953,11 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .world-crowd.quiet { color: #9fd88a; }
 .world-crowd.busy { color: #f3d99a; }
 .world-crowd.full { color: #ff8a7a; }
+/* The menu's word on the server link while it is not up: along the top, over every step. */
+.conn-status {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 30; max-width: calc(100% - 32px);
+  display: flex; align-items: center; gap: 12px; font-size: 14px; pointer-events: auto;
+}
+.conn-status p { margin: 0; }
+.conn-status.failed p { color: #ffb4a8; }
+.conn-status button { flex: none; white-space: nowrap; }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { Connection } from "../net/connection";
 import { t } from "./lang";
 import { CHARACTERS_PER_WORLD } from "../game/account/characters";
 import type { FriendsView } from "../game/account/friends";
@@ -30,6 +31,11 @@ interface LobbyProps {
   accountFailed: boolean;
   // Starting needs the Verse8 server.
   online: boolean;
+  // How the link to it stands, said on the menu while it is not up.
+  connection: Connection;
+  // Thrown back here by a dropped connection; onLostSeen once that has been read.
+  lost: boolean;
+  onLostSeen: () => void;
   onPickWorld: (world: string) => Promise<void>;
   checkName: (name: string) => Promise<boolean>;
   onCreate: (name: string, playerClass: string, costume: string) => Promise<void>;
@@ -54,7 +60,7 @@ type Step = "title" | "world" | "characters" | "class" | "name" | "look";
 type Sheet = "none" | "settings" | "ranking";
 
 export function Lobby({
-  account, view, accountFailed, online, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, loadWorldLoads,
+  account, view, accountFailed, online, connection, lost, onLostSeen, onPickWorld, checkName, onCreate, onSelect, onDelete, loadRanking, loadRankDetail, loadWorldLoads,
   friends, friendsView, onStart, returning,
 }: LobbyProps) {
   const stage = useRef<HTMLDivElement>(null);
@@ -113,6 +119,8 @@ export function Lobby({
   // Tap anywhere on the title to go on: the server comes first.
   const tapTitle = () => {
     if (loading < 1) return;
+    if (connection === "trying" || connection === "failed") return;
+    onLostSeen();
     if (!online) {
       setNotice(t("lobby.needServer"));
       return;
@@ -199,11 +207,21 @@ export function Lobby({
       />
       <div className="ui">
         {loading < 1 && <div className="menu-loading band">{t("lobby.loading", { n: Math.round(loading * 100) })}</div>}
+        {(connection === "trying" || connection === "failed" || lost) && (
+          <div className={`conn-status band${connection === "failed" ? " failed" : ""}`}>
+            <p>
+              {connection === "failed" ? t("conn.failed") : connection === "trying" ? t(lost ? "conn.retrying" : "conn.trying") : t("conn.lost")}
+            </p>
+            {connection === "failed" && (
+              <button type="button" className="brush-button small" onClick={() => window.location.reload()}>{t("conn.restart")}</button>
+            )}
+          </div>
+        )}
 
         {step === "title" && (
           <div className="title-screen" onClick={tapTitle}>
             <h1 className="game-title">{GAME_TITLE}</h1>
-            {loading >= 1 && <p className="tap-to-start">{t("lobby.tapToStart")}</p>}
+            {loading >= 1 && connection !== "trying" && connection !== "failed" && <p className="tap-to-start">{t("lobby.tapToStart")}</p>}
             {notice && <p className="title-notice band">{notice}</p>}
           </div>
         )}

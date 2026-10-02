@@ -640,6 +640,11 @@ export const en: Bundle = {
 
   "lobby.newCharacter": "New character",
   "lobby.needServer": "The game needs a connection to Verse8 before it can start.",
+  "conn.trying": "Connecting to the server…",
+  "conn.retrying": "Lost the server. Reconnecting…",
+  "conn.failed": "Couldn't reach the server. Please restart the game.",
+  "conn.restart": "Restart",
+  "conn.lost": "The connection dropped, so you're back at the title.",
   "lobby.accountFailed": "Your account could not be read. Please refresh.",
   "lobby.accountLoading": "Reading your account…",
   "lobby.loading": "Loading the village… {n}%",

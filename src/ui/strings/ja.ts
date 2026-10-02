@@ -640,6 +640,11 @@ export const ja: Bundle = {
 
   "lobby.newCharacter": "新しいキャラクター",
   "lobby.needServer": "Verse8サーバーに接続しないとゲームを始められません。",
+  "conn.trying": "サーバーに接続中…",
+  "conn.retrying": "サーバーとの接続が切れました。再接続中…",
+  "conn.failed": "サーバーに接続できませんでした。ゲームを再起動してください。",
+  "conn.restart": "再起動",
+  "conn.lost": "接続が切れたため、タイトルに戻りました。",
   "lobby.accountFailed": "アカウント情報を読み込めませんでした。再読み込みしてください。",
   "lobby.accountLoading": "アカウント情報を読み込み中…",
   "lobby.loading": "村を読み込み中… {n}%",
