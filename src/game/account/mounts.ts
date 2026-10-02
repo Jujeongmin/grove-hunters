@@ -63,7 +63,7 @@ export const MOUNTS: Record<MountId, Mount> = {
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
 
 // The mount you have picked makes you stronger whether you ride it or not: a share more damage and
-// more health, more the rarer it is (the full game's own counts as below common).
+// more health, more the rarer it is (the deer, everyone's own, counts as below common).
 export interface MountBonus { power: number; hp: number }
 const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
   base: { power: 0.1, hp: 30 },

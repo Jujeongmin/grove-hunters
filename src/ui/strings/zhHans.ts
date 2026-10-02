@@ -851,7 +851,7 @@ export const zhHans: Bundle = {
   "pad.dismount": "下坐骑",
   "problem.not_enough_gems": "宝石不足",
   "problem.no_mount": "没有这个坐骑",
-  "mount.none": "没有可骑的坐骑。完整版附赠鹿，孵蛋可获得更多。",
+  "mount.none": "没有可骑的坐骑。在马厩孵蛋即可获得。",
   "mount.rideHint": "按 T 或骑乘按钮上下坐骑。攻击或被攻击时会下坐骑。",
   "mount.stats": "攻击 +{p}% · 生命 +{h}",
   "mount.statsNote": "选中的坐骑即使不骑也会提升攻击力和生命值。",

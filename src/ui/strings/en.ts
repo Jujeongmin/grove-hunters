@@ -851,7 +851,7 @@ export const en: Bundle = {
   "pad.dismount": "Get off",
   "problem.not_enough_gems": "Not enough gems",
   "problem.no_mount": "You do not have that mount",
-  "mount.none": "No mount to ride. The full game comes with a deer; hatch eggs for more.",
+  "mount.none": "No mount to ride. Hatch eggs at the stable for one.",
   "mount.rideHint": "T or the ride button gets you on and off. Attacking or being hit takes you off.",
   "mount.stats": "Attack +{p}% · Health +{h}",
   "mount.statsNote": "Your picked mount raises your attack and health, ridden or not.",

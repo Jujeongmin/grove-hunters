@@ -6,7 +6,7 @@ import {
 import { combatPowerAt } from "../../src/game/combat/power";
 
 describe("mounts", () => {
-  it("run faster the rarer they are, the full game's own at 1.2", () => {
+  it("run faster the rarer they are, the deer everyone has at 1.2", () => {
     expect(MOUNTS[BASE_MOUNT].speed).toBe(1.2);
     const speed = { common: 1.3, rare: 1.4, epic: 1.5, legendary: 1.6, mythic: 1.75 } as const;
     for (const id of MOUNT_IDS) if (id !== BASE_MOUNT) expect(MOUNTS[id].speed).toBe(speed[tierOf(id)!]);
@@ -25,7 +25,7 @@ describe("mounts", () => {
     expect(GACHA_ODDS.map((o) => o.tier)).toEqual(["common", "rare", "epic", "legendary", "mythic"]);
   });
 
-  it("a draw picks a tier by its odds, then one of that tier's mounts evenly; never the full game's own", () => {
+  it("a draw picks a tier by its odds, then one of that tier's mounts evenly; never the deer everyone has", () => {
     expect(tierOf(rollMount(() => 0))).toBe("common");
     expect(tierOf(rollMount(() => 0.599))).toBe("common");
     expect(tierOf(rollMount(() => 0.6))).toBe("rare");

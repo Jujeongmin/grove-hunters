@@ -851,7 +851,7 @@ export const ja: Bundle = {
   "pad.dismount": "降りる",
   "problem.not_enough_gems": "宝石が足りません",
   "problem.no_mount": "その乗り物は持っていません",
-  "mount.none": "乗れる乗り物がありません。製品版にはシカが付き、卵のふ化でさらに手に入ります。",
+  "mount.none": "乗れる乗り物がありません。厩舎で卵をふ化させると手に入ります。",
   "mount.rideHint": "Tキーか乗るボタンで乗り降りします。攻撃したり攻撃されたりすると降ります。",
   "mount.stats": "攻撃 +{p}% · 体力 +{h}",
   "mount.statsNote": "選んだ乗り物は、乗っていなくても攻撃力と体力を上げます。",

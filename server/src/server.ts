@@ -1063,7 +1063,7 @@ export class Server {
     return { success: true, code: granted ? "granted" : "already_granted" };
   }
 
-  // Your gems and mounts: what you own (drawn, and the full game's own), and the one you ride.
+  // Your gems and mounts: what you own (drawn, and the deer everyone has), and the one you ride.
   async getMounts(): Promise<MountsView> {
     return mountsView($sender.account);
   }

@@ -132,7 +132,7 @@ describe("characters", () => {
   });
 });
 
-describe("classes and the full game", () => {
+describe("classes in the free game", () => {
   // A real wallet account: it does not play for free like the test- accounts.
   const PLAYER = "0x2222222222222222222222222222222222222222";
 

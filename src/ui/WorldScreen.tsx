@@ -282,7 +282,7 @@ function ZoneScreen({
       setHud(h);
       setNow(performance.now());
     });
-    // The ride button with no mount opens the stable: a gem hatch, or the full game's deer.
+    // The ride button with no mount opens the stable, where eggs hatch for gems.
     const offNoMount = next.onNoMount(() => setPanel("mounts"));
     void next.start().then(() => setReady(true));
     return () => {

@@ -2,9 +2,9 @@ import { TILE_SIZE, parseLevel, type LevelLayout, type Point2 } from "../rules/l
 import { fieldMap, portalCell, type House, type Side } from "./fieldMap";
 import { BUILDINGS } from "./grove";
 
-// The open world: a village, two forest fields and the boss's clearing, joined by portals (O cells).
+// The open world: a village, the forest fields, the deep forest and the boss's clearing, joined by portals (O cells).
 // A server runs as channels (see CHANNEL_CAPACITY), each zone of a channel one Verse8 room. The
-// village and the first field are free; the rest open with the full game.
+// whole world is free to everyone; each zone only asks for a level (minLevel).
 // The arena is where a guild fights its boss (see guildBoss.ts): no portal leads there, only the guild.
 // Past the deep forest lies the snow region: its outpost, three fields and the Glacier Emperor's altar.
 export type ZoneId =

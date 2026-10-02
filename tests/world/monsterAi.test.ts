@@ -162,7 +162,7 @@ describe("the boss", () => {
 });
 
 describe("the deep forest", () => {
-  it("holds the level 28 to 40 monsters and opens at level 25 with the full game", () => {
+  it("holds the level 28 to 40 monsters and opens at level 25", () => {
     const monsters = Object.values(spawnMonsters("forest3"));
     expect(monsters.length).toBeGreaterThanOrEqual(24);
     for (const m of monsters) {
