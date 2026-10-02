@@ -297,7 +297,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .ui .side-panel { top: 64px; width: 280px; }
 /* The menu: one button at the top right (the corner map is at the top left now), unfolding into a
    grid five across under itself, which leaves the quest below it in the clear. */
-.hud-menu-buttons { position: absolute; top: 10px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+/* Over the quest tracker (the tutorial's shows while the menu is open), so a tap on the menu, gaps
+   included, never reaches the quest under it; under the full-screen panels (6). */
+.hud-menu-buttons { position: absolute; top: 10px; right: 12px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .hud-menu-row { display: flex; gap: 8px; }
 /* The unfolded menu comes in a box of its own; the pinned buttons above it have none. */
 .hud-menu-grid {
@@ -351,7 +353,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
 }
-.hud-cell img { position: absolute; inset: 2px; width: 34px; height: 34px; image-rendering: pixelated; }
+/* The icon right in the middle of the square (whatever its border and size). */
+.hud-cell img { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; transform: translate(-50%, -50%); image-rendering: pixelated; }
 .hud-cell.locked { border-color: rgba(255, 255, 255, 0.15); }
 .hud-cell.locked img { opacity: 0.35; filter: grayscale(1); }
 .hud-cell-key {
@@ -363,8 +366,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
   position: absolute; right: 1px; bottom: 1px; padding: 0 3px; border-radius: 3px; line-height: 13px;
   font: 700 11px var(--font-head); color: var(--ink); background: rgba(0, 0, 0, 0.6); text-shadow: var(--shadow);
 }
-/* The potion bottle sits a pixel left of its picture's middle, and low: set right in the square. */
-.hud-cell.potion img { transform: translate(1px, -2px); }
 .hud-cell-cooling { position: absolute; left: 0; right: 0; top: 0; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .hud-cell-name {
   max-width: 46px; overflow: hidden; text-overflow: ellipsis;
@@ -1296,6 +1297,8 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .smith-protect input { accent-color: #ffd36a; }
 .smith-protect-gems { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 12px var(--font-head); color: #bff0ff; }
 .smith-protect-gems img { width: 16px; height: 16px; image-rendering: pixelated; }
+/* 강화석's picture before each of its counts at the forge. */
+.stone-icon { width: 16px; height: 16px; margin-right: 2px; vertical-align: -3px; image-rendering: pixelated; }
 .smith-short { color: var(--blood); }
 .smith-note { font: 700 15px var(--font-head); margin: 8px 0; }
 .smith-note.good { color: #8fe08a; }

@@ -54,7 +54,7 @@ function Cell({ slot, keyLabel, name, icon, corner, cooling, locked, isAuto, glo
   return (
     <div className="hud-slot">
       <div
-        className={`hud-cell${slot < 0 ? " potion" : ""}${locked ? " locked" : ""}${isAuto ? " auto" : ""}${pull !== null ? " pulling" : ""}${icon ? "" : " empty"}${glow ? " tutorial-glow" : ""}`}
+        className={`hud-cell${locked ? " locked" : ""}${isAuto ? " auto" : ""}${pull !== null ? " pulling" : ""}${icon ? "" : " empty"}${glow ? " tutorial-glow" : ""}`}
         style={{ transform: `translateY(${offset}px)` }}
         data-slot={slot >= 0 ? slot : undefined}
         title={name}

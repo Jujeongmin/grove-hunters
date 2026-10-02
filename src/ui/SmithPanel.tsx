@@ -18,6 +18,11 @@ const stillScreen = () => typeof matchMedia === "function" && matchMedia("(prefe
 
 const percent = (n: number) => `${Math.round(n * 100)}%`;
 
+// 강화석's picture, before its count.
+function StoneIcon() {
+  return <img className="stone-icon" src={iconFor("stone") ?? undefined} alt="" draggable={false} />;
+}
+
 // The forge, from the menu anywhere (or from the village smith): enhance your gear, worn or in the bag (+1 to +10,
 // riskier the higher it goes) and make gear and potions from what monsters drop.
 export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag: BagView | null; onClose: () => void }) {
@@ -66,7 +71,9 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
   return (
     <>
       <FullScreen title={t("forge.title")} className="bag-panel smith-panel" onClose={onClose}>
-        <p className="bag-gold">{bag ? `${t("common.gold", { n: bag.gold.toLocaleString(locale()) })} · ${t("forge.stones", { n: stones })}` : t("common.loading")}</p>
+        <p className="bag-gold">
+          {bag ? <>{t("common.gold", { n: bag.gold.toLocaleString(locale()) })} · <StoneIcon />{t("forge.stones", { n: stones })}</> : t("common.loading")}
+        </p>
         <div className="smith-tabs">
           <button type="button" className={`text-button${tab === "enhance" ? " on" : ""}`} onClick={() => setTab("enhance")}>{t("forge.enhance")}</button>
           <button type="button" className={`text-button${tab === "craft" ? " on" : ""}`} onClick={() => setTab("craft")}>{t("forge.craft")}</button>
@@ -107,7 +114,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                         {cost.breaks > 0 && (shield !== null
                           ? <em className="smith-safe"> · {t("forge.protected", { n: shield })}</em>
                           : <em className="smith-risk"> · {t("forge.breakRisk", { pct: percent(cost.breaks) })}</em>)}
-                        {" "}· {t("common.gold", { n: cost.gold.toLocaleString(locale()) })} · {t("forge.stones", { n: cost.stones })}
+                        {" "}· {t("common.gold", { n: cost.gold.toLocaleString(locale()) })} · <StoneIcon />{t("forge.stones", { n: cost.stones })}
                       </span>
                     </>
                   ) : (

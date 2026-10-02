@@ -365,6 +365,9 @@ export class WorldView {
     // Your own name stays off: the camera is right behind you and it would only cover the view.
     this.me = this.hero(this.options.playerClass, this.options.costume);
     this.addNpcs();
+    // Every shader of what stands in the zone made now, behind the loading screen, rather than on the
+    // frame something first comes into view.
+    this.renderer.compile(this.scene, this.camera);
     this.clock.start();
     preloadCues();
     this.frame = requestAnimationFrame(this.tick);

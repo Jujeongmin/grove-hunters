@@ -92,8 +92,11 @@ export function Lobby({
     if (!container) return;
     const next = new MenuScene(container);
     scene.current = next;
-    void next.start((done, total) => setLoading(done / total)).then(() => setLoading(1));
+    // A scene already let go (React mounts twice in development) has no say over the progress.
+    let live = true;
+    void next.start((done, total) => live && setLoading(done / total)).then(() => live && setLoading(1));
     return () => {
+      live = false;
       scene.current = null;
       next.dispose();
     };

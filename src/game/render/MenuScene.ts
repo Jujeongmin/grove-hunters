@@ -118,9 +118,14 @@ export class MenuScene {
     this.resize();
   }
 
+  // Fetches every model the game has, the menu's own first (it shows as soon as those are in), the
+  // rest behind them, all on the one progress: nothing is fetched or parsed later, mid-game. A model
+  // that will not come now is left for the zone that needs it to ask for again.
   async start(onProgress?: (done: number, total: number) => void): Promise<void> {
     const library = await ModelLibrary.load();
-    await library.preload(MENU_MODELS, onProgress);
+    const rest = library.names().filter((name) => !MENU_MODELS.includes(name));
+    const total = MENU_MODELS.length + rest.length;
+    await library.preload(MENU_MODELS, (done) => onProgress?.(done, total));
     if (this.disposed) return;
     buildLevelScene(this.scene, library, parseLevel(MENU_MAP, TILE_SIZE), this.renderer);
     this.library = library;
@@ -130,6 +135,7 @@ export class MenuScene {
     this.scene.add(this.slime.object);
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
+    await library.preload(rest, (done) => onProgress?.(MENU_MODELS.length + done, total)).catch(() => undefined);
   }
 
   // The six classes in a row (for a new character), or your character.

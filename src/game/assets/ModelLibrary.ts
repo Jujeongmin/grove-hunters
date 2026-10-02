@@ -53,6 +53,11 @@ export class ModelLibrary {
     );
   }
 
+  // Every model the game has (the manifest's).
+  names(): string[] {
+    return Object.keys(this.manifest.models);
+  }
+
   has(name: string): boolean {
     return this.loaded.has(name);
   }
