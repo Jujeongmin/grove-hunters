@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CROSSFADE_MS, MusicPlayer, type MusicElement } from "../../src/game/audio/MusicPlayer";
-import { MUSIC_LEVEL } from "../../src/game/audio/musicTrack";
+import { MUSIC_FILES, MUSIC_LEVEL } from "../../src/game/audio/musicTrack";
 
 class FakeAudio implements MusicElement {
   volume = 1;
@@ -41,6 +41,16 @@ afterEach(() => {
 });
 
 describe("MusicPlayer", () => {
+  it("fetches every track ahead, playing none of them until asked", () => {
+    const { player, made } = setup();
+    player.warm();
+    expect(made.map((m) => m.src).sort()).toEqual(Object.values(MUSIC_FILES).sort());
+    expect(made.every((m) => m.plays === 0 && m.volume === 0)).toBe(true);
+    player.play("field");
+    expect(made.length).toBe(Object.keys(MUSIC_FILES).length);
+    expect(made.find((m) => m.src === MUSIC_FILES.field)!.plays).toBe(1);
+  });
+
   it("fades the new track in and the old one out, then stops the old one", async () => {
     vi.useFakeTimers();
     const { player, made } = setup();

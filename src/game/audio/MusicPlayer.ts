@@ -1,8 +1,10 @@
 import { publicUrl } from "../assets/publicUrl";
-import { MUSIC_FILES, MUSIC_LEVEL, type Track } from "./musicTrack";
+import { MUSIC_FILES, MUSIC_LEVEL, MUSIC_TRACKS, type Track } from "./musicTrack";
+import { audioContext } from "./sfx";
 
-// How long one piece takes to fade out while the next fades in.
-export const CROSSFADE_MS = 2000;
+// How long one piece takes to fade out while the next fades in: short, so a new zone sounds like itself
+// at once.
+export const CROSSFADE_MS = 1000;
 const STEP_MS = 50;
 
 // What the player needs from an audio element, so tests can hand it a fake one.
@@ -28,10 +30,48 @@ const waitForTouch: WaitForTouch = (again) => {
   window.addEventListener("keydown", once, { once: true });
 };
 
+// A track's element, fetched ahead (the player makes them all at the start). Its loudness goes through
+// the audio context's gain where there is one: iPhones ignore an audio element's volume (always full),
+// so the levels below and the music setting would not count there otherwise.
 function makeAudio(src: string): MusicElement {
   const audio = new Audio(publicUrl(src));
-  audio.preload = "none";
-  return audio;
+  audio.preload = "auto";
+  const ctx = audioContext();
+  let gain: GainNode;
+  try {
+    if (!ctx) return audio;
+    gain = ctx.createGain();
+    ctx.createMediaElementSource(audio).connect(gain).connect(ctx.destination);
+  } catch {
+    return audio;
+  }
+  gain.gain.value = 0;
+  return {
+    get volume() {
+      return gain.gain.value;
+    },
+    set volume(v: number) {
+      gain.gain.value = v;
+    },
+    get loop() {
+      return audio.loop;
+    },
+    set loop(v: boolean) {
+      audio.loop = v;
+    },
+    get currentTime() {
+      return audio.currentTime;
+    },
+    set currentTime(v: number) {
+      audio.currentTime = v;
+    },
+    // The context starts held until the page is touched, like the element.
+    play: () => {
+      if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
+      return audio.play();
+    },
+    pause: () => audio.pause(),
+  };
 }
 
 // Plays one looping track at a time, fading between them. Browsers refuse to start audio before the
@@ -65,6 +105,11 @@ export class MusicPlayer {
     this.wanted = track;
     if (track) this.start(track);
     this.run();
+  }
+
+  // Makes every track's element now, so each is fetched ahead and a zone's piece starts at once.
+  warm(): void {
+    for (const track of MUSIC_TRACKS) this.element(track);
   }
 
   dispose(): void {

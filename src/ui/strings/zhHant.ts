@@ -408,6 +408,7 @@ export const zhHant: Bundle = {
   "world.loading": "正在載入森林… {n}%",
   "world.travelling": "移動中…",
   "world.channel": "頻道 {n}",
+  "zoneTitle.level": "Lv.{n} 以上",
   "world.talk": "{name} — {role} · 對話 (E)",
   "world.portalLevel": "{zone} — Lv{n} 起可前往",
   "world.portalTo": "通往{zone}的路",

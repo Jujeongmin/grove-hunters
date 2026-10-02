@@ -408,6 +408,7 @@ export const en: Bundle = {
   "world.loading": "Loading the forest… {n}%",
   "world.travelling": "Travelling…",
   "world.channel": "Channel {n}",
+  "zoneTitle.level": "Lv.{n}+",
   "world.talk": "{name} — {role} · talk (E)",
   "world.portalLevel": "{zone} — open from Lv {n}",
   "world.portalTo": "The way to {zone}",

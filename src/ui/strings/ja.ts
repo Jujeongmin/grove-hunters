@@ -408,6 +408,7 @@ export const ja: Bundle = {
   "world.loading": "森を読み込み中… {n}%",
   "world.travelling": "移動中…",
   "world.channel": "チャンネル {n}",
+  "zoneTitle.level": "Lv.{n}以上",
   "world.talk": "{name} — {role} · 会話 (E)",
   "world.portalLevel": "{zone} — Lv{n}から行けます",
   "world.portalTo": "{zone}へ続く道",

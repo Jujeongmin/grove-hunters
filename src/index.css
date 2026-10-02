@@ -1977,3 +1977,19 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .conn-status button { flex: none; white-space: nowrap; }
 /* A learned skill's row is what you drag (or double-tap); the page must not scroll or select under it. */
 .skill-row.learned { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+/* A zone's name across the top on coming in: it eases down and in, holds, and fades (ZONE_TITLE_MS). */
+.zone-title {
+  position: absolute; top: 17%; left: 50%; transform: translateX(-50%); z-index: 4; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; white-space: nowrap;
+  animation: zone-title 3.2s ease-out forwards;
+}
+.zone-title b { font: 800 26px var(--font-logo); letter-spacing: 0.08em; color: #fff4dc; padding: 6px 34px; }
+.zone-title span { font: 700 13px var(--font-head); color: var(--ink-dim); text-shadow: var(--shadow); }
+@keyframes zone-title {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  75% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .zone-title { animation-name: zone-title-still; } }
+@keyframes zone-title-still { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }

@@ -33,7 +33,8 @@ export type Cue = keyof typeof CUES;
 
 let audio: AudioContext | null = null;
 
-function context(): AudioContext | null {
+// The page's one audio context: the cues play through it, and so does the music (see MusicPlayer).
+export function audioContext(): AudioContext | null {
   if (typeof AudioContext === "undefined") return null;
   audio ??= new AudioContext();
   return audio;
@@ -56,13 +57,13 @@ function load(ctx: AudioContext, file: string): Promise<AudioBuffer | null> {
 }
 
 export function preloadCues(): void {
-  const ctx = context();
+  const ctx = audioContext();
   if (!ctx) return;
   for (const { file } of Object.values(CUES)) if (!buffers.has(file)) void load(ctx, file);
 }
 
 export function playCue(cue: Cue): void {
-  const ctx = context();
+  const ctx = audioContext();
   if (!ctx) return;
   const { file, level: own } = CUES[cue];
   const level = own * settings().volume;

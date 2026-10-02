@@ -417,6 +417,7 @@ export const ko = {
   "world.loading": "숲을 불러오는 중… {n}%",
   "world.travelling": "이동하는 중…",
   "world.channel": "채널 {n}",
+  "zoneTitle.level": "Lv.{n} 이상",
   "world.talk": "{name} — {role} · 대화 (E)",
   "world.portalLevel": "{zone} — Lv{n}부터 갈 수 있어요",
   "world.portalTo": "{zone}(으)로 가는 길",

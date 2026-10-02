@@ -408,6 +408,7 @@ export const zhHans: Bundle = {
   "world.loading": "正在加载森林… {n}%",
   "world.travelling": "移动中…",
   "world.channel": "频道 {n}",
+  "zoneTitle.level": "Lv.{n} 以上",
   "world.talk": "{name} — {role} · 对话 (E)",
   "world.portalLevel": "{zone} — Lv{n} 起可前往",
   "world.portalTo": "通往{zone}的路",

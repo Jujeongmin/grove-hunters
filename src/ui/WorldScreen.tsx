@@ -16,6 +16,7 @@ import type { ZoneEntry } from "../game/world/zones";
 import type { WorldClient, WorldState } from "../net/worldClient";
 import type { BagView } from "../game/account/items";
 import { START_ZONE } from "../game/world/zones";
+import { ZoneTitle } from "./ZoneTitle";
 import { BagPanel, ShopPanel, problemText } from "./BagPanel";
 import { QuestTracker } from "./QuestTracker";
 import { TUTORIAL, tutorialGlow } from "../game/account/tutorial";
@@ -743,6 +744,7 @@ function ZoneScreen({
           {entry.zone === "arena" && <ArenaHud client={client} />}
           {inDungeon && <DungeonHud client={client} />}
           <AnnounceBanner client={client} />
+          <ZoneTitle entry={entry} />
           {hud.dead && entry.zone !== "arena" && !inDungeon && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} vip={bag?.vip ?? 0} travelling={travelling} />
           )}

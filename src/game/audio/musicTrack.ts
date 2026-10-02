@@ -4,6 +4,8 @@ import type { ZoneId } from "../world/zones";
 // Cleyton Kauffman (Forest Whisper Theme), all CC0 (see docs/licenses).
 export type Track = "menu" | "village" | "field" | "field2" | "deep" | "boss";
 
+export const MUSIC_TRACKS: readonly Track[] = ["menu", "village", "field", "field2", "deep", "boss"];
+
 export const MUSIC_FILES: Record<Track, string> = {
   menu: "assets/music/menu.ogg",
   village: "assets/music/village.ogg",

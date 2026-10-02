@@ -7,6 +7,8 @@ let player: MusicPlayer | null = null;
 function live(): MusicPlayer {
   if (!player) {
     player = new MusicPlayer();
+    // Every piece fetched from the start, like the models: nothing waits for its file mid-game.
+    player.warm();
     player.setVolume(settings().music);
     onSettings((s) => player?.setVolume(s.music));
   }
