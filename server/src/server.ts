@@ -75,6 +75,8 @@ import { attendanceOf, markAttendanceSeen, stampAttendance } from "./attendance"
 import type { AttendanceView } from "../../src/game/account/attendance";
 import { achievementsOf, claimAchievement, claimAllAchievements } from "./achievements";
 import { NO_RECORD, recordFelled, type AchievementsView } from "../../src/game/account/achievements";
+import { answer as answerInvite, candidatesOf, invite, kick, leaveParty, partyIdOf, partyStateOf, passLead } from "./party";
+import { shareOf, type PartyCandidate, type PartyState } from "../../src/game/account/party";
 import {
   freeRevive, huntBonus, pieceLimit, premiumView, protectCost, readPremium, vipEnhance, vipOf, type PremiumView,
 } from "../../src/game/account/premium";
@@ -343,20 +345,31 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
     if (!pay) pays.set(account, (pay = { xp: 0, gold: 0, items: [], felled: [] }));
     return pay;
   };
+  // Everyone here, with their level and the party the room has them in (see party.ts).
+  const inRoom = [...present];
+  const states = await $room.getUserStates(inRoom, ["look", "party"]);
   const levels = new Map<string, number>();
+  const parties = new Map<string, string>();
+  inRoom.forEach((account, i) => {
+    const state = states[i] as { look?: { level?: unknown }; party?: unknown } | null | undefined;
+    levels.set(account, typeof state?.look?.level === "number" ? state.look.level : 1);
+    if (typeof state?.party === "string" && state.party.length > 0) parties.set(account, state.party);
+  });
   for (const kill of result.kills) {
     const hunters = rankHitters(kill.hitters, present);
     const owner = hunters[0] ?? caller;
-    if (!levels.has(owner)) {
-      const [state] = await $room.getUserStates([owner], ["look"]);
-      levels.set(owner, typeof state?.look?.level === "number" ? state.look.level : 1);
-    }
+    // The owner's party members here share what it pays (each by their own level); its drops stay the owner's.
+    const party = parties.get(owner);
+    const sharers = party ? inRoom.filter((account) => account === owner || parties.get(account) === party) : [owner];
+    const share = shareOf(sharers.length);
     const loot = rollLoot(kill.type);
-    const own = payOf(owner);
-    own.xp += xpFor(kill.type, levels.get(owner)!);
-    own.gold += loot.gold;
-    own.items.push(...loot.items);
-    for (const counted of new Set([owner, ...hunters])) payOf(counted).felled.push(kill.type);
+    for (const account of sharers) {
+      const pay = payOf(account);
+      pay.xp += Math.round(xpFor(kill.type, levels.get(account) ?? 1) * share);
+      pay.gold += Math.round(loot.gold * share);
+    }
+    payOf(owner).items.push(...loot.items);
+    for (const counted of new Set([owner, ...hunters, ...sharers])) payOf(counted).felled.push(kill.type);
   }
   if (here) for (const account of pays.keys()) await markHunter(account, here.world, Date.now());
   for (const [account, pay] of pays) await payHunter(account, roomId, pay);
@@ -563,6 +576,56 @@ export class Server {
     if (kept && NEWS.findIndex((n) => n.id === kept) <= NEWS.findIndex((n) => n.id === id)) return { seen: kept };
     await $global.updateUserState(account, { newsSeen: id });
     return { seen: id };
+  }
+
+  // Your party and the invitations waiting for you, polled by the screen: it also marks you as about,
+  // and notes the party on you in the room you are in, for sharing kills.
+  async partyState(): Promise<PartyState> {
+    const account = $sender.account;
+    const { partyId, ...state } = await partyStateOf(account, await playing(account), Date.now());
+    if ($sender.roomId && readChannelRoom($sender.roomId)) {
+      const mine = await $room.getMyState();
+      if ((mine.party ?? null) !== partyId) await $room.updateMyState({ party: partyId });
+    }
+    return state;
+  }
+
+  // Players on your channel in no party, to invite.
+  async partyCandidates(): Promise<PartyCandidate[]> {
+    const account = $sender.account;
+    const where = readChannelRoom($sender.roomId);
+    if (!where) return [];
+    return candidatesOf(account, where.world, where.channel);
+  }
+
+  async inviteToParty(target: unknown): Promise<void> {
+    const account = $sender.account;
+    await invite(account, await playing(account), requireText(target), Date.now());
+  }
+
+  // Taken: the leader's channel when you must move there (the screen does), or null.
+  async answerPartyInvite(id: unknown, accept: unknown): Promise<{ channel: number | null }> {
+    const account = $sender.account;
+    const here = readChannelRoom($sender.roomId);
+    const { partyId, channel } = await answerInvite(account, await playing(account), requireText(id), accept === true, here?.channel ?? null, Date.now());
+    if (partyId && here) await $room.updateMyState({ party: partyId });
+    return { channel };
+  }
+
+  async leaveParty(): Promise<void> {
+    const account = $sender.account;
+    await leaveParty(account, await playing(account));
+    if (readChannelRoom($sender.roomId)) await $room.updateMyState({ party: null });
+  }
+
+  async kickFromParty(target: unknown): Promise<void> {
+    const account = $sender.account;
+    await kick(account, await playing(account), requireText(target));
+  }
+
+  async passPartyLeader(target: unknown): Promise<void> {
+    const account = $sender.account;
+    await passLead(account, await playing(account), requireText(target));
   }
 
   // The attendance sheet (stamped on coming into the world) and marking today's as looked at.
@@ -1229,6 +1292,8 @@ export class Server {
       // Every room is come into on foot.
       riding: null,
       look: zoneLook(character, await vipOfAccount(account)),
+      // The party the room shares kills by (see reward).
+      party: await partyIdOf(account),
       savedAt: now,
       xp: character.xp, maxHp, gear, ...vitals,
     });

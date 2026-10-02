@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-02-party",
+    date: "2026-10-02",
+    text: {
+      ko: {
+        title: "파티가 생겼어요",
+        lines: [
+          "같은 서버의 최대 4명이 파티를 맺어요. 메뉴의 '파티'(5)에서 같은 채널 사람을 초대하고, 초대를 받으면 화면 위에서 수락해요.",
+          "같은 구역에 있는 파티원끼리 경험치·골드를 나눠 가져요. 인원이 많을수록 보너스가 붙고, 퀘스트 처치 수도 함께 올라요.",
+          "왼쪽 위에 파티원이 보여요. 같은 구역이면 체력, 아니면 있는 곳이 나와요. 다른 채널에서 초대를 받으면 파티장 채널로 옮겨요.",
+        ],
+      },
+      en: {
+        title: "Parties are here",
+        lines: [
+          "Up to four players of one server can form a party. Invite people on your channel from 'Party' (5) in the menu, and accept invitations at the top of the screen.",
+          "Members in the same zone share XP and gold, with a bonus that grows with the party, and count kills toward their quests together.",
+          "Your party shows at the top left: health for those in your zone, where the others are. Accepting from another channel moves you to the leader's.",
+        ],
+      },
+      ja: {
+        title: "パーティーが登場",
+        lines: [
+          "同じサーバーの最大4人でパーティーを組めます。メニューの「パーティー」（5）から同じチャンネルの人を招待し、招待は画面上部で受けられます。",
+          "同じエリアにいるメンバー同士で経験値・ゴールドを分け合います。人数が多いほどボーナスがつき、クエストの討伐数も一緒に増えます。",
+          "左上にメンバーが表示されます。同じエリアなら体力、それ以外は居場所。別チャンネルで招待を受けるとリーダーのチャンネルへ移動します。",
+        ],
+      },
+      "zh-Hant": {
+        title: "新增隊伍",
+        lines: [
+          "同一伺服器最多4人可以組隊。在選單的「隊伍」（5）邀請同頻道的玩家，收到邀請時在畫面上方接受。",
+          "同一區域的隊員共享經驗與金幣，人數越多加成越高，任務擊殺數也一起增加。",
+          "左上角會顯示隊員：同一區域顯示體力，其他顯示所在位置。在其他頻道接受邀請會移動到隊長的頻道。",
+        ],
+      },
+      "zh-Hans": {
+        title: "新增队伍",
+        lines: [
+          "同一服务器最多4人可以组队。在菜单的“队伍”（5）邀请同频道的玩家，收到邀请时在画面上方接受。",
+          "同一区域的队员共享经验与金币，人数越多加成越高，任务击杀数也一起增加。",
+          "左上角会显示队员：同一区域显示体力，其他显示所在位置。在其他频道接受邀请会移动到队长的频道。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-02-attendance",
     date: "2026-10-02",
     text: {

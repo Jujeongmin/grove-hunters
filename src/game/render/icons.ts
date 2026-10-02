@@ -36,6 +36,8 @@ export const ICON_IDS = [
   "ui_gold",
   // Attendance and achievements, and the mount ticket (PixelLab).
   "ui_rewards", "ui_ticket",
+  // The party (PixelLab).
+  "ui_party",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

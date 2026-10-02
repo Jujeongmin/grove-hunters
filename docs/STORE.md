@@ -4,7 +4,7 @@ Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 
 숫자는 코드 기준(2026-10-02): 직업 6개, 전직 12종(Lv10, 갈래마다 스킬 3개·마지막은 Lv40), 마을 2곳(초록숲 마을·설산 전초기지),
 사냥터 6곳(숲 3·설산 3) + 보스 구역 2곳(버섯왕·빙하의 황제), 메인 퀘스트 21개(숲 13·설산 8) + 일일 퀘스트 6개,
 길드 보스 3종(주마다 교대), 강화 +15, 탈것 23종(사슴 기본, 뽑기 21종, VIP 10 전용 1종), 서버마다 채널 10개(채널당 10명),
-출석부 28일(주 2회 탈것 소환권), 업적 31개, 전부 무료(보석 판매).
+파티(최대 4명), 출석부 28일(주 2회 탈것 소환권), 업적 31개, 전부 무료(보석 판매).
 
 ## 제목
 
@@ -42,6 +42,7 @@ Lv10이 되면 직업마다 두 갈래 중 하나로 전직하고, 고른 길의
 ■ 함께하는 사냥
 서버마다 채널 10개, 채널당 10명. 친구가 어느 채널에 있는지 보고 바로 옮겨 갈 수 있습니다.
 몬스터의 보상은 가장 많이 싸운 사람에게, 퀘스트 카운트는 함께 때린 모두에게 올라갑니다.
+최대 4명이 파티를 맺으면 같은 구역에서 잡은 몬스터의 경험치와 골드를 함께 나눕니다.
 채팅으로 대화하고, 친구를 맺고, 레벨과 전투력 랭킹에서 겨뤄 보세요.
 
 ■ 길드와 길드 보스
@@ -99,6 +100,7 @@ When a mark appears on the ground, don't block: step out. The blow lands on whoe
 ■ Hunt together
 Ten channels per server, ten players each. See which channel your friends are on and hop over to them.
 A monster's rewards go to whoever fought it hardest, and everyone who hit it counts it toward their quest.
+Form a party of up to four to share the XP and gold of what you fell together in a zone.
 Chat, make friends and climb the level and power rankings.
 
 ■ Guilds and guild bosses
@@ -157,6 +159,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 한국어:
 
 ```
+- 파티: 최대 4명, 같은 구역 파티원끼리 경험치·골드 나눔(인원 보너스), 퀘스트 카운트 공유 (메뉴 '파티', PC는 5)
 - 출석부: 매일 첫 접속에 골드·보석·강화석, 매주 4·7일째 탈것 소환권 (7·14·21·28일째 보석 50·80·80·200)
 - 업적 31개와 보석 보상, 모두 받기 (메뉴 '보상', PC는 V)
 - 마구간에서 소환권으로 부화, 부화 연출 스킵(화면 누르기 또는 '연출 스킵' 켜기)
@@ -178,6 +181,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 English:
 
 ```
+- Parties of up to four: members in the same zone share XP and gold (with a bonus) and quest kills (menu 'Party', 5 on PC)
 - Attendance sheet: gold, gems or whetstones on your first visit each day, and a mount ticket on days 4 and 7 of each week (50, 80, 80 and 200 gems on days 7, 14, 21 and 28)
 - 31 achievements with gem rewards, and Claim all (menu 'Rewards', V on PC)
 - Hatch with a ticket at the stable, and skip the hatch (tap the screen, or turn on Skip)

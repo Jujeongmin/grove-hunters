@@ -16,7 +16,7 @@ import type { ZoneEntry } from "../game/world/zones";
 import type { WorldClient, WorldState } from "../net/worldClient";
 import type { BagView } from "../game/account/items";
 import { START_ZONE } from "../game/world/zones";
-import { BagPanel, ShopPanel } from "./BagPanel";
+import { BagPanel, ShopPanel, problemText } from "./BagPanel";
 import { QuestTracker } from "./QuestTracker";
 import { tutorialGlow } from "../game/account/tutorial";
 import type { QuestTrip } from "../game/world/questRoute";
@@ -32,6 +32,8 @@ import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
 import { RewardsPanel, type RewardsTab } from "./RewardsPanel";
+import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
+import { PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { MarketPanel } from "./MarketPanel";
 import { GuildPanel } from "./GuildPanel";
 import { ArenaHud } from "./ArenaHud";
@@ -138,7 +140,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -337,6 +339,32 @@ function ZoneScreen({
   const [attendPending, setAttendPending] = useState(false);
   const [attendKnown, setAttendKnown] = useState(false);
   const [rewardsTab, setRewardsTab] = useState<RewardsTab>("attendance");
+  // The party and invitations waiting (see party.ts), asked every PARTY_POLL_MS once the world is ready.
+  const [party, setParty] = useState<PartyState | null>(null);
+  const [answering, setAnswering] = useState(false);
+  const [partyNote, setPartyNote] = useState<string | null>(null);
+  const pollParty = useRef(() => {});
+  pollParty.current = () => {
+    void client.partyState().then((next) => {
+      if (next) setParty(next);
+    });
+  };
+  useEffect(() => {
+    if (!ready) return;
+    pollParty.current();
+    const timer = setInterval(() => pollParty.current(), PARTY_POLL_MS);
+    return () => clearInterval(timer);
+  }, [ready]);
+  const answerInvite = async (id: string, accept: boolean) => {
+    setAnswering(true);
+    setPartyNote(null);
+    // Gone from the banner at once; the next poll shows where things stand.
+    setParty((p) => (p ? { ...p, invites: p.invites.filter((i) => i.id !== id) } : p));
+    const problem = await client.answerPartyInvite(id, accept);
+    setAnswering(false);
+    if (problem) setPartyNote(problemText(problem));
+    pollParty.current();
+  };
   useEffect(() => {
     if (!ready || attendKnown) return;
     let live = true;
@@ -432,6 +460,10 @@ function ZoneScreen({
         toggle("rewards");
       },
       on: panel === "rewards", dot: claimable > 0 || attendPending,
+    },
+    {
+      id: "party", label: t("menu.party"), key: "5", code: "Digit5", act: () => toggle("party"), on: panel === "party",
+      dot: (party?.invites.length ?? 0) > 0,
     },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
@@ -546,7 +578,17 @@ function ZoneScreen({
             </div>
             {/* Under the vitals in the same column, so a taller vitals box pushes it down, never under. */}
             {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
+            {!saving && (
+              <PartyFrame
+                state={party} me={client.account} others={client.state.others} here={{ zone: hud.zoneId, channel: hud.channel }}
+                onOpen={() => toggle("party")}
+              />
+            )}
           </div>
+          {party && party.invites.length > 0 && (
+            <PartyInviteBanner invite={party.invites[0]} busy={answering} onAnswer={(accept) => void answerInvite(party.invites[0].id, accept)} />
+          )}
+          {partyNote && <button type="button" className="party-note band" onClick={() => setPartyNote(null)}>{partyNote}</button>}
           {/* The menu sits left of the corner map and unfolds into a grid below itself, so the two
               never cover each other. */}
           <div className={`hud-menu-buttons${menuOpen ? " open" : ""}`}>
@@ -677,6 +719,12 @@ function ZoneScreen({
       {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
       {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
+      {panel === "party" && hud && (
+        <PartyPanel
+          client={client} state={party} me={client.account} here={{ zone: hud.zoneId, channel: hud.channel }}
+          onChanged={() => pollParty.current()} onClose={() => setPanel(null)}
+        />
+      )}
       {panel === "rewards" && <RewardsPanel client={client} tab={rewardsTab} onClaimable={setClaimable} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (

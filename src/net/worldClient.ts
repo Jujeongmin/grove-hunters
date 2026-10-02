@@ -21,6 +21,7 @@ import type { LeagueView } from "../game/world/guildBoss";
 import type { Mail } from "../game/account/mail";
 import type { AttendanceView } from "../game/account/attendance";
 import type { AchievementsView } from "../game/account/achievements";
+import type { PartyCandidate, PartyState } from "../game/account/party";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
 import type { MatchTransport } from "./transport";
@@ -57,6 +58,9 @@ export interface OtherPlayer {
   look: ZoneLook;
   // The mount they are on, if any.
   riding: MountId | null;
+  // Their health as the room has it (a party member's bar), when it says.
+  hp: number | null;
+  maxHp: number | null;
 }
 
 // Your gems and mounts, as the server keeps them (see mounts.ts).
@@ -484,6 +488,52 @@ export class WorldClient {
     }
   }
 
+  // Parties (see party.ts): your party and invitations (null when it cannot be read), the players you
+  // could invite, and every change, each answering null when done or why it was refused.
+  async partyState(): Promise<PartyState | null> {
+    if (this.current.phase !== "in") return null;
+    return await this.transport.call<PartyState>("partyState").catch(() => null);
+  }
+
+  async partyCandidates(): Promise<PartyCandidate[] | null> {
+    return await this.transport.call<PartyCandidate[]>("partyCandidates").catch(() => null);
+  }
+
+  inviteToParty(account: string): Promise<string | null> {
+    return this.doneOrProblem("inviteToParty", [account]);
+  }
+
+  // Taken, you move to the leader's channel when it is not yours.
+  async answerPartyInvite(id: string, accept: boolean): Promise<string | null> {
+    try {
+      const { channel } = await this.transport.call<{ channel: number | null }>("answerPartyInvite", [id, accept]);
+      return channel !== null ? await this.changeChannel(channel) : null;
+    } catch (error) {
+      return errorCode(error);
+    }
+  }
+
+  leaveParty(): Promise<string | null> {
+    return this.doneOrProblem("leaveParty", []);
+  }
+
+  kickFromParty(account: string): Promise<string | null> {
+    return this.doneOrProblem("kickFromParty", [account]);
+  }
+
+  passPartyLeader(account: string): Promise<string | null> {
+    return this.doneOrProblem("passPartyLeader", [account]);
+  }
+
+  private async doneOrProblem(name: string, args: unknown[]): Promise<string | null> {
+    try {
+      await this.transport.call(name, args);
+      return null;
+    } catch (error) {
+      return errorCode(error);
+    }
+  }
+
   // The attendance sheet (stamped by the server on coming in; null when it cannot be read) and today's
   // looked at, told without waiting.
   async attendance(): Promise<AttendanceView | null> {
@@ -825,6 +875,7 @@ export class WorldClient {
       const p = user.pose;
       others.push({
         account, look, riding: readMountId(user.riding),
+        hp: typeof user.hp === "number" ? user.hp : null, maxHp: typeof user.maxHp === "number" ? user.maxHp : null,
         pose: {
           x: p.x, z: p.z, yaw: p.yaw, y: readJumpY(p.y), block: p.block === true, swing: readSwing(p.swing), skill: readSwing(p.skill),
           slot: readSlot(p.slot) ?? 0,
