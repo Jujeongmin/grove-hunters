@@ -165,7 +165,6 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .pain .band { color: #ff5a45; font: 700 18px var(--font-head); }
 /* Shown while the shield is up, just below the middle of the screen. */
-.hud-shield { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font: 700 13px var(--font-head); color: var(--frost); }
 
 /* Your level, health and XP, bottom left; the monster you fight, top centre. */
 .hud-vitals {
@@ -431,13 +430,19 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .pad-button img { width: 34px; height: 34px; image-rendering: pixelated; opacity: 0.85; pointer-events: none; }
 .pad-button span { pointer-events: none; }
+/* Waiting to go again (the dodge roll): dimmed, the seconds left over its picture. */
+.pad-button.cooling img { opacity: 0.3; }
+.pad-count {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); pointer-events: none;
+  font: 800 20px var(--font-head); color: #fff; text-shadow: var(--shadow);
+}
 .pad-button:hover { background: rgba(14, 11, 9, 0.45); }
 .pad-button:active { transform: scale(0.94); }
 .pad-button .hud-key { top: -4px; right: -8px; }
 .pad-attack { right: 0; bottom: 0; width: 92px; height: 92px; border-color: rgba(255, 179, 90, 0.7); }
 .pad-attack img { width: 50px; height: 50px; }
 .pad-jump { right: 104px; bottom: 2px; }
-.pad-block { right: 86px; bottom: 76px; }
+.pad-roll { right: 86px; bottom: 76px; }
 /* Auto-battle sits left of the block, so nothing stands above the attack
    button and the quest under the map has the right side to itself down to the buttons. */
 .pad-auto { right: 170px; bottom: 76px; border-color: rgba(157, 255, 176, 0.55); }

@@ -36,7 +36,8 @@ export const zhHans: Bundle = {
 
   "keys.jump": "跳跃",
   "keys.click": "左键 / 右键",
-  "keys.attackGuard": "攻击 / 格挡",
+  "keys.attackRoll": "攻击 / 翻滚",
+  "keys.roll": "翻滚闪避",
   "keys.skills": "技能",
   "keys.potion": "药水",
   "keys.talk": "对话",
@@ -410,7 +411,6 @@ export const zhHans: Bundle = {
   "world.talk": "{name} — {role} · 对话 (E)",
   "world.portalLevel": "{zone} — Lv{n} 起可前往",
   "world.portalTo": "通往{zone}的路",
-  "world.blocking": "格挡中",
 
   "menu.map": "地图",
   "menu.ranking": "排行",
@@ -606,12 +606,11 @@ export const zhHans: Bundle = {
   "quest.reporting": "正在前往完成…",
 
   "pad.attack": "攻击",
-  "pad.block": "格挡",
+  "pad.roll": "翻滚",
   "pad.jump": "跳跃",
   "pad.auto": "自动",
   "pad.autoOn": "自动中",
   "pad.leftClick": "左键",
-  "pad.rightClick": "右键",
 
   "map.tapToWalk": "点击即可走到那里",
   "map.portals": "区域出入口",
@@ -669,7 +668,6 @@ export const zhHans: Bundle = {
   "class.speed": "攻击速度",
   "class.perSecond": "{n} 次/秒",
   "class.reach": "射程",
-  "class.block": "格挡",
   "class.skillLine": "技能 {n} · {name}",
   "class.confirm": "选定这个职业",
   "class.onceNote": "职业在创建角色时决定一次。",

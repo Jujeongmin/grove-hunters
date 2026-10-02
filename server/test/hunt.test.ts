@@ -1,6 +1,7 @@
 import { MONSTERS, maxHpAt, spawnMonsters } from "../../src/game/world/monsters";
 import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
+import { ROLL } from "../../src/game/combat/roll";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { REVIVE_HP_SHARE, deathXpLoss, levelCost, levelOf, reviveCost } from "../../src/game/account/level";
 import { STEED, enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
@@ -89,7 +90,7 @@ describe("hunting", () => {
     expect(mine.hp).toBe(mine.maxHp);
   });
 
-  test("a monster in reach hits you, and a raised guard takes part of it", async (server) => {
+  test("a monster in reach hits you, and a dodge roll lets its blows go by for a moment", async (server) => {
     const entry = await toForest(server, "test-a");
     const spawn = zoneLayout("forest1").playerSpawn;
     await standAt(server, spawn.x, spawn.z);
@@ -100,21 +101,42 @@ describe("hunting", () => {
     await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
     await server.simulateTick(entry.roomId, 200);
     const full = maxHpAt(1) + STEED.hp;
-    const bare = full - (await $room.getMyState()).hp;
-    expect(bare).toBe(MONSTERS.rat.damage);
+    expect(full - (await $room.getMyState()).hp).toBe(MONSTERS.rat.damage);
 
+    // A roll (the pose's roll count up by one): the next blow goes by.
     await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
-    await $room.updateMyState({ hp: full, pose: { ...(await $room.getMyState()).pose, block: true } });
+    await $room.updateMyState({ hp: full });
+    const pose = (await $room.getMyState()).pose;
+    await server.reportPose({ x: pose.x, z: pose.z, yaw: 0, roll: 1 });
+    expect(typeof (await $room.getMyState()).rolledAt).toBe("number");
     await server.simulateTick(entry.roomId, 200);
-    const guarded = full - (await $room.getMyState()).hp;
-    expect(guarded).toBeGreaterThan(0);
-    expect(guarded).toBeLessThan(bare);
+    expect((await $room.getMyState()).hp).toBe(full);
 
-    // Mid-swing (the weapon not ready again yet) the guard does nothing: no striking behind it.
+    // Its moment over, blows land again; and a roll before the wait is out keeps none off.
+    await $room.updateMyState({ rolledAt: Date.now() - ROLL.safeMs });
     await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
-    await $room.updateMyState({ hp: full, strikeReadyAt: Date.now() + 60_000 });
     await server.simulateTick(entry.roomId, 200);
-    expect(full - (await $room.getMyState()).hp).toBe(bare);
+    expect(full - (await $room.getMyState()).hp).toBe(MONSTERS.rat.damage);
+    await $room.updateMyState({ hp: full });
+    await server.reportPose({ x: pose.x, z: pose.z, yaw: 0, roll: 2 });
+    await only("rat", spawn.x, spawn.z - 1, undefined, "test-a");
+    await server.simulateTick(entry.roomId, 200);
+    expect(full - (await $room.getMyState()).hp).toBe(MONSTERS.rat.damage);
+  });
+
+  test("a roll carries you further than a step, but only while it lasts", async (server) => {
+    await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    const before = (await $room.getMyState()).pose;
+    // Rolling, the four metres are taken at once.
+    await server.reportPose({ x: before.x + ROLL.distance, z: before.z, yaw: 0, roll: 1 });
+    expect((await $room.getMyState()).pose.x).toBeCloseTo(before.x + ROLL.distance, 1);
+    // Long after it, the same leap is cut short to what walking allows.
+    await $room.updateMyState({ rolledAt: Date.now() - 60_000 });
+    const after = (await $room.getMyState()).pose;
+    await server.reportPose({ x: after.x - ROLL.distance, z: after.z, yaw: 0, roll: 1 });
+    expect((await $room.getMyState()).pose.x).toBeGreaterThan(after.x - ROLL.distance + 0.5);
   });
 
   test("a reported step into the forest is not taken", async (server) => {

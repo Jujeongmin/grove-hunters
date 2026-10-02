@@ -1,5 +1,6 @@
 import { WEAPONS, readClass, type PlayerClass } from "../../src/game/combat/classes";
-import { BLOCK_ARC, facing, inStrikeReach } from "../../src/game/combat/melee";
+import { inStrikeReach } from "../../src/game/combat/melee";
+import { dodging } from "../../src/game/combat/roll";
 import { readSlot, skillAt, skillTargets } from "../../src/game/combat/skills";
 import { readJob, type JobId } from "../../src/game/combat/jobs";
 import type { FightBonus } from "../../src/game/combat/power";
@@ -100,9 +101,9 @@ async function writeMonsters(monsters: Record<string, MonsterState>): Promise<vo
   await $room.updateRoomState({ monsters: tidy(monsters) }, { returnState: false });
 }
 
-// One room tick: monsters move and swing, blows land on players (a raised guard facing the monster
-// stops part of it), marked attacks land on whoever is still inside them (no guard helps: only
-// stepping out), and players out of a fight heal a little. Answers who fell in it.
+// One room tick: monsters move and swing, blows land on players, marked attacks land on whoever is
+// still inside them, and players out of a fight heal a little. A player mid dodge roll (see roll.ts)
+// takes neither. Answers who fell in it.
 // A Trial Dungeon room's mercenaries (see mercenary.ts) come too: they act first (out of marks, a
 // cleric's heal, their blows), then the monsters hunt and strike them like players. Their state is
 // changed in place for the caller to keep.
@@ -112,11 +113,12 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
   if (accounts.length === 0) return [];
   const monsters = await readMonsters(zone);
   const users: (Record<string, any> & { account: string })[] = await $room.getUserStates(
-    accounts, ["pose", "look", "hp", "maxHp", "dead", "hitAt", "safeUntil", "strikeReadyAt"],
+    accounts, ["pose", "look", "hp", "maxHp", "dead", "hitAt", "safeUntil", "strikeReadyAt", "rolledAt"],
   );
   const fighters = new Map(users.map((u) => [u.account, {
     ...readFighter(u), hitAt: typeof u.hitAt === "number" ? u.hitAt : 0,
     strikeReadyAt: typeof u.strikeReadyAt === "number" ? u.strikeReadyAt : 0,
+    rolledAt: typeof u.rolledAt === "number" ? u.rolledAt : undefined,
   }]));
   const prey: Prey[] = [];
   // Just stood up where they fell: the monsters leave them be for a moment.
@@ -146,9 +148,9 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
     for (const [id, m] of Object.entries(mercs)) {
       const key = `merc:${id}`;
       fighters.set(key, {
-        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, block: false, swing: 0, skill: 0, slot: 0 } as Pose, playerClass: m.playerClass, job: null,
+        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, swing: 0, skill: 0, roll: 0, slot: 0 } as Pose, playerClass: m.playerClass, job: null,
         level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0 }, learned: true,
-        hitAt: m.hitAt, strikeReadyAt: 0,
+        hitAt: m.hitAt, strikeReadyAt: 0, rolledAt: undefined,
       });
       if (!m.dead) prey.push({ account: key, x: m.x, z: m.z });
     }
@@ -159,7 +161,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
   const fell: string[] = [];
   for (const hit of struck.hits) {
     const f = fighters.get(hit.account);
-    if (!f || f.dead) continue;
+    if (!f || f.dead || dodging(f.rolledAt, now)) continue;
     f.hp = Math.max(0, f.hp - Math.max(1, Math.round(hit.damage * (1 - f.gear.guard))));
     f.dead = f.hp <= 0;
     if (f.dead) fell.push(hit.account);
@@ -169,13 +171,9 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
   for (const hit of hits) {
     const f = fighters.get(hit.account);
     const m = monsters[hit.monsterId];
-    if (!f || f.dead || !m) continue;
-    // A raised guard facing the monster takes part of the blow, but not mid-swing: striking from
-    // behind a guard is not a thing (the client never does it; a modified one gains nothing).
-    const midSwing = typeof f.strikeReadyAt === "number" && now < f.strikeReadyAt;
-    const guarded = f.pose?.block === true && !midSwing && facing(f.pose, m, BLOCK_ARC);
-    const shield = guarded ? 1 - WEAPONS[f.playerClass].block : 1;
-    const damage = Math.max(1, Math.round(hit.damage * shield * (1 - f.gear.guard)));
+    // Rolling, the blow goes by.
+    if (!f || f.dead || !m || dodging(f.rolledAt, now)) continue;
+    const damage = Math.max(1, Math.round(hit.damage * (1 - f.gear.guard)));
     f.hp = Math.max(0, f.hp - damage);
     f.dead = f.hp <= 0;
     if (f.dead) fell.push(hit.account);

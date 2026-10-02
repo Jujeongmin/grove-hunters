@@ -42,7 +42,6 @@ export function ClassPanel({ picked, onPick, onConfirm, onBack }: ClassPanelProp
               <div><dt>{t("class.damage")}</dt><dd>{info.weapon.damage}</dd></div>
               <div><dt>{t("class.speed")}</dt><dd>{t("class.perSecond", { n: (1000 / info.weapon.intervalMs).toFixed(1) })}</dd></div>
               <div><dt>{t("class.reach")}</dt><dd>{info.weapon.reach} m</dd></div>
-              <div><dt>{t("class.block")}</dt><dd>{Math.round(info.weapon.block * 100)}%</dd></div>
             </dl>
             <p className="class-skill">
               <b>{t("class.skillLine", { n: 1, name: skillName(picked, null, 0) })}</b>

@@ -73,10 +73,11 @@ describe("mouse and keys", () => {
     expect(input.consumeLook()).toEqual({ dx: 0, dy: 0 });
   });
 
-  it("raises the shield while the right button is held", () => {
+  it("asks for a dodge roll on the right button or Shift", () => {
     canvas.dispatchEvent(event("mousedown", { button: 2 }));
-    expect(input.blocking).toBe(true);
-    window.dispatchEvent(event("mouseup", { button: 2 }));
-    expect(input.blocking).toBe(false);
+    expect(input.consumePress("Roll")).toBe(true);
+    expect(input.consumePress("Roll")).toBe(false);
+    window.dispatchEvent(event("keydown", { code: "ShiftLeft" }));
+    expect(input.consumePress("Roll")).toBe(true);
   });
 });

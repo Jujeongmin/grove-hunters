@@ -342,20 +342,20 @@ export class WorldClient {
     this.set({ chat: [...this.current.chat, line].slice(-CHAT_KEEP) });
   }
 
-  // Every POSE_THROTTLE_MS while moving, every IDLE_POSE_MS while standing still; a guard, an attack
+  // Every POSE_THROTTLE_MS while moving, every IDLE_POSE_MS while standing still; a dodge roll, an attack
   // or a skill as soon as MIN_POSE_GAP_MS allows. Called every frame, so nothing held back is lost.
   reportPose(pose: Pose): void {
     if (this.current.phase !== "in") return;
     if (this.lastPose && this.now() - this.lastPose.at < MIN_POSE_GAP_MS) return;
     const sent = {
-      x: pose.x, z: pose.z, yaw: pose.yaw, y: readJumpY(pose.y), block: pose.block === true,
+      x: pose.x, z: pose.z, yaw: pose.yaw, y: readJumpY(pose.y), roll: readSwing(pose.roll),
       swing: readSwing(pose.swing), skill: readSwing(pose.skill), slot: readSlot(pose.slot) ?? 0,
     };
     const now = this.now();
     const last = this.lastPose;
     const moved = !last || Math.abs(sent.x - last.x) > POSE_EPSILON || Math.abs(sent.z - last.z) > POSE_EPSILON
       || Math.abs(sent.yaw - last.yaw) > POSE_EPSILON || Math.abs(sent.y - (last.y ?? 0)) > POSE_EPSILON;
-    const acted = !!last && (sent.block !== (last.block === true) || sent.swing !== (last.swing ?? 0) || sent.skill !== (last.skill ?? 0));
+    const acted = !!last && (sent.roll !== (last.roll ?? 0) || sent.swing !== (last.swing ?? 0) || sent.skill !== (last.skill ?? 0));
     if (last && !acted && now - last.at < (moved ? POSE_THROTTLE_MS : IDLE_POSE_MS)) return;
     this.lastPose = { ...sent, at: now };
     void this.transport.call("reportPose", [sent], { needResponse: false });
@@ -927,7 +927,7 @@ export class WorldClient {
         account, look, riding: readMountId(user.riding), dead: user.dead === true,
         hp: typeof user.hp === "number" ? user.hp : null, maxHp: typeof user.maxHp === "number" ? user.maxHp : null,
         pose: {
-          x: p.x, z: p.z, yaw: p.yaw, y: readJumpY(p.y), block: p.block === true, swing: readSwing(p.swing), skill: readSwing(p.skill),
+          x: p.x, z: p.z, yaw: p.yaw, y: readJumpY(p.y), swing: readSwing(p.swing), skill: readSwing(p.skill), roll: readSwing(p.roll),
           slot: readSlot(p.slot) ?? 0,
         },
       });
@@ -937,7 +937,7 @@ export class WorldClient {
       others.push({
         account: `merc:${id}`, merc: true, dead: m.dead, riding: null, hp: m.hp, maxHp: m.maxHp,
         look: { name: m.name, costume: m.costume, playerClass: m.playerClass, level: m.level, job: null },
-        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, block: false, swing: readSwing(m.swing), skill: readSwing(m.skill), slot: 0 },
+        pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, swing: readSwing(m.swing), skill: readSwing(m.skill), roll: 0, slot: 0 },
       });
     }
     this.set({ others, me });

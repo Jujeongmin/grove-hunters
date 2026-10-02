@@ -54,7 +54,8 @@ import { enhanceCost, hasMaterials, readRecipe, rollEnhance, type EnhanceOutcome
 import { parseNickname, type AccountView } from "../../src/game/account/nickname";
 import { readWorld } from "../../src/game/account/worlds";
 import { costumeById } from "../../src/game/render/costumes";
-import { PROTOCOL_VERSION, RuleViolation, isPose } from "../../src/game/world/types";
+import { PROTOCOL_VERSION, RuleViolation, isPose, readSwing, type Pose } from "../../src/game/world/types";
+import { ROLL, rollReady } from "../../src/game/combat/roll";
 import {
   CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, townOf, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
   readWhereabouts, readZone, zoneLayout, type ZoneEntry, type ZoneId,
@@ -104,6 +105,9 @@ const newUid = () => `g-${token(10)}`;
 // leaving the room saves it too), and how far it must have gone since the last save. Each save rewrites
 // the account's characters, so it is kept rare.
 const SAVE_SPOT_MS = 30_000;
+// A roll's poses may carry you further than walking for this long past its tumble (the poses come in
+// a little late).
+const ROLL_SLACK_MS = 400;
 const SAVE_SPOT_MOVED = 1;
 
 function requireText(value: unknown): string {
@@ -529,7 +533,7 @@ async function arriveInArena(account: string): Promise<{ x: number; z: number; g
   const at = zoneLayout("arena").playerSpawn;
   const { maxHp, gear } = fightStats(await mounted(account, character));
   await $room.updateMyState({
-    pose: { x: at.x, z: at.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+    pose: { x: at.x, z: at.z, yaw: 0, y: 0, swing: 0, skill: 0, roll: 0, at: now },
     characterId: character.id, riding: null, look: zoneLook(character, await vipOfAccount(account)), savedAt: now,
     xp: character.xp, maxHp, gear, hp: maxHp, dead: false, arenaUntil: pass.until, timeUp: false,
   });
@@ -547,7 +551,7 @@ async function arriveInDungeon(account: string): Promise<{ x: number; z: number;
   const now = Date.now();
   const { maxHp, gear } = fightStats(await mounted(account, character));
   await $room.updateMyState({
-    pose: { x: at.x, z: at.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+    pose: { x: at.x, z: at.z, yaw: 0, y: 0, swing: 0, skill: 0, roll: 0, at: now },
     characterId: character.id, riding: null, look: zoneLook(character, await vipOfAccount(account)), savedAt: now,
     xp: character.xp, maxHp, gear, hp: maxHp, dead: false, party: place.matchId,
   });
@@ -1391,7 +1395,7 @@ export class Server {
     const mine = await $room.getMyState();
     const vitals = arrivalVitals(character.vitals ?? null, roomCharacter(mine) === character.id ? mine : null, maxHp);
     await $room.updateMyState({
-      pose: { x: spot.x, z: spot.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+      pose: { x: spot.x, z: spot.z, yaw: 0, y: 0, swing: 0, skill: 0, roll: 0, at: now },
       characterId: character.id,
       // Every room is come into on foot.
       riding: null,
@@ -1443,7 +1447,13 @@ export class Server {
     const last = typeof at === "number" ? { x: mine.pose.x, z: mine.pose.z, at } : null;
     // A rider may go as fast as the mount runs.
     const mount = readMountId(mine.riding);
-    const saved = await writeZonePose(zone, raw, now, last, mount ? MOUNTS[mount].speed : 1);
+    // A higher roll count is a new dodge roll (see roll.ts): no blow lands for a moment from now, if
+    // the last one's wait is over (a modified client rolling too often only gets the tumble).
+    const rolledAt = typeof mine.rolledAt === "number" ? mine.rolledAt : undefined;
+    const rolledNow = readSwing(raw.roll) > readSwing((mine.pose as Pose).roll) && rollReady(rolledAt, now);
+    if (rolledNow) await $room.updateMyState({ rolledAt: now }, { returnState: false });
+    const rolling = rolledNow || (rolledAt !== undefined && now - rolledAt < ROLL.seconds * 1000 + ROLL_SLACK_MS);
+    const saved = await writeZonePose(zone, raw, now, last, mount ? MOUNTS[mount].speed : 1, rolling);
     const savedAt = mine.savedAt;
     // A boss room is never where you come back to.
     const savedAtX = typeof mine.savedX === "number" ? mine.savedX : Infinity;

@@ -19,6 +19,7 @@ import {
 } from "../../src/game/world/zones";
 import { solidAt } from "../../src/game/rules/levelLayout";
 import { WALK_SPEED, readJumpY } from "../../src/game/rules/movement";
+import { ROLL } from "../../src/game/combat/roll";
 import { maxFeetY } from "../../src/game/rules/platforms";
 
 // One row per purchase the platform reported, so a replayed receipt is noticed.
@@ -364,14 +365,15 @@ const STEP_SLACK = 1;
 // Stores the caller's reported pose in their room, held to the zone: inside the map, no farther from
 // the last pose than walking allows, and no higher than what is underfoot plus a jump. Returns where
 // it put them.
+// `rolling`: a dodge roll under way (see roll.ts), which carries you further than walking.
 export async function writeZonePose(
-  zone: ZoneId, pose: Pose, now: number, last: { x: number; z: number; at: number } | null, speed = 1,
+  zone: ZoneId, pose: Pose, now: number, last: { x: number; z: number; at: number } | null, speed = 1, rolling = false,
 ): Promise<{ x: number; z: number }> {
   const layout = zoneLayout(zone);
   let x = Math.min(Math.max(pose.x, 0), layout.cols * layout.tileSize);
   let z = Math.min(Math.max(pose.z, 0), layout.rows * layout.tileSize);
   if (last) {
-    const most = (WALK_SPEED * speed * STEP_ALLOWANCE * Math.max(0, now - last.at)) / 1000 + STEP_SLACK;
+    const most = (WALK_SPEED * speed * STEP_ALLOWANCE * Math.max(0, now - last.at)) / 1000 + STEP_SLACK + (rolling ? ROLL.distance : 0);
     const d = Math.hypot(x - last.x, z - last.z);
     if (d > most) {
       x = last.x + ((x - last.x) * most) / d;
@@ -387,7 +389,7 @@ export async function writeZonePose(
   await $room.updateMyState(
     {
       pose: {
-        x, z, yaw: pose.yaw, y, block: pose.block === true, swing: readSwing(pose.swing), skill: readSwing(pose.skill),
+        x, z, yaw: pose.yaw, y, swing: readSwing(pose.swing), skill: readSwing(pose.skill), roll: readSwing(pose.roll),
         slot: readSlot(pose.slot) ?? 0, at: now,
       },
     },

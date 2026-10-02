@@ -39,7 +39,8 @@ export const ko = {
 
   "keys.jump": "점프",
   "keys.click": "좌클릭 / 우클릭",
-  "keys.attackGuard": "공격 / 막기",
+  "keys.attackRoll": "공격 / 구르기",
+  "keys.roll": "구르기",
   "keys.skills": "스킬",
   "keys.potion": "물약",
   "keys.talk": "대화",
@@ -419,7 +420,6 @@ export const ko = {
   "world.talk": "{name} — {role} · 대화 (E)",
   "world.portalLevel": "{zone} — Lv{n}부터 갈 수 있어요",
   "world.portalTo": "{zone}(으)로 가는 길",
-  "world.blocking": "막는 중",
 
   "menu.map": "지도",
   "menu.ranking": "랭킹",
@@ -615,12 +615,11 @@ export const ko = {
   "quest.reporting": "완료하러 가는 중…",
 
   "pad.attack": "공격",
-  "pad.block": "막기",
+  "pad.roll": "구르기",
   "pad.jump": "점프",
   "pad.auto": "자동",
   "pad.autoOn": "자동 중",
   "pad.leftClick": "좌클릭",
-  "pad.rightClick": "우클릭",
 
   "map.tapToWalk": "눌러서 그곳으로 걸어갑니다",
   "map.portals": "구역 출입구",
@@ -678,7 +677,6 @@ export const ko = {
   "class.speed": "공격 속도",
   "class.perSecond": "{n}회/초",
   "class.reach": "사거리",
-  "class.block": "막기",
   "class.skillLine": "스킬 {n} · {name}",
   "class.confirm": "이 직업으로 정하기",
   "class.onceNote": "직업은 캐릭터를 만들 때 한 번 정해요.",

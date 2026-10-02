@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ROLL } from "../combat/roll";
 import type { Pose } from "../world/types";
 import type { Costume } from "./costumes";
 import { applyCostume } from "./dyes";
@@ -42,6 +43,8 @@ const LABEL_FAR = 28;
 // A pause this long between swings starts a combo over.
 const COMBO_RESET_SECONDS = 1.4;
 const SKILL_COMMIT = 0.8;
+// The tumble runs this much past the roll itself (seconds), to get back on its feet.
+const ROLL_TAIL = 0.1;
 
 interface Animated {
   mixer: THREE.AnimationMixer;
@@ -49,7 +52,7 @@ interface Animated {
   walk: THREE.AnimationAction;
   run: THREE.AnimationAction;
   attacks: THREE.AnimationAction[];
-  guard: THREE.AnimationAction;
+  roll: THREE.AnimationAction;
   death: THREE.AnimationAction;
   skill: THREE.AnimationAction;
   blender: ActionBlender;
@@ -152,7 +155,7 @@ function once(action: THREE.AnimationAction, clamp: boolean): THREE.AnimationAct
 }
 
 // A hero in the match or on the menu: follows its pose, walks in the direction it moves, swings when
-// its swing count goes up, raises its guard while blocking and falls when it goes down.
+// its swing count goes up, tumbles when its roll count does and falls when it goes down.
 export class PlayerActor {
   readonly object: THREE.Object3D;
   private readonly body: THREE.Object3D;
@@ -163,6 +166,9 @@ export class PlayerActor {
   private dead = false;
   private lastSwing: number | null = null;
   private lastSkill: number | null = null;
+  private lastRoll: number | null = null;
+  // What is left of a dodge roll's tumble (seconds); it plays over anything but a fall.
+  private rollLeft = 0;
   private readonly rig: HeroRig | null;
   // The hero's advanced path, which decides what its second and third skills look like.
   path: JobId | null = null;
@@ -330,7 +336,8 @@ export class PlayerActor {
       walk: action(rig.walk),
       run: action(rig.run),
       attacks: rig.attacks.map((n) => once(action(n), false)),
-      guard: action(rig.guard),
+      // A model with no roll (and none borrowed) slides along standing rather than failing to load.
+      roll: once(THREE.AnimationClip.findByName(clips, rig.roll) ? action(rig.roll) : mixer.clipAction(clipByName(clips, rig.idle).clone()), false),
       death: once(action(rig.death), true),
       skill: once(action(rig.skill), false),
       blender: new ActionBlender(idle),
@@ -399,6 +406,18 @@ export class PlayerActor {
       if (fx?.shot) this.pendingShots.push({ left: RELEASE_SECONDS, reach: fx.shot });
     }
     this.lastSkill = skill;
+    // A higher roll count is a dodge roll: the tumble, sped up to the roll's length, cuts any swing short.
+    const roll = pose.roll ?? 0;
+    if (this.lastRoll !== null && roll > this.lastRoll && !this.dead) {
+      this.rollLeft = ROLL.seconds + ROLL_TAIL;
+      a.roll.timeScale = a.roll.getClip().duration / this.rollLeft;
+      this.swingLeft = 0;
+      this.commitLeft = 0;
+      if (a.blender.active === a.roll) a.roll.reset().play();
+      else a.blender.fadeTo(a.roll, 0.04);
+    }
+    this.lastRoll = roll;
+    this.rollLeft = Math.max(0, this.rollLeft - dt);
     this.fireShots(dt, pose.yaw);
     this.swingLeft = Math.max(0, this.swingLeft - dt);
     this.commitLeft = Math.max(0, this.commitLeft - dt);
@@ -407,9 +426,9 @@ export class PlayerActor {
     if (this.swingLeft > 0 && this.commitLeft === 0 && moving) this.swingLeft = 0;
 
     if (this.dead) a.blender.fadeTo(a.death, 0.1);
-    else if (this.swingLeft > 0) {
-      // The swing plays through.
-    } else if (pose.block) a.blender.fadeTo(a.guard, 0.08);
+    else if (this.rollLeft > 0 || this.swingLeft > 0) {
+      // The tumble, or the swing, plays through.
+    }
     // A rider sits still; the mount does the walking.
     else a.blender.fadeTo(this.riding ? a.idle : this.moveClip(a, dx, dz, pose.yaw));
     a.mixer.update(dt);

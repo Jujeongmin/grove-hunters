@@ -36,7 +36,8 @@ export const ja: Bundle = {
 
   "keys.jump": "ジャンプ",
   "keys.click": "左クリック / 右クリック",
-  "keys.attackGuard": "攻撃 / ガード",
+  "keys.attackRoll": "攻撃 / 回避",
+  "keys.roll": "回避ローリング",
   "keys.skills": "スキル",
   "keys.potion": "ポーション",
   "keys.talk": "会話",
@@ -410,7 +411,6 @@ export const ja: Bundle = {
   "world.talk": "{name} — {role} · 会話 (E)",
   "world.portalLevel": "{zone} — Lv{n}から行けます",
   "world.portalTo": "{zone}へ続く道",
-  "world.blocking": "ガード中",
 
   "menu.map": "マップ",
   "menu.ranking": "ランキング",
@@ -606,12 +606,11 @@ export const ja: Bundle = {
   "quest.reporting": "完了しに向かっています…",
 
   "pad.attack": "攻撃",
-  "pad.block": "ガード",
+  "pad.roll": "回避",
   "pad.jump": "ジャンプ",
   "pad.auto": "オート",
   "pad.autoOn": "オート中",
   "pad.leftClick": "左クリック",
-  "pad.rightClick": "右クリック",
 
   "map.tapToWalk": "押すとそこへ歩いていきます",
   "map.portals": "エリアの出入口",
@@ -669,7 +668,6 @@ export const ja: Bundle = {
   "class.speed": "攻撃速度",
   "class.perSecond": "{n}回/秒",
   "class.reach": "射程",
-  "class.block": "ガード",
   "class.skillLine": "スキル {n} · {name}",
   "class.confirm": "この職業にする",
   "class.onceNote": "職業はキャラクターを作るときに一度だけ決めます。",

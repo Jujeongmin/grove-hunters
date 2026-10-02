@@ -5,7 +5,8 @@ export interface Vec2 { x: number; z: number }
 // Where a player stands and what they are doing. y: feet height (jumps and platforms). block: the
 // guard is up. swing and skill: how many attacks and skills so far, so others can play each one;
 // slot: which skill (0 to 2) the last one was.
-export interface Pose extends Vec2 { yaw: number; y?: number; block?: boolean; swing?: number; skill?: number; slot?: number }
+// `swing`, `skill` and `roll` count up, one for each attack, skill and dodge roll, so a new one shows.
+export interface Pose extends Vec2 { yaw: number; y?: number; swing?: number; skill?: number; roll?: number; slot?: number }
 
 // An attack or skill count from a client: a whole number, kept small so it never grows without bound.
 export function readSwing(value: unknown): number {

@@ -15,9 +15,9 @@ const WALK_KEYS: Record<string, { forward?: number; strafe?: number }> = {
 };
 
 export class FpsInput {
-  // The attack button held: swing. The right mouse button or the guard button held: raise the shield.
+  // The attack button held: swing. The right mouse button (or the roll button, or Shift) asks for a
+  // dodge roll, read with consumePress("Roll").
   firing = false;
-  blocking = false;
   private readonly pressed = new Set<string>();
   // Walking keys held down.
   private readonly held = new Set<string>();
@@ -26,7 +26,6 @@ export class FpsInput {
   // On-screen controls (every device): the pad's push, look drags, and held buttons.
   private virtualMove: MoveInput = { forward: 0, strafe: 0 };
   private virtualFiring = false;
-  private virtualBlocking = false;
 
   constructor(private readonly element: HTMLElement) {
     element.addEventListener("mousedown", this.onMouseDown);
@@ -58,7 +57,7 @@ export class FpsInput {
   }
 
   // The on-screen controls: the joystick's push (each -1 to 1), a look drag in pixels, a held
-  // attack or guard button, and a tapped key.
+  // attack button, and a tapped key.
   setVirtualMove(forward: number, strafe: number): void {
     this.virtualMove = { forward, strafe };
   }
@@ -73,11 +72,6 @@ export class FpsInput {
     this.virtualFiring = on;
     this.firing = on;
     if (on) this.pressed.add("VirtualFire");
-  }
-
-  setVirtualBlocking(on: boolean): void {
-    this.virtualBlocking = on;
-    this.blocking = on || this.mouseBlocking;
   }
 
   press(code: string): void {
@@ -95,8 +89,6 @@ export class FpsInput {
     this.click = null;
     return click;
   }
-
-  private mouseBlocking = false;
 
   consumeLook(): { dx: number; dy: number } {
     const look = { dx: this.lookX, dy: this.lookY };
@@ -126,8 +118,7 @@ export class FpsInput {
       this.dragging = true;
       this.dragged = 0;
     }
-    if (e.button === 2) this.mouseBlocking = true;
-    this.blocking = this.mouseBlocking || this.virtualBlocking;
+    if (e.button === 2) this.press("Roll");
   };
   private onMouseUp = (e: MouseEvent) => {
     if (e.button === 0 && this.dragging) {
@@ -138,10 +129,8 @@ export class FpsInput {
         this.click = { x: e.clientX, y: e.clientY };
       }
     }
-    if (e.button === 2) this.mouseBlocking = false;
-    this.blocking = this.mouseBlocking || this.virtualBlocking;
   };
-  // The right button raises the shield, so it must not open the browser's menu.
+  // The right button rolls, so it must not open the browser's menu.
   private onContextMenu = (e: MouseEvent) => {
     e.preventDefault();
   };
@@ -153,7 +142,7 @@ export class FpsInput {
       e.preventDefault();
       return;
     }
-    if (!e.repeat) this.pressed.add(e.code);
+    if (!e.repeat) this.pressed.add(e.code === "ShiftLeft" || e.code === "ShiftRight" ? "Roll" : e.code);
   };
   private onKeyUp = (e: KeyboardEvent) => {
     this.held.delete(e.code);
@@ -163,9 +152,7 @@ export class FpsInput {
     this.held.clear();
     this.click = null;
     this.dragging = false;
-    this.mouseBlocking = false;
     this.firing = this.virtualFiring;
-    this.blocking = this.virtualBlocking;
   };
   private onMouseMove = (e: MouseEvent) => {
     if (!this.dragging) return;

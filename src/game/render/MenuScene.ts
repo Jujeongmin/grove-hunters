@@ -6,7 +6,7 @@ import type { MonsterState } from "../world/monsters";
 import { MENU_MAP } from "../world/zones";
 import { TILE_SIZE, parseLevel } from "../rules/levelLayout";
 import { COSTUMES, type Costume } from "./costumes";
-import { HEROES, HERO_MODELS } from "./heroes";
+import { HEROES, HERO_MODELS, heroClips } from "./heroes";
 import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import { MonsterActor } from "./MonsterActor";
@@ -210,7 +210,7 @@ export class MenuScene {
     CLASSES.forEach((c) => {
       const rig = HEROES[c];
       const actor = new PlayerActor(`lineup-${c}`, {
-        object: library.instance(rig.model), clips: library.get(rig.model).animations, costume: COSTUMES[0], rig,
+        object: library.instance(rig.model), clips: heroClips(library, rig), costume: COSTUMES[0], rig,
       });
       const label = createLabel(1.1);
       this.scene.add(actor.object, label);
@@ -233,7 +233,7 @@ export class MenuScene {
       if (!member) return;
       const rig = HEROES[member.playerClass];
       const actor = new PlayerActor(`menu-${i}`, {
-        object: library.instance(rig.model), clips: library.get(rig.model).animations, costume: member.costume, rig,
+        object: library.instance(rig.model), clips: heroClips(library, rig), costume: member.costume, rig,
       });
       const label = createLabel(0.9);
       label.position.set(spot.x, LABEL_HEIGHT, spot.z);

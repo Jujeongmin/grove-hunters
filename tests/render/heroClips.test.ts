@@ -18,9 +18,11 @@ describe("hero clips", () => {
     for (const c of CLASSES) {
       const rig = HEROES[c];
       const clips = clipsOf(`${dir}/${rig.model}.glb`);
-      for (const name of [rig.idle, rig.walk, rig.run, rig.guard, rig.skill, rig.death, ...rig.attacks]) {
+      for (const name of [rig.idle, rig.walk, rig.run, rig.skill, rig.death, ...rig.attacks]) {
         expect(clips, `${c}: ${name}`).toContain(name);
       }
+      // The roll, from the model itself or the one it borrows it from (the cleric, the warrior's).
+      expect(clipsOf(`${dir}/${rig.rollFrom ?? rig.model}.glb`), `${c}: roll`).toContain(rig.roll);
     }
   });
 

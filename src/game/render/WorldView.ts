@@ -19,7 +19,7 @@ import { readJob, type JobId } from "../combat/jobs";
 import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
 import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
-  GROUNDED, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
+  GROUNDED, MAX_STEP_SECONDS, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
   type SolidTest,
 } from "../rules/movement";
 import { gridRoute, lineClear } from "../rules/pathing";
@@ -40,7 +40,8 @@ import { costumeById, type Costume } from "./costumes";
 import { ARROW_MODEL, Effects, type ShotKind } from "./effects";
 import { magicCircle } from "./magicCircle";
 import { FpsInput } from "./FpsInput";
-import { HEROES, HERO_MODELS } from "./heroes";
+import { HEROES, HERO_MODELS, heroClips } from "./heroes";
+import { ROLL, ROLL_SPEED } from "../combat/roll";
 import { createLabel, setLabel } from "./labels";
 import { LEVEL_MODELS, VIEW_FAR, buildLevelScene } from "./levelScene";
 import type { LodBatch } from "./lodBatch";
@@ -80,7 +81,6 @@ export const WORLD_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ARROW_
 // Outdoors nothing roofs the camera in; this only keeps it from flying off.
 const SKY_CEILING = 30;
 // Share of walking speed kept while the guard is up.
-const GUARD_WALK = 0.55;
 const HUD_INTERVAL_MS = 100;
 // A HUD that changed nothing still goes out this often (the screen's clocks ride on it).
 const HUD_HEARTBEAT_MS = 1000;
@@ -168,7 +168,8 @@ export interface WorldHud {
   portal: { to: string; needLevel: number | null } | null;
   // The four slots of the bar (keys 1 to 4): the skill each holds, or null while empty.
   skills: ({ skill: number; readyInMs: number; cooldownMs: number; level: number; open: boolean } | null)[];
-  blocking: boolean;
+  // Whole seconds until the dodge roll may go again; 0 when it may.
+  rollIn: number;
   hp: number;
   maxHp: number;
   dead: boolean;
@@ -263,6 +264,11 @@ export class WorldView {
   private yaw = 0;
   private pitch = 0;
   private swings = 0;
+  // Dodge rolls made (sent with the pose, so a new one shows), the one under way (what is left of it
+  // and which way it goes), and when the next may come.
+  private rolls = 0;
+  private rolling: { left: number; yaw: number } | null = null;
+  private rollReadyAt = 0;
   private skills = 0;
   private lastAttackAt = Number.NEGATIVE_INFINITY;
   // When each skill slot was last used, and which one went last (others see it by the slot).
@@ -701,6 +707,8 @@ export class WorldView {
     // Mid-swing you stand still (and turn only through the attack itself).
     const rooted = this.me?.rooted === true;
     const potion = this.input.consumePress("KeyQ");
+    const wantRoll = this.input.consumePress("Roll");
+    if (!here) this.rolling = null;
     if (this.input.consumePress("KeyE")) this.talk();
     // A click or tap on someone in the village walks you to them to talk, instead of a blow.
     const click = this.input.consumeClick();
@@ -729,9 +737,16 @@ export class WorldView {
         if (m.alive) this.bodies.push({ x: m.x, z: m.z, r: PLAYER_BODY + MONSTERS[m.type].body });
       }
       for (const npc of this.npcs) this.bodies.push({ x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 });
-      const speed = WALK_SPEED * (this.input.blocking ? GUARD_WALK : 1) * (this.riding ? MOUNTS[this.riding].speed : 1);
+      const speed = WALK_SPEED * (this.riding ? MOUNTS[this.riding].speed : 1);
       const move = talking ? { forward: 0, strafe: 0 } : this.input.moveInput();
       const idle = move.forward === 0 && move.strafe === 0;
+      // A dodge roll goes the way you are walking (where you face, standing still), not on a mount.
+      const clock = performance.now();
+      if (wantRoll && !talking && !this.riding && !this.rolling && clock >= this.rollReadyAt) {
+        this.rolling = { left: ROLL.seconds, yaw: walkYaw(this.yaw, move) ?? this.pose.yaw };
+        this.rollReadyAt = clock + ROLL.cooldownMs;
+        this.rolls++;
+      }
       // Your own steps cancel a walk you were sent on, and the trip it was part of.
       if (!idle) {
         this.walkGoal = null;
@@ -745,7 +760,18 @@ export class WorldView {
       const sent = (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal !== null;
       this.sentFor = sent && chase?.walk === true && !rooted ? this.sentFor + dt : 0;
       if (this.sentFor >= AUTO_MOUNT_SECONDS && !this.riding && (this.wayLeft() ?? 0) > AUTO_MOUNT_WAY) this.getOn();
-      if (rooted) {
+      if (this.rolling) {
+        // The tumble carries you on, whatever else is going on.
+        facingYaw = this.rolling.yaw;
+        // In steps the movement rules take (a slow frame would otherwise cut the roll short), and no
+        // further than what is left of it.
+        for (let left = Math.min(dt, this.rolling.left); left > 1e-6; left -= MAX_STEP_SECONDS) {
+          const step = Math.min(left, MAX_STEP_SECONDS);
+          this.pose = stepAround({ ...this.pose, yaw: this.rolling.yaw }, this.rolling.yaw, step, this.isSolid, ROLL_SPEED);
+        }
+        this.rolling.left -= dt;
+        if (this.rolling.left <= 0) this.rolling = null;
+      } else if (rooted) {
         facingYaw = chase ? chase.yaw : this.pose.yaw;
       } else if (chase) {
         facingYaw = chase.yaw;
@@ -764,7 +790,7 @@ export class WorldView {
     this.air = here ? stepJump(this.air, jump, dt, ground) : GROUNDED;
     facingYaw = this.handleActions(here && !talking, state.monsters, facingYaw);
     this.pose = {
-      ...this.pose, yaw: facingYaw, y: this.air.y, block: here && this.input.blocking, swing: this.swings, skill: this.skills,
+      ...this.pose, yaw: facingYaw, y: this.air.y, roll: this.rolls, swing: this.swings, skill: this.skills,
       slot: this.lastSlot,
     };
     if (here) this.client.reportPose(this.pose);
@@ -1043,7 +1069,7 @@ export class WorldView {
   // they all go by themselves. Returns where you face (toward what you hit).
   private handleActions(here: boolean, monsters: Record<string, MonsterState>, yaw: number): number {
     const pressed = SKILL_KEYS.map((key) => this.input.consumePress(key));
-    if (!here || this.input.blocking) return yaw;
+    if (!here || this.rolling) return yaw;
     const now = performance.now();
     const c = this.options.playerClass;
     const weapon = WEAPONS[c];
@@ -1174,7 +1200,7 @@ export class WorldView {
     const library = this.library!;
     const rig = HEROES[playerClass];
     const actor = new PlayerActor("", {
-      object: library.instance(rig.model), clips: library.get(rig.model).animations, costume, rig, effects: this.effects,
+      object: library.instance(rig.model), clips: heroClips(library, rig), costume, rig, effects: this.effects,
     });
     this.scene.add(actor.object);
     return actor;
@@ -1353,7 +1379,7 @@ export class WorldView {
           readyInMs: Math.max(0, this.lastSkillAt[index] + skill.cooldownMs - now),
         };
       }),
-      blocking: !!this.pose.block,
+      rollIn: Math.max(0, Math.ceil((this.rollReadyAt - performance.now()) / 1000)),
       hp: me?.hp ?? 0,
       maxHp: me?.maxHp ?? 1,
       dead: me?.dead === true,

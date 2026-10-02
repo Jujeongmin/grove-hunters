@@ -36,7 +36,8 @@ export const zhHant: Bundle = {
 
   "keys.jump": "跳躍",
   "keys.click": "左鍵 / 右鍵",
-  "keys.attackGuard": "攻擊 / 格擋",
+  "keys.attackRoll": "攻擊 / 翻滾",
+  "keys.roll": "翻滾閃避",
   "keys.skills": "技能",
   "keys.potion": "藥水",
   "keys.talk": "對話",
@@ -410,7 +411,6 @@ export const zhHant: Bundle = {
   "world.talk": "{name} — {role} · 對話 (E)",
   "world.portalLevel": "{zone} — Lv{n} 起可前往",
   "world.portalTo": "通往{zone}的路",
-  "world.blocking": "格擋中",
 
   "menu.map": "地圖",
   "menu.ranking": "排行",
@@ -606,12 +606,11 @@ export const zhHant: Bundle = {
   "quest.reporting": "正在前往完成…",
 
   "pad.attack": "攻擊",
-  "pad.block": "格擋",
+  "pad.roll": "翻滾",
   "pad.jump": "跳躍",
   "pad.auto": "自動",
   "pad.autoOn": "自動中",
   "pad.leftClick": "左鍵",
-  "pad.rightClick": "右鍵",
 
   "map.tapToWalk": "點擊即可走到那裡",
   "map.portals": "區域出入口",
@@ -669,7 +668,6 @@ export const zhHant: Bundle = {
   "class.speed": "攻擊速度",
   "class.perSecond": "{n} 次/秒",
   "class.reach": "射程",
-  "class.block": "格擋",
   "class.skillLine": "技能 {n} · {name}",
   "class.confirm": "選定這個職業",
   "class.onceNote": "職業在建立角色時決定一次。",

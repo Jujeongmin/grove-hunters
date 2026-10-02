@@ -701,7 +701,6 @@ function ZoneScreen({
             </div>
           )}
           {showProblem && <div className="hud-error band">{problem.text}</div>}
-          {hud.blocking && <div className="hud-shield band">{t("world.blocking")}</div>}
           {hud.target && (
             <div className="hud-target band">
               <b>{hud.target.name}</b>
@@ -713,7 +712,7 @@ function ZoneScreen({
               controls={view.current.controls} auto={hud.auto}
               onJump={() => view.current?.tapJump()} onAuto={() => view.current?.toggleAuto()}
               keys={keyHints} glowAuto={glow === "auto"}
-              riding={hud.riding !== null} onRide={() => view.current?.toggleRide()}
+              riding={hud.riding !== null} onRide={() => view.current?.toggleRide()} rollIn={hud.rollIn}
             />
           )}
           <SkillBar hud={hud} playerClass={playerClass} job={bag?.job ?? null} onSkill={(slot) => view.current?.tapSkill(slot)} onPotion={() => view.current?.tapPotion()}

@@ -4,8 +4,6 @@ import type { Pose, Vec2 } from "../world/types";
 
 // Poses reach the server a little late, so a swing's arc is judged this much wider there.
 export const ARC_SLACK = (20 * Math.PI) / 180;
-// A shield covers this much of what is in front of you.
-export const BLOCK_ARC = (150 * Math.PI) / 180;
 
 // Whether a point lies within half of arc either side of where the body faces (yaw 0 faces -z).
 export function facing(pose: Pose, point: Vec2, arc: number): boolean {

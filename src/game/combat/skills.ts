@@ -135,7 +135,7 @@ export function skillTargets(
 ): string[] {
   if (skill.damage <= 0 && skill.stunMs <= 0) return [];
   const reachOf = {
-    damage: skill.damage, intervalMs: 0, reach: skill.reach, arc: skill.arc, block: 0, ranged: false,
+    damage: skill.damage, intervalMs: 0, reach: skill.reach, arc: skill.arc, ranged: false,
   };
   const hit = Object.entries(monsters)
     .filter(([, m]) => m.alive && !m.returning && inStrikeReach(pose, m, reachOf, slack))

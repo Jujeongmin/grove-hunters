@@ -36,7 +36,8 @@ export const en: Bundle = {
 
   "keys.jump": "Jump",
   "keys.click": "Left / right click",
-  "keys.attackGuard": "Attack / guard",
+  "keys.attackRoll": "Attack / dodge roll",
+  "keys.roll": "Dodge roll",
   "keys.skills": "Skills",
   "keys.potion": "Potion",
   "keys.talk": "Talk",
@@ -410,7 +411,6 @@ export const en: Bundle = {
   "world.talk": "{name} — {role} · talk (E)",
   "world.portalLevel": "{zone} — open from Lv {n}",
   "world.portalTo": "The way to {zone}",
-  "world.blocking": "Guarding",
 
   "menu.map": "Map",
   "menu.ranking": "Ranking",
@@ -606,12 +606,11 @@ export const en: Bundle = {
   "quest.reporting": "Going to turn it in…",
 
   "pad.attack": "Attack",
-  "pad.block": "Guard",
+  "pad.roll": "Roll",
   "pad.jump": "Jump",
   "pad.auto": "Auto",
   "pad.autoOn": "Auto on",
   "pad.leftClick": "Left click",
-  "pad.rightClick": "Right click",
 
   "map.tapToWalk": "Tap to walk there",
   "map.portals": "Ways out",
@@ -669,7 +668,6 @@ export const en: Bundle = {
   "class.speed": "Attack speed",
   "class.perSecond": "{n}/s",
   "class.reach": "Reach",
-  "class.block": "Guard",
   "class.skillLine": "Skill {n} · {name}",
   "class.confirm": "Take this class",
   "class.onceNote": "A class is chosen once, when the character is made.",

@@ -111,27 +111,30 @@ interface PadButtonsProps {
   // On a mount, and the button that gets you on or off.
   riding: boolean;
   onRide: () => void;
+  // Whole seconds until the dodge roll may go again (the button dims and counts down meanwhile).
+  rollIn: number;
 }
 
-// One round, see-through button: its picture (496 RPG icons pack), its name, and its key.
-function PadButton({ id, label, keyLabel, className = "", ...rest }: {
-  id: string; label: string; keyLabel: string | null; className?: string;
+// One round, see-through button: its picture (496 RPG icons pack), its name, and its key; `count`,
+// the seconds it still waits, over the picture.
+function PadButton({ id, label, keyLabel, className = "", count = null, ...rest }: {
+  id: string; label: string; keyLabel: string | null; className?: string; count?: number | null;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button type="button" className={`pad-button pad-${id} ${className}`} {...rest}>
       <img src={iconFor(`pad_${id}`) ?? undefined} alt="" draggable={false} />
       <span>{label}</span>
       {keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
+      {count !== null && <b className="pad-count">{count}</b>}
     </button>
   );
 }
 
 // The round buttons at the bottom right, on every device: a big attack button (held for a flurry)
-// with guard, jump and auto-battle round it. People are talked to by clicking (or tapping) them.
-export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto, riding, onRide }: PadButtonsProps) {
+// with the dodge roll, jump and auto-battle round it. People are talked to by clicking (or tapping) them.
+export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto, riding, onRide, rollIn }: PadButtonsProps) {
   useEffect(() => () => {
     controls.setVirtualFiring(false);
-    controls.setVirtualBlocking(false);
   }, [controls]);
 
   const hold = (set: (on: boolean) => void) => ({
@@ -146,7 +149,10 @@ export function PadButtons({ controls, auto, onJump, onAuto, keys, glowAuto, rid
   return (
     <div className="pad-buttons">
       <PadButton id="attack" label={t("pad.attack")} keyLabel={keys ? t("pad.leftClick") : null} {...hold((on) => controls.setVirtualFiring(on))} />
-      <PadButton id="block" label={t("pad.block")} keyLabel={keys ? t("pad.rightClick") : null} {...hold((on) => controls.setVirtualBlocking(on))} />
+      <PadButton
+        id="roll" label={t("pad.roll")} keyLabel={keys ? "Shift" : null} className={rollIn > 0 ? "cooling" : ""}
+        onPointerDown={() => controls.press("Roll")} count={rollIn > 0 ? rollIn : null}
+      />
       <PadButton id="jump" label={t("pad.jump")} keyLabel={keys ? "Space" : null} onPointerDown={onJump} />
       <PadButton id="auto" label={auto ? t("pad.autoOn") : t("pad.auto")} keyLabel={keys ? "R" : null} className={[auto && "on", glowAuto && "tutorial-glow"].filter(Boolean).join(" ")} onClick={onAuto} />
       <PadButton id="ride" label={riding ? t("pad.dismount") : t("pad.ride")} keyLabel={keys ? "T" : null} className={riding ? "on" : ""} onClick={onRide} />

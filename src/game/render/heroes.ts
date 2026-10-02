@@ -1,5 +1,6 @@
 import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
 import type { Skill } from "../combat/skills";
+import type * as THREE from "three";
 import type { ShotKind } from "./effects";
 
 // The RPG Character Pack (Quaternius, CC0): one hero model per class, and which of its clips play
@@ -11,8 +12,9 @@ export interface HeroRig {
   walk: string;
   run: string;
   attacks: readonly string[];
-  // Held while the guard is up.
-  guard: string;
+  // The dodge roll; a model without one borrows it from `rollFrom` (see heroClips).
+  roll: string;
+  rollFrom?: string;
   skill: string;
   death: string;
   // Accessory meshes the costume can take off (names as three.js reads them: dots dropped).
@@ -48,32 +50,32 @@ export function skillFx(hero: HeroRig, skill: Skill): { ring: { radius: number; 
 const CLIPS: Record<PlayerClass, Clips> = {
   warrior: {
     model: "hero_warrior", idle: "Idle_Weapon", walk: "Walk", run: "Run_Weapon",
-    attacks: ["Sword_Attack", "Sword_Attack2", "Punch"], guard: "Idle_Attacking", skill: "Sword_Attack2", death: "Death",
+    attacks: ["Sword_Attack", "Sword_Attack2", "Punch"], roll: "Roll", skill: "Sword_Attack2", death: "Death",
     gear: ["ShoulderPadL", "ShoulderPadR"],
   },
   ranger: {
     model: "hero_ranger", idle: "Idle_Weapon", walk: "Walk", run: "Run_Holding",
-    attacks: ["Bow_Shoot"], guard: "Idle_Attacking", skill: "Bow_Draw", death: "Death",
+    attacks: ["Bow_Shoot"], roll: "Roll", skill: "Bow_Draw", death: "Death",
     gear: ["Cloak", "ArmGuardL", "ArmGuardR", "Pouch"],
   },
   wizard: {
     model: "hero_wizard", idle: "Idle_Weapon", walk: "Walk", run: "Run_Weapon",
-    attacks: ["Spell1"], guard: "Idle_Attacking", skill: "Spell2", death: "Death",
+    attacks: ["Spell1"], roll: "Roll", skill: "Spell2", death: "Death",
     gear: ["ShoulderPadL", "ShoulderPadR", "Pouch"],
   },
   cleric: {
     model: "hero_cleric", idle: "Idle_Weapon", walk: "Walk", run: "Run",
-    attacks: ["Staff_Attack", "Punch"], guard: "RecieveHit_Attacking", skill: "Spell1", death: "Death",
+    attacks: ["Staff_Attack", "Punch"], roll: "Roll", rollFrom: "hero_warrior", skill: "Spell1", death: "Death",
     gear: ["ShoulderPads"],
   },
   rogue: {
     model: "hero_rogue", idle: "Idle", walk: "Walk", run: "Run",
-    attacks: ["Dagger_Attack", "Dagger_Attack2", "Punch"], guard: "Attacking_Idle", skill: "Dagger_Attack2", death: "Death",
+    attacks: ["Dagger_Attack", "Dagger_Attack2", "Punch"], roll: "Roll", skill: "Dagger_Attack2", death: "Death",
     gear: ["Guard", "Belt", "Pouch"],
   },
   monk: {
     model: "hero_monk", idle: "Idle", walk: "Walk", run: "Run",
-    attacks: ["Attack", "Attack2"], guard: "Idle_Attacking", skill: "Attack2", death: "Death",
+    attacks: ["Attack", "Attack2"], roll: "Roll", skill: "Attack2", death: "Death",
     gear: [],
   },
 };
@@ -85,4 +87,20 @@ export const HERO_MODELS = CLASSES.map((c) => HEROES[c].model);
 // Weapon meshes carry their own texture; the costume's weapon colour repaints them.
 export function isWeaponMesh(name: string): boolean {
   return /(Sword|Bow|Staff|Dagger)$/.test(name);
+}
+
+// A hero's clips. The cleric's model has no roll: it takes the warrior's, the pack's heroes sharing one
+// rig (the same 32 bones at the same rest pose), so it plays on the cleric as it is.
+export function heroClips(
+  library: { get(name: string): { animations: THREE.AnimationClip[] } }, rig: HeroRig,
+): THREE.AnimationClip[] {
+  const own = library.get(rig.model).animations;
+  if (!rig.rollFrom || own.some((c) => c.name === rig.roll)) return own;
+  let borrowed: THREE.AnimationClip | undefined;
+  try {
+    borrowed = library.get(rig.rollFrom).animations.find((c) => c.name === rig.roll);
+  } catch {
+    // Not loaded: the hero just does without the tumble (see PlayerActor).
+  }
+  return borrowed ? [...own, borrowed] : own;
 }

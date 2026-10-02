@@ -44,7 +44,7 @@ export const ICON_IDS = [
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {
   ui_forge: "forge.png", ui_more: "menu.png", ui_sleep: "sleep.png",
-  pad_attack: "pad_attack.png", pad_block: "pad_block.png", pad_jump: "pad_jump.png", pad_auto: "pad_auto.png",
+  pad_attack: "pad_attack.png", pad_roll: "pad_roll.png", pad_jump: "pad_jump.png", pad_auto: "pad_auto.png",
 };
 
 // A weapon is one item for every class (the same stats, the same name, traded as one), but it is

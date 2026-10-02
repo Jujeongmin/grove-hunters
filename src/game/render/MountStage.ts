@@ -4,7 +4,7 @@ import { MOUNTS, type MountId, type MountTier } from "../account/mounts";
 import type { PlayerClass } from "../combat/classes";
 import type { Costume } from "./costumes";
 import { HatchFx, type Grandeur } from "./hatchFx";
-import { HEROES } from "./heroes";
+import { HEROES, heroClips } from "./heroes";
 import { MOUNT_LOOKS, mountObject } from "./mountLooks";
 import { PLAYER_HEIGHT, PlayerActor } from "./PlayerActor";
 import { QUALITY, settings } from "../../ui/settings";
@@ -159,7 +159,7 @@ export class MountStage {
 
     const rig = HEROES[rider.playerClass];
     this.rider = new PlayerActor("", {
-      object: library.instance(rig.model), clips: library.get(rig.model).animations, costume: rider.costume, rig,
+      object: library.instance(rig.model), clips: heroClips(library, rig), costume: rider.costume, rig,
     });
     this.rider.object.visible = false;
     this.scene.add(this.rider.object);
