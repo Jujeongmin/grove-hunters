@@ -34,7 +34,7 @@ export const ICON_IDS = [
   "ui_news", "ui_mail", "ui_market", "ui_guild",
   // The HUD's gold (drawn by scripts/menu-icons.py too).
   "ui_gold",
-  // Attendance and achievements (drawn by scripts/rewards-icon.mjs).
+  // Attendance and achievements, and the mount ticket (PixelLab).
   "ui_rewards", "ui_ticket",
 ];
 // Older icons with names of their own.
