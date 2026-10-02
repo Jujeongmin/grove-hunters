@@ -270,6 +270,11 @@ export interface MonsterState {
   // Gave up a chase past its leash: walks home paying no one any mind and taking no harm, and is
   // whole again once there (see monsterAi.ts).
   returning?: boolean;
+  // Left be, it strolls about home (see WANDER in monsterAi.ts): the spot it is strolling to, and
+  // until when it rests before picking the next.
+  wanderX?: number;
+  wanderZ?: number;
+  restUntil?: number;
 }
 
 // Who a fallen monster's XP, gold and drops go to: of the hunters in `present`, the one who dealt it

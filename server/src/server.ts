@@ -1640,12 +1640,14 @@ export class Server {
   // happens; a failure on the way to +6 and above may break the piece (see forge.ts).
   // With `protect`, an attempt at +6 or above also costs protectCost gems, and a failure never breaks
   // the gear.
-  async enhanceGear(rawSlot: unknown, protect?: unknown): Promise<{ outcome: EnhanceOutcome; bag: BagView }> {
-    if (rawSlot !== "weapon" && rawSlot !== "armor") throw new RuleViolation("unavailable");
-    const slot: Slot = rawSlot;
+  // What is worn, by its slot ("weapon", "armor"); or a piece in the bag, by its uid.
+  async enhanceGear(rawTarget: unknown, protect?: unknown): Promise<{ outcome: EnhanceOutcome; bag: BagView }> {
+    const slot: Slot | null = rawTarget === "weapon" || rawTarget === "armor" ? rawTarget : null;
     const account = $sender.account;
     const current = await playing(account);
-    const piece = current.gear[slot];
+    const find = (c: typeof current): GearPiece | null =>
+      slot ? c.gear[slot] : typeof rawTarget === "string" ? c.pieces.find((p) => p.uid === rawTarget) ?? null : null;
+    const piece = find(current);
     if (!piece) throw new RuleViolation("unavailable");
     const cost = enhanceCost(piece.id, piece.plus);
     if (!cost) throw new RuleViolation("max_plus");
@@ -1665,20 +1667,24 @@ export class Server {
     try {
       const next = await updateActive(account, (c) => {
         // Changed since it was priced (another tab): nothing happens and the gold comes back.
-        const worn = c.gear[slot];
+        const worn = find(c);
         if (worn?.uid !== piece.uid || worn.plus !== cost.to - 1) throw new RuleViolation("unavailable");
+        // The piece where it was, made better (or gone).
+        const put = (next: GearPiece | null) => slot
+          ? { gear: { ...c.gear, [slot]: next } }
+          : { pieces: next ? c.pieces.map((p) => (p.uid === piece.uid ? next : p)) : c.pieces.filter((p) => p.uid !== piece.uid) };
         const paid = spend(c, [{ id: "stone", n: cost.stones }]);
         outcome = rollEnhance({ ...cost, success: Math.min(1, cost.success + vipEnhance(vip)) }, Math.random(), Math.random());
         if (outcome === "broken" && shield !== null) outcome = "fail";
         if (outcome === "success") {
           const record = c.record ?? NO_RECORD;
           return {
-            ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } },
+            ...paid, ...put({ ...worn, plus: cost.to }),
             record: { ...record, bestPlus: Math.max(record.bestPlus, cost.to) },
           };
         }
         if (outcome === "fail") return paid;
-        return { ...paid, gear: { ...c.gear, [slot]: null } };
+        return { ...paid, ...put(null) };
       });
       await refreshFighter(next);
       // A big one is told to everyone.

@@ -797,10 +797,11 @@ export class WorldClient {
 
   // The smith: enhancing what is worn in a slot (the outcome, or why it was refused) and making things.
   // With `protect`, a failure at +6 and above never breaks the gear, for gems (see premium.ts).
-  async enhance(slot: Slot, protect = false): Promise<{ outcome: EnhanceOutcome } | { problem: string }> {
+  // `target`: a worn slot, or the uid of a piece in the bag.
+  async enhance(target: Slot | string, protect = false): Promise<{ outcome: EnhanceOutcome } | { problem: string }> {
     if (this.current.phase !== "in") return { problem: "unavailable" };
     try {
-      const { outcome, bag } = await this.transport.call<{ outcome: EnhanceOutcome; bag: BagView }>("enhanceGear", [slot, protect]);
+      const { outcome, bag } = await this.transport.call<{ outcome: EnhanceOutcome; bag: BagView }>("enhanceGear", [target, protect]);
       this.set({ bag });
       // The gems it took show on the wallet at once.
       if (protect) void this.refreshBag();

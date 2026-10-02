@@ -42,6 +42,24 @@ export function hotbarFor(playerClass: string): (number | null)[] {
   return Array.from({ length: HOTBAR_SLOTS }, (_, i) => (typeof bar[i] === "number" ? bar[i] : null));
 }
 
+// A new character's class starts with an empty bar, so putting the first skill there is its own
+// tutorial step; a class already played keeps its bar (or the old default, its first skill first).
+export function startBarEmpty(playerClass: string): void {
+  if (current.hotbars[playerClass]) return;
+  updateSettings({ hotbars: { ...current.hotbars, [playerClass]: Array.from({ length: HOTBAR_SLOTS }, () => null) } });
+}
+
+// Puts a skill in the first empty slot (the first slot when none is), unless it is on the bar
+// already; answers the slot it is in.
+export function equipSkill(playerClass: string, skill: number): number {
+  const bar = hotbarFor(playerClass);
+  const at = bar.indexOf(skill);
+  if (at >= 0) return at;
+  const slot = Math.max(0, bar.indexOf(null));
+  setHotbarSlot(playerClass, slot, skill);
+  return slot;
+}
+
 // Puts a skill in a slot (and takes it out of any other slot it was in), or empties the slot.
 export function setHotbarSlot(playerClass: string, slot: number, skill: number | null): void {
   const bar = hotbarFor(playerClass).map((s) => (s === skill ? null : s));

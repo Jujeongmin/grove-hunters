@@ -1,16 +1,19 @@
 import type { BagView } from "../game/account/items";
 import { t } from "./lang";
 import { questGoal, questName } from "./names";
+import { questHint } from "./questHint";
 import { QUESTS, questDone } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 
 interface QuestTrackerProps {
   bag: BagView | null;
-  // Auto-battle is already heading for this quest's monsters (or you are on the way to the elder).
+  // Auto-battle is already heading for this quest's monsters (or you are on the way to the elder);
+  // of that, whether it is the elder, and whether a monster of the hunt is being fought now.
   seeking: boolean;
+  toElder: boolean;
+  fighting: boolean;
   // How far is left to walk, in metres.
   way: number | null;
-  inVillage: boolean;
   // Tapping an unfinished quest sends you hunting for its monsters.
   onSeek: (types: readonly MonsterType[]) => void;
   // Tapping a finished one walks you to the elder to report it, through the portals if need be.
@@ -22,7 +25,7 @@ interface QuestTrackerProps {
 // The quest you are on, at the right, kept short: its name, what to hunt and how far along (the
 // reward is in the quest tab). Tapping it goes after its monsters; once done, it is reported to the
 // elder in the village.
-export function QuestTracker({ bag, seeking, way, inVillage, onSeek, onReport, keyLabel }: QuestTrackerProps) {
+export function QuestTracker({ bag, seeking, toElder, fighting, way, onSeek, onReport, keyLabel }: QuestTrackerProps) {
   if (!bag) return null;
   const index = bag.quest.index;
   const quest = QUESTS[index];
@@ -34,14 +37,13 @@ export function QuestTracker({ bag, seeking, way, inVillage, onSeek, onReport, k
     );
   }
   const done = questDone(bag.quest);
-  const hint = seeking ? t("quest.seeking")
-    : done ? inVillage ? t("quest.reportHere") : t("quest.reportInVillage")
-    : t("quest.goFind");
+  const { key, going, showWay } = questHint(done, { seeking, toElder, fighting });
+  const hint = t(key);
   // On the way: how far is left.
-  const left = seeking && way !== null ? `${Math.max(1, Math.round(way))}m` : null;
+  const left = showWay && way !== null ? `${Math.max(1, Math.round(way))}m` : null;
   return (
     <div
-      className={`hud-quest clickable${seeking ? " seeking" : ""}${done ? " done" : ""}`}
+      className={`hud-quest clickable${going ? " seeking" : ""}${done ? " done" : ""}`}
       role="button"
       onClick={() => {
         if (!done) onSeek(quest.targets);

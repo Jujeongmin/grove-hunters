@@ -5,7 +5,11 @@ import { SKILL_SLOTS, skillAt } from "../game/combat/skills";
 import { ADVANCE_LEVEL, type JobId } from "../game/combat/jobs";
 import { skillBlurb, skillName } from "./names";
 import { iconFor, skillIconId } from "../game/render/icons";
-import { hotbarFor, onSettings, setHotbarSlot } from "./settings";
+import { equipSkill, hotbarFor, onSettings, setHotbarSlot } from "./settings";
+
+// A press that moves this far (px) is a drag; less, a tap. Two taps this close (ms) put the skill on.
+const DRAG_START = 6;
+const DOUBLE_TAP_MS = 350;
 import { skillLearned, type TutorialStep } from "../game/account/tutorial";
 
 interface SkillPanelProps {
@@ -21,13 +25,21 @@ interface SkillPanelProps {
 }
 
 // Your four skills, top right: the class's own, and the three your advanced path brings (shown as
-// waiting until you advance). The ones learned can be dragged onto a slot of the bar at the bottom
-// (the hotbar's cells carry data-slot). The panel leaves the bar in view.
+// waiting until you advance). A learned one is dragged by its row onto a slot of the bar at the bottom
+// (the hotbar's cells carry data-slot), or double-clicked (double-tapped) into the first empty slot.
+// The panel leaves the bar in view.
 export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClose }: SkillPanelProps) {
   const [bar, setBar] = useState(() => hotbarFor(playerClass));
   useEffect(() => onSettings(() => setBar(hotbarFor(playerClass))), [playerClass]);
   const [drag, setDrag] = useState<{ skill: number; x: number; y: number } | null>(null);
-  const pointer = useRef<number | null>(null);
+  // The press under way: which pointer, where it went down, whether it has become a drag.
+  const press = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
+  const lastTap = useRef<{ skill: number; at: number } | null>(null);
+
+  const equip = (skill: number) => {
+    equipSkill(playerClass, skill);
+    onPlaced();
+  };
 
   const drop = (skill: number, x: number, y: number) => {
     // Looks through the panel itself, in case it hangs over the bar on a small screen.
@@ -49,29 +61,45 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
           const learned = skill !== null && taught && level >= skill.level;
           const slot = bar.indexOf(i);
           return (
-            <div key={i} className={`skill-row${learned ? "" : " unlearned"}`}>
-              <div
-                className="skill-row-icon"
-                onPointerDown={(e) => {
-                  if (!learned || pointer.current !== null) return;
-                  pointer.current = e.pointerId;
-                  e.currentTarget.setPointerCapture(e.pointerId);
-                  setDrag({ skill: i, x: e.clientX, y: e.clientY });
-                }}
-                onPointerMove={(e) => {
-                  if (pointer.current === e.pointerId) setDrag({ skill: i, x: e.clientX, y: e.clientY });
-                }}
-                onPointerUp={(e) => {
-                  if (pointer.current !== e.pointerId) return;
-                  pointer.current = null;
-                  setDrag(null);
+            <div
+              key={i}
+              className={`skill-row${learned ? " learned" : " unlearned"}`}
+              onPointerDown={(e) => {
+                // The remove button keeps its own click.
+                if (!learned || press.current !== null || (e.target as HTMLElement).closest("button")) return;
+                press.current = { id: e.pointerId, x: e.clientX, y: e.clientY, dragging: false };
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }}
+              onPointerMove={(e) => {
+                const p = press.current;
+                if (!p || p.id !== e.pointerId) return;
+                if (!p.dragging && Math.hypot(e.clientX - p.x, e.clientY - p.y) < DRAG_START) return;
+                p.dragging = true;
+                setDrag({ skill: i, x: e.clientX, y: e.clientY });
+              }}
+              onPointerUp={(e) => {
+                const p = press.current;
+                if (!p || p.id !== e.pointerId) return;
+                press.current = null;
+                setDrag(null);
+                if (p.dragging) {
                   drop(i, e.clientX, e.clientY);
-                }}
-                onPointerCancel={() => {
-                  pointer.current = null;
-                  setDrag(null);
-                }}
-              >
+                  return;
+                }
+                const now = performance.now();
+                if (lastTap.current?.skill === i && now - lastTap.current.at < DOUBLE_TAP_MS) {
+                  lastTap.current = null;
+                  equip(i);
+                } else {
+                  lastTap.current = { skill: i, at: now };
+                }
+              }}
+              onPointerCancel={() => {
+                press.current = null;
+                setDrag(null);
+              }}
+            >
+              <div className="skill-row-icon">
                 <img src={iconFor(skillIconId(playerClass, job, i)) ?? undefined} alt="" draggable={false} />
               </div>
               <div className="skill-row-text">

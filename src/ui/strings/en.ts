@@ -376,6 +376,7 @@ export const en: Bundle = {
   "forge.enhance": "Enhance",
   "forge.craft": "Craft",
   "forge.noGear": "You are wearing nothing to enhance",
+  "forge.inBag": "Bag",
   "forge.chance": "+{to}, {pct} to succeed",
   "forge.breakRisk": "{pct} to break on failure",
   "forge.maxed": "Fully enhanced (+{n})",
@@ -598,10 +599,11 @@ export const en: Bundle = {
   "problem.name_mismatch": "That is not the name",
 
   "quest.allDone": "Every quest done",
-  "quest.reportHere": "Tap to report to the elder",
-  "quest.reportInVillage": "Tap to head to the village elder",
   "quest.seeking": "On the way…",
   "quest.goFind": "Tap to go there",
+  "quest.fighting": "Fighting…",
+  "quest.goReport": "Tap to turn it in",
+  "quest.reporting": "Going to turn it in…",
 
   "pad.attack": "Attack",
   "pad.block": "Guard",
@@ -627,11 +629,11 @@ export const en: Bundle = {
   "bar.autoPotionTurnOff": "Turn auto potion off",
 
   "skills.title": "Skills",
-  "skills.dragNote": "Drag a skill you have learned into a slot below.",
+  "skills.dragNote": "Drag a skill you have learned into a slot below, or double-tap it into an empty one.",
   "skills.learnAt": "Learned at Lv {n}",
   "skills.fromElder": "Learn from the elder",
   "skills.inSlot": "Slot {n}",
-  "skills.dragIn": "Drag into a slot",
+  "skills.dragIn": "Drag or double-tap to equip",
   "skills.cooldown": "{n}s cooldown",
   "skills.remove": "Take out",
 

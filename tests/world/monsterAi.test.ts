@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveTelegraphs, type Telegraph } from "../../src/game/world/telegraphs";
-import { LEASH, stepMonsters } from "../../src/game/world/monsterAi";
+import { LEASH, WANDER, stepMonsters } from "../../src/game/world/monsterAi";
 import { BOSS_MOVES, MONSTERS, spawnMonsters, type MonsterState } from "../../src/game/world/monsters";
 import { zoneLayout } from "../../src/game/world/zones";
 
@@ -34,7 +34,38 @@ describe("monsters", () => {
     const monsters = { m: rat(home.x, home.z - 1.2) };
     const hits = [0, 500, 1000, 1500].flatMap((t) => stepMonsters(monsters, [{ account: "a", x: home.x, z: home.z }], layout, 0.5, 1000 + t));
     expect(hits).toEqual([]);
-    expect(monsters.m.z).toBe(home.z - 1.2);
+    expect(monsters.m.hitters).toBeUndefined();
+  });
+
+  it("left be, stroll about where they started and rest between strolls", () => {
+    const monsters = { m: rat(home.x, home.z) };
+    let seed = 7;
+    const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    let moved = 0;
+    let rested = 0;
+    for (let t = 0; t < 600; t++) {
+      const before = { x: monsters.m.x, z: monsters.m.z };
+      stepMonsters(monsters, [], layout, 0.1, 1000 + t * 100, [], random);
+      const step = Math.hypot(monsters.m.x - before.x, monsters.m.z - before.z);
+      if (step > 0) moved++;
+      else rested++;
+      expect(Math.hypot(monsters.m.x - home.x, monsters.m.z - home.z)).toBeLessThanOrEqual(WANDER.radius + 0.5);
+      expect(step).toBeLessThanOrEqual(MONSTERS.rat.speed * WANDER.pace * 0.1 + 1e-6);
+    }
+    expect(moved).toBeGreaterThan(20);
+    expect(rested).toBeGreaterThan(moved);
+  });
+
+  it("a wounded one goes home to heal before strolling again", () => {
+    const monsters = { m: rat(home.x + 3, home.z, { homeX: home.x, homeZ: home.z, hp: 10 }) };
+    for (let t = 0; t < 40; t++) stepMonsters(monsters, [], layout, 0.25, 1000 + t * 250);
+    expect(monsters.m.hp).toBe(MONSTERS.rat.hp);
+  });
+
+  it("the boss stays put when left be", () => {
+    const monsters = { boss: rat(home.x, home.z, { type: "mushroom_king", hp: MONSTERS.mushroom_king.hp }) };
+    for (let t = 0; t < 100; t++) stepMonsters(monsters, [], layout, 0.1, 1000 + t * 100, [], () => 0.5);
+    expect([monsters.boss.x, monsters.boss.z]).toEqual([home.x, home.z]);
   });
 
   it("once hit, walk toward whoever hit them and bite once close", () => {

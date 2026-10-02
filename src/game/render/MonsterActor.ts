@@ -4,6 +4,9 @@ import { ActionBlender, clipByName, ownMaterials, skinnedHeight } from "./skinne
 
 const HIT_FLASH_SECONDS = 0.08;
 const FOLLOW_RATE = 12;
+// The server moves monsters every 200 ms or so; one whose place changed this recently is still walking
+// (a slow stroll would otherwise flick between walking and standing between updates).
+const STILL_WALKING_SECONDS = 0.45;
 // Without a death take, a fallen monster sinks into the ground over this long.
 const SINK_SECONDS = 0.8;
 const BAR_WIDTH = 0.9;
@@ -46,6 +49,9 @@ export class MonsterActor {
   private lastAttackReadyAt: number | null = null;
   private dead = false;
   private placed = false;
+  // Where the server last had it, and how long ago that changed.
+  private lastPlace: { x: number; z: number } | null = null;
+  private sinceMoved = Infinity;
   // The jolt of the last blow, springing back to nothing.
   private readonly knock = new THREE.Vector3();
   // Where the next blow comes from (set by the view before sync), to push away from.
@@ -113,6 +119,9 @@ export class MonsterActor {
       p.set(state.x, 0, state.z);
       this.placed = true;
     }
+    if (this.lastPlace && (this.lastPlace.x !== state.x || this.lastPlace.z !== state.z)) this.sinceMoved = 0;
+    else this.sinceMoved += dt;
+    this.lastPlace = { x: state.x, z: state.z };
     const k = 1 - Math.exp(-dt * FOLLOW_RATE);
     const dx = state.x - p.x;
     const dz = state.z - p.z;
@@ -149,7 +158,7 @@ export class MonsterActor {
       if (this.death) this.blender.fadeTo(this.death, 0.1);
       else this.sinkLeft = SINK_SECONDS;
     } else if (!this.dead && this.attackLeft === 0) {
-      this.blender.fadeTo(Math.hypot(dx, dz) > 0.03 ? this.walk : this.idle);
+      this.blender.fadeTo(Math.hypot(dx, dz) > 0.03 || this.sinceMoved < STILL_WALKING_SECONDS ? this.walk : this.idle);
     }
     if (this.dead && !this.death) {
       this.sinkLeft = Math.max(0, this.sinkLeft - dt);

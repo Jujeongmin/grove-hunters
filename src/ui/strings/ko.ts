@@ -385,6 +385,7 @@ export const ko = {
   "forge.enhance": "강화",
   "forge.craft": "제작",
   "forge.noGear": "장착한 장비가 없어요",
+  "forge.inBag": "가방",
   "forge.chance": "+{to} 성공 {pct}",
   "forge.breakRisk": "실패 시 파괴 {pct}",
   "forge.maxed": "최대 강화 (+{n})",
@@ -607,10 +608,11 @@ export const ko = {
   "problem.name_mismatch": "이름이 맞지 않아요",
 
   "quest.allDone": "모든 퀘스트 완료",
-  "quest.reportHere": "눌러서 촌장에게 보고하기",
-  "quest.reportInVillage": "눌러서 마을 촌장에게 가기",
   "quest.seeking": "찾아가는 중…",
   "quest.goFind": "눌러서 찾아가기",
+  "quest.fighting": "퇴치 중…",
+  "quest.goReport": "눌러서 완료하러 가기",
+  "quest.reporting": "완료하러 가는 중…",
 
   "pad.attack": "공격",
   "pad.block": "막기",
@@ -636,11 +638,11 @@ export const ko = {
   "bar.autoPotionTurnOff": "자동 물약 끄기",
 
   "skills.title": "스킬",
-  "skills.dragNote": "배운 스킬을 아래 칸으로 끌어다 놓으세요.",
+  "skills.dragNote": "배운 스킬을 아래 칸으로 끌어다 놓거나, 두 번 눌러 빈 칸에 넣으세요.",
   "skills.learnAt": "Lv{n}에 배움",
   "skills.fromElder": "촌장에게 배우기",
   "skills.inSlot": "{n}번 칸",
-  "skills.dragIn": "끌어서 칸에 넣기",
+  "skills.dragIn": "끌거나 두 번 눌러 넣기",
   "skills.cooldown": "재사용 {n}초",
   "skills.remove": "빼기",
 

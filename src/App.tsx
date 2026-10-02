@@ -15,6 +15,7 @@ import { useFriends } from "./ui/useFriends";
 import { useShop } from "./ui/useShop";
 import { useKeyboardFreeze } from "./ui/useKeyboardFreeze";
 import { useUiScale } from "./ui/useUiScale";
+import { useMultiTouchClicks } from "./ui/useMultiTouchClicks";
 import { t, useLang } from "./ui/lang";
 
 const ONLINE_AVAILABLE = Boolean(import.meta.env.VITE_AGENT8_VERSE);
@@ -33,6 +34,8 @@ export default function App() {
   const [lost, setLost] = useState(false);
   useUiScale();
   useKeyboardFreeze();
+  // A thumb on the movement stick must not stop the other from pressing buttons.
+  useMultiTouchClicks();
   // Read so the whole tree says itself again when the language changes.
   useLang();
   const transport = useMemo(

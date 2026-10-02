@@ -182,6 +182,9 @@ export interface WorldHud {
   riding: MountId | null;
   // Auto-battle is hunting for a quest's monsters.
   seeking: boolean;
+  // Of that: on the way to the elder to report it; and, on a hunt, at grips with one of them.
+  toElder: boolean;
+  fighting: boolean;
   // How far is left to walk on the way you were sent (a quest's monster, the elder, a portal on the
   // way to another zone, a spot on the map), in metres.
   way: number | null;
@@ -846,6 +849,13 @@ export class WorldView {
     return { yaw: this.yawTo(points[0]), walk: true };
   }
 
+  // On a quest's hunt, with its monster near enough to be swinging at (or nearly).
+  private fightingForQuest(): boolean {
+    if (!this.auto || !this.questSeek || !this.target) return false;
+    const m = this.client.state.monsters[this.target];
+    return !!m && m.alive && this.distanceTo(m) <= WEAPONS[this.options.playerClass].reach * AUTO_CLOSE * 1.6;
+  }
+
   // A talk begins: the camera comes round to the NPC's face and they turn to you. The screen shows the
   // words and ends the talk with endDialogue.
   beginDialogue(id: NpcId): void {
@@ -1351,6 +1361,8 @@ export class WorldView {
       auto: this.auto,
       riding: this.riding,
       seeking: (this.auto && this.questSeek !== null) || this.trip !== null || this.walkGoal?.talk === "elder",
+      toElder: this.trip?.kind === "elder" || this.walkGoal?.talk === "elder",
+      fighting: this.fightingForQuest(),
       way: this.wayLeft(),
       bosses: this.groveView?.revealsBosses
         ? Object.values(this.client.state.monsters)

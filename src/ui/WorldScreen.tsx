@@ -18,7 +18,8 @@ import type { BagView } from "../game/account/items";
 import { START_ZONE } from "../game/world/zones";
 import { BagPanel, ShopPanel, problemText } from "./BagPanel";
 import { QuestTracker } from "./QuestTracker";
-import { tutorialGlow } from "../game/account/tutorial";
+import { TUTORIAL, tutorialGlow } from "../game/account/tutorial";
+import { startBarEmpty } from "./settings";
 import type { QuestTrip } from "../game/world/questRoute";
 import { useTutorial } from "./useTutorial";
 import { TutorialDoneBanner, TutorialTracker } from "./TutorialTracker";
@@ -312,6 +313,10 @@ function ZoneScreen({
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
   // The first tutorial: what to do next, and what lights up for it.
   const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false, panel === "skills");
+  // A character new to the game finds its bar empty, for the tutorial to have it fill the first slot.
+  useEffect(() => {
+    if (tutorial.step !== null && tutorial.step <= TUTORIAL.register) startBarEmpty(playerClass);
+  }, [tutorial.step, playerClass]);
   const glow = tutorialGlow(tutorial.step, { menuOpen, skillsOpen: panel === "skills" });
   // Read by the once-bound handlers (talking to the elder, J).
   const tutorialStep = useRef(tutorial.step);
@@ -493,7 +498,7 @@ function ZoneScreen({
     { id: "skills", label: t("menu.skills"), key: "K", code: "KeyK", act: () => toggle("skills"), on: panel === "skills" },
     { id: "grove", label: t("menu.grove"), key: "G", code: "KeyG", act: () => toggle("grove"), on: panel === "grove" },
     { id: "forge", label: t("menu.forge"), key: "U", code: "KeyU", act: () => toggle("smith"), on: panel === "smith", pinned: true },
-    { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag" },
+    { id: "bag", label: t("menu.bag"), key: "I", code: "KeyI", act: () => toggle("bag"), on: panel === "bag", pinned: true },
     { id: "mounts", label: t("menu.mounts"), key: "H", code: "KeyH", act: () => toggle("mounts"), on: panel === "mounts", pinned: true },
     { id: "guild", label: t("menu.guild"), key: "Z", code: "KeyZ", act: () => toggle("guild"), on: panel === "guild", dot: applicants > 0 || bossReady },
     { id: "market", label: t("menu.market"), key: "X", code: "KeyX", act: () => toggle("market"), on: panel === "market" },
@@ -724,7 +729,7 @@ function ZoneScreen({
               />
             ) : (
               <QuestTracker
-                bag={bag} seeking={hud.seeking} way={hud.way} inVillage={inVillage} keyLabel={keyHints ? "J" : null}
+                bag={bag} seeking={hud.seeking} toElder={hud.toElder} fighting={hud.fighting} way={hud.way} keyLabel={keyHints ? "J" : null}
                 onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
               />
             )

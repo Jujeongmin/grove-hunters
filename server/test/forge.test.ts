@@ -41,6 +41,17 @@ describe("the smith", () => {
     expect((await $room.getMyState()).gear.power).toBeGreaterThan(ITEMS.weapon_2.power);
   });
 
+  test("a piece in the bag is enhanced where it lies, by its uid", async (server) => {
+    await atTheForge(server);
+    const spare = { uid: "g-spare", id: "armor_2" as const, plus: 0, trade: false };
+    await updateActive("test-a", (c) => ({ ...c, pieces: [spare] }));
+    const { outcome, bag } = await rolling(0, () => server.enhanceGear("g-spare"));
+    expect(outcome).toBe("success");
+    expect(bag.pieces).toEqual([{ ...spare, plus: 1 }]);
+    expect(bag.gear.weapon).toEqual(weapon(0));
+    expect(await errorOf(server.enhanceGear("g-nothing"))).toContain("unavailable");
+  });
+
   test("a piece that may be traded keeps that through enhancing, and 강화석 that may not be traded goes first", async (server) => {
     await atTheForge(server, 1);
     await updateActive("test-a", (c) => ({ ...c, bagTrade: { stone: 5 }, gear: { ...c.gear, weapon: weapon(1, true) } }));

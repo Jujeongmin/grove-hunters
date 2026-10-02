@@ -376,6 +376,7 @@ export const zhHans: Bundle = {
   "forge.enhance": "强化",
   "forge.craft": "制作",
   "forge.noGear": "沒有装备任何東西",
+  "forge.inBag": "背包",
   "forge.chance": "+{to} 成功 {pct}",
   "forge.breakRisk": "失败时损毁 {pct}",
   "forge.maxed": "已達最高强化（+{n}）",
@@ -598,10 +599,11 @@ export const zhHans: Bundle = {
   "problem.name_mismatch": "名称不符",
 
   "quest.allDone": "所有任务完成",
-  "quest.reportHere": "点击向村长汇报",
-  "quest.reportInVillage": "点一下前往村里的村长",
   "quest.seeking": "前往中…",
   "quest.goFind": "点击前往",
+  "quest.fighting": "讨伐中…",
+  "quest.goReport": "点击前往完成",
+  "quest.reporting": "正在前往完成…",
 
   "pad.attack": "攻击",
   "pad.block": "格挡",
@@ -627,11 +629,11 @@ export const zhHans: Bundle = {
   "bar.autoPotionTurnOff": "关闭自动药水",
 
   "skills.title": "技能",
-  "skills.dragNote": "把学会的技能拖到下方的格子。",
+  "skills.dragNote": "把学会的技能拖到下方的格子，或双击放进空格。",
   "skills.learnAt": "Lv{n} 学会",
   "skills.fromElder": "向村长学习",
   "skills.inSlot": "第 {n} 格",
-  "skills.dragIn": "拖曳放入格子",
+  "skills.dragIn": "拖曳或双击装备",
   "skills.cooldown": "冷却 {n} 秒",
   "skills.remove": "取出",
 

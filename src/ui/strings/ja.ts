@@ -376,6 +376,7 @@ export const ja: Bundle = {
   "forge.enhance": "強化",
   "forge.craft": "製作",
   "forge.noGear": "装備しているものがありません",
+  "forge.inBag": "かばん",
   "forge.chance": "+{to} 成功 {pct}",
   "forge.breakRisk": "失敗時に破壊 {pct}",
   "forge.maxed": "最大強化（+{n}）",
@@ -598,10 +599,11 @@ export const ja: Bundle = {
   "problem.name_mismatch": "名前が違います",
 
   "quest.allDone": "すべてのクエスト完了",
-  "quest.reportHere": "押して村長に報告",
-  "quest.reportInVillage": "タップで村の村長のもとへ",
   "quest.seeking": "向かっています…",
   "quest.goFind": "押して向かう",
+  "quest.fighting": "討伐中…",
+  "quest.goReport": "タップして完了しに行く",
+  "quest.reporting": "完了しに向かっています…",
 
   "pad.attack": "攻撃",
   "pad.block": "ガード",
@@ -627,11 +629,11 @@ export const ja: Bundle = {
   "bar.autoPotionTurnOff": "オートポーションをオフ",
 
   "skills.title": "スキル",
-  "skills.dragNote": "覚えたスキルを下の枠にドラッグしてください。",
+  "skills.dragNote": "覚えたスキルを下の枠にドラッグするか、ダブルタップで空き枠に入れてください。",
   "skills.learnAt": "Lv{n}で習得",
   "skills.fromElder": "村長から習う",
   "skills.inSlot": "{n}番の枠",
-  "skills.dragIn": "ドラッグして枠に入れる",
+  "skills.dragIn": "ドラッグかダブルタップで装着",
   "skills.cooldown": "再使用 {n}秒",
   "skills.remove": "外す",
 

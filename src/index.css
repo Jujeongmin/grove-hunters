@@ -358,7 +358,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
   position: absolute; left: 2px; top: 2px; width: 13px; height: 13px; display: grid; place-items: center; border-radius: 3px;
   font: 700 10px var(--font-head); color: #1a120b; background: var(--ember);
 }
-.hud-cell-corner { position: absolute; right: 3px; bottom: 1px; font: 700 12px var(--font-head); color: var(--ink); text-shadow: var(--shadow); }
+/* A count or the seconds left, on a dark tab in the corner so it never reads as part of the picture. */
+.hud-cell-corner {
+  position: absolute; right: 1px; bottom: 1px; padding: 0 3px; border-radius: 3px; line-height: 13px;
+  font: 700 11px var(--font-head); color: var(--ink); background: rgba(0, 0, 0, 0.6); text-shadow: var(--shadow);
+}
+/* The potion bottle sits a pixel left of its picture's middle, and low: set right in the square. */
+.hud-cell.potion img { transform: translate(1px, -2px); }
 .hud-cell-cooling { position: absolute; left: 0; right: 0; top: 0; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .hud-cell-name {
   max-width: 46px; overflow: hidden; text-overflow: ellipsis;
@@ -1961,3 +1967,5 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .conn-status p { margin: 0; }
 .conn-status.failed p { color: #ffb4a8; }
 .conn-status button { flex: none; white-space: nowrap; }
+/* A learned skill's row is what you drag (or double-tap); the page must not scroll or select under it. */
+.skill-row.learned { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }

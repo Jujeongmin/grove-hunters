@@ -2,7 +2,7 @@ import { useState } from "react";
 import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials } from "../game/account/forge";
 import { protectCost, vipEnhance } from "../game/account/premium";
-import { MAX_PLUS, type BagView, type Slot } from "../game/account/items";
+import { MAX_PLUS, type BagView, type GearPiece, type Slot } from "../game/account/items";
 import { TRADE_CRAFT_CHANCE, allStacks } from "../game/account/inventory";
 import { iconFor } from "../game/render/icons";
 import type { WorldClient } from "../net/worldClient";
@@ -18,7 +18,7 @@ const stillScreen = () => typeof matchMedia === "function" && matchMedia("(prefe
 
 const percent = (n: number) => `${Math.round(n * 100)}%`;
 
-// The forge, from the menu anywhere (or from the village smith): enhance what you wear (+1 to +10,
+// The forge, from the menu anywhere (or from the village smith): enhance your gear, worn or in the bag (+1 to +10,
 // riskier the higher it goes) and make gear and potions from what monsters drop.
 export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag: BagView | null; onClose: () => void }) {
   const [tab, setTab] = useState<"enhance" | "craft">("enhance");
@@ -32,15 +32,16 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
 
   // The attempt plays out (see EnhanceShow): the gauge fills while the server answers, and the
   // outcome shows once both are done.
-  const enhance = (slot: Slot) => {
-    const worn = bag?.gear[slot];
+  // `target`: a worn slot, or the uid of a piece in the bag.
+  const enhance = (target: Slot | string) => {
+    const worn = target === "weapon" || target === "armor" ? bag?.gear[target] : bag?.pieces.find((p) => p.uid === target);
     const cost = worn ? enhanceCost(worn.id, worn.plus) : null;
     if (!worn || !cost) return;
     const shielded = protect && protectCost(cost.to) !== null;
     setBusy(true);
     setNote(null);
     setShow({ item: worn.id, name: itemName(worn.id), from: worn.plus, to: cost.to, outcome: null });
-    void Promise.all([client.enhance(slot, shielded), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
+    void Promise.all([client.enhance(target, shielded), wait(stillScreen() ? 0 : CHARGE_MS)]).then(([r]) => {
       setBusy(false);
       if ("outcome" in r) {
         setShow((s) => s && { ...s, outcome: r.outcome });
@@ -73,12 +74,14 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
 
         {tab === "enhance" && bag && (
           <div className="bag-list">
-            {(["weapon", "armor"] as Slot[]).map((slot) => {
-              const worn = bag.gear[slot];
+            {[
+              ...(["weapon", "armor"] as Slot[]).map((slot) => ({ key: slot, target: slot as Slot | string, label: slotLabel(slot), worn: bag.gear[slot] })),
+              ...bag.pieces.map((p) => ({ key: p.uid, target: p.uid as Slot | string, label: t("forge.inBag"), worn: p as GearPiece | null })),
+            ].map(({ key, target, label, worn }) => {
               if (!worn) {
                 return (
-                  <div key={slot} className="bag-row">
-                    <span className="bag-slot">{slotLabel(slot)}</span>
+                  <div key={key} className="bag-row">
+                    <span className="bag-slot">{label}</span>
                     <span className="note">{t("forge.noGear")}</span>
                   </div>
                 );
@@ -86,8 +89,8 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
               const cost = enhanceCost(worn.id, worn.plus);
               const shield = cost && protect ? protectCost(cost.to) : null;
               return (
-                <div key={slot} className="bag-row smith-row">
-                  <span className="bag-slot">{slotLabel(slot)}</span>
+                <div key={key} className="bag-row smith-row">
+                  <span className="bag-slot">{label}</span>
                   <img className="bag-icon" src={iconFor(worn.id) ?? undefined} alt="" />
                   <b>{gearName(worn)}</b>
                   {cost ? (
@@ -95,7 +98,7 @@ export function SmithPanel({ client, bag, onClose }: { client: WorldClient; bag:
                       <button
                         type="button" className="text-button"
                         disabled={busy || stones < cost.stones || bag.gold < cost.gold || (shield !== null && bag.gems < shield)}
-                        onClick={() => enhance(slot)}
+                        onClick={() => enhance(target)}
                       >
                         {t("forge.enhance")}
                       </button>

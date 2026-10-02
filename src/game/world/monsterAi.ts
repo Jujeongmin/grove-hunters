@@ -25,6 +25,11 @@ export interface MonsterHit { monsterId: string; account: string; damage: number
 // turning at the edge again and again while an archer shoots it from beyond.
 export const LEASH = 20;
 
+// Left be and whole, a monster ambles about where it started: a few metres off, at a stroll, then a
+// rest of a few seconds before the next (so most stand at any moment and the room's state seldom
+// changes for it). Bosses, the guild bosses and the brood stay put.
+export const WANDER = { radius: 3.5, min: 1.2, pace: 0.35, restMs: 2_500, restSpreadMs: 5_000 };
+
 // One step of every monster in a room: the fallen come back when their time is up, the rest leave
 // players be until hit (the aggressive kinds not) and then chase whoever hit them, walk round each
 // other, the players and the forest, and swing when close enough. Returns the blows landed; the caller takes them off the players.
@@ -68,6 +73,12 @@ export function stepMonsters(
         if (seen && (!target || d < target.d)) target = { prey: p, d };
       }
     }
+    if (!target && !m.returning && !m.hitters && m.hp >= spec.hp && wanders(m)) {
+      amble(id, m, monsters, prey, walls, dt, now, random);
+      continue;
+    }
+    delete m.wanderX;
+    delete m.wanderZ;
     const goal = target ? target.prey : { x: m.homeX, z: m.homeZ };
     const d = Math.hypot(goal.x - m.x, goal.z - m.z);
     const yaw = Math.atan2(-(goal.x - m.x), -(goal.z - m.z));
@@ -95,24 +106,77 @@ export function stepMonsters(
       continue;
     }
 
-    const bodies: Body[] = [];
-    for (const [otherId, other] of Object.entries(monsters)) {
-      if (otherId !== id && other.alive) bodies.push({ x: other.x, z: other.z, r: spec.body + MONSTERS[other.type].body });
-    }
-    for (const p of prey) bodies.push({ x: p.x, z: p.z, r: spec.body + PLAYER_BODY });
-    // The movement rules take at most MAX_STEP_SECONDS at a time.
-    let left = dt;
-    while (left > 1e-6) {
-      const step = Math.min(left, MAX_STEP_SECONDS);
-      left -= step;
-      const blocked: SolidTest = (x, z) => walls(x, z) || crowdBlocks(bodies, m, x, z);
-      const moved = stepAround({ x: m.x, z: m.z, yaw }, yaw, step, blocked, spec.speed);
-      m.x = moved.x;
-      m.z = moved.z;
-    }
-    m.yaw = yaw;
+    walk(id, m, monsters, prey, walls, yaw, spec.speed, dt);
   }
   return hits;
+}
+
+// Walks a monster along yaw at speed for dt, round the forest, the other monsters and the players.
+function walk(
+  id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], walls: SolidTest,
+  yaw: number, speed: number, dt: number,
+): void {
+  const spec = MONSTERS[m.type];
+  const bodies: Body[] = [];
+  for (const [otherId, other] of Object.entries(monsters)) {
+    if (otherId !== id && other.alive) bodies.push({ x: other.x, z: other.z, r: spec.body + MONSTERS[other.type].body });
+  }
+  for (const p of prey) bodies.push({ x: p.x, z: p.z, r: spec.body + PLAYER_BODY });
+  // The movement rules take at most MAX_STEP_SECONDS at a time.
+  let left = dt;
+  while (left > 1e-6) {
+    const step = Math.min(left, MAX_STEP_SECONDS);
+    left -= step;
+    const blocked: SolidTest = (x, z) => walls(x, z) || crowdBlocks(bodies, m, x, z);
+    const moved = stepAround({ x: m.x, z: m.z, yaw }, yaw, step, blocked, speed);
+    m.x = moved.x;
+    m.z = moved.z;
+  }
+  m.yaw = yaw;
+}
+
+function wanders(m: MonsterState): boolean {
+  return !m.summoned && !BOSSES.has(m.type) && !PATTERN_BOSS_TYPES.has(m.type);
+}
+
+// One step of a monster left be (see WANDER): resting, picking a spot near home, or strolling there.
+function amble(
+  id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], walls: SolidTest,
+  dt: number, now: number, random: () => number,
+): void {
+  const rest = () => {
+    delete m.wanderX;
+    delete m.wanderZ;
+    m.restUntil = now + WANDER.restMs + random() * WANDER.restSpreadMs;
+  };
+  if (m.wanderX === undefined || m.wanderZ === undefined) {
+    if (now < (m.restUntil ?? 0)) return;
+    // A few tries at a spot on open ground; none found, it rests again.
+    for (let i = 0; i < 4; i++) {
+      const a = random() * Math.PI * 2;
+      const r = WANDER.min + random() * (WANDER.radius - WANDER.min);
+      const x = m.homeX + Math.cos(a) * r;
+      const z = m.homeZ + Math.sin(a) * r;
+      if (!walls(x, z)) {
+        m.wanderX = x;
+        m.wanderZ = z;
+        return;
+      }
+    }
+    rest();
+    return;
+  }
+  const d = Math.hypot(m.wanderX - m.x, m.wanderZ - m.z);
+  if (d < 0.3) {
+    rest();
+    return;
+  }
+  const yaw = Math.atan2(-(m.wanderX - m.x), -(m.wanderZ - m.z));
+  const from = { x: m.x, z: m.z };
+  const speed = MONSTERS[m.type].speed * WANDER.pace;
+  walk(id, m, monsters, prey, walls, yaw, speed, dt);
+  // Something in the way (another monster, a player standing there): it gives up on that spot.
+  if (Math.hypot(m.x - from.x, m.z - from.z) < speed * dt * 0.2) rest();
 }
 
 // The boss's own moves, before its ordinary chase and bite. Calls its brood at set shares of its
