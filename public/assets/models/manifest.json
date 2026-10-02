@@ -691,12 +691,12 @@
     },
     "sn_pine_1": {
       "url": "assets/models/sn_pine_1.glb",
-      "bytes": 83024,
+      "bytes": 62480,
       "animations": []
     },
     "sn_pine_3": {
       "url": "assets/models/sn_pine_3.glb",
-      "bytes": 87444,
+      "bytes": 59920,
       "animations": []
     },
     "sn_rock": {
@@ -711,22 +711,22 @@
     },
     "sn_tree_1": {
       "url": "assets/models/sn_tree_1.glb",
-      "bytes": 159948,
+      "bytes": 139028,
       "animations": []
     },
     "sn_tree_2": {
       "url": "assets/models/sn_tree_2.glb",
-      "bytes": 140952,
+      "bytes": 122876,
       "animations": []
     },
     "sn_tree_3": {
       "url": "assets/models/sn_tree_3.glb",
-      "bytes": 133308,
+      "bytes": 127300,
       "animations": []
     },
     "sn_tree_4": {
       "url": "assets/models/sn_tree_4.glb",
-      "bytes": 115408,
+      "bytes": 98088,
       "animations": []
     }
   }
