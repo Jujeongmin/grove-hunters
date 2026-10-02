@@ -118,9 +118,9 @@ export class MenuScene {
     this.resize();
   }
 
-  // Fetches every model the game has, the menu's own first (it shows as soon as those are in), the
-  // rest behind them, all on the one progress: nothing is fetched or parsed later, mid-game. A model
-  // that will not come now is left for the zone that needs it to ask for again.
+  // Makes the menu's models, then fetches every other model's file behind them, all on the one progress:
+  // nothing is downloaded later, mid-game. Those are only made (their textures decoded) in the zone that
+  // shows them; making all of them here ran a phone out of memory (black models, no sound).
   async start(onProgress?: (done: number, total: number) => void): Promise<void> {
     const library = await ModelLibrary.load();
     const rest = library.names().filter((name) => !MENU_MODELS.includes(name));
@@ -135,7 +135,7 @@ export class MenuScene {
     this.scene.add(this.slime.object);
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
-    await library.preload(rest, (done) => onProgress?.(MENU_MODELS.length + done, total)).catch(() => undefined);
+    await library.prefetch(rest, (done) => onProgress?.(MENU_MODELS.length + done, total));
   }
 
   // The six classes in a row (for a new character), or your character.
@@ -202,6 +202,8 @@ export class MenuScene {
     this.resizeObserver.disconnect();
     cancelAnimationFrame(this.resizeFrame);
     this.renderer.dispose();
+    // Its WebGL context goes now: a browser keeps only a few, and drops the oldest (the world's) past that.
+    this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
   }
 

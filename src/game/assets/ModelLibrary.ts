@@ -19,6 +19,8 @@ export class ModelLibrary {
   private readonly loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   private readonly loaded = new Map<string, LoadedModel>();
   private readonly coming = new Map<string, Promise<LoadedModel>>();
+  // Files fetched ahead (see prefetch), kept as bytes until a zone asks for the model.
+  private readonly bytes = new Map<string, Promise<ArrayBuffer | null>>();
 
   private constructor(private readonly manifest: ModelManifest) {}
 
@@ -53,6 +55,28 @@ export class ModelLibrary {
     );
   }
 
+  // Fetches models' files without making them: only their bytes are kept (the whole game is about
+  // 10 MB), so nothing is downloaded mid-game, while a model's textures are only decoded (into memory
+  // a phone has little of) when a zone that shows it is entered. A file that will not come is left
+  // for preload to fetch again.
+  async prefetch(names: string[], onProgress?: (done: number, total: number) => void): Promise<void> {
+    let done = 0;
+    onProgress?.(0, names.length);
+    await Promise.all(
+      names.map(async (name) => {
+        const entry = this.manifest.models[name];
+        if (entry && !this.loaded.has(name) && !this.bytes.has(name)) {
+          const fetching = fetch(publicUrl(entry.url))
+            .then((res) => (res.ok ? res.arrayBuffer() : null))
+            .catch(() => null);
+          this.bytes.set(name, fetching);
+          if ((await fetching) === null) this.bytes.delete(name);
+        }
+        onProgress?.(++done, names.length);
+      }),
+    );
+  }
+
   // Every model the game has (the manifest's).
   names(): string[] {
     return Object.keys(this.manifest.models);
@@ -75,7 +99,10 @@ export class ModelLibrary {
   private async fetchModel(name: string): Promise<LoadedModel> {
     const entry = this.manifest.models[name];
     if (!entry) throw new Error(`model not in manifest: ${name}`);
-    const gltf = await this.loader.loadAsync(publicUrl(entry.url));
+    const url = publicUrl(entry.url);
+    const fetched = await this.bytes.get(name);
+    this.bytes.delete(name);
+    const gltf = fetched ? await this.loader.parseAsync(fetched, url.slice(0, url.lastIndexOf("/") + 1)) : await this.loader.loadAsync(url);
     return { scene: gltf.scene, animations: gltf.animations };
   }
 }

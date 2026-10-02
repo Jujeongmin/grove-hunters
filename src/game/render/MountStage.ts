@@ -265,14 +265,15 @@ export class MountStage {
     return url;
   }
 
-  // The stage's own canvas keeps its context (a new stage on the same canvas takes it up again); the
-  // card painter's goes.
+  // The stage's context and the card painter's both go: each opening of the stable makes a new canvas,
+  // and contexts left behind made the browser drop the world's own (its models came out black).
   dispose(): void {
     cancelAnimationFrame(this.raf);
     for (const fx of this.fx.splice(0)) fx.dispose();
     this.warmFx?.dispose();
     this.cracks.texture.dispose();
     this.renderer.dispose();
+    this.renderer.forceContextLoss();
     this.painter?.dispose();
     this.painter?.forceContextLoss();
     this.painter = null;

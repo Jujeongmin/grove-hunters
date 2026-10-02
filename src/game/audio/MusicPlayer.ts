@@ -107,6 +107,11 @@ export class MusicPlayer {
     this.run();
   }
 
+  // Starts the wanted piece again if something stopped it (a phone pausing the page's sound).
+  revive(): void {
+    if (this.wanted && !this.disposed) this.start(this.wanted);
+  }
+
   // Makes every track's element now, so each is fetched ahead and a zone's piece starts at once.
   warm(): void {
     for (const track of MUSIC_TRACKS) this.element(track);

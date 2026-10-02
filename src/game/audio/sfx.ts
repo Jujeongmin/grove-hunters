@@ -25,7 +25,8 @@ const CUES = {
   coins: { file: "coins.ogg", level: 0.23 },
   die: { file: "die.ogg", level: 0.32 },
   potion: { file: "potion.wav", level: 0.23 },
-  gold: { file: "gold.wav", level: 0.28 },
+  // Heard on most kills, so it sits well under the rest.
+  gold: { file: "gold.wav", level: 0.14 },
   click: { file: "click.wav", level: 0.17 },
   open: { file: "cloth.wav", level: 0.15 },
   close: { file: "cloth.wav", level: 0.12 },
@@ -50,6 +51,18 @@ export function audioContext(): AudioContext | null {
   if (typeof AudioContext === "undefined") return null;
   audio ??= new AudioContext();
   return audio;
+}
+
+// A phone stops the audio context now and then (another app's sound, low memory, the screen going
+// off); it is started again on the next touch or on coming back to the page.
+export function wakeAudio(): void {
+  if (audio && audio.state !== "running" && audio.state !== "closed") void audio.resume().catch(() => undefined);
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("pointerdown", wakeAudio, true);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") wakeAudio();
+  });
 }
 
 // Decoded files, by file name (two cues may share one).

@@ -49,6 +49,8 @@ const ROLL_TAIL = 0.1;
 interface Animated {
   mixer: THREE.AnimationMixer;
   idle: THREE.AnimationAction;
+  // Sat on a mount: the pack's plain stand, arms at rest (the weapon stance would hold the blade across the mount's face).
+  ride: THREE.AnimationAction;
   walk: THREE.AnimationAction;
   run: THREE.AnimationAction;
   attacks: THREE.AnimationAction[];
@@ -65,10 +67,8 @@ export interface MountModel {
   clips: THREE.AnimationClip[];
 }
 
-// How a rider sits (radians): thighs forward, knees bent back down, legs apart over the mount's back.
-const RIDE_THIGH = 1.25;
-const RIDE_KNEE = 1.35;
-const RIDE_SPREAD = 0.7;
+// How a rider sits (radians, about its own body): thighs forward, knees bent back down, legs apart over the mount.
+const RIDE_LEGS = { thigh: 1.25, knee: 1.35, spread: 0.7 };
 
 // Getting on or off takes this long (seconds): the mount pops up (or shrinks away) in a puff while the
 // rider hops up onto it (or down), this high at the top of the hop.
@@ -290,13 +290,18 @@ export class PlayerActor {
   }
 
   // The legs bent over the mount, after the clip has posed the rest of the body.
+  // The bends are about the body's own axes (its right, and the way it faces): about the world's, the
+  // legs knelt backwards facing one way and swung sideways facing another.
   private sitLegs(weight: number): void {
     if (!this.legs || weight <= 0) return;
     this.body.updateMatrixWorld(true);
+    const frame = this.body.getWorldQuaternion(new THREE.Quaternion());
+    const across = X_AXIS.clone().applyQuaternion(frame);
+    const ahead = Z_AXIS.clone().applyQuaternion(frame);
     for (const leg of this.legs) {
-      turnInWorld(leg.upper, X_AXIS, -RIDE_THIGH * weight);
-      turnInWorld(leg.upper, Z_AXIS, leg.side * RIDE_SPREAD * weight);
-      turnInWorld(leg.lower, X_AXIS, RIDE_KNEE * weight);
+      turnInWorld(leg.upper, across, -RIDE_LEGS.thigh * weight);
+      turnInWorld(leg.upper, ahead, leg.side * RIDE_LEGS.spread * weight);
+      turnInWorld(leg.lower, across, RIDE_LEGS.knee * weight);
       const foot = leg.lower.localToWorld(leg.footInLower.clone());
       leg.foot.position.copy(leg.foot.parent!.worldToLocal(foot));
       leg.foot.updateMatrixWorld(true);
@@ -333,6 +338,7 @@ export class PlayerActor {
     return {
       mixer,
       idle,
+      ride: THREE.AnimationClip.findByName(clips, "Idle") ? action("Idle") : idle,
       walk: action(rig.walk),
       run: action(rig.run),
       attacks: rig.attacks.map((n) => once(action(n), false)),
@@ -430,7 +436,7 @@ export class PlayerActor {
       // The tumble, or the swing, plays through.
     }
     // A rider sits still; the mount does the walking.
-    else a.blender.fadeTo(this.riding ? a.idle : this.moveClip(a, dx, dz, pose.yaw));
+    else a.blender.fadeTo(this.riding ? a.ride : this.moveClip(a, dx, dz, pose.yaw));
     a.mixer.update(dt);
     if (this.riding) this.stepMount(this.riding, true, moving, dt);
     else if (this.leaving) this.stepMount(this.leaving, false, moving, dt);

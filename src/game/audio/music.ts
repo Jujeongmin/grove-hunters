@@ -11,6 +11,11 @@ function live(): MusicPlayer {
     player.warm();
     player.setVolume(settings().music);
     onSettings((s) => player?.setVolume(s.music));
+    // Stopped by the phone (see wakeAudio), the music comes back on the next touch or on coming back.
+    window.addEventListener("pointerdown", () => player?.revive(), true);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") player?.revive();
+    });
   }
   return player;
 }
