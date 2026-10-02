@@ -38,6 +38,8 @@ export const ICON_IDS = [
   "ui_rewards", "ui_ticket",
   // The party (PixelLab).
   "ui_party",
+  // The Trial Dungeon (PixelLab).
+  "ui_dungeon",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

@@ -22,6 +22,7 @@ import type { Mail } from "../game/account/mail";
 import type { AttendanceView } from "../game/account/attendance";
 import type { AchievementsView } from "../game/account/achievements";
 import type { PartyCandidate, PartyState } from "../game/account/party";
+import { readRun, type DungeonRun, type DungeonView } from "../game/world/dungeon";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
 import type { MatchTransport } from "./transport";
@@ -106,6 +107,8 @@ export interface WorldState {
   telegraphs: Telegraph[];
   // In a guild boss room: the boss's full health for the week (its hp is what is left of it).
   arenaMax: number | null;
+  // In a Trial Dungeon room: how its run stands (see dungeon.ts).
+  dungeon: DungeonRun | null;
   me: Vitals | null;
   // Your gold, bag and gear; null until the server has said.
   bag: BagView | null;
@@ -188,6 +191,7 @@ function readMonsters(raw: unknown): Record<string, MonsterState> {
       stunnedUntil: num(m.stunnedUntil), attackReadyAt: num(m.attackReadyAt), respawnAt: num(m.respawnAt),
       homeX: num(m.homeX), homeZ: num(m.homeZ),
       slamming: m.slamming === true, summoned: m.summoned === true, returning: m.returning === true,
+      ...(typeof m.maxHp === "number" ? { maxHp: m.maxHp } : {}),
     };
   }
   return out;
@@ -205,7 +209,7 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // and your own pose going out to them.
 export class WorldClient {
   private current: WorldState = {
-    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
   };
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
@@ -625,6 +629,41 @@ export class WorldClient {
     }
   }
 
+  // The Trial Dungeon (see dungeon.ts): how things stand (null when it cannot be read), the queue,
+  // going in at once, saying yes, each answering how things stand after or why it was refused; and
+  // the way into and out of its room.
+  async dungeonState(): Promise<DungeonView | null> {
+    if (this.current.phase !== "in") return null;
+    return await this.transport.call<DungeonView>("dungeonState").catch(() => null);
+  }
+
+  dungeonCall(name: "queueDungeon" | "cancelDungeon" | "soloDungeon" | "readyDungeon"): Promise<DungeonView | { problem: string }> {
+    return this.tryCall<DungeonView>(name, []);
+  }
+
+  async enterDungeon(): Promise<string | null> {
+    if (this.current.phase !== "in") return "unavailable";
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(await this.transport.call<ZoneEntry>("enterDungeon"));
+      return null;
+    } catch (error) {
+      this.set({ phase: "in" });
+      return errorCode(error);
+    }
+  }
+
+  async leaveDungeon(): Promise<string | null> {
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(await this.transport.call<ZoneEntry>("leaveDungeon"));
+      return null;
+    } catch (error) {
+      this.set({ phase: "in" });
+      return errorCode(error);
+    }
+  }
+
   async leaveArena(): Promise<string | null> {
     this.set({ phase: "travelling" });
     try {
@@ -837,7 +876,7 @@ export class WorldClient {
     this.users = [];
     this.lastPose = null;
     this.payoutSeen = undefined;
-    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, me: null, error: null });
+    this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, me: null, error: null });
     void this.refreshBag();
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
@@ -849,6 +888,8 @@ export class WorldClient {
         if (telegraphs !== undefined) this.set({ telegraphs: readTelegraphs(telegraphs) });
         const arena = (state as { arena?: { max?: unknown } }).arena;
         if (arena && typeof arena.max === "number" && arena.max !== this.current.arenaMax) this.set({ arenaMax: arena.max });
+        const run = (state as { dungeon?: unknown }).dungeon;
+        if (run !== undefined) this.set({ dungeon: readRun(run) });
         this.refreshOthers();
       }),
       this.transport.onRoomMessage(entry.roomId, "chat", (message) => this.heard(message)),

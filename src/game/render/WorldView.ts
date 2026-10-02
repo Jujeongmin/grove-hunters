@@ -47,6 +47,7 @@ import type { LodBatch } from "./lodBatch";
 import { TelegraphLayer } from "./telegraphMarks";
 import { lookOf } from "./regionLook";
 import { GUILD_BOSSES } from "../world/guildBoss";
+import { BRACKETS } from "../world/dungeon";
 import type { Telegraph } from "../world/telegraphs";
 import { MonsterActor } from "./MonsterActor";
 import { MONSTER_SKINS } from "./monsterLooks";
@@ -148,6 +149,8 @@ function zoneMonsterModels(zone: ZoneId): string[] {
   if (zone === GROVE_GUARDIAN_ZONE) types.push("grove_guardian");
   // A guild's arena may hold any of the week's bosses, and the glub's brood.
   if (zone === "arena") types.push(...GUILD_BOSSES, "glub_brood");
+  // The Trial Dungeon may hold any bracket's waves and boss.
+  if (zone === "dungeon") for (const b of BRACKETS) types.push(...b.waves, b.boss, "glub_brood");
   return [...new Set(types.map((t) => MONSTER_SKINS[t].model))];
 }
 
@@ -1239,7 +1242,7 @@ export class WorldView {
         // A kind this zone did not load (a server ahead of this client): not drawn, rather than the
         // whole view stopping on it.
         if (!library.has(skin.model)) continue;
-        actor = new MonsterActor(id, library.instance(skin.model), library.get(skin.model).animations, skin.look, MONSTERS[state.type].hp);
+        actor = new MonsterActor(id, library.instance(skin.model), library.get(skin.model).animations, skin.look, state.maxHp ?? MONSTERS[state.type].hp);
         this.monsters.set(id, actor);
         this.scene.add(actor.object);
       }
@@ -1346,7 +1349,7 @@ export class WorldView {
         return npc ? { id: npc.id, name: npcName(npc.id), role: npcRole(npc.id) } : null;
       })(),
       target: fighting?.alive && isBoss(fighting.type)
-        ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: MONSTERS[fighting.type].hp }
+        ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: fighting.maxHp ?? MONSTERS[fighting.type].hp }
         : null,
       potions: (this.client.state.bag?.bag.potion_small ?? 0) + (this.client.state.bag?.bag.potion_big ?? 0),
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),

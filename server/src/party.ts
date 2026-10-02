@@ -241,3 +241,9 @@ export async function passLead(account: string, character: Character, target: st
     await writeParty({ ...now, leader: target });
   });
 }
+
+// The caller's party as the dungeon queues it: its members and whether the caller leads; null for none.
+export async function partyGroupOf(account: string, character: Character): Promise<{ leads: boolean; members: Party["members"] } | null> {
+  const party = await currentParty(account, character);
+  return party ? { leads: party.leader === account, members: party.members } : null;
+}

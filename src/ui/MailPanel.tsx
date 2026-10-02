@@ -34,6 +34,7 @@ function words(mail: Mail): { title: string; body: string | null } {
       ? { title: t("mail.leagueGuild", { n: place }), body: t("mail.leagueGuildBody", { guild: String(mail.params.guild ?? ""), n: place }) }
       : { title: t("mail.leaguePlayer", { n: place }), body: t("mail.leaguePlayerBody", { n: place }) };
   }
+  if (mail.kind === "dungeon") return { title: t("mail.dungeon"), body: t("mail.dungeonBody") };
   if (mail.kind === "attendance") return { title: t("mail.attendance", { n: Number(mail.params.day) || 1 }), body: t("mail.attendanceBody") };
   if (mail.kind === "vip_daily") return { title: t("mail.vipDaily", { n: Number(mail.params.vip) || 0 }), body: t("mail.vipDailyBody") };
   const thing = marketThing(mail);

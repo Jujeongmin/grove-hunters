@@ -1902,11 +1902,11 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .party-crown { font-style: normal; color: #ffd36a; }
 .party-hp { height: 7px; }
 .party-invite {
-  position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px;
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px;
   padding: 8px 14px; white-space: nowrap; font-size: 14px; pointer-events: auto;
 }
 .party-invite .brush-button.small { padding: 6px 14px; font-size: 13px; }
-.party-note { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 6px 14px; font-size: 13px; color: #ff8a7a; cursor: pointer; pointer-events: auto; }
+.party-note { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 6px 14px; font-size: 13px; color: #ff8a7a; cursor: pointer; pointer-events: auto; }
 .party-lead { margin: 0; font-size: 13px; }
 .party-panel .note.good { color: #9fd88a; }
 .party-panel .note.bad { color: #ff8a7a; }
@@ -1924,3 +1924,18 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .party-actions .text-button.bad { color: #ff8a7a; }
 .party-leave { display: flex; justify-content: center; }
 .party-leave .brush-button.small { padding: 6px 16px; font-size: 13px; }
+/* The Trial Dungeon: its screen's cards and buttons, the match band at the top, and the HUD inside
+   (the guild boss room's, with the wave beside the clock). */
+.dungeon-lead, .dungeon-hint { margin: 0; font-size: 13px; }
+.dungeon-panel .note.bad { margin: 0; color: #ff8a7a; font-size: 12px; text-align: center; }
+.dungeon-card { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); font-size: 13px; }
+.dungeon-card b { font: 400 15px var(--font-head); color: #f3d99a; }
+.dungeon-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.dungeon-actions .brush-button.small { padding: 8px 18px; font-size: 14px; }
+.dungeon-waiting { font: 400 15px var(--font-head); color: #f3d99a; }
+.dungeon-banner {
+  position: absolute; top: 112px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px;
+  padding: 8px 14px; white-space: nowrap; font-size: 14px; pointer-events: auto;
+}
+.dungeon-banner .brush-button.small { padding: 6px 14px; font-size: 13px; }
+.dungeon-hud .arena-top { gap: 10px; }

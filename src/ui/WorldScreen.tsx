@@ -34,6 +34,8 @@ import { MailPanel } from "./MailPanel";
 import { RewardsPanel, type RewardsTab } from "./RewardsPanel";
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
 import { PARTY_POLL_MS, type PartyState } from "../game/account/party";
+import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
+import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
 import { MarketPanel } from "./MarketPanel";
 import { GuildPanel } from "./GuildPanel";
 import { ArenaHud } from "./ArenaHud";
@@ -140,7 +142,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party" | "dungeon";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -355,6 +357,43 @@ function ZoneScreen({
     const timer = setInterval(() => pollParty.current(), PARTY_POLL_MS);
     return () => clearInterval(timer);
   }, [ready]);
+  // The Trial Dungeon: how things stand, asked every DUNGEON_POLL_MS while queued, matched or looking
+  // at its screen (asking also works the queue through). A started match you said yes to takes you in.
+  const [dungeon, setDungeon] = useState<DungeonView | null>(null);
+  const [readying, setReadying] = useState(false);
+  const pollDungeon = useRef(() => {});
+  pollDungeon.current = () => {
+    void client.dungeonState().then((next) => {
+      if (next) setDungeon(next);
+    });
+  };
+  const inDungeon = entry.zone === "dungeon";
+  // A match your party's leader made shows up in the party's poll.
+  const dungeonBusy = !!dungeon?.queued || !!dungeon?.match || panel === "dungeon" || party?.dungeonMatch === true;
+  useEffect(() => {
+    if (!ready || inDungeon) return;
+    pollDungeon.current();
+    if (!dungeonBusy) return;
+    const timer = setInterval(() => pollDungeon.current(), DUNGEON_POLL_MS);
+    return () => clearInterval(timer);
+  }, [ready, inDungeon, dungeonBusy]);
+  const goingIn = useRef(false);
+  useEffect(() => {
+    if (inDungeon || goingIn.current || !dungeon?.match?.started || !dungeon.match.ready) return;
+    goingIn.current = true;
+    setPanel(null);
+    void client.enterDungeon().then((problem) => {
+      goingIn.current = false;
+      if (problem) setPartyNote(problemText(problem));
+    });
+  }, [dungeon, inDungeon, client]);
+  const readyDungeon = async () => {
+    setReadying(true);
+    const r = await client.dungeonCall("readyDungeon");
+    setReadying(false);
+    if ("problem" in r) setPartyNote(problemText(r.problem));
+    else setDungeon(r);
+  };
   const answerInvite = async (id: string, accept: boolean) => {
     setAnswering(true);
     setPartyNote(null);
@@ -460,6 +499,10 @@ function ZoneScreen({
         toggle("rewards");
       },
       on: panel === "rewards", dot: claimable > 0 || attendPending,
+    },
+    {
+      id: "dungeon", label: t("menu.dungeon"), key: "6", code: "Digit6", act: () => toggle("dungeon"), on: panel === "dungeon",
+      dot: !!dungeon?.match && !dungeon.match.ready,
     },
     {
       id: "party", label: t("menu.party"), key: "5", code: "Digit5", act: () => toggle("party"), on: panel === "party",
@@ -588,6 +631,9 @@ function ZoneScreen({
           {party && party.invites.length > 0 && (
             <PartyInviteBanner invite={party.invites[0]} busy={answering} onAnswer={(accept) => void answerInvite(party.invites[0].id, accept)} />
           )}
+          {dungeon?.match && !inDungeon && (
+            <DungeonMatchBanner view={dungeon} busy={readying} onReady={() => void readyDungeon()} />
+          )}
           {partyNote && <button type="button" className="party-note band" onClick={() => setPartyNote(null)}>{partyNote}</button>}
           {/* The menu sits left of the corner map and unfolds into a grid below itself, so the two
               never cover each other. */}
@@ -685,8 +731,9 @@ function ZoneScreen({
             />
           )}
           {entry.zone === "arena" && <ArenaHud client={client} />}
+          {inDungeon && <DungeonHud client={client} />}
           <AnnounceBanner client={client} />
-          {hud.dead && entry.zone !== "arena" && (
+          {hud.dead && entry.zone !== "arena" && !inDungeon && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} vip={bag?.vip ?? 0} travelling={travelling} />
           )}
         </>
@@ -719,6 +766,11 @@ function ZoneScreen({
       {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
       {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
+      {panel === "dungeon" && (
+        <DungeonPanel
+          client={client} view={dungeon} partyLeader={party?.party?.leader === client.account} onView={setDungeon} onClose={() => setPanel(null)}
+        />
+      )}
       {panel === "party" && hud && (
         <PartyPanel
           client={client} state={party} me={client.account} here={{ zone: hud.zoneId, channel: hud.channel }}

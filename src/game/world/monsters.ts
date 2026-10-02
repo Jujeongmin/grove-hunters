@@ -213,6 +213,7 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   snow2: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"],
   snow3: ["peak_yeti", "frost_drake", "glacier_alpaking"],
   snowboss: [],
+  dungeon: [],
 };
 export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king", snowboss: "frost_emperor" };
 // Where the grove's guardian comes (see grove.ts).

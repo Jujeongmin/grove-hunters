@@ -29,6 +29,7 @@ export const RULE_ERRORS = [
   "guild_name_invalid", "guild_name_taken", "in_guild", "no_guild", "guild_full", "guild_wait", "applied_limit", "applicants_full",
   "no_applicant", "not_allowed", "vice_limit", "master_must_pass", "guild_not_empty",
   "party_full", "in_party", "no_invite", "no_party",
+  "no_runs", "in_dungeon", "no_match", "dungeon_over",
   "boss_down", "entered_today", "room_full", "arena_over",
   "nickname_invalid", "nickname_taken", "name_mismatch",
   "friend_not_found", "friend_self", "already_friends", "friend_limit", "request_limit", "no_request",

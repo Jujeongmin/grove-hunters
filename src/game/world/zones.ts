@@ -7,9 +7,10 @@ import { BUILDINGS } from "./grove";
 // whole world is free to everyone; each zone only asks for a level (minLevel).
 // The arena is where a guild fights its boss (see guildBoss.ts): no portal leads there, only the guild.
 // Past the deep forest lies the snow region: its outpost, three fields and the Glacier Emperor's altar.
+// The dungeon is the Trial Dungeon's room (see dungeon.ts): only a match leads there.
 export type ZoneId =
   | "village" | "forest1" | "forest2" | "forest3" | "boss" | "arena"
-  | "outpost" | "snow1" | "snow2" | "snow3" | "snowboss";
+  | "outpost" | "snow1" | "snow2" | "snow3" | "snowboss" | "dungeon";
 
 // The two regions: the grove (the village and the forest) and the snow. Falling in one sends you back
 // to its own town.
@@ -122,6 +123,13 @@ export const ZONES: Record<ZoneId, Zone> = {
     map: fieldMap({
       cols: 18, rows: 18, seed: 83, spawn: [9, 14], portals: [],
       monsters: 0, boss: [9, 7], groves: 0, edge: 3, props: "",
+    }),
+  },
+  dungeon: {
+    id: "dungeon", region: "grove", minLevel: 10, portals: [],
+    map: fieldMap({
+      cols: 22, rows: 22, seed: 131, spawn: [11, 17], portals: [],
+      monsters: 0, boss: [11, 8], groves: 0, edge: 3, props: "",
     }),
   },
   outpost: {

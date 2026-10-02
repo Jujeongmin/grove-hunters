@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-02-dungeon",
+    date: "2026-10-02",
+    text: {
+      ko: {
+        title: "시련의 던전이 열렸어요",
+        lines: [
+          "메뉴의 '던전'(6)에서 매칭을 시작하면 모든 서버에서 비슷한 레벨끼리 최대 4명이 모여요. 매칭되면 15초 안에 '입장'을 눌러요.",
+          "웨이브 2번과 보스(초급 장로 글럽·중급 설산 예티·상급 고대 드래곤)를 5분 안에 깨면 골드·강화석·장비(40%)를 우편으로 받아요. 2분 30초 안이면 골드 +50%, 그날 첫 클리어는 보석 30개.",
+          "기다릴수록 적은 인원으로도 출발하고(인원이 적으면 몬스터도 약해져요), '혼자 입장'이나 파티장의 '파티와 바로 입장'도 있어요. 하루 3번.",
+        ],
+      },
+      en: {
+        title: "The Trial Dungeon is open",
+        lines: [
+          "Find a match from 'Dungeon' (6) in the menu: up to four players of like level from every server come together. Press 'Enter' within 15 seconds once matched.",
+          "Clear two waves and a boss (Novice: Elder Glub, Adept: Snowpeak Yeti, Master: Ancient Dragon) within 5 minutes for gold, whetstones and a 40% chance of gear by mail. Under 2:30 adds 50% gold; the day's first clear brings 30 gems.",
+          "The longer the wait, the fewer it starts with (fewer players, weaker monsters); you can also enter alone, or as a leader with your party. Three runs a day.",
+        ],
+      },
+      ja: {
+        title: "試練のダンジョンが開きました",
+        lines: [
+          "メニューの「ダンジョン」（6）でマッチングを始めると、全サーバーから近いレベルの最大4人が集まります。マッチングしたら15秒以内に「入場」を押しましょう。",
+          "ウェーブ2回とボス（初級 長老グラブ・中級 雪山イエティ・上級 古代ドラゴン）を5分以内に倒すと、ゴールド・強化石・装備（40%）が郵便で届きます。2分30秒以内ならゴールド+50%、その日最初のクリアは宝石30個。",
+          "待つほど少ない人数でも出発し（人数が少ないとモンスターも弱くなります）、「ひとりで入場」やリーダーの「パーティーで入場」もあります。1日3回。",
+        ],
+      },
+      "zh-Hant": {
+        title: "試煉地下城開放了",
+        lines: [
+          "在選單的「地下城」（6）開始配對，就會從所有伺服器集合等級相近的最多4人。配對成功後請在15秒內按下「進入」。",
+          "在5分鐘內擊敗2波怪物和首領（初級 長老咕嚕・中級 雪山雪怪・高級 遠古巨龍），可透過郵件獲得金幣、強化石與裝備（40%）。2分30秒內通關金幣+50%，當天首次通關獲得寶石30個。",
+          "等待越久，越少人數也會出發（人數越少怪物越弱），也可以「單人進入」或由隊長「與隊伍進入」。每天3次。",
+        ],
+      },
+      "zh-Hans": {
+        title: "试炼地下城开放了",
+        lines: [
+          "在菜单的“地下城”（6）开始匹配，就会从所有服务器集合等级相近的最多4人。匹配成功后请在15秒内按下“进入”。",
+          "在5分钟内击败2波怪物和首领（初级 长老咕噜・中级 雪山雪怪・高级 远古巨龙），可通过邮件获得金币、强化石与装备（40%）。2分30秒内通关金币+50%，当天首次通关获得宝石30个。",
+          "等待越久，越少人数也会出发（人数越少怪物越弱），也可以“单人进入”或由队长“与队伍进入”。每天3次。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-02-party",
     date: "2026-10-02",
     text: {

@@ -78,6 +78,11 @@ import { NO_RECORD, recordFelled, type AchievementsView } from "../../src/game/a
 import { answer as answerInvite, candidatesOf, invite, kick, leaveParty, partyIdOf, partyStateOf, passLead } from "./party";
 import { shareOf, type PartyCandidate, type PartyState } from "../../src/game/account/party";
 import {
+  cancel as cancelDungeonQueue, enter as enterDungeonRoom, leave as leaveDungeonRoom, passFor, queue as queueForDungeon, ready as readyForDungeon,
+  runOpen, solo as soloIntoDungeon, tickDungeon, viewOf as dungeonViewOf,
+} from "./dungeon";
+import { readDungeonRoom, type DungeonView } from "../../src/game/world/dungeon";
+import {
   freeRevive, huntBonus, pieceLimit, premiumView, protectCost, readPremium, vipEnhance, vipOf, type PremiumView,
 } from "../../src/game/account/premium";
 import { hasMonsters, strike, tickRoom, useSkill, withRoomLock, type HitResult } from "./hunt";
@@ -443,12 +448,17 @@ async function requireNpc(role: NpcRole): Promise<void> {
 }
 
 // Where the caller is fighting: a channel's room, or one of its guild's boss rooms (see arena.ts).
-type Place = { kind: "channel"; roomId: string; zone: ZoneId } | { kind: "arena"; roomId: string; zone: ZoneId; guildId: string; n: number };
+type Place =
+  | { kind: "channel"; roomId: string; zone: ZoneId }
+  | { kind: "arena"; roomId: string; zone: ZoneId; guildId: string; n: number }
+  | { kind: "dungeon"; roomId: string; zone: ZoneId; matchId: string };
 
 function currentPlace(): Place {
   const roomId = $sender.roomId;
   const arena = readArenaRoom(roomId);
   if (arena && roomId) return { kind: "arena", roomId, zone: "arena", ...arena };
+  const dungeon = readDungeonRoom(roomId);
+  if (dungeon && roomId) return { kind: "dungeon", roomId, zone: "dungeon", ...dungeon };
   return { kind: "channel", ...currentChannel() };
 }
 
@@ -522,6 +532,24 @@ async function arriveInArena(account: string): Promise<{ x: number; z: number; g
   return { x: at.x, z: at.z, grove: null };
 }
 
+// Standing in a dungeon room, whole, as your pass (enterDungeon) says; the room's run shares kills
+// among everyone in it like a party.
+async function arriveInDungeon(account: string): Promise<{ x: number; z: number; grove: null }> {
+  const roomId = $sender.roomId;
+  const place = readDungeonRoom(roomId);
+  if (!place || !roomId || !(await passFor(account, roomId))) throw new RuleViolation("dungeon_over");
+  const character = await playing(account);
+  const at = zoneLayout("dungeon").playerSpawn;
+  const now = Date.now();
+  const { maxHp, gear } = fightStats(await mounted(account, character));
+  await $room.updateMyState({
+    pose: { x: at.x, z: at.z, yaw: 0, y: 0, block: false, swing: 0, skill: 0, at: now },
+    characterId: character.id, riding: null, look: zoneLook(character, await vipOfAccount(account)), savedAt: now,
+    xp: character.xp, maxHp, gear, hp: maxHp, dead: false, party: place.matchId,
+  });
+  return { x: at.x, z: at.z, grove: null };
+}
+
 // A listing as the market's screen shows it: whose it is by name only, and whether it is yours.
 function listingView(listing: Listing, account: string): ListingView {
   const { seller, ...shown } = listing;
@@ -578,6 +606,69 @@ export class Server {
     return { seen: id };
   }
 
+  // The Trial Dungeon (see dungeon.ts): how things stand (asked every few seconds while waiting, which
+  // also works the queue through), joining or leaving the queue, going in at once, saying yes to a
+  // match, and the way in and out of its room.
+  async dungeonState(): Promise<DungeonView> {
+    const account = $sender.account;
+    return dungeonViewOf(account, await playing(account), Date.now());
+  }
+
+  async queueDungeon(): Promise<DungeonView> {
+    const account = $sender.account;
+    if (!readChannelRoom($sender.roomId)) throw new RuleViolation("unavailable");
+    const character = await playing(account);
+    await queueForDungeon(account, character, Date.now());
+    return dungeonViewOf(account, character, Date.now());
+  }
+
+  async cancelDungeon(): Promise<DungeonView> {
+    const account = $sender.account;
+    await cancelDungeonQueue(account);
+    return dungeonViewOf(account, await playing(account), Date.now());
+  }
+
+  async soloDungeon(): Promise<DungeonView> {
+    const account = $sender.account;
+    if (!readChannelRoom($sender.roomId)) throw new RuleViolation("unavailable");
+    const character = await playing(account);
+    await soloIntoDungeon(account, character, Date.now());
+    return dungeonViewOf(account, character, Date.now());
+  }
+
+  async readyDungeon(): Promise<DungeonView> {
+    const account = $sender.account;
+    await readyForDungeon(account, Date.now());
+    return dungeonViewOf(account, await playing(account), Date.now());
+  }
+
+  async enterDungeon(): Promise<ZoneEntry> {
+    const account = $sender.account;
+    const here = readChannelRoom($sender.roomId);
+    if (!here) throw new RuleViolation("unavailable");
+    const mine = await $room.getMyState();
+    if (mine.dead === true) throw new RuleViolation("unavailable");
+    const roomId = await enterDungeonRoom(account, await playing(account), here.channel, Date.now());
+    // As you are in the field is how you come back to it.
+    await carryVitals(account, mine);
+    const at = zoneLayout("dungeon").playerSpawn;
+    return { roomId, zone: "dungeon", channel: here.channel, x: at.x, z: at.z };
+  }
+
+  // Out of the dungeon, back to where you stood in the field before, on the same channel.
+  async leaveDungeon(): Promise<ZoneEntry> {
+    const account = $sender.account;
+    const back = await leaveDungeonRoom(account);
+    const character = await playing(account);
+    const spot = returnSpot(character.spot);
+    const channel = back ?? await channelToEnter(account, character);
+    if (spot && spot.zone !== "arena" && spot.zone !== "dungeon" && levelOf(character.xp).level >= ZONES[spot.zone].minLevel) {
+      return enter(account, character, spot.zone, spot.x, spot.z, channel);
+    }
+    const home = zoneLayout(START_ZONE).playerSpawn;
+    return enter(account, character, START_ZONE, home.x, home.z, channel);
+  }
+
   // Your party and the invitations waiting for you, polled by the screen: it also marks you as about,
   // and notes the party on you in the room you are in, for sharing kills.
   async partyState(): Promise<PartyState> {
@@ -587,7 +678,8 @@ export class Server {
       const mine = await $room.getMyState();
       if ((mine.party ?? null) !== partyId) await $room.updateMyState({ party: partyId });
     }
-    return state;
+    const pass = (await $global.getUserState(account)).dungeon as { match?: unknown } | null | undefined;
+    return { ...state, dungeonMatch: typeof pass?.match === "string" };
   }
 
   // Players on your channel in no party, to invite.
@@ -1269,6 +1361,7 @@ export class Server {
   async arrive(): Promise<{ x: number; z: number; grove: { gold: number; xp: number } | null }> {
     const account = $sender.account;
     if (currentPlace().kind === "arena") return arriveInArena(account);
+    if (currentPlace().kind === "dungeon") return arriveInDungeon(account);
     const { roomId, zone } = currentChannel();
     const character = await playing(account);
     // Only into the room enter sent you to (it checked the zone's price, its level and the channel's
@@ -1370,6 +1463,7 @@ export class Server {
   async strike(monsterId: unknown, yaw?: unknown): Promise<HitResult> {
     const place = currentPlace();
     if (place.kind === "arena") await arenaOpen();
+    if (place.kind === "dungeon" && !(await runOpen())) throw new RuleViolation("dungeon_over");
     const result = await withRoomLock(place.roomId, () => strike(place.zone, $sender.account, monsterId, yaw, Date.now()));
     await noteBossDamage(place, result);
     return reward($sender.account, place.roomId, result);
@@ -1379,6 +1473,7 @@ export class Server {
   async useSkill(slot?: unknown, yaw?: unknown): Promise<HitResult> {
     const place = currentPlace();
     if (place.kind === "arena") await arenaOpen();
+    if (place.kind === "dungeon" && !(await runOpen())) throw new RuleViolation("dungeon_over");
     const result = await withRoomLock(place.roomId, () => useSkill(place.zone, $sender.account, slot, yaw, Date.now()));
     await noteBossDamage(place, result);
     return reward($sender.account, place.roomId, result);
@@ -1775,6 +1870,11 @@ export class Server {
   // Whoever falls loses a little XP (see deathXpLoss); the room shows them how much.
   async $roomTick(delta: number, roomId: string): Promise<void> {
     // A guild's boss room: its own tick, and no one loses anything for falling there.
+    // A Trial Dungeon room: its waves, its boss and its clock (no one loses anything for falling).
+    if (readDungeonRoom(roomId)) {
+      await tickDungeon(roomId, delta, Date.now());
+      return;
+    }
     if (readArenaRoom(roomId)) {
       await tickArena(roomId, currentWeek(Date.now()), delta, Date.now());
       return;

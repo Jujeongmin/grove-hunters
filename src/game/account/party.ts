@@ -98,6 +98,9 @@ export interface PartyView { id: string; leader: string; members: PartyMemberVie
 export interface PartyState {
   party: PartyView | null;
   invites: { id: string; fromName: string; at: number }[];
+  // A Trial Dungeon match is waiting for you (made by your party's leader): the screen starts asking
+  // about it (see dungeon.ts).
+  dungeonMatch?: boolean;
 }
 
 // Someone on your channel you could invite.

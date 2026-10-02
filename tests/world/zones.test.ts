@@ -82,8 +82,8 @@ describe("zones", () => {
       for (const p of [...layout.portals, ...layout.zombieSpawns, ...(layout.bossSpawn ? [layout.bossSpawn] : [])]) {
         expect(seen.has(cell(p))).toBe(true);
       }
-      // The guild's arena is a small ring on purpose; the rest are wide open country.
-      if (id !== "arena") expect(layout.cols * t).toBeGreaterThanOrEqual(120);
+      // The guild's arena and the Trial Dungeon are small rings on purpose; the rest are wide open country.
+      if (id !== "arena" && id !== "dungeon") expect(layout.cols * t).toBeGreaterThanOrEqual(120);
     }
     expect(zoneLayout("arena").bossSpawn).not.toBeNull();
     expect(zoneLayout("forest1").zombieSpawns.length).toBeGreaterThanOrEqual(20);
