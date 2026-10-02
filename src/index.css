@@ -1820,3 +1820,69 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .full-screen > .full-body > .mail-list, .full-screen > .full-body > .market-tab, .full-screen > .full-body > .guild-body {
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
 }
+/* Attendance and achievements: the sheet as a 7x4 grid of boxes, stamped as the days go by, and the
+   achievements one line per kind, each with its next goal's bar and gems. Sized to fit the smallest
+   stage (800x450) without scrolling the sheet. */
+.rewards-panel .note.bad { margin: 0; text-align: center; color: #ff8a7a; font-size: 12px; }
+.attend-tab { display: flex; flex-direction: column; gap: 8px; }
+.attend-lead { margin: 0; text-align: center; font: 400 15px var(--font-head); color: #f3d99a; }
+.attend-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 0; padding: 0; list-style: none; }
+.attend-cell {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-height: 56px; padding: 3px 2px; border-radius: 6px; box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.attend-cell.big { background: rgba(96, 200, 230, 0.12); border-color: rgba(96, 200, 230, 0.35); }
+.attend-cell img { width: 24px; height: 24px; image-rendering: pixelated; }
+.attend-day { font-size: 11px; color: var(--ink-dim); }
+.attend-amount { font-size: 12px; color: #ffe08a; font-variant-numeric: tabular-nums; }
+.attend-cell.stamped img, .attend-cell.stamped .attend-amount { opacity: 0.45; }
+.attend-stamp {
+  position: absolute; left: 50%; top: 50%; width: 42px; height: 42px; margin: -21px 0 0 -21px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; pointer-events: none; border-radius: 50%;
+  border: 3px solid #e2483a; background: rgba(226, 72, 58, 0.22); box-shadow: 0 0 0 1px #0e0906, inset 0 0 0 1px #0e0906;
+  font: 900 22px/1 var(--font-head); font-style: normal; color: #ff6a58; text-shadow: 0 1px 0 #0e0906;
+  transform: rotate(-12deg);
+}
+.attend-cell.today { border-color: #f3d99a; box-shadow: 0 0 0 1px #f3d99a, 0 0 10px rgba(243, 217, 154, 0.45); }
+.attend-cell.today .attend-stamp { animation: attend-stamp 0.45s ease-out both; }
+@keyframes attend-stamp { from { transform: rotate(-12deg) scale(2.2); opacity: 0; } to { transform: rotate(-12deg) scale(1); opacity: 1; } }
+.attend-foot { margin: 0; text-align: center; font-size: 12px; color: var(--ink-dim); }
+.ach-lead { margin: 0; text-align: center; font-size: 13px; color: var(--ink-dim); }
+.ach-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ach-list > li { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
+.ach-list > li.ready { background: rgba(243, 217, 154, 0.12); box-shadow: inset 0 0 0 1px rgba(243, 217, 154, 0.5); }
+.ach-list > li.done { opacity: 0.6; }
+.ach-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; }
+.ach-head .note { font-size: 12px; color: var(--ink-dim); }
+.ach-row { display: flex; align-items: center; gap: 10px; }
+.ach-goal { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-dim); }
+.ach-bar { position: relative; height: 14px; border-radius: 7px; overflow: hidden; background: rgba(0, 0, 0, 0.45); border: 1px solid #0e0906; }
+.ach-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #f3d99a, #c79a3a); }
+.ach-bar em { position: relative; display: block; text-align: center; font: 400 10px/14px var(--font-head); font-style: normal; color: #fff; text-shadow: 0 1px 0 #0e0906; font-variant-numeric: tabular-nums; }
+.ach-gems { flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: 13px; color: #7fe0ff; }
+.ach-gems img { width: 20px; height: 20px; image-rendering: pixelated; }
+.ach-row .brush-button.small { flex: none; padding: 6px 14px; font-size: 13px; }
+.ach-done { flex: none; min-width: 60px; text-align: center; font: 400 13px var(--font-head); color: #9fd88a; }
+/* Mount tickets: a corner badge on every box of the sheet, the line saying so, and the stable's
+   ticket hatch, which spans the row above the gem hatches. */
+.attend-ticket { position: absolute; top: 2px; right: 2px; width: 16px !important; height: 16px !important; image-rendering: pixelated; }
+.attend-every { display: flex; align-items: center; justify-content: center; gap: 4px; margin: -4px 0 0; font-size: 12px; color: #c9b8ff; }
+.attend-every img { width: 18px; height: 18px; image-rendering: pixelated; }
+.stable-hatches .stable-hatch.ticket { grid-column: 1 / -1; border-color: #b49cff; background: linear-gradient(180deg, #4a3a7a, #2e2350); }
+/* The stable's hatch: the skip toggle at the stage's top right, and the hint while an egg plays out. */
+.stable-skip {
+  position: absolute; top: 10px; right: 10px; z-index: 3; padding: 5px 12px; cursor: pointer; border-radius: 14px;
+  font: 400 13px var(--font-head); color: var(--ink-dim); border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(0, 0, 0, 0.5);
+}
+.stable-skip b { margin-left: 4px; font-weight: 400; color: var(--ink-dim); }
+.stable-skip.on { color: #1a120c; border-color: #7a5a2a; background: linear-gradient(180deg, #f3d99a, #d9b86a); }
+.stable-skip.on b { color: #1a120c; }
+.stable-skip:focus-visible { outline: 2px solid #d9b86a; outline-offset: 2px; }
+.stable-skip-hint {
+  position: absolute; left: 0; right: 0; bottom: 12px; z-index: 3; margin: 0; text-align: center; pointer-events: none;
+  font-size: 12px; color: rgba(255, 255, 255, 0.75); text-shadow: 0 1px 2px #000; animation: stable-in 0.3s ease-out;
+}
+.ach-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ach-top .ach-lead { text-align: left; }
+.ach-top .brush-button.small { flex: none; padding: 6px 14px; font-size: 13px; }

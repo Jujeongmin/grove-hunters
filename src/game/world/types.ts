@@ -24,7 +24,7 @@ export const RANGE_SLACK = 1.5;
 export const RULE_ERRORS = [
   "unavailable", "no_character", "character_limit", "no_zone", "not_near", "zone_full", "channel_full", "too_fast", "blocking",
   "no_monster", "monster_dead", "out_of_range", "no_item", "not_enough_gold", "max_plus", "not_in_village", "too_low",
-  "quest_unfinished", "nothing", "no_building", "bag_full", "not_enough_gems", "no_mount", "no_mail",
+  "quest_unfinished", "nothing", "no_building", "bag_full", "not_enough_gems", "no_ticket", "no_mount", "no_mail",
   "listing_gone", "listing_limit", "bad_price", "not_tradable", "own_listing", "too_many",
   "guild_name_invalid", "guild_name_taken", "in_guild", "no_guild", "guild_full", "guild_wait", "applied_limit", "applicants_full",
   "no_applicant", "not_allowed", "vice_limit", "master_must_pass", "guild_not_empty",

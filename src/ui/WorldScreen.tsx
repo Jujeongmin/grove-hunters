@@ -31,6 +31,7 @@ import { DialogueBox } from "./DialogueBox";
 import { GrovePanel } from "./GrovePanel";
 import { NewsPanel } from "./NewsPanel";
 import { MailPanel } from "./MailPanel";
+import { RewardsPanel, type RewardsTab } from "./RewardsPanel";
 import { MarketPanel } from "./MarketPanel";
 import { GuildPanel } from "./GuildPanel";
 import { ArenaHud } from "./ArenaHud";
@@ -137,7 +138,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -329,6 +330,25 @@ function ZoneScreen({
   // Letters waiting in the mailbox, and applications waiting on your guild (dots on the menu),
   // counted on coming in and every minute.
   const [mailWaiting, setMailWaiting] = useState(0);
+  // Achievements waiting to be claimed (counted with the mail), and today's attendance sheet stamped but
+  // not yet looked at. The sheet is stamped as the world is entered, so it is asked once the world is
+  // ready; it opens by itself, and the news waits for the answer to open after it.
+  const [claimable, setClaimable] = useState(0);
+  const [attendPending, setAttendPending] = useState(false);
+  const [attendKnown, setAttendKnown] = useState(false);
+  const [rewardsTab, setRewardsTab] = useState<RewardsTab>("attendance");
+  useEffect(() => {
+    if (!ready || attendKnown) return;
+    let live = true;
+    void client.attendance().then((a) => {
+      if (!live) return;
+      setAttendPending(a !== null && a.stampedToday && !a.seen);
+      setAttendKnown(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, [client, ready, attendKnown]);
   const [applicants, setApplicants] = useState(0);
   const [bossReady, setBossReady] = useState(false);
   useEffect(() => {
@@ -336,6 +356,9 @@ function ZoneScreen({
     const count = () => {
       void client.mailCount().then((n) => {
         if (live) setMailWaiting(n);
+      });
+      void client.achievements().then((a) => {
+        if (live && a) setClaimable(a.claimable);
       });
       void client.guildBadge().then((b) => {
         if (!live) return;
@@ -352,10 +375,22 @@ function ZoneScreen({
   }, [client]);
   const tutorialOver = bag !== null && bag.tutorial === null;
   useEffect(() => {
-    if (!ready || !tutorialOver || newsUnread === 0 || client.newsShown) return;
+    if (!ready || !tutorialOver || !attendPending || client.attendanceShown) return;
+    client.attendanceShown = true;
+    setRewardsTab("attendance");
+    setPanel((p) => p ?? "rewards");
+  }, [ready, tutorialOver, attendPending, client]);
+  useEffect(() => {
+    if (panel !== "rewards") return;
+    client.attendanceShown = true;
+    setAttendPending(false);
+  }, [panel, client]);
+  useEffect(() => {
+    // Over nothing else: once today's sheet is closed, the news follows.
+    if (!ready || !tutorialOver || !attendKnown || attendPending || panel !== null || newsUnread === 0 || client.newsShown) return;
     client.newsShown = true;
-    setPanel((p) => p ?? "news");
-  }, [ready, tutorialOver, newsUnread, client]);
+    setPanel("news");
+  }, [ready, tutorialOver, attendKnown, attendPending, panel, newsUnread, client]);
   useEffect(() => {
     if (panel !== "news") return;
     client.newsShown = true;
@@ -390,6 +425,14 @@ function ZoneScreen({
     { id: "guild", label: t("menu.guild"), key: "Z", code: "KeyZ", act: () => toggle("guild"), on: panel === "guild", dot: applicants > 0 || bossReady },
     { id: "market", label: t("menu.market"), key: "X", code: "KeyX", act: () => toggle("market"), on: panel === "market" },
     { id: "mail", label: t("menu.mail"), key: "F", code: "KeyF", act: () => toggle("mail"), on: panel === "mail", dot: mailWaiting > 0 },
+    {
+      id: "rewards", label: t("menu.rewards"), key: "V", code: "KeyV",
+      act: () => {
+        if (panel !== "rewards") setRewardsTab(claimable > 0 && !attendPending ? "achievements" : "attendance");
+        toggle("rewards");
+      },
+      on: panel === "rewards", dot: claimable > 0 || attendPending,
+    },
     { id: "news", label: t("menu.news"), key: "Y", code: "KeyY", act: () => toggle("news"), on: panel === "news", dot: newsUnread > 0 },
     { id: "sleep", label: t("menu.sleep"), key: "B", code: "KeyB", act: () => setSaving((on) => !on), on: saving },
     {
@@ -634,6 +677,7 @@ function ZoneScreen({
       {panel === "guild" && <GuildPanel client={client} onBadge={setApplicants} onClose={() => setPanel(null)} />}
       {panel === "market" && <MarketPanel client={client} bag={bag} onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
+      {panel === "rewards" && <RewardsPanel client={client} tab={rewardsTab} onClaimable={setClaimable} onClose={() => setPanel(null)} />}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}
       {panel === "donate" && grove && (
         <DonatePanel

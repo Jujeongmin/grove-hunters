@@ -8,6 +8,7 @@ import { levelOf, readXp, type LevelView } from "./level";
 import { readDaily, readQuest, type DailyProgress, type QuestProgress } from "./quests";
 import { readTutorial, type TutorialStep } from "./tutorial";
 import { readVitals, type Vitals } from "./vitals";
+import { readRecord, type CharRecord } from "./achievements";
 
 // An account holds characters on each server. One of them is active: the one the menus show and
 // the one that walks into the world. Its class and look are fixed when it is made.
@@ -42,6 +43,9 @@ export interface Character extends Inventory {
   guild: GuildTag | null;
   guildLeftAt: number;
   applied: string[];
+  // What it has done toward the account's achievements (see achievements.ts); none for characters
+  // from before it was kept.
+  record?: CharRecord;
 }
 
 // A character in no guild, never in one.
@@ -86,6 +90,7 @@ export function readCharacters(raw: unknown): Character[] {
       guild: readGuildTag(c.guild),
       guildLeftAt: typeof c.guildLeftAt === "number" && Number.isFinite(c.guildLeftAt) ? c.guildLeftAt : 0,
       applied: Array.isArray(c.applied) ? c.applied.filter((id): id is string => typeof id === "string") : [],
+      record: readRecord(c.record),
     });
   }
   return out.sort((a, b) => a.made - b.made);

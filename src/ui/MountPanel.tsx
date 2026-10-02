@@ -16,6 +16,7 @@ import { playCue } from "../game/audio/sfx";
 import { buyProduct, onAnyShopClosed, productPrice } from "../net/shop";
 import type { MountPull, MountsView, WorldClient } from "../net/worldClient";
 import { problemText } from "./BagPanel";
+import { settings, updateSettings } from "./settings";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 
@@ -53,6 +54,16 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
   const [hatched, setHatched] = useState<{ mount: MountId; repeat: boolean; star: number | null } | null>(null);
   const [hatchCount, setHatchCount] = useState(0);
   const [busy, setBusy] = useState(false);
+  // Skipping the hatch: always (the toggle, kept in the settings), or this once (a tap on the stage
+  // while the egg plays out).
+  const [skip, setSkip] = useState(settings().skipHatch);
+  const skipNow = useRef<(() => void) | null>(null);
+  // A tap that came before the egg began (while the server was still answering) counts too.
+  const skipAsked = useRef(false);
+  const tapStage = () => {
+    skipAsked.current = true;
+    skipNow.current?.();
+  };
   const [waiting, setWaiting] = useState(false);
   const [ready, setReady] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -120,13 +131,14 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
   }), [refresh, view?.gems]);
 
   // One draw or ten: the egg hatches into the best of them, and a ten-draw lists all ten.
-  const hatch = (ten: boolean) => {
+  const hatch = (ten: boolean, ticket = false) => {
     setBusy(true);
+    skipAsked.current = false;
     setNote(null);
     setHatched(null);
     setPulls([]);
     stage.current?.showEgg();
-    void client.pullMount(ten).then(async (r) => {
+    void client.pullMount(ten, ticket).then(async (r) => {
       if ("problem" in r) {
         setBusy(false);
         setNote({ text: problemText(r.problem)!, tone: "bad" });
@@ -134,8 +146,13 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
       }
       const best = bestPull(r.pulls);
       // The egg hatches on the stage's frames; a hidden page draws none, so the answer never waits long.
+      // Skipped, it bursts at once.
       if (stage.current) {
-        await Promise.race([stage.current.hatchInto(best.mount, (moment) => playCue(moment === "knock" ? "click" : "skill")), new Promise((done) => setTimeout(done, HATCH_WAIT_MS))]);
+        const playing = stage.current.hatchInto(best.mount, (moment) => playCue(moment === "knock" ? "click" : "skill"));
+        if (!skip && !skipAsked.current) {
+          await Promise.race([playing, new Promise((done) => setTimeout(done, HATCH_WAIT_MS)), new Promise<void>((done) => { skipNow.current = done; })]);
+        }
+        skipNow.current = null;
         stage.current?.finishHatch();
       }
       setBusy(false);
@@ -181,8 +198,21 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
       </header>
 
       <div className="stable-body">
-        <section className={`stable-stage tier-${shown ? tierKey(shown) : "base"}`}>
+        <section className={`stable-stage tier-${shown ? tierKey(shown) : "base"}`} onClick={tapStage}>
           <canvas ref={canvas} />
+          {tab === "hatch" && (
+            <button
+              type="button" className={`stable-skip${skip ? " on" : ""}`} aria-pressed={skip}
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSettings({ skipHatch: !skip });
+                setSkip(!skip);
+              }}
+            >
+              {t("mount.skip")} <b>{t(skip ? "common.on" : "common.off")}</b>
+            </button>
+          )}
+          {tab === "hatch" && busy && !skip && <p className="stable-skip-hint">{t("mount.skipHint")}</p>}
           {!ready && <p className="stable-loading">{t("common.loading")}</p>}
           {/* The burst on screen: a flash, and for a new mount its tier and name thrown up big, with
               turning rays behind for the rare and better. Keyed so each hatch plays it afresh. */}
@@ -251,6 +281,12 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
             <>
               <p className="stable-lede">{t("mount.hatchLede")}</p>
               <div className="stable-hatches">
+                {(view?.tickets ?? 0) > 0 && (
+                  <button type="button" className="stable-hatch ticket" disabled={busy} onClick={() => hatch(false, true)}>
+                    <span>{t("mount.hatchTicket")}</span>
+                    <small><img src={iconFor("ui_ticket") ?? undefined} alt="" />{t("mount.tickets", { n: view!.tickets })}</small>
+                  </button>
+                )}
                 <button type="button" className="stable-hatch" disabled={busy || !view || gems < PULL_COST} onClick={() => hatch(false)}>
                   <span>{t("mount.hatch")}</span>
                   <small><img src={iconFor("ui_gem") ?? undefined} alt="" />{PULL_COST}</small>
@@ -285,7 +321,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                       : t("mount.new", { name: mountName(hatched.mount), tier: tierName(tierKey(hatched.mount)) })}
                 </p>
               )}
-              {!busy && view && gems < PULL_COST && (
+              {!busy && view && gems < PULL_COST && view.tickets === 0 && (
                 <button type="button" className="text-button stable-more" onClick={() => switchTab("shop")}>{t("mount.needGems")}</button>
               )}
               {/* The odds in full: each tier, and each mount in it. */}

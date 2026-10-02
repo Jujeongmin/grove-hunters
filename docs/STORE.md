@@ -4,7 +4,7 @@ Verse8 게임 페이지(Description, 태그, 릴리스 노트)에 붙여 넣는 
 숫자는 코드 기준(2026-10-02): 직업 6개, 전직 12종(Lv10, 갈래마다 스킬 3개·마지막은 Lv40), 마을 2곳(초록숲 마을·설산 전초기지),
 사냥터 6곳(숲 3·설산 3) + 보스 구역 2곳(버섯왕·빙하의 황제), 메인 퀘스트 21개(숲 13·설산 8) + 일일 퀘스트 6개,
 길드 보스 3종(주마다 교대), 강화 +15, 탈것 23종(사슴 기본, 뽑기 21종, VIP 10 전용 1종), 서버마다 채널 10개(채널당 10명),
-전부 무료(보석 판매).
+출석부 28일(매일 탈것 소환권), 업적 31개, 전부 무료(보석 판매).
 
 ## 제목
 
@@ -72,6 +72,10 @@ PC는 마우스만으로(WASD 이동도 됩니다), 모바일은 손가락만으
 6개 직업과 모든 지역을 레벨 제한 없이 무료로 즐길 수 있습니다(지역마다 필요한 레벨만 있습니다).
 보석은 탈것 부화, 거래소, 강화 파괴 방지에 씁니다. 보석 상품마다 첫 구매는 2배이고, 보석을 살수록 VIP 등급(1~10)과 혜택이 올라갑니다.
 월정액은 30일 동안 매일 보석과 경험치 +10%를 드립니다.
+
+■ 출석부와 업적
+매일 처음 들어오면 출석부에 도장이 찍히고 탈것 소환권과 골드·보석·강화석을 받습니다. 빠진 날이 있어도 이어서 찍힙니다.
+레벨·퀘스트·사냥·보스·강화·탈것 수집 등 업적 31개를 채우고 보석을 받으세요.
 ```
 
 English:
@@ -125,6 +129,10 @@ Your skill bar is saved to your account, the same on PC and mobile.
 All six classes and every region are free, with no level cap (each region only asks for a level).
 Gems hatch mounts, trade at the market and protect gear from breaking. Each gem pack's first purchase is doubled, and buying gems raises your VIP rank (1-10) and its perks.
 The monthly pass brings gems every day and +10% XP for 30 days.
+
+■ Attendance and achievements
+Your first visit each day stamps the attendance sheet for a mount ticket plus gold, gems or whetstones; missed days don't break it.
+Meet 31 achievements, from levels, quests and bosses to enhancing and collecting mounts, for gems.
 ```
 
 ## 태그
@@ -144,9 +152,17 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 | `gems-1200` | 보석 1,200개 / 1,200 Gems | 보석이 가득한 상자. 첫 구매는 2배. / A chest full of gems. Double on your first purchase. |
 | `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 50개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 50 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
 
-## 릴리스 노트 (이번 업데이트, 2026-10-01)
+## 릴리스 노트 (이번 업데이트, 2026-10-02)
 
 한국어:
+
+```
+- 출석부: 매일 첫 접속에 탈것 소환권 1장과 골드·보석·강화석 (7·14·21·28일째 보석 50·80·80·200)
+- 업적 31개와 보석 보상, 모두 받기 (메뉴 '보상', PC는 V)
+- 마구간에서 소환권으로 부화, 부화 연출 스킵(화면 누르기 또는 '연출 스킵' 켜기)
+```
+
+지난 업데이트 (2026-10-01):
 
 ```
 - 이제 게임 전체가 무료입니다: 모든 지역과 6개 직업, 모든 계정에 사슴 탈것
@@ -160,6 +176,14 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 ```
 
 English:
+
+```
+- Attendance sheet: a mount ticket plus gold, gems or whetstones on your first visit each day (50, 80, 80 and 200 gems on days 7, 14, 21 and 28)
+- 31 achievements with gem rewards, and Claim all (menu 'Rewards', V on PC)
+- Hatch with a ticket at the stable, and skip the hatch (tap the screen, or turn on Skip)
+```
+
+The update before (2026-10-01):
 
 ```
 - The whole game is free: every region, all six classes, and a deer for every account

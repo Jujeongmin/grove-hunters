@@ -65,12 +65,16 @@ import {
   rollMounts, tierOf, vipMounts, type MountId, type Pity,
 } from "../../src/game/account/mounts";
 import {
-  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, markSeen,
+  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, changeTickets, readTickets, markSeen,
   pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
 } from "./store";
 import { accountPremium, grantGemPack, grantPass, isPassProduct, payPassDay, payVipDay, roomOf, vipOfAccount } from "./premium";
+import { attendanceOf, markAttendanceSeen, stampAttendance } from "./attendance";
+import type { AttendanceView } from "../../src/game/account/attendance";
+import { achievementsOf, claimAchievement, claimAllAchievements } from "./achievements";
+import { NO_RECORD, recordFelled, type AchievementsView } from "../../src/game/account/achievements";
 import {
   freeRevive, huntBonus, pieceLimit, premiumView, protectCost, readPremium, vipEnhance, vipOf, type PremiumView,
 } from "../../src/game/account/premium";
@@ -164,7 +168,7 @@ interface Pay {
 // Your gems, the mounts you own and the one you ride (the first you own if none was picked, or it
 // is no longer yours).
 interface MountsView {
-  gems: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>>; premium: PremiumView;
+  gems: number; tickets: number; owned: MountId[]; selected: MountId | null; stars: Partial<Record<MountId, number>>; premium: PremiumView;
   // Draws left until a legendary, and a mythic, is certain (천장).
   pity: Pity;
 }
@@ -172,19 +176,20 @@ async function mountsView(account: string): Promise<MountsView> {
   const { owned, selected, stars } = await accountMounts(account);
   const since = readPity((await $global.getUserState(account)).pity);
   const pity = { legendary: PITY - since.legendary, mythic: MYTHIC_PITY - since.mythic };
-  return { gems: await readGems(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()), pity };
+  return { gems: await readGems(account), tickets: await readTickets(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()), pity };
 }
 
 // One draw's outcome: the mount, whether it was owned already, the star it reached (a repeat below
 // MAX_STARS), and gems back (a repeat past it).
 interface Pull { mount: MountId; repeat: boolean; star: number | null; refund: number }
 
-// `n` draws for `cost` gems, under the account's mount lock: each new mount kept, each repeat a
+// `n` draws for `cost` gems (or one mount ticket each, `ticket`), under the account's mount lock: each new mount kept, each repeat a
 // star (or past MAX_STARS, gems back), the count toward the pity kept. A new legendary and a ★5 are
 // told to everyone; the picked mount growing makes you stronger at once.
-async function drawMounts(account: string, n: number, cost: number): Promise<{ view: MountsView; pulls: Pull[] }> {
+async function drawMounts(account: string, n: number, cost: number, ticket = false): Promise<{ view: MountsView; pulls: Pull[] }> {
   const pulls = await $lock(`mounts:${account}`, async () => {
-    await changeGems(account, -cost);
+    if (ticket) await changeTickets(account, -n);
+    else await changeGems(account, -cost);
     const state = await $global.getUserState(account);
     const rolled = rollMounts(n, readPity(state.pity), Math.random);
     const owned = ownedMounts(state.mounts);
@@ -305,7 +310,7 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
   }
   const next = await updateActive(account, (c) => ({
     ...loot(c, pay.items, Math.random, newUid, pieceLimit(vip)), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
-    daily: countDaily(c.daily, pay.felled, Date.now()),
+    daily: countDaily(c.daily, pay.felled, Date.now()), record: recordFelled(c.record, pay.felled),
   }));
   if (pay.xp > 0) await writeRanking(account, next, vip, combatPower(await mounted(account, next)));
   const levelled = levelOf(next.xp).level > levelOf(next.xp - pay.xp).level;
@@ -526,6 +531,7 @@ async function claimLetter(account: string, id: string): Promise<void> {
         });
       }
       if (mail.gems > 0) await changeGems(account, mail.gems);
+      if (mail.tickets) await changeTickets(account, mail.tickets);
       if (mail.gold > 0) await $asset.mint(GOLD, mail.gold);
     },
   );
@@ -557,6 +563,28 @@ export class Server {
     if (kept && NEWS.findIndex((n) => n.id === kept) <= NEWS.findIndex((n) => n.id === id)) return { seen: kept };
     await $global.updateUserState(account, { newsSeen: id });
     return { seen: id };
+  }
+
+  // The attendance sheet (stamped on coming into the world) and marking today's as looked at.
+  async getAttendance(): Promise<AttendanceView> {
+    return attendanceOf($sender.account, Date.now());
+  }
+
+  async markAttendanceSeen(): Promise<AttendanceView> {
+    return markAttendanceSeen($sender.account, Date.now());
+  }
+
+  // The account's achievements, and claiming one's gems.
+  async getAchievements(): Promise<AchievementsView> {
+    return achievementsOf($sender.account);
+  }
+
+  async claimAchievement(id: unknown): Promise<AchievementsView & { gems: number }> {
+    return claimAchievement($sender.account, id);
+  }
+
+  async claimAllAchievements(): Promise<AchievementsView & { gems: number; claimed: number }> {
+    return claimAllAchievements($sender.account);
   }
 
   // Your mailbox, newest first (gifts due are delivered on reading it).
@@ -1071,8 +1099,9 @@ export class Server {
   // One draw for PULL_COST gems: a mount to keep, or, if already owned, DUPLICATE_REFUND gems back.
   // A repeat of one owned already breaks through: a star more (see mounts.ts), and only past MAX_STARS
   // gems back. `star` is the star it reached (null for a new mount or gems back).
-  async pullMount(): Promise<MountsView & Pull & { pulls: Pull[] }> {
-    const { view, pulls } = await drawMounts($sender.account, 1, PULL_COST);
+  // With `ticket`, a mount ticket (소환권, from the attendance sheet) pays instead of gems.
+  async pullMount(ticket?: unknown): Promise<MountsView & Pull & { pulls: Pull[] }> {
+    const { view, pulls } = await drawMounts($sender.account, 1, PULL_COST, ticket === true);
     return { ...view, ...pulls[0], pulls };
   }
 
@@ -1140,6 +1169,7 @@ export class Server {
     const character = await playing(account);
     await payPassDay(account, Date.now());
     await payVipDay(account, Date.now());
+    await stampAttendance(account, Date.now());
     const spot = returnSpot(character.spot);
     const level = levelOf(character.xp).level;
     const channel = await channelToEnter(account, character);
@@ -1466,7 +1496,13 @@ export class Server {
         const paid = spend(c, [{ id: "stone", n: cost.stones }]);
         outcome = rollEnhance({ ...cost, success: Math.min(1, cost.success + vipEnhance(vip)) }, Math.random(), Math.random());
         if (outcome === "broken" && shield !== null) outcome = "fail";
-        if (outcome === "success") return { ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } } };
+        if (outcome === "success") {
+          const record = c.record ?? NO_RECORD;
+          return {
+            ...paid, gear: { ...c.gear, [slot]: { ...worn, plus: cost.to } },
+            record: { ...record, bestPlus: Math.max(record.bestPlus, cost.to) },
+          };
+        }
         if (outcome === "fail") return paid;
         return { ...paid, gear: { ...c.gear, [slot]: null } };
       });
@@ -1596,6 +1632,7 @@ export class Server {
       return {
         ...give(c, quest.items, false, newUid, room),
         daily: { ...today, claimed: [...today.claimed, quest.id] },
+        record: { ...(c.record ?? NO_RECORD), dailies: (c.record?.dailies ?? 0) + 1 },
       };
     });
     await $asset.mint(GOLD, quest.gold);

@@ -17,6 +17,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-02-attendance",
+    date: "2026-10-02",
+    text: {
+      ko: {
+        title: "출석부와 업적",
+        lines: [
+          "매일 처음 들어오면 출석부에 도장이 찍히고, 탈것 소환권 1장과 골드·보석·강화석이 우편으로 와요. 빠진 날이 있어도 이어서 찍히고, 7·14·21·28일째는 보석 50·80·80·200개예요.",
+          "업적이 생겼어요: 레벨, 퀘스트, 사냥, 보스, 일일 퀘스트, 강화, 전직, 길드, 탈것, 출석. 목표를 채우면 보석을 받아요.",
+          "메뉴의 '보상'(V)에서 보고 '모두 받기'로 한 번에 받아요. 이미 해 둔 퀘스트·보스·강화도 반영돼요. 마구간에서 소환권으로 부화하고, 화면을 누르거나 '연출 스킵'을 켜면 결과가 바로 보여요.",
+        ],
+      },
+      en: {
+        title: "Attendance and achievements",
+        lines: [
+          "Your first visit each day stamps the attendance sheet and mails you a mount ticket plus gold, gems or whetstones. Missed days don't break it, and days 7, 14, 21 and 28 bring 50, 80, 80 and 200 gems.",
+          "Achievements are here: levels, quests, hunting, bosses, dailies, enhancing, advancing, guilds, mounts and attendance. Meet a goal to earn gems.",
+          "Find them under 'Rewards' (V) in the menu, with 'Claim all'. Quests, bosses and enhancements you've already done count. At the stable, hatch with a ticket, and tap the screen (or turn on Skip) to see the result at once.",
+        ],
+      },
+      ja: {
+        title: "出席簿と実績",
+        lines: [
+          "毎日最初に入ると出席簿にスタンプが押され、乗り物召喚券1枚とゴールド・宝石・強化石が郵便で届きます。休んだ日があっても続きから押され、7・14・21・28日目は宝石50・80・80・200個です。",
+          "実績が登場：レベル、クエスト、狩り、ボス、デイリー、強化、転職、ギルド、乗り物、出席。目標を達成すると宝石がもらえます。",
+          "メニューの「報酬」（V）から見られ、「すべて受け取る」で一度に受け取れます。厩舎では召喚券でふ化でき、画面をタップするか「演出スキップ」をオンにするとすぐ結果が見られます。",
+        ],
+      },
+      "zh-Hant": {
+        title: "簽到簿與成就",
+        lines: [
+          "每天第一次進入時會在簽到簿蓋章，並以郵件寄出坐騎召喚券1張與金幣・寶石・強化石。中間缺席也會接著蓋，第7・14・21・28天是寶石50・80・80・200個。",
+          "新增成就：等級、任務、狩獵、首領、每日任務、強化、轉職、公會、坐騎、簽到。達成目標即可獲得寶石。",
+          "在選單的「獎勵」（V）中查看，可用「全部領取」一次領完。在馬廄可用召喚券孵化，點擊畫面或開啟「跳過動畫」即可立即看到結果。",
+        ],
+      },
+      "zh-Hans": {
+        title: "签到簿与成就",
+        lines: [
+          "每天第一次进入时会在签到簿盖章，并通过邮件发送坐骑召唤券1张与金币・宝石・强化石。中间缺席也会接着盖，第7・14・21・28天是宝石50・80・80・200个。",
+          "新增成就：等级、任务、狩猎、首领、每日任务、强化、转职、公会、坐骑、签到。达成目标即可获得宝石。",
+          "在菜单的“奖励”（V）中查看，可用“全部领取”一次领完。在马厩可用召唤券孵化，点击画面或开启“跳过动画”即可立即看到结果。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-01-plus15-league",
     date: "2026-10-01",
     text: {

@@ -94,6 +94,21 @@ export function changeGems(account: string, delta: number): Promise<number> {
   });
 }
 
+// An account's mount tickets (소환권: one free hatch each; see attendance.ts), kept like its gems.
+export async function readTickets(account: string): Promise<number> {
+  const tickets = (await $global.getUserState(account)).tickets;
+  return typeof tickets === "number" && Number.isInteger(tickets) && tickets > 0 ? tickets : 0;
+}
+
+export function changeTickets(account: string, delta: number): Promise<number> {
+  return $lock(`tickets:${account}`, async () => {
+    const next = (await readTickets(account)) + delta;
+    if (next < 0) throw new RuleViolation("no_ticket");
+    await $global.updateUserState(account, { tickets: next });
+    return next;
+  });
+}
+
 // An account's characters and the active one. Reading never writes: accounts from before characters
 // (one nickname and class on the account) read back as one character on the server they last picked,
 // with the XP of their old match record, and are saved that way the next time anything changes.

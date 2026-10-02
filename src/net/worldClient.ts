@@ -19,6 +19,8 @@ import type { Announcement } from "../game/world/announce";
 import type { PremiumView } from "../game/account/premium";
 import type { LeagueView } from "../game/world/guildBoss";
 import type { Mail } from "../game/account/mail";
+import type { AttendanceView } from "../game/account/attendance";
+import type { AchievementsView } from "../game/account/achievements";
 import type { ListingView, MarketFilter } from "../game/account/market";
 import type { GuildListing, GuildView } from "../game/account/guild";
 import type { MatchTransport } from "./transport";
@@ -60,6 +62,8 @@ export interface OtherPlayer {
 // Your gems and mounts, as the server keeps them (see mounts.ts).
 export interface MountsView {
   gems: number;
+  // Mount tickets (소환권): a hatch each, without gems.
+  tickets: number;
   owned: MountId[];
   selected: MountId | null;
   // Each mount's stars (★0 not listed; see mounts.ts).
@@ -215,8 +219,10 @@ export class WorldClient {
   // The newest announcement heard (server ms); only those after it are asked for. Starts now: what
   // was told before this visit is not told again.
   private announcedAt = Date.now();
-  // Whether the news has opened by itself yet this visit (once, not once per zone).
+  // Whether the news, and today's attendance sheet, have opened by themselves yet this visit (once,
+  // not once per zone).
   newsShown = false;
+  attendanceShown = false;
   // Bumped by every enter and leave: one overtaken by a newer one (React's development double run
   // enters, leaves and enters again at once; a double tap on retry) lets the newer one decide.
   private generation = 0;
@@ -478,6 +484,29 @@ export class WorldClient {
     }
   }
 
+  // The attendance sheet (stamped by the server on coming in; null when it cannot be read) and today's
+  // looked at, told without waiting.
+  async attendance(): Promise<AttendanceView | null> {
+    return await this.transport.call<AttendanceView>("getAttendance").catch(() => null);
+  }
+
+  markAttendanceSeen(): void {
+    void this.transport.call("markAttendanceSeen", [], { needResponse: false });
+  }
+
+  // Achievements: the list (null when it cannot be read) and claiming one, whose gems go on the HUD.
+  async achievements(): Promise<AchievementsView | null> {
+    return await this.transport.call<AchievementsView>("getAchievements").catch(() => null);
+  }
+
+  async claimAchievement(id: string): Promise<(AchievementsView & { gems: number }) | { problem: string }> {
+    return this.noteGems(await this.tryCall<AchievementsView & { gems: number }>("claimAchievement", [id]));
+  }
+
+  async claimAllAchievements(): Promise<(AchievementsView & { gems: number }) | { problem: string }> {
+    return this.noteGems(await this.tryCall<AchievementsView & { gems: number }>("claimAllAchievements", []));
+  }
+
   // The mailbox: its letters, newest first (null when it cannot be read), how many wait, and taking
   // them (what they carry lands in the bag, which is read again).
   async mailbox(): Promise<Mail[] | null> {
@@ -643,10 +672,10 @@ export class WorldClient {
     return this.noteGems(await this.transport.call<MountsView>("getMounts").catch(() => null));
   }
 
-  // One draw, or ten at once (`ten`).
-  async pullMount(ten = false): Promise<(MountsView & { pulls: MountPull[] }) | { problem: string }> {
+  // One draw, or ten at once (`ten`), or one paid with a mount ticket (`ticket`).
+  async pullMount(ten = false, ticket = false): Promise<(MountsView & { pulls: MountPull[] }) | { problem: string }> {
     try {
-      const pulled = this.noteGems(await this.transport.call<MountsView & { pulls: MountPull[] }>(ten ? "pullMount10" : "pullMount"));
+      const pulled = this.noteGems(await this.transport.call<MountsView & { pulls: MountPull[] }>(ten ? "pullMount10" : "pullMount", ten ? [] : [ticket]));
       // A new mount may be the picked one now, and the picked one adds to 전투력.
       void this.refreshBag();
       return pulled;

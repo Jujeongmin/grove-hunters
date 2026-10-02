@@ -21,6 +21,8 @@ export interface Settings extends Controls {
   damageNumbers: boolean;
   // The announcements to every server (a legendary mount, a big enhancement…) at the top and in chat.
   showAnnouncements: boolean;
+  // The stable's hatches show their outcome at once, without the egg's knocks and burst.
+  skipHatch: boolean;
   // From Controls: which of the potion and the four skills auto-battle may use on its own
   // (dragged down under their slots to turn on), and what sits in the four skill slots of the bar,
   // per class (a skill's index, or null for an empty slot; a learned skill is dragged in from the
@@ -63,7 +65,7 @@ const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: c
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: null,
-  quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true, showAnnouncements: true,
+  quality: COARSE ? "mid" : "high", showNames: true, damageNumbers: true, showAnnouncements: true, skipHatch: false,
   sensitivity: 1, volume: 0.8, music: 0.5, brightness: 1, autoPotion: true, potionAt: POTION_AT.start, autoSkills: [true, false, false, false], hotbars: {},
 };
 

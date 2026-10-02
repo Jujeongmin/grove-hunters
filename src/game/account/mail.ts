@@ -6,7 +6,7 @@ import { give, putPiece, type Inventory, type MakeUid } from "./inventory";
 // per account, the same on every server and character; what a letter carries goes to the character
 // that takes it, its gold and gems to the account.
 
-export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss" | "monthly_pass" | "vip_daily" | "guild_league";
+export type MailKind = "gift" | "market_sold" | "market_bought" | "market_returned" | "guild_boss" | "monthly_pass" | "vip_daily" | "guild_league" | "attendance";
 
 // What a letter carries: n of an item, given new (gear as new pieces; trade: whether it may be
 // traded), or one whole piece of gear as it was (from the market, its + and all).
@@ -20,6 +20,8 @@ export interface Mail {
   at: number;
   gold: number;
   gems: number;
+  // Mount tickets (소환권), to the account like gems; only on letters that carry some.
+  tickets?: number;
   items: MailItem[];
   // The holes in its words (a gift's id, a price…).
   params: Record<string, string | number>;
@@ -30,7 +32,7 @@ export const MAIL_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 // The mailbox shows the newest this many.
 export const MAILBOX_SHOWN = 50;
 
-const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss", "monthly_pass", "vip_daily", "guild_league"];
+const KINDS: readonly MailKind[] = ["gift", "market_sold", "market_bought", "market_returned", "guild_boss", "monthly_pass", "vip_daily", "guild_league", "attendance"];
 
 const count = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : 0);
 
@@ -65,7 +67,10 @@ export function readMail(row: unknown): Mail | null {
       if (typeof v === "string" || typeof v === "number") params[k] = v;
     }
   }
-  return { id: r.__id, kind: r.kind as MailKind, at: r.at, gold: count(r.gold), gems: count(r.gems), items, params };
+  const tickets = count(r.tickets);
+  return {
+    id: r.__id, kind: r.kind as MailKind, at: r.at, gold: count(r.gold), gems: count(r.gems), ...(tickets > 0 ? { tickets } : {}), items, params,
+  };
 }
 
 export function mailExpired(mail: Pick<Mail, "at">, now: number): boolean {
