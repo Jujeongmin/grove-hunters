@@ -1993,3 +1993,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 @media (prefers-reduced-motion: reduce) { .zone-title { animation-name: zone-title-still; } }
 @keyframes zone-title-still { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+/* Every panel of the world in one layer over the HUD (whose menu sits over the quest tracker, z-index
+   5): a panel opened from the menu is never under it. The layer itself lets taps through to the world. */
+.world-panels { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+:where(.world-panels) > * { pointer-events: auto; }
+/* Where a dragged skill will go (the nearest slot within reach). */
+.hud-cell.drop-target { border-color: #ffd36a; box-shadow: 0 0 12px rgba(255, 211, 106, 0.9), inset 0 0 0 2px rgba(0, 0, 0, 0.5); }

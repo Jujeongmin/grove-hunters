@@ -768,6 +768,8 @@ function ZoneScreen({
           }}
         />
       )}
+      {/* The panels, over the HUD and its menu (see .world-panels). */}
+      <div className="world-panels">
       {/* Every panel loaded on demand (lazy, above) must be drawn in here: one outside suspends with no
           boundary to catch it, and that takes the whole game down. */}
       <Suspense fallback={null}>
@@ -848,6 +850,7 @@ function ZoneScreen({
       {panel === "ranking" && <RankingPanel
         account={client.account} load={() => client.ranking()} loadDetail={(id) => client.rankDetail(id)} onClose={() => setPanel(null)}
       />}
+      </div>
       </div>
     </div>
   );

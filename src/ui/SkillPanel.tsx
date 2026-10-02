@@ -10,6 +10,33 @@ import { equipSkill, hotbarFor, onSettings, setHotbarSlot } from "./settings";
 // A press that moves this far (px) is a drag; less, a tap. Two taps this close (ms) put the skill on.
 const DRAG_START = 6;
 const DOUBLE_TAP_MS = 350;
+// A skill let go this near a slot of the bar (px, from its middle) goes in it: on a phone the bar sits
+// at the screen's foot, where a finger cannot get right onto it.
+const SNAP_PX = 110;
+
+// The slot of the bar a skill let go at (x, y) goes into: the one under the finger, or else the
+// nearest within SNAP_PX; null for none.
+function slotAt(x: number, y: number): HTMLElement | null {
+  // Looks through the panel itself, in case it hangs over the bar on a small screen.
+  const under = document.elementsFromPoint(x, y).map((el) => el.closest<HTMLElement>("[data-slot]")).find((el) => el);
+  if (under) return under;
+  let best: { el: HTMLElement; d: number } | null = null;
+  for (const el of document.querySelectorAll<HTMLElement>("[data-slot]")) {
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+    if (d <= SNAP_PX && (!best || d < best.d)) best = { el, d };
+  }
+  return best?.el ?? null;
+}
+
+// Lights the slot a drag would go into (one at a time); null puts the light out.
+let lit: HTMLElement | null = null;
+function light(el: HTMLElement | null): void {
+  if (lit === el) return;
+  lit?.classList.remove("drop-target");
+  el?.classList.add("drop-target");
+  lit = el;
+}
 import { skillLearned, type TutorialStep } from "../game/account/tutorial";
 
 interface SkillPanelProps {
@@ -31,6 +58,8 @@ interface SkillPanelProps {
 export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClose }: SkillPanelProps) {
   const [bar, setBar] = useState(() => hotbarFor(playerClass));
   useEffect(() => onSettings(() => setBar(hotbarFor(playerClass))), [playerClass]);
+  // Closed mid-drag, the lit slot goes dark.
+  useEffect(() => () => light(null), []);
   const [drag, setDrag] = useState<{ skill: number; x: number; y: number } | null>(null);
   // The press under way: which pointer, where it went down, whether it has become a drag.
   const press = useRef<{ id: number; x: number; y: number; dragging: boolean } | null>(null);
@@ -42,8 +71,8 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
   };
 
   const drop = (skill: number, x: number, y: number) => {
-    // Looks through the panel itself, in case it hangs over the bar on a small screen.
-    const cell = document.elementsFromPoint(x, y).map((el) => el.closest<HTMLElement>("[data-slot]")).find((el) => el);
+    light(null);
+    const cell = slotAt(x, y);
     if (!cell) return;
     setHotbarSlot(playerClass, Number(cell.dataset.slot), skill);
     onPlaced();
@@ -76,6 +105,7 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
                 if (!p.dragging && Math.hypot(e.clientX - p.x, e.clientY - p.y) < DRAG_START) return;
                 p.dragging = true;
                 setDrag({ skill: i, x: e.clientX, y: e.clientY });
+                light(slotAt(e.clientX, e.clientY));
               }}
               onPointerUp={(e) => {
                 const p = press.current;
@@ -97,6 +127,7 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
               onPointerCancel={() => {
                 press.current = null;
                 setDrag(null);
+                light(null);
               }}
             >
               <div className="skill-row-icon">
