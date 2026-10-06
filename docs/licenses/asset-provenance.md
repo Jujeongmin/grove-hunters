@@ -278,3 +278,4 @@ develop 브랜치의 `public/`에 있으나 위 표에 따로 적히지 않았�
 | `public/assets/ui/items/weapon_{2..7}_{bow,staff,holy,dagger,fist}.png` | 2~7등급 무기 그림 | 위 1등급 그림을 `scripts/weapon-icons.py`가 등급 색으로 다시 칠함 | PixelLab 약관 (파생물) | 위와 같음 |
 | `public/assets/ui/shop/monthly-pass.png` | 보석 상점 월정액 그림 (256x256, 두루마리와 왕관 방패) | **확인 필요** (도트 생성 그림으로 보이나 커밋 343b3ab에 출처가 적혀 있지 않음) | **확인 필요** | develop 343b3ab (2026-10-01) |
 | `public/cursor/pointer.png`, `press.png` | PC 마우스 포인터 (금빛 화살촉, 누를 수 있는 곳에서는 빛나는 것) | 직접 그림 (Python/Pillow) | 자체 제작 | 2026-10-06, master에도 있음 |
+| `public/assets/ui/shop/gems-6500.png`, `gems-14000.png` | 보석 상점 큰 묶음 그림 (256x256) | 사용자 ChatGPT 구독의 Codex CLI 이미지 생성(기존 상점 그림을 스타일 참고로 첨부) | 사용자 계정으로 생성, 상업적 이용 가능(사용자 확인) | 2026-10-06 |
