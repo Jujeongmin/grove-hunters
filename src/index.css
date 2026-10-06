@@ -2182,16 +2182,19 @@ button.hud-prompt:hover { color: #ffe0b0; }
    light sweeping across it and a glowing edge; a party invitation and a party note bob in, ringed in a
    pulsing gold. Only opacity, transform and shadows move. */
 .hud-quest.clickable:not(.seeking):not(.done) {
-  overflow: hidden; border-color: rgba(255, 196, 110, 0.7);
+  border-color: rgba(255, 196, 110, 0.7);
   animation: quest-call 2.4s ease-in-out infinite;
 }
+/* The light moves as a background within the tracker's own box, so nothing needs clipping and the key
+   badge on its corner stays whole. */
 .hud-quest.clickable:not(.seeking):not(.done)::after {
-  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(255, 230, 170, 0.28), transparent);
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 230, 170, 0.28), transparent) no-repeat;
+  background-size: 40% 100%; background-position: -70% 0;
   animation: quest-sweep 3.2s ease-in-out infinite;
 }
 @keyframes quest-call { 50% { box-shadow: 0 0 0 1px rgba(255, 211, 106, 0.55), 0 0 14px rgba(255, 190, 90, 0.45); } }
-@keyframes quest-sweep { 0%, 35% { transform: translateX(0); } 75%, 100% { transform: translateX(420%); } }
+@keyframes quest-sweep { 0%, 35% { background-position: -70% 0; } 75%, 100% { background-position: 170% 0; } }
 .party-invite, .party-note { animation: party-call-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1), party-call 1.6s ease-in-out 0.45s infinite; }
 @keyframes party-call-in { from { opacity: 0; translate: 0 -14px; scale: 0.9; } }
 @keyframes party-call { 50% { box-shadow: 0 0 0 2px #ffd36a, 0 0 18px rgba(255, 211, 106, 0.7); } }
