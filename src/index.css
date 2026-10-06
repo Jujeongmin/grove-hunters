@@ -2108,3 +2108,48 @@ button.hud-prompt:hover { color: #ffe0b0; }
     cursor: var(--cursor-press), pointer;
   }
 }
+
+/* Fallen: the world sinks into a deep red dusk, the words drop in with a slow heartbeat of light,
+   what it cost sits in a small badge, and the two ways up are cards side by side. */
+.pain.fallen {
+  background: radial-gradient(ellipse at 50% 45%, rgba(40, 4, 4, 0.35), rgba(12, 0, 0, 0.82) 75%);
+  animation: death-dusk 0.8s ease-out;
+}
+@keyframes death-dusk { from { background-color: rgba(120, 0, 0, 0.5); opacity: 0; } }
+.death-screen { display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(560px, calc(100% - 32px)); }
+.death-title {
+  margin: 0; font: 400 46px/1 var(--font-logo); letter-spacing: 0.12em; color: #ffd9cf;
+  text-shadow: 0 3px 0 #2a0505, 0 0 24px rgba(255, 60, 40, 0.75), 0 0 60px rgba(255, 40, 20, 0.45);
+  animation: death-title 0.9s cubic-bezier(0.2, 1.2, 0.4, 1), death-beat 2.4s ease-in-out 1s infinite;
+}
+@keyframes death-title { from { opacity: 0; transform: translateY(-18px) scale(1.15); filter: blur(4px); } }
+@keyframes death-beat { 50% { text-shadow: 0 3px 0 #2a0505, 0 0 34px rgba(255, 70, 50, 0.95), 0 0 80px rgba(255, 40, 20, 0.6); } }
+.death-rule { display: block; width: 260px; height: 2px; background: linear-gradient(90deg, transparent, #ff6a4a, transparent); opacity: 0.8; }
+.death-loss { display: flex; flex-direction: column; align-items: center; gap: 3px; margin: 0; text-align: center; }
+.death-loss b {
+  padding: 3px 14px; border-radius: 999px; font: 400 15px var(--font-head); color: #ffb3a3;
+  background: rgba(60, 6, 6, 0.75); border: 1px solid rgba(255, 106, 74, 0.45);
+}
+.death-loss small { font-size: 11px; color: rgba(255, 220, 210, 0.65); }
+.death-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 6px; animation: death-cards 0.6s ease-out 0.35s both; }
+@keyframes death-cards { from { opacity: 0; transform: translateY(14px); } }
+.death-choice {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 14px 12px 12px;
+  border-radius: 12px; color: var(--ink); text-align: center; cursor: var(--cursor-press), pointer;
+  background: linear-gradient(180deg, rgba(48, 30, 22, 0.95), rgba(20, 12, 10, 0.95));
+  border: 1px solid rgba(255, 196, 110, 0.35); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.death-choice:hover:not(:disabled) { transform: translateY(-3px); border-color: #ffd36a; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 200, 100, 0.3); }
+.death-choice:disabled { cursor: default; filter: grayscale(0.7) brightness(0.7); }
+.death-choice > img { width: 34px; height: 34px; image-rendering: pixelated; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8)); }
+.death-choice b { font: 400 17px var(--font-head); color: #fff1dc; }
+.death-choice small { font-size: 11px; line-height: 1.45; color: var(--ink-dim); }
+.death-price {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 12px; border-radius: 999px;
+  font: 400 14px var(--font-head); color: #1a120c; background: linear-gradient(180deg, #ffe7a8, #e0b25a);
+}
+.death-price img { width: 16px; height: 16px; image-rendering: pixelated; }
+.death-choice.village .death-price { background: linear-gradient(180deg, #b8f5b0, #6fcf72); }
+.death-short { font-style: normal; font-size: 11px; color: #ff8a73; }
+@media (prefers-reduced-motion: reduce) { .pain.fallen, .death-title, .death-choices { animation: none; } }
