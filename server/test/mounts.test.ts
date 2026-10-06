@@ -23,8 +23,7 @@ describe("gems", () => {
     expect(await server.$onItemPurchased(gems("g-1", "gems-550"))).toEqual({ success: true, code: "granted" });
     expect(await server.$onItemPurchased(gems("g-1", "gems-550"))).toEqual({ success: true, code: "already_granted" });
     server.connect({ account: BUYER });
-    // The pack's first purchase comes doubled (see premium.test.ts).
-    expect((await server.getMounts()).gems).toBe(1100);
+    expect((await server.getMounts()).gems).toBe(550);
   });
 });
 

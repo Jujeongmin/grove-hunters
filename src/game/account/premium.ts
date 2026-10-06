@@ -2,7 +2,7 @@ import { MAX_PIECES } from "./inventory";
 import { GEM_PRODUCTS } from "./mounts";
 
 // What money buys beyond the gems themselves (see docs/superpowers/specs/2026-10-01-free-to-play-design.md):
-// each gem pack doubled the first time an account buys it, VIP ranks from all an account has bought,
+// VIP ranks from all an account has bought,
 // a monthly pass, and gems spent to keep a high enhancement from breaking gear. Kept on the account
 // (its global user state), so every character shares them. All the numbers live here.
 
@@ -133,7 +133,7 @@ export function gemPurchase(productId: string, quantity: number, p: Premium): { 
   const each = GEM_PRODUCTS[productId];
   if (each === undefined || !Number.isInteger(quantity) || quantity < 1) return null;
   const first = !p.firstBought.includes(productId);
-  return { gems: each * quantity + (first ? each : 0), points: each * quantity, first };
+  return { gems: each * quantity, points: each * quantity, first };
 }
 
 // Gems to protect an attempt at `to`; null below +6, where nothing can break.

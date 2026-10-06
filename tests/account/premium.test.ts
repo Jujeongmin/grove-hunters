@@ -25,11 +25,12 @@ describe("premium", () => {
     expect(nextVipAt(200_000)).toBeNull();
   });
 
-  it("doubles a gem pack the first time an account buys it, and counts its own gems as points", () => {
-    expect(gemPurchase("gems-550", 1, none)).toEqual({ gems: 1100, points: 550, first: true });
-    expect(gemPurchase("gems-550", 2, none)).toEqual({ gems: 1650, points: 1100, first: true });
+  it("gives a gem pack's own gems, every time (no first-purchase double), and counts them as points", () => {
+    expect(gemPurchase("gems-550", 1, none)).toEqual({ gems: 550, points: 550, first: true });
+    expect(gemPurchase("gems-550", 2, none)).toEqual({ gems: 1100, points: 1100, first: true });
     const bought = { ...none, firstBought: ["gems-550"] };
     expect(gemPurchase("gems-550", 1, bought)).toEqual({ gems: 550, points: 550, first: false });
+    expect(gemPurchase("gems-14000", 1, none)).toEqual({ gems: 14000, points: 14000, first: true });
     expect(gemPurchase("gems-100", 1, bought)?.first).toBe(true);
     expect(gemPurchase("monthly-pass", 1, none)).toBeNull();
   });

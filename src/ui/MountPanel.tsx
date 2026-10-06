@@ -404,18 +404,14 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                 {Object.entries(GEM_PRODUCTS).map(([productId, n]) => {
                   const price = productPrice(productId);
                   const bonus = price ? Math.round((n / price / BASE_RATE - 1) * 100) : 0;
-                  const first = view !== null && !view.premium.firstBought.includes(productId);
                   return (
                     <button
                       key={productId} type="button" className="stable-pack" disabled={!VERSE || waiting}
                       onClick={() => VERSE && buyProduct(VERSE, productId)}
                     >
-                      {first
-                        ? <span className="stable-bonus first">{t("mount.first2x")}</span>
-                        : bonus > 0 && <span className="stable-bonus">{t("mount.bonus", { n: bonus })}</span>}
+                      {bonus > 0 && <span className="stable-bonus">{t("mount.bonus", { n: bonus })}</span>}
                       <img src={publicUrl(`assets/ui/shop/${productId}.png`)} alt="" />
                       <b>{t("mount.pack", { n: n.toLocaleString(locale()) })}</b>
-                      {first && <small className="stable-first-gets">{t("mount.firstGets", { n: (n * 2).toLocaleString(locale()) })}</small>}
                       <span className="stable-price">{price !== null ? `${price.toLocaleString(locale())} VX` : "—"}</span>
                     </button>
                   );

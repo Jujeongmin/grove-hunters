@@ -51,7 +51,7 @@ export const MERC_AFTER_MS = 30_000;
 // A clear this fast pays FAST_GOLD more gold; the day's first clear brings FIRST_GEMS.
 export const FAST_MS = 150_000;
 export const FAST_GOLD = 0.5;
-export const FIRST_GEMS = 30;
+export const FIRST_GEMS = 10;
 export const GEAR_CHANCE = 0.4;
 // The boss's health for n players, as a share of its health for four; the waves' health and count.
 const BOSS_SHARE = [0, 0.4, 0.6, 0.8, 1];

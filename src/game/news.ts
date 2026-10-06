@@ -1,5 +1,6 @@
 import type { Lang } from "./langs";
 import { PASS_GEMS_DAILY, PASS_XP, VIP_BONUS } from "./account/premium";
+import { FIRST_GEMS } from "./world/dungeon";
 
 // What each update brought, as the news panel shows it. Kept in code and shipped with the game: a
 // new entry goes on the FRONT (newest first; what an account has read is kept as the id of the
@@ -22,6 +23,52 @@ export interface NewsEntry {
 }
 
 export const NEWS: readonly NewsEntry[] = [
+  {
+    id: "2026-10-06-gem-packs",
+    date: "2026-10-06",
+    text: {
+      ko: {
+        title: "큰 보석 상품 · 보상 조정",
+        lines: [
+          "보석 6,500개(+30%)와 14,000개(+40%) 상품이 생겼어요. 큰 상품일수록 보석을 더 얹어 드려요.",
+          "상품별 첫 구매 2배는 끝났어요. 모든 상품이 언제 사도 같은 양이에요.",
+          `출석부 보석과 탈것 소환권(주 1회), 시련의 던전 하루 첫 클리어 보석(${FIRST_GEMS}개)이 조정됐어요.`,
+        ],
+      },
+      en: {
+        title: "Bigger gem packs · reward changes",
+        lines: [
+          "New packs of 6,500 (+30%) and 14,000 gems (+40%): the bigger the pack, the more gems on top.",
+          "The first-purchase double has ended: every pack gives the same gems whenever you buy it.",
+          `The attendance sheet's gems and mount tickets (once a week) and the Trial Dungeon's first clear of the day (${FIRST_GEMS} gems) have changed.`,
+        ],
+      },
+      ja: {
+        title: "大きな宝石パック · 報酬の調整",
+        lines: [
+          "宝石6,500個（+30%）と14,000個（+40%）のパックが登場。大きいパックほど宝石が多く付きます。",
+          "パックごとの初回購入2倍は終了しました。どのパックもいつ買っても同じ量です。",
+          `出席簿の宝石と乗り物召喚券（週1回）、試練のダンジョンの1日初回クリア宝石（${FIRST_GEMS}個）を調整しました。`,
+        ],
+      },
+      "zh-Hans": {
+        title: "大额宝石礼包 · 奖励调整",
+        lines: [
+          "新增 6,500 宝石（+30%）和 14,000 宝石（+40%）礼包，礼包越大赠送越多。",
+          "各礼包首充双倍已结束，任何时候购买数量都相同。",
+          `签到簿的宝石与坐骑召唤券（每周 1 次）、试炼地下城每日首通宝石（${FIRST_GEMS} 个）已调整。`,
+        ],
+      },
+      "zh-Hant": {
+        title: "大額寶石禮包 · 獎勵調整",
+        lines: [
+          "新增 6,500 寶石（+30%）和 14,000 寶石（+40%）禮包，禮包越大贈送越多。",
+          "各禮包首儲雙倍已結束，任何時候購買數量都相同。",
+          `簽到簿的寶石與坐騎召喚券（每週 1 次）、試煉地城每日首通寶石（${FIRST_GEMS} 個）已調整。`,
+        ],
+      },
+    },
+  },
   {
     id: "2026-10-02-mercs",
     date: "2026-10-02",
@@ -356,7 +403,7 @@ export const NEWS: readonly NewsEntry[] = [
       ko: {
         title: "VIP · 월정액 · 첫 구매 2배 · 파괴 방지",
         lines: [
-          "보석 상품마다 첫 구매는 보석이 2배예요.",
+          "보석 상품마다 첫 구매는 보석이 2배예요. (2026-10-06에 끝났어요)",
           `보석을 살수록 VIP 등급(1~10)이 올라요. 등급마다 사냥 경험치·골드 +${VIP_PCT}%, 이름 옆에 VIP 표시가 붙어요.`,
           `월정액: 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 ${PASS_GEMS_DAILY}개(우편), 기간 중 경험치 +${PASS_XP_PCT}%.`,
           "대장간에서 +6 이상 강화할 때 보석으로 파괴를 막을 수 있어요.",
@@ -365,7 +412,7 @@ export const NEWS: readonly NewsEntry[] = [
       en: {
         title: "VIP, the monthly pass, first purchase ×2, protection",
         lines: [
-          "Each gem pack's first purchase gives double gems.",
+          "Each gem pack's first purchase gives double gems. (Ended on 2026-10-06.)",
           `The more gems you buy, the higher your VIP rank (1-10): +${VIP_PCT}% hunting XP and gold a rank, and a VIP mark by your name.`,
           `Monthly pass: 300 gems now, ${PASS_GEMS_DAILY} more on your first visit each day for 30 days (by mail), and +${PASS_XP_PCT}% XP while it lasts.`,
           "At the smith, gems can keep enhancements at +6 and up from breaking your gear.",
@@ -374,7 +421,7 @@ export const NEWS: readonly NewsEntry[] = [
       ja: {
         title: "VIP・月額パス・初回2倍・破壊防止",
         lines: [
-          "宝石商品ごとに初回購入は宝石2倍です。",
+          "宝石商品ごとに初回購入は宝石2倍です。（2026-10-06に終了）",
           `宝石を買うほどVIPランク（1〜10）が上がります。ランクごとに狩りの経験値・ゴールド+${VIP_PCT}%、名前の横にVIPマークが付きます。`,
           `月額パス：すぐに宝石300個、30日間毎日最初のログインで宝石${PASS_GEMS_DAILY}個（郵便）、期間中は経験値+${PASS_XP_PCT}%。`,
           "鍛冶屋で+6以上の強化時、宝石で破壊を防げます。",
@@ -383,7 +430,7 @@ export const NEWS: readonly NewsEntry[] = [
       "zh-Hant": {
         title: "VIP、月卡、首購2倍、防破壞",
         lines: [
-          "每種寶石商品首次購買可得2倍寶石。",
+          "每種寶石商品首次購買可得2倍寶石。（已於 2026-10-06 結束）",
           `買越多寶石，VIP等級（1~10）越高。每級狩獵經驗與金幣+${VIP_PCT}%，名字旁會顯示VIP標記。`,
           `月卡：立得寶石300個，30天內每天首次登入得寶石${PASS_GEMS_DAILY}個（郵件），期間經驗+${PASS_XP_PCT}%。`,
           "在鐵匠處強化+6以上時，可用寶石防止裝備被破壞。",
@@ -392,7 +439,7 @@ export const NEWS: readonly NewsEntry[] = [
       "zh-Hans": {
         title: "VIP、月卡、首购2倍、防破坏",
         lines: [
-          "每种宝石商品首次购买可得2倍宝石。",
+          "每种宝石商品首次购买可得2倍宝石。（已于 2026-10-06 结束）",
           `买越多宝石，VIP等级（1~10）越高。每级狩猎经验与金币+${VIP_PCT}%，名字旁会显示VIP标记。`,
           `月卡：立得宝石300个，30天内每天首次登录得宝石${PASS_GEMS_DAILY}个（邮件），期间经验+${PASS_XP_PCT}%。`,
           "在铁匠处强化+6以上时，可用宝石防止装备被破坏。",

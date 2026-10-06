@@ -4,14 +4,14 @@ import {
 } from "../../src/game/account/attendance";
 
 describe("attendance", () => {
-  it("has a reward for every box, a mount ticket twice a week, the most gems at the end of each week, and no potions", () => {
+  it("has a reward for every box, a mount ticket once a week, the most gems at the end of each week, and no potions", () => {
     expect(ATTEND_REWARDS.length).toBe(ATTEND_DAYS);
-    expect(ATTEND_REWARDS.map((r, i) => (r.tickets > 0 ? i + 1 : 0)).filter(Boolean)).toEqual([4, 7, 11, 14, 18, 21, 25, 28]);
+    expect(ATTEND_REWARDS.map((r, i) => (r.tickets > 0 ? i + 1 : 0)).filter(Boolean)).toEqual([7, 14, 21, 28]);
     for (const week of [0, 1, 2, 3]) {
       const days = ATTEND_REWARDS.slice(week * 7, week * 7 + 7);
       expect(Math.max(...days.map((r) => r.gems))).toBe(days[6].gems);
     }
-    expect(ATTEND_REWARDS.reduce((n, r) => n + r.gems, 0)).toBe(550);
+    expect(ATTEND_REWARDS.reduce((n, r) => n + r.gems, 0)).toBe(275);
     expect(ATTEND_REWARDS.reduce((n, r) => n + r.gold, 0)).toBe(98000);
     for (const r of ATTEND_REWARDS) expect(r.items.every((item) => item.id === "stone" && item.n > 0 && item.n <= 99)).toBe(true);
   });

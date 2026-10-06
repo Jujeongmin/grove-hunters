@@ -13,16 +13,15 @@ async function premiumOf(server: any, account = BUYER): Promise<any> {
 }
 
 describe("premium", () => {
-  test("a gem pack's first purchase is doubled, once per pack, and every gem bought counts toward VIP", async (server) => {
+  test("a gem pack gives its own gems, first purchase or not, and every gem bought counts toward VIP", async (server) => {
     await server.$onItemPurchased(buy("p1", "gems-100"));
     let view = await premiumOf(server);
-    expect(view.gems).toBe(200);
+    expect(view.gems).toBe(100);
     expect(view.premium).toMatchObject({ vip: 1, vipPoints: 100, firstBought: ["gems-100"] });
     await server.$onItemPurchased(buy("p2", "gems-100"));
     await server.$onItemPurchased(buy("p3", "gems-550"));
     view = await premiumOf(server);
-    // 200, then 100, then 550 doubled.
-    expect(view.gems).toBe(200 + 100 + 1100);
+    expect(view.gems).toBe(100 + 100 + 550);
     expect(view.premium).toMatchObject({ vip: 2, vipPoints: 750, nextVipAt: 1200 });
     expect([...view.premium.firstBought].sort()).toEqual(["gems-100", "gems-550"]);
   });

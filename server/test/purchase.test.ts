@@ -26,10 +26,10 @@ describe("purchases", () => {
       $global.updateUserState = real;
     }
     server.connect({ account: BUYER });
-    // A first pack, doubled: the gems are the buyer's.
-    expect((await server.getMounts()).gems).toBe(200);
+    // The gems are the buyer's.
+    expect((await server.getMounts()).gems).toBe(100);
     expect(await server.$onItemPurchased(purchase(BUYER, "p-9"))).toEqual({ success: true, code: "already_granted" });
-    expect((await server.getMounts()).gems).toBe(200);
+    expect((await server.getMounts()).gems).toBe(100);
   });
 
   test("a grant that fails before any gems are credited gives the receipt back for the retry", async (server) => {
@@ -45,7 +45,7 @@ describe("purchases", () => {
     }
     expect(await server.$onItemPurchased(purchase(BUYER, "p-8"))).toEqual({ success: true, code: "granted" });
     server.connect({ account: BUYER });
-    expect((await server.getMounts()).gems).toBe(200);
+    expect((await server.getMounts()).gems).toBe(100);
   });
 
   test("turns away products it does not sell (the full game is gone) and broken events", async (server) => {

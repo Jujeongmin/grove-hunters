@@ -126,6 +126,8 @@ export const GEM_PRODUCTS: Readonly<Record<string, number>> = {
   "gems-100": 100,
   "gems-550": 550,
   "gems-1200": 1200,
+  "gems-6500": 6500,
+  "gems-14000": 14000,
 };
 
 export function gemsFor(productId: string, quantity: number): number | null {

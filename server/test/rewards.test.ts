@@ -46,13 +46,13 @@ describe("the attendance sheet", () => {
 
   test("a ticket day's mount ticket goes to the account, and hatches a mount at the stable without gems", async (server) => {
     await makeCharacter(server, "test-a", "소환왕");
-    // Three boxes stamped before: today is the fourth, a ticket day.
-    await $global.updateUserState("test-a", { attendance: { stamps: 3, lastDay: "2000-01-01", total: 3 } });
+    // Six boxes stamped before: today is the seventh, a ticket day.
+    await $global.updateUserState("test-a", { attendance: { stamps: 6, lastDay: "2000-01-01", total: 6 } });
     await enterAs(server, "test-a");
     const [letter] = await attendanceMail(server, "test-a");
-    expect(letter.params.day).toBe(4);
+    expect(letter.params.day).toBe(7);
     expect(ATTEND_REWARDS[0].tickets).toBe(0);
-    expect(letter.tickets).toBe(ATTEND_REWARDS[3].tickets);
+    expect(letter.tickets).toBe(ATTEND_REWARDS[6].tickets);
     expect(letter.tickets).toBe(1);
     await server.claimMail(letter.id);
     expect((await server.getMounts()).tickets).toBe(1);
@@ -60,7 +60,8 @@ describe("the attendance sheet", () => {
     const pulled = await server.pullMount(true);
     expect(pulled.pulls.length).toBe(1);
     expect(pulled.tickets).toBe(0);
-    expect(pulled.gems).toBe(0);
+    // The ticket hatched it: the box's own gems are all still there.
+    expect(pulled.gems).toBe(ATTEND_REWARDS[6].gems);
     expect(await errorOf(server.pullMount(true))).toContain("no_ticket");
   });
 
