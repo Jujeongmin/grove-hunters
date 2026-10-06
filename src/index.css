@@ -1338,70 +1338,212 @@ button.hud-prompt:hover { color: #ffe0b0; }
 
 .bag-power { margin-left: 14px; color: var(--ember); font-weight: 700; }
 
-/* The smith's forge: enhance and craft tabs, a line per piece of gear or recipe. */
-.smith-panel { width: 560px; }
+/* Tabs and notes other screens took from the old forge. */
 .smith-tabs { display: flex; gap: 8px; margin-bottom: 8px; }
 .smith-tabs .on { color: var(--ember); text-decoration: underline; }
-.smith-row .bag-blurb { flex-basis: 100%; }
-.smith-risk { color: var(--blood); font-style: normal; }
-.smith-safe { color: #9dffb0; font-style: normal; }
-/* Protecting attempts from breaking: a box to tick, and the gems there are to spend. */
-.smith-protect { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ink); cursor: var(--cursor-press), pointer; }
-.smith-protect input { accent-color: #ffd36a; }
-.smith-protect-gems { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 12px var(--font-head); color: #bff0ff; }
-.smith-protect-gems img { width: 16px; height: 16px; image-rendering: pixelated; }
-/* 강화석's picture before each of its counts at the forge. */
-.stone-icon { width: 16px; height: 16px; margin-right: 2px; vertical-align: -3px; image-rendering: pixelated; }
-.smith-short { color: var(--blood); }
 .smith-note { font: 700 15px var(--font-head); margin: 8px 0; }
 .smith-note.good { color: #8fe08a; }
 .smith-note.bad { color: var(--blood); }
-/* An enhancement played out over the forge: the piece hums while a gauge fills all the way, then a
-   golden flash (success), a grey shudder (failure) or a red flash with the piece coming apart. */
-.enhance-show {
-  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; background: rgba(3, 2, 2, 0.94); backdrop-filter: blur(4px); cursor: default;
+/* The forge: the anvil on the left, the gear (or the recipes) in a narrow column on the right, and the
+   world left in view between them. The one bold thing is the hearth under the anvil, whose heat says
+   the odds: white-gold when an attempt is all but sure, through ember orange, to a deep red. */
+.forge {
+  --iron: #17110c; --soot: #0b0806; --rim: rgba(255, 196, 110, 0.26); --molten: #ffd36a; --cinder: #ff6b5a;
+  --safe: #9dffb0;
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  animation: forge-in 0.22s ease-out;
 }
-.enhance-show.success, .enhance-show.fail, .enhance-show.broken { cursor: var(--cursor-press), pointer; }
-.enhance-piece {
-  width: 110px; height: 110px; display: grid; place-items: center; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 179, 90, 0.3), transparent 70%);
-  animation: enhance-hum 0.3s ease-in-out infinite alternate;
+.forge::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0.5));
 }
-.enhance-piece img { width: 72px; height: 72px; image-rendering: pixelated; }
-.enhance-name { font: 700 18px var(--font-head); color: var(--ink); text-shadow: var(--shadow); }
-.enhance-plus { font: 700 16px var(--font-head); color: #ffd36a; }
-.enhance-gauge {
-  width: 320px; height: 16px; margin-top: 6px; border-radius: 8px; overflow: hidden;
-  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 211, 106, 0.45);
+.forge-anvil, .forge-side {
+  position: absolute; top: max(10px, env(safe-area-inset-top)); bottom: max(10px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; box-sizing: border-box; pointer-events: auto;
+  border: 1px solid var(--rim); border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 230, 190, 0.06);
 }
-.enhance-gauge i {
-  display: block; width: 0; height: 100%; border-radius: 8px;
-  background: linear-gradient(90deg, #c8661e, #ffb35a 60%, #ffe9b8); box-shadow: 0 0 14px rgba(255, 190, 90, 0.9);
-  animation: enhance-fill 1.8s cubic-bezier(0.35, 0.05, 0.25, 1) forwards;
+.forge-anvil {
+  left: max(10px, env(safe-area-inset-left)); width: 404px;
+  background: radial-gradient(ellipse 90% 45% at 50% 30%, rgba(120, 60, 20, 0.22), transparent 70%), linear-gradient(180deg, var(--iron), var(--soot));
 }
-.enhance-result { margin: 6px 0 0; min-height: 30px; font: 800 22px var(--font-head); color: var(--ink-dim); text-shadow: var(--shadow); }
-.enhance-close { font: 600 13px var(--font-body); color: var(--ink-dim); }
-.enhance-show:is(.success, .fail, .broken) .enhance-gauge i { width: 100%; }
-.enhance-show:is(.success, .fail, .broken) .enhance-piece { animation: none; }
+.forge-side {
+  right: max(10px, env(safe-area-inset-right)); width: 268px; padding: 10px 12px; gap: 8px; overflow-y: auto;
+  background: linear-gradient(180deg, rgba(26, 19, 14, 0.96), rgba(12, 9, 7, 0.96));
+}
+@keyframes forge-in { from { opacity: 0; } }
 
-.enhance-show.success .enhance-piece {
-  background: radial-gradient(circle, rgba(255, 233, 160, 0.95), rgba(255, 190, 90, 0.35) 45%, transparent 72%);
-  animation: enhance-shine 0.8s ease-out;
+.forge-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 0 14px; flex: none; }
+.forge-head h2 { margin: 0; font: 700 19px var(--font-head); color: var(--molten); text-shadow: 0 2px 6px #000; }
+.forge-tabs { display: flex; gap: 4px; margin-left: 4px; padding: 3px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); }
+.forge-tabs button {
+  border: 0; border-radius: 999px; padding: 5px 14px; background: none; color: var(--ink-dim);
+  font: 700 13px var(--font-head); cursor: var(--cursor-press), pointer;
 }
-.enhance-show.success .enhance-gauge i { background: #ffe08a; box-shadow: 0 0 22px #ffd36a; }
-.enhance-show.success .enhance-result { color: #ffe08a; text-shadow: 0 0 14px rgba(255, 200, 100, 0.9); animation: enhance-pop 0.45s ease-out; }
+.forge-tabs button.on { background: linear-gradient(180deg, #ffcf7a, #e58f35); color: #2a1606; box-shadow: 0 0 10px rgba(255, 170, 80, 0.45); }
+.forge-close {
+  margin-left: auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--rim); background: rgba(0, 0, 0, 0.4);
+  color: var(--ink); font-size: 14px; cursor: var(--cursor-press), pointer;
+}
+.forge-close:hover { border-color: var(--molten); color: var(--molten); }
+.forge-stage {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 16px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.forge-enhance, .forge-craft { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.forge-empty { margin: auto 0; padding: 40px 0; color: var(--ink-dim); font: 600 15px var(--font-head); text-align: center; }
+.forge-label { align-self: flex-start; font: 700 11px var(--font-head); letter-spacing: 0.08em; color: var(--ink-dim); }
+.forge-mini { width: 15px; height: 15px; margin-right: 3px; vertical-align: -3px; image-rendering: pixelated; }
 
-.enhance-show.fail .enhance-piece { background: none; filter: grayscale(0.7); animation: enhance-shake 0.45s ease-in-out; }
-.enhance-show.fail .enhance-gauge i { background: #7b7466; box-shadow: none; }
-.enhance-show.fail .enhance-result { animation: enhance-pop 0.45s ease-out; }
+/* The hearth: the glow from below, an anvil's shape, and the piece floating over it. */
+.forge-hearth {
+  --heat: #ffc66a; --glow: rgba(255, 160, 60, 0.5);
+  position: relative; width: 100%; height: 132px; flex: none; display: grid; place-items: center;
+  background: radial-gradient(ellipse 46% 62% at 50% 100%, var(--glow), transparent 72%);
+}
+.forge-hearth.heat-sure { --heat: #fff1c2; --glow: rgba(255, 226, 150, 0.55); }
+.forge-hearth.heat-warm { --heat: #ffc66a; --glow: rgba(255, 165, 70, 0.5); }
+.forge-hearth.heat-hot { --heat: #ff8a3a; --glow: rgba(255, 110, 40, 0.5); }
+.forge-hearth.heat-fierce { --heat: #e2402a; --glow: rgba(210, 40, 25, 0.55); }
+.forge-hearth.heat-cold { --heat: #8a7f74; --glow: rgba(120, 100, 85, 0.25); }
+.forge-hearth::after {
+  content: ""; position: absolute; left: 50%; bottom: 6px; width: 156px; height: 36px; translate: -50% 0;
+  background: linear-gradient(180deg, #4a3d33, #1d1712 70%);
+  clip-path: polygon(0 0, 100% 0, 90% 38%, 70% 44%, 75% 100%, 25% 100%, 30% 44%, 10% 38%);
+}
+.forge-piece { position: relative; z-index: 1; margin-bottom: 26px; animation: forge-float 3.2s ease-in-out infinite; }
+.forge-piece img {
+  display: block; width: 84px; height: 84px; image-rendering: pixelated;
+  filter: drop-shadow(0 0 10px var(--heat)) drop-shadow(0 6px 4px rgba(0, 0, 0, 0.7));
+}
+@keyframes forge-float { 50% { transform: translateY(-5px); } }
+.forge-gauge {
+  position: absolute; z-index: 2; left: 18%; right: 18%; bottom: 0; height: 6px; border-radius: 3px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.6); opacity: 0;
+}
+.forge-gauge i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #c8661e, #ffb35a 60%, #ffe9b8); }
+.forge-enhance:not(.idle) .forge-gauge { opacity: 1; }
+.forge-enhance.working .forge-gauge i { animation: enhance-fill 1.8s cubic-bezier(0.35, 0.05, 0.25, 1) forwards; }
+.forge-enhance:is(.success, .fail, .broken) .forge-gauge i { width: 100%; }
+.forge-enhance.working .forge-piece { animation: enhance-hum 0.18s ease-in-out infinite alternate; }
+.forge-enhance.success .forge-piece { animation: enhance-shine 0.8s ease-out; }
+.forge-enhance.success .forge-hearth { --glow: rgba(255, 236, 170, 0.85); }
+.forge-enhance.success .forge-gauge i { background: #ffe08a; }
+.forge-enhance.fail .forge-piece { animation: enhance-shake 0.45s ease-in-out; filter: grayscale(0.6); }
+.forge-enhance.fail .forge-gauge i { background: #7b7466; }
+.forge-enhance.broken .forge-hearth { animation: forge-scorch 0.8s ease-out; }
+.forge-enhance.broken .forge-piece { animation: none; }
+.forge-enhance.broken .forge-piece img { animation: enhance-shatter 0.9s ease-in forwards; }
+.forge-enhance.broken .forge-gauge i { background: var(--cinder); }
+@keyframes forge-scorch { 0% { background-color: rgba(200, 30, 20, 0.55); } 100% { background-color: transparent; } }
 
-.enhance-show.broken { animation: enhance-flash 0.7s ease-out; }
-.enhance-show.broken .enhance-piece { background: radial-gradient(circle, rgba(220, 40, 30, 0.55), transparent 70%); animation: enhance-shake 0.35s ease-in-out; }
-.enhance-show.broken .enhance-piece img { animation: enhance-shatter 0.9s ease-in forwards; }
-.enhance-show.broken .enhance-gauge i { background: var(--blood); box-shadow: 0 0 18px rgba(220, 40, 30, 0.9); }
-.enhance-show.broken .enhance-result { color: var(--blood); animation: enhance-pop 0.45s ease-out; }
+.forge-name { font: 700 18px var(--font-head); color: var(--ink); text-shadow: 0 2px 4px #000; text-align: center; }
+.forge-where { margin-top: -4px; font-size: 12px; color: var(--ink-dim); text-align: center; }
+/* The + so far, as a row of studs: lit up to where the piece stands, the next one blinking, those
+   where a failure can break it edged in red. */
+.forge-track { display: flex; gap: 4px; margin: 2px 0; }
+.forge-track i { width: 9px; height: 9px; transform: rotate(45deg); background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); }
+.forge-track i.risky { border-color: rgba(255, 107, 90, 0.55); }
+.forge-track i.lit { background: var(--molten); border-color: #fff0c0; box-shadow: 0 0 6px rgba(255, 211, 106, 0.8); }
+.forge-track i.next { animation: forge-blink 1s ease-in-out infinite; }
+@keyframes forge-blink { 50% { background: rgba(255, 211, 106, 0.55); } }
+.forge-outcome { margin: 2px 0; font: 800 22px var(--font-head); text-shadow: 0 2px 6px #000; animation: enhance-pop 0.45s ease-out; }
+.forge-outcome.working { color: var(--ink-dim); font-size: 16px; animation: none; }
+.forge-outcome.success { color: #ffe08a; text-shadow: 0 0 14px rgba(255, 200, 100, 0.9); }
+.forge-outcome.fail { color: var(--ink-dim); }
+.forge-outcome.broken { color: var(--cinder); }
+.forge-gain { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 13px; color: var(--ink-dim); }
+.forge-gain em { font-style: normal; color: var(--ember); margin: 0 3px; }
+.forge-gain b { color: #b6ffb0; font: 700 14px var(--font-head); }
+.forge-maxed { color: var(--molten); font: 700 15px var(--font-head); }
+.forge-odds { display: flex; gap: 8px; width: 100%; }
+.forge-odd {
+  flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px 0 4px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.forge-odd small { font: 700 11px var(--font-head); color: var(--ink-dim); letter-spacing: 0.06em; }
+.forge-odd b { font: 700 22px var(--font-head); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.forge-odd.good b { color: var(--molten); }
+.forge-odd.bad b { color: var(--cinder); }
+.forge-odd.bad { border-color: rgba(255, 107, 90, 0.35); }
+.forge-odd.safe b { color: var(--safe); }
+.forge-cost { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.forge-cost span {
+  padding: 3px 9px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.1);
+  font: 700 12px var(--font-head); color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.forge-cost span.short { color: var(--cinder); border-color: rgba(255, 107, 90, 0.45); }
+.forge-protect { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink); cursor: var(--cursor-press), pointer; }
+.forge-protect input { accent-color: var(--molten); }
+.forge .forge-hammer { min-width: 0; width: 100%; padding: 12px 20px; font-size: 17px; color: #fff3dc; }
+/* The hammer in the hearth's colours, so it reads as the one thing to press on the dark iron. */
+.forge .forge-hammer::before { background: linear-gradient(180deg, rgba(214, 120, 40, 0.95), rgba(140, 60, 18, 0.95)); }
+.forge .forge-hammer:hover:not(:disabled)::before { background: linear-gradient(180deg, rgba(240, 150, 60, 0.98), rgba(170, 80, 24, 0.98)); }
+.forge .forge-hammer:disabled::before { background: rgba(60, 46, 36, 0.9); }
+.forge-hint { margin: 0; font-size: 11px; color: var(--ink-dim); text-align: center; line-height: 1.4; }
+.forge-note { margin: 0; font: 700 14px var(--font-head); text-align: center; }
+.forge-note.good { color: #8fe08a; }
+.forge-note.bad { color: var(--cinder); }
+.forge-log { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 2px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.forge-log-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-dim); }
+.forge-log-row img { width: 18px; height: 18px; image-rendering: pixelated; }
+.forge-log-row b { margin-left: auto; font: 700 12px var(--font-head); }
+.forge-log-row.success b { color: var(--molten); }
+.forge-log-row.broken b { color: var(--cinder); }
 
+/* Crafting on the anvil: what it takes, each against what you have, with a bar that fills. */
+.forge-needs { width: 100%; display: flex; flex-direction: column; gap: 4px; }
+.forge-need {
+  position: relative; display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 8px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.42); border: 1px solid rgba(255, 107, 90, 0.3);
+}
+.forge-need.met { border-color: rgba(157, 255, 176, 0.3); }
+.forge-need img { position: relative; z-index: 1; width: 26px; height: 26px; image-rendering: pixelated; }
+.forge-need-name { position: relative; z-index: 1; flex: 1; font-size: 13px; color: var(--ink); }
+.forge-need-count { position: relative; z-index: 1; font: 700 13px var(--font-head); color: var(--cinder); font-variant-numeric: tabular-nums; }
+.forge-need.met .forge-need-count { color: var(--safe); }
+.forge-need i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(255, 107, 90, 0.16), rgba(255, 107, 90, 0.05)); }
+.forge-need.met i { background: linear-gradient(90deg, rgba(157, 255, 176, 0.14), rgba(157, 255, 176, 0.04)); }
+.forge-craft:not(.ready) .forge-piece img { filter: grayscale(0.5) brightness(0.8) drop-shadow(0 6px 4px rgba(0, 0, 0, 0.7)); }
+
+/* The column on the right: the purse, then the squares of gear or the list of recipes. */
+.forge-purse { display: flex; flex-wrap: wrap; gap: 4px 10px; font: 700 13px var(--font-head); color: var(--molten); }
+.forge-purse .gems { color: #bff0ff; }
+.forge-rack { display: flex; flex-direction: column; gap: 6px; }
+.forge-worn { display: flex; gap: 12px; }
+.forge-worn-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--ink-dim); }
+.forge-grid { display: grid; grid-template-columns: repeat(4, 52px); gap: 6px; }
+.forge-cell {
+  position: relative; width: 52px; height: 52px; padding: 5px; box-sizing: border-box; border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14); background: radial-gradient(circle at 50% 70%, rgba(80, 50, 25, 0.35), rgba(0, 0, 0, 0.5));
+  cursor: var(--cursor-press), pointer;
+}
+.forge-cell img { width: 100%; height: 100%; image-rendering: pixelated; }
+.forge-cell.empty { display: block; border-style: dashed; cursor: default; }
+.forge-cell:hover { border-color: rgba(255, 211, 106, 0.6); }
+.forge-cell.picked { border-color: var(--molten); box-shadow: 0 0 0 1px var(--molten), 0 0 12px rgba(255, 190, 90, 0.55); }
+.forge-cell.trade::after {
+  content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; transform: rotate(45deg);
+  background: #7fe0ff; box-shadow: 0 0 0 1px #10202a;
+}
+.forge-cell-plus {
+  position: absolute; right: 2px; bottom: 1px; font: 700 11px var(--font-head); color: var(--molten);
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+.forge-group { display: flex; flex-direction: column; gap: 3px; }
+.forge-tier { font: 700 11px var(--font-head); color: var(--ember); margin-top: 2px; }
+.forge-recipe {
+  display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 8px; text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.35); color: var(--ink-dim);
+  font: 600 13px var(--font-body); cursor: var(--cursor-press), pointer;
+}
+.forge-recipe img { width: 26px; height: 26px; image-rendering: pixelated; }
+.forge-recipe span { flex: 1; }
+.forge-recipe.ready { color: var(--ink); }
+.forge-recipe:hover { border-color: rgba(255, 211, 106, 0.45); }
+.forge-recipe.picked { border-color: var(--molten); background: rgba(70, 42, 18, 0.7); color: var(--ink); }
+.forge-ready { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); box-shadow: 0 0 6px rgba(157, 255, 176, 0.9); }
+.forge :focus-visible { outline: 2px solid var(--molten); outline-offset: 2px; }
 @keyframes enhance-fill { to { width: 100%; } }
 @keyframes enhance-hum { from { transform: scale(1); } to { transform: scale(1.07); } }
 @keyframes enhance-shine {
@@ -1421,20 +1563,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
   60% { transform: translateX(-6px); }
   80% { transform: translateX(4px); }
 }
-@keyframes enhance-flash {
-  0% { background: rgba(160, 20, 12, 0.85); }
-  100% { background: rgba(3, 2, 2, 0.94); }
-}
 @keyframes enhance-shatter {
   0% { transform: none; opacity: 1; filter: none; }
   30% { transform: rotate(-12deg) scale(1.1); filter: sepia(1) saturate(4) hue-rotate(-30deg); }
   100% { transform: rotate(28deg) scale(0.55) translateY(26px); opacity: 0.15; filter: grayscale(1) brightness(0.5); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .enhance-show, .enhance-show *, .enhance-gauge i { animation: none !important; }
+  .forge, .forge *, .forge *::before, .forge *::after { animation: none !important; }
 }
-.smith-row { flex-wrap: wrap; }
-.smith-row > b { flex: 1; }
 
 /* No browser scrollbars anywhere: panels still scroll by wheel, drag and touch. */
 * { scrollbar-width: none; }
