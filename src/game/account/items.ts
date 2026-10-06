@@ -1,4 +1,4 @@
-import type { MountId } from "./mounts";
+import type { MountBonus, MountId } from "./mounts";
 import type { JobId } from "../combat/jobs";
 import type { TutorialStep } from "./tutorial";
 import { RuleViolation } from "../world/types";
@@ -178,6 +178,8 @@ export interface BagView {
   // The account's picked mount (it adds to every fight, ridden or not; see mounts.ts), and its stars.
   mount: MountId | null;
   mountStars: number;
+  // What every mount the account owns adds by being owned (보유 효과; see mounts.ts).
+  herd: MountBonus;
   // The account's VIP rank (see premium.ts).
   vip: number;
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST,
-  mountBonus, mountsOfTier,
+  herdBonus, mountBonus, mountsOfTier, ownedBonus,
   type MountId, type MountTier,
 } from "../game/account/mounts";
 import {
@@ -253,7 +253,12 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
               </span>
               {mine(shown) && shown !== BASE_MOUNT && <span className="stable-stars">{starMarks(starsOf(shown))}</span>}
               <span className="stable-stats">
-                {t("mount.stats", { p: Math.round(mountBonus(shown, starsOf(shown)).power * 100), h: mountBonus(shown, starsOf(shown)).hp })}
+                <span>{t("mount.stats", { p: Math.round(mountBonus(shown, starsOf(shown)).power * 100), h: mountBonus(shown, starsOf(shown)).hp })}</span>
+                {shown !== BASE_MOUNT && (
+                  <span className={mine(shown) ? "" : "unowned"}>
+                    {t("mount.ownStats", { p: Math.round(ownedBonus(shown, starsOf(shown)).power * 100), h: ownedBonus(shown, starsOf(shown)).hp })}
+                  </span>
+                )}
               </span>
               {mine(shown) && shown !== BASE_MOUNT && starsOf(shown) < MAX_STARS && (
                 <span className="stable-next">
@@ -275,6 +280,16 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
         <section className="stable-side">
           {tab === "stable" && (
             <>
+              {view && (() => {
+                const herd = herdBonus(view.owned, view.stars);
+                const counted = view.owned.filter((id) => id !== BASE_MOUNT).length;
+                return (
+                  <div className="stable-herd">
+                    <small>{t("mount.herd", { n: counted })}</small>
+                    <b>{t("mount.herdStats", { p: Math.round(herd.power * 100), h: herd.hp })}</b>
+                  </div>
+                );
+              })()}
               <div className="stable-grid">
                 {MOUNT_IDS.map((id) => (
                   <button

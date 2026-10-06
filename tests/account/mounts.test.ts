@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MOUNTS, MOUNT_IDS, PULL_COST, gemsFor, ownedMounts,
-  MAX_STARS, STAR_BONUS, mountBonus, readMountId, readStars, rollMount, tierOf,
+  MAX_STARS, NO_HERD, STAR_BONUS, herdBonus, mountBonus, ownedBonus, readMountId, readStars, rollMount, tierOf,
 } from "../../src/game/account/mounts";
 import { combatPowerAt } from "../../src/game/combat/power";
 
@@ -66,5 +66,22 @@ describe("breaking through", () => {
   it("reads saved stars, only whole ones in range for known mounts", () => {
     expect(readStars({ dragon: 3, pig: 9, moon: 2, cat: 0, dog: 1.5 })).toEqual({ dragon: 3, pig: MAX_STARS });
     expect(readStars(null)).toEqual({});
+  });
+});
+
+describe("owning mounts (보유 효과)", () => {
+  it("adds each owned mount's tier share, the deer nothing, stars growing it as they do the picked bonus", () => {
+    expect(ownedBonus(BASE_MOUNT)).toEqual(NO_HERD);
+    expect(ownedBonus("pig")).toEqual({ power: 0.05, hp: 15 });
+    expect(ownedBonus("dragon")).toEqual({ power: 0.28, hp: 84 });
+    expect(ownedBonus("pig", MAX_STARS)).toEqual({ power: 0.1, hp: 30 });
+    expect(herdBonus([BASE_MOUNT, "pig", "chicken", "pig"], { chicken: 1 })).toEqual({ power: 0.11, hp: 33 });
+  });
+
+  it("makes you stronger whichever mount is picked", () => {
+    const gear = { weapon: null, armor: null };
+    const without = combatPowerAt(20, "warrior", gear, null, "pig", 0, 0);
+    const owning = combatPowerAt(20, "warrior", gear, null, "pig", 0, 0, herdBonus(["pig", "dragon"], {}));
+    expect(owning).toBeGreaterThan(without);
   });
 });

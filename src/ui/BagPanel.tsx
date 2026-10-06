@@ -64,7 +64,7 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
       bar={(
         <span className="bag-head">
           <span className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</span>
-          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip).toLocaleString(locale()) })}</span>}
+          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd).toLocaleString(locale()) })}</span>}
         </span>
       )}
       onClose={onClose}

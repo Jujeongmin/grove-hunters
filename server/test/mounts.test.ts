@@ -1,5 +1,5 @@
 import {
-  BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, mountBonus,
+  BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, mountBonus, ownedBonus,
 } from "../../src/game/account/mounts";
 import { maxHpAt } from "../../src/game/world/monsters";
 import { enterAs, errorOf, makeCharacter } from "./helpers";
@@ -60,7 +60,8 @@ describe("the mount draw", () => {
     expect(told.map((a: any) => [a.kind, a.params.mount, a.params.name])).toEqual([["mount_legendary", "dragon", "별기수"]]);
     for (let s = 1; s <= MAX_STARS; s++) await drawing(0.995, () => server.pullMount());
     const hp = (await $room.getMyState()).maxHp;
-    expect(hp).toBe(maxHpAt(1) + mountBonus("dragon", MAX_STARS).hp);
+    // The picked bonus and the owned one, both at ★5.
+    expect(hp).toBe(maxHpAt(1) + mountBonus("dragon", MAX_STARS).hp + ownedBonus("dragon", MAX_STARS).hp);
     expect(mountBonus("dragon", MAX_STARS).power).toBeCloseTo(mountBonus("dragon").power * 2);
     const all = await server.announcements(0);
     expect(all.map((a: any) => a.kind)).toEqual(["mount_legendary", "mount_star5"]);
@@ -88,7 +89,7 @@ describe("the mount draw", () => {
     const before = (await server.getBag()).mount;
     expect(before).toBe(BASE_MOUNT);
     await server.selectMount("dragon");
-    expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus("dragon").hp);
+    expect((await $room.getMyState()).maxHp).toBe(maxHpAt(1) + mountBonus("dragon").hp + ownedBonus("dragon").hp);
     expect((await server.getBag()).mount).toBe("dragon");
   });
 });

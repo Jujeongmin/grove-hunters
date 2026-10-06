@@ -24,6 +24,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-06-mount-herd",
+    date: "2026-10-06",
+    text: {
+      ko: {
+        title: "탈것 보유 효과 · 새 대장간",
+        lines: [
+          "이제 가진 탈것마다 보유 효과가 붙어요. 일반 공격 +5%·체력 +15부터 희귀 +8%, 영웅 +14%, 전설 +28%, 신화 +47%까지, 돌파(★)하면 더 올라요.",
+          "장착한 탈것의 효과는 그대로이고, 보유 효과는 어떤 탈것을 골라도 모두 더해져요. 탈것 창 위쪽에서 합계를 볼 수 있어요.",
+          "대장간이 바뀌었어요. 오른쪽에서 장비를 고르면 왼쪽 모루에 올라가 확률·비용·결과를 한눈에 보여 줘요.",
+        ],
+      },
+      en: {
+        title: "Owned mount bonus · a new forge",
+        lines: [
+          "Every mount you own now adds an owned bonus: attack +5% and health +15 for a common, up to +8% rare, +14% epic, +28% legendary and +47% mythic, more with stars (★).",
+          "The picked mount's bonus stays as it was; owned bonuses all add up whichever mount you pick. The stable shows the total at the top.",
+          "The forge is new: pick gear on the right and it goes on the anvil on the left, with its odds, its price and how it went.",
+        ],
+      },
+      ja: {
+        title: "乗り物の保有効果 · 新しい鍛冶場",
+        lines: [
+          "持っている乗り物ごとに保有効果が付きます。コモン攻撃+5%・体力+15から、レア+8%、エピック+14%、レジェンド+28%、神話+47%まで。突破(★)でさらに上がります。",
+          "装着した乗り物の効果はそのままで、保有効果はどれを選んでもすべて加算されます。乗り物画面の上で合計を確認できます。",
+          "鍛冶場が新しくなりました。右で装備を選ぶと左の金床に載り、確率・費用・結果がひと目で分かります。",
+        ],
+      },
+      "zh-Hans": {
+        title: "坐骑持有效果 · 全新铁匠铺",
+        lines: [
+          "现在拥有的每只坐骑都有持有效果：普通攻击 +5%、生命 +15，稀有 +8%，史诗 +14%，传说 +28%，神话 +47%，突破(★)后更高。",
+          "装备坐骑的效果不变，无论选择哪只，持有效果都会全部叠加。可在坐骑界面顶部查看合计。",
+          "铁匠铺焕然一新：在右侧选择装备，它会放上左侧的铁砧，概率、费用与结果一目了然。",
+        ],
+      },
+      "zh-Hant": {
+        title: "坐騎持有效果 · 全新鐵匠鋪",
+        lines: [
+          "現在擁有的每隻坐騎都有持有效果：普通攻擊 +5%、生命 +15，稀有 +8%，史詩 +14%，傳說 +28%，神話 +47%，突破(★)後更高。",
+          "裝備坐騎的效果不變，無論選擇哪隻，持有效果都會全部疊加。可在坐騎介面頂部查看合計。",
+          "鐵匠鋪煥然一新：在右側選擇裝備，它會放上左側的鐵砧，機率、費用與結果一目了然。",
+        ],
+      },
+    },
+  },
+  {
     id: "2026-10-06-market-fee",
     date: "2026-10-06",
     text: {

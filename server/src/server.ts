@@ -63,7 +63,7 @@ import {
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
   BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MOUNTS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, gemsFor, ownedMounts, readMountId, readPity, readStars,
-  rollMounts, tierOf, vipMounts, type MountId, type Pity,
+  herdBonus, rollMounts, tierOf, vipMounts, type MountBonus, type MountId, type Pity,
 } from "../../src/game/account/mounts";
 import {
   channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, changeTickets, readTickets, markSeen,
@@ -244,8 +244,8 @@ async function drawMounts(account: string, n: number, cost: number, ticket = fal
     if (p.star === MAX_STARS) await announce("mount_star5", { ...(await announcedAs(account)), mount: p.mount }, now);
   }
   const view = await mountsView(account);
-  // A first mount is picked on its own, and a star on the picked one makes you stronger.
-  if (pulls.some((p) => !p.repeat || (p.star !== null && view.selected === p.mount))) await refreshMounted(account);
+  // A new mount or a star makes you stronger (by owning it, and a first one is picked on its own).
+  if (pulls.some((p) => !p.repeat || p.star !== null)) await refreshMounted(account);
   return { view, pulls };
 }
 
@@ -258,10 +258,13 @@ async function accountMounts(account: string): Promise<{ owned: MountId[]; selec
   return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars), vip };
 }
 
-// A character with its account's picked mount and its stars, which add to its every fight (see mounts.ts).
-async function mounted<C extends Character>(account: string, character: C): Promise<C & { mount: MountId | null; mountStars: number; vip: number }> {
-  const { selected, stars, vip } = await accountMounts(account);
-  return { ...character, mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip };
+// A character with its account's picked mount and its stars, and what all its owned mounts add, which
+// go into its every fight (see mounts.ts).
+async function mounted<C extends Character>(
+  account: string, character: C,
+): Promise<C & { mount: MountId | null; mountStars: number; vip: number; herd: MountBonus }> {
+  const { owned, selected, stars, vip } = await accountMounts(account);
+  return { ...character, mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip, herd: herdBonus(owned, stars) };
 }
 
 // Who a moment happened to, as an announcement names them: the character played and its server.
@@ -405,8 +408,8 @@ async function bagView(character: Character): Promise<BagView> {
     job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
     ...(await (async () => {
-      const { selected, stars, vip } = await accountMounts($sender.account);
-      return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip };
+      const { owned, selected, stars, vip } = await accountMounts($sender.account);
+      return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip, herd: herdBonus(owned, stars) };
     })()),
   };
 }

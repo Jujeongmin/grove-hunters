@@ -669,7 +669,7 @@ function ZoneScreen({
                 <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
                 {bag && (
                   <span className="hud-power" title={t("rank.power")}>
-                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip).toLocaleString()}
+                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd).toLocaleString()}
                   </span>
                 )}
               </div>

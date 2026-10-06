@@ -1762,7 +1762,17 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .stable-speed { grid-row: 3; grid-column: 1; }
 .stable-plate > :is(.brush-button, .stable-riding, .stable-locked) { grid-row: 3 / span 2; grid-column: 2; }
-.stable-stats { grid-row: 4; grid-column: 1; font: 400 12px var(--font-head); color: #ffb35a; white-space: nowrap; }
+.stable-stats { grid-row: 4; grid-column: 1; display: flex; flex-direction: column; font: 400 12px var(--font-head); color: #ffb35a; white-space: nowrap; }
+/* The owned bonus under the picked one, in green; dimmed for a mount not yet owned. */
+.stable-stats > span + span { color: #9dffb0; }
+.stable-stats > span.unowned { color: var(--ink-dim); opacity: 0.7; }
+/* What every owned mount adds together, over the stalls. */
+.stable-herd {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 8px;
+  background: linear-gradient(90deg, rgba(60, 110, 70, 0.28), rgba(20, 30, 20, 0.2)); border: 1px solid rgba(157, 255, 176, 0.3);
+}
+.stable-herd small { font: 400 12px var(--font-head); color: var(--ink-dim); }
+.stable-herd b { font: 400 16px var(--font-head); color: #9dffb0; text-shadow: 0 0 10px rgba(157, 255, 176, 0.35); white-space: nowrap; }
 .stable-plate .brush-button.small { justify-self: end; min-width: 0; padding: 8px 18px; font-size: 14px; }
 /* Its stars (돌파) under the name, and what the next star would bring. */
 .stable-stars { grid-column: 1 / -1; justify-self: center; font: 400 16px var(--font-head); letter-spacing: 2px; color: #ffd36a; text-shadow: 0 0 8px rgba(255, 211, 106, 0.6); }
