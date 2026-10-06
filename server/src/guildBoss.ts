@@ -196,8 +196,15 @@ export async function leagueView(week: number, myGuild: string | null, myCharact
   };
 }
 
-// Pays a week that is over, once: gems by mail to every member of its first three guilds (as they
-// stand when it is paid) and to its first three players, and the first guild told to every server.
+// The accounts that fought for a guild in a week: everyone who went in (and anyone with damage), each
+// account once however many of its characters went.
+function weekAccounts(w: BossWeek): string[] {
+  return [...new Set([...Object.values(w.entries), ...Object.values(w.hitters)].map((e) => e.account))];
+}
+
+// Pays a week that is over, once: gems by mail to each account that fought that week for one of its
+// first three guilds (as the week's row has them, not whoever is a member when it is paid) and to its
+// first three players, and the first guild told to every server.
 export async function settleLeague(week: number, now: number): Promise<void> {
   await $lock("gboss-league", async () => {
     const done = await $global.getCollectionItems(LEAGUE_COLLECTION, { filters: [{ field: "week", operator: "==", value: week }], limit: 1 });
@@ -206,11 +213,11 @@ export async function settleLeague(week: number, now: number): Promise<void> {
     const rows = leagueOrder(await weekRows(week)).filter((r) => r.damage > 0);
     for (let i = 0; i < Math.min(rows.length, LEAGUE_GUILD_GEMS.length); i++) {
       const guild = await readGuildById(rows[i].guild);
-      if (!guild) continue;
-      for (const m of guild.members) {
-        await sendMail(m.account, { kind: "guild_league", gold: 0, gems: LEAGUE_GUILD_GEMS[i], items: [], params: { place: i + 1, guild: guild.name, who: "guild" } }, now);
+      const name = guild?.name ?? "";
+      for (const account of weekAccounts(rows[i])) {
+        await sendMail(account, { kind: "guild_league", gold: 0, gems: LEAGUE_GUILD_GEMS[i], items: [], params: { place: i + 1, guild: name, who: "guild" } }, now);
       }
-      if (i === 0) await announce("guild_week", { guild: guild.name }, now).catch(() => undefined);
+      if (i === 0 && guild) await announce("guild_week", { guild: guild.name }, now).catch(() => undefined);
     }
     const players = rows.flatMap((r) => Object.values(r.hitters)).sort((a, b) => b.damage - a.damage);
     for (let i = 0; i < Math.min(players.length, LEAGUE_PLAYER_GEMS.length); i++) {

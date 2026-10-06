@@ -53,6 +53,32 @@ describe("guild boss league", () => {
     expect(told.filter((r: any) => r.kind === "guild_week").map((r: any) => r.params.guild)).toEqual(["라마바길드"]);
   });
 
+  test("a guild's gems go once to each account that fought that week, not to whoever is in it when paid", async (server) => {
+    const now = currentWeek(Date.now());
+    const a = await founder(server, "test-a", "가나다");
+    const character = (await $global.getUserState("test-a")).active;
+    // Two of test-a's characters went in, and test-c, who has left the guild since.
+    await $global.addCollectionItem("guildBoss", {
+      guild: a, week: now - 1, boss: bossOfWeek(now - 1), max: bossMax(1), damage: 100, stagesPaid: 0, killedAt: null,
+      entries: {
+        [character]: { account: "test-a", name: "가나다", day: "d" },
+        "c-second": { account: "test-a", name: "둘째", day: "d" },
+        "c-gone": { account: "test-c", name: "떠난이", day: "d" },
+      },
+      hitters: { [character]: { account: "test-a", name: "가나다", damage: 100 } },
+    });
+    // test-b joins only after the week is over.
+    await makeCharacter(server, "test-b", "늦은이");
+    await server.applyGuild(a);
+    server.connect({ account: "test-a" });
+    await server.answerApplication((await $global.getUserState("test-b")).active, true);
+    await server.guildLeague();
+    const guildGems = async (account: string) => (await leagueMail(server, account)).filter((m: any) => m.params.who === "guild").map((m: any) => m.gems);
+    expect(await guildGems("test-a")).toEqual([LEAGUE_GUILD_GEMS[0]]);
+    expect(await guildGems("test-c")).toEqual([LEAGUE_GUILD_GEMS[0]]);
+    expect(await guildGems("test-b")).toEqual([]);
+  });
+
   test("a guild that did no damage is paid nothing", async (server) => {
     const now = currentWeek(Date.now());
     const a = await founder(server, "test-a", "가나다");

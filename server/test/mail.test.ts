@@ -42,6 +42,28 @@ describe("mail", () => {
     expect((await server.getBag()).bag.potion_big).toBe(3);
   });
 
+  test("a letter that fails part way goes back with only what was not handed over", async (server) => {
+    await makeCharacter(server, "test-a", "우편왕");
+    const id = await post("test-a", { gold: 50, gems: 7, items: [{ id: "potion_big", n: 3 }] });
+    const real = $asset.mint;
+    $asset.mint = async () => {
+      throw new Error("mint failed");
+    };
+    try {
+      expect(await errorOf(server.claimMail(id))).toContain("mint failed");
+    } finally {
+      $asset.mint = real;
+    }
+    expect((await server.getBag()).gems).toBe(7);
+    const [rest]: any[] = posted((await server.getMail()).mail);
+    expect([rest.gold, rest.gems, rest.items]).toEqual([50, 0, []]);
+    const gold = await $asset.get(GOLD);
+    await server.claimMail(rest.id);
+    expect(await $asset.get(GOLD)).toBe(gold + 50);
+    const bag = await server.getBag();
+    expect([bag.gems, bag.bag.potion_big]).toEqual([7, 3]);
+  });
+
   test("only your own letters", async (server) => {
     await makeCharacter(server, "test-a", "우편왕");
     const theirs = await post("test-b", { gold: 50 });

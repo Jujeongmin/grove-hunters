@@ -51,11 +51,12 @@ async function announceVip(account: string, before: number, after: number, now: 
 // Gems onto the buyer's account, once per receipt: a pack's first purchase doubled, its gems counted
 // toward VIP. False for a receipt seen before.
 export function grantGemPack(event: PurchaseEvent, now: number): Promise<boolean> {
-  return onceper(event, () => withPremiumLock(event.account, async () => {
+  return onceper(event, (credited) => withPremiumLock(event.account, async () => {
     const before = await accountPremium(event.account);
     const bought = gemPurchase(event.productId, event.quantity, before);
     if (!bought) throw new Error(`not a gem pack: ${event.productId}`);
     await changeGems(event.account, bought.gems);
+    credited();
     const firstBought = bought.first ? [...before.firstBought, event.productId] : before.firstBought;
     await $global.updateUserState(event.account, { firstBought, vipPoints: before.vipPoints + bought.points });
     await announceVip(event.account, before.vipPoints, before.vipPoints + bought.points, now);
@@ -64,9 +65,10 @@ export function grantGemPack(event: PurchaseEvent, now: number): Promise<boolean
 
 // The monthly pass, once per receipt: its gems now, thirty days more of it, and its VIP points.
 export function grantPass(event: PurchaseEvent, now: number): Promise<boolean> {
-  return onceper(event, () => withPremiumLock(event.account, async () => {
+  return onceper(event, (credited) => withPremiumLock(event.account, async () => {
     const before = await accountPremium(event.account);
     await changeGems(event.account, PASS_GEMS_NOW * event.quantity);
+    credited();
     const points = before.vipPoints + PASS_POINTS * event.quantity;
     await $global.updateUserState(event.account, { passUntil: extendPass(before.passUntil, now, event.quantity), vipPoints: points });
     await announceVip(event.account, before.vipPoints, points, now);

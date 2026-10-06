@@ -295,15 +295,47 @@ function spawn(bracket: Bracket, wave: number, size: number, now: number): Recor
   return out;
 }
 
-// Pays everyone in the room at the clear, by mail.
+// The match's members, as the room keeps them (written when the run is set up, so a tick needs no
+// read of the match); read from the match for a run set up before the room kept them.
+async function roomMembers(run: DungeonRun): Promise<Member[]> {
+  const kept = readMembers((await $room.getRoomState(["dungeonMembers"])).dungeonMembers);
+  if (kept.length > 0) return kept;
+  const members = (await readMatchById(run.match))?.members ?? [];
+  if (members.length > 0) await $room.updateRoomState({ dungeonMembers: members }, { returnState: false });
+  return members;
+}
+
+// Who in the room is one of the match's members: the account and the character it arrived with
+// (arriving needs the pass) are a member's. A client can join any room, so an outsider standing in
+// it is no one here: not paid, and not counted among the living. With `pass`, the account's saved
+// pass must name this room too (it is let go on the way out).
+async function membersHere(roomId: string, run: DungeonRun, pass: boolean): Promise<{ account: string; dead: boolean }[]> {
+  const accounts: string[] = (await $room.getRoomState([])).$users ?? [];
+  if (accounts.length === 0) return [];
+  const members = await roomMembers(run);
+  const states: Record<string, unknown>[] = await $room.getUserStates(accounts, ["characterId", "dead"]);
+  const out: { account: string; dead: boolean }[] = [];
+  for (let i = 0; i < accounts.length; i++) {
+    const account = accounts[i];
+    if (!members.some((m) => m.account === account && m.characterId === states[i]?.characterId)) continue;
+    if (pass && !(await passFor(account, roomId))) continue;
+    out.push({ account, dead: states[i]?.dead === true });
+  }
+  return out;
+}
+
+// Pays the members in the room at the clear, by mail. The first clear of the day is told apart under
+// the account's lock, so two clears at once cannot both be the first.
 async function payClear(run: DungeonRun, accounts: readonly string[], now: number): Promise<void> {
   const bracket = bracketById(run.bracket)!;
   const today = dailyDay(now);
   for (const account of accounts) {
-    const state = await $global.getUserState(account);
-    const first = state.dungeonFirst !== today;
+    const first = await withAccountLock(account, async () => {
+      if ((await $global.getUserState(account)).dungeonFirst === today) return false;
+      await $global.updateUserState(account, { dungeonFirst: today });
+      return true;
+    });
     const reward = clearReward(bracket, run.clearMs ?? DUNGEON_MS, first, Math.random);
-    if (first) await $global.updateUserState(account, { dungeonFirst: today });
     const items = [{ id: "stone" as const, n: reward.stones }, ...(reward.gear ? [{ id: reward.gear, n: 1 }] : [])];
     await sendMail(account, {
       kind: "dungeon", gold: reward.gold, gems: reward.gems, items, params: { bracket: run.bracket, ms: run.clearMs ?? 0 },
@@ -337,8 +369,15 @@ export async function tickDungeon(roomId: string, delta: number, now: number): P
       match: match.id, bracket: bracket.id, size: match.members.length + seats, mercs: seats, wave: 1, status: "running", startedAt: now,
       endsAt: match.startedAt + DUNGEON_MS, clearMs: null,
     };
-    await withRoomLock(roomId, () => $room.updateRoomState({ dungeon: started, mercs, monsters: spawn(bracket, 1, started.size, now), telegraphs: [] }));
-    run = started;
+    // Set up once: a tick that comes second finds the first one's run and keeps it.
+    run = await withRoomLock(roomId, async () => {
+      const set = readRun((await $room.getRoomState(["dungeon"])).dungeon);
+      if (set) return set;
+      await $room.updateRoomState({
+        dungeon: started, mercs, monsters: spawn(bracket, 1, started.size, now), telegraphs: [], dungeonMembers: match.members,
+      });
+      return started;
+    });
   }
   await withRoomLock(roomId, async () => {
     const mercs: Record<string, Merc> = JSON.parse(JSON.stringify(readMercs((await $room.getRoomState(["mercs"])).mercs)));
@@ -347,21 +386,31 @@ export async function tickDungeon(roomId: string, delta: number, now: number): P
     if (JSON.stringify(mercs) !== before) await $room.updateRoomState({ mercs }, { returnState: false });
   });
   if (run.status !== "running") return;
-  const accounts: string[] = (await $room.getRoomState([])).$users ?? [];
-  const users: Record<string, unknown>[] = accounts.length > 0 ? await $room.getUserStates(accounts, ["dead"]) : [];
   const monsters = ((await $room.getRoomState(["monsters"])).monsters ?? {}) as Record<string, MonsterState>;
   const cleared = Object.values(monsters).every((m) => !m.alive);
-  let next: DungeonRun = run;
+  const seen = run;
+  // Each change is made under the room's lock on the run as it stands there, and only while it is
+  // still the run this tick looked at (running, on the same wave): ticks at once change it once, and
+  // only the tick that ended it pays.
+  const change = (next: DungeonRun, more: Record<string, unknown> = {}) => withRoomLock(roomId, async () => {
+    const current = readRun((await $room.getRoomState(["dungeon"])).dungeon);
+    if (!current || current.status !== "running" || current.wave !== seen.wave) return false;
+    await $room.updateRoomState({ dungeon: next, telegraphs: [], ...more });
+    return true;
+  });
   if (cleared && run.wave <= WAVES) {
-    next = { ...run, wave: run.wave + 1 };
-    await withRoomLock(roomId, () => $room.updateRoomState({ dungeon: next, monsters: spawn(bracketById(run!.bracket)!, next.wave, run!.size, now), telegraphs: [] }));
+    const wave = run.wave + 1;
+    await change({ ...run, wave }, { monsters: spawn(bracketById(run.bracket)!, wave, run.size, now) });
     return;
   }
-  if (cleared) next = { ...run, status: "cleared", clearMs: now - run.startedAt };
-  else if (now >= run.endsAt || (users.length > 0 && users.every((u) => u.dead === true))) next = { ...run, status: "failed" };
-  if (next === run) return;
-  await withRoomLock(roomId, () => $room.updateRoomState({ dungeon: next, telegraphs: [] }));
-  if (next.status === "cleared") await payClear(next, accounts, now);
+  if (cleared) {
+    const next: DungeonRun = { ...run, status: "cleared", clearMs: now - run.startedAt };
+    if (await change(next)) await payClear(next, (await membersHere(roomId, run, true)).map((m) => m.account), now);
+    return;
+  }
+  // Everyone here has fallen: the match's members only, so an idle outsider cannot keep a run alive.
+  const here = now >= run.endsAt ? [] : await membersHere(roomId, run, false);
+  if (now >= run.endsAt || (here.length > 0 && here.every((m) => m.dead))) await change({ ...run, status: "failed" });
 }
 
 // Whether blows still count in this room: the run is under way.

@@ -38,6 +38,15 @@ describe("guilds", () => {
     expect(await errorOf(server.createGuild("셋째길드"))).toContain("not_enough_gold");
   });
 
+  test("two foundings sent at once found one guild and cost the gold once", async (server) => {
+    await founder(server);
+    await $asset.mint(GOLD, GUILD_COST);
+    const tries = await Promise.allSettled([server.createGuild("첫째길드"), server.createGuild("둘째길드")]);
+    expect(tries.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(await $asset.get(GOLD)).toBe(GUILD_COST);
+    expect(await $global.countCollectionItems("guilds")).toBe(1);
+  });
+
   test("applying, answering, and the list of guilds", async (server) => {
     await founder(server);
     const guild = (await server.createGuild("숲길드")).guild.id;

@@ -140,4 +140,33 @@ describe("the smith", () => {
     expect(await errorOf(server.craftItem("nothing"))).toContain("unavailable");
     expect((await readProfile("test-a")).active!.pieces.length).toBe(2);
   });
+
+  test("an enhancement, a making or a purchase once saved stands, even should what comes after fail", async (server) => {
+    await atTheForge(server);
+    await updateActive("test-a", (c) => ({ ...c, bag: { ...c.bag, jelly: 20 } }));
+    // The gold is read for the answer only after the change is saved: that read fails.
+    const afterSave = async (run: () => Promise<unknown>): Promise<string> => {
+      const real = $asset.get;
+      $asset.get = async () => {
+        throw new Error("read failed");
+      };
+      try {
+        return await errorOf(run());
+      } finally {
+        $asset.get = real;
+      }
+    };
+    const cost = enhanceCost("weapon_2", 0)!;
+    expect(await afterSave(() => rolling(0, () => server.enhanceGear("weapon")))).toContain("read failed");
+    const recipe = RECIPES.find((r) => r.id === "weapon_1")!;
+    expect(await afterSave(() => server.craftItem("weapon_1"))).toContain("read failed");
+    await toNpc(server, "merchant");
+    expect(await afterSave(() => server.buyItem("potion_small"))).toContain("read failed");
+    // Each was paid for once and kept, with no gold back.
+    const bag = await server.getBag();
+    expect(bag.gear.weapon).toEqual(weapon(1));
+    expect(bag.pieces.map((p: any) => p.id)).toEqual(["weapon_1"]);
+    expect(bag.bag.potion_small).toBe(6);
+    expect(bag.gold).toBe(5000 - cost.gold - recipe.gold - ITEMS.potion_small.price!);
+  });
 });

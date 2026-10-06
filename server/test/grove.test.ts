@@ -118,6 +118,17 @@ describe("the grove's rewards and the village", () => {
     expect((await server.arrive()).grove).toBeNull();
   });
 
+  test("arrivals sent at once pay the stages owed once", async (server) => {
+    const entry = await inForest(server);
+    await killOne(server);
+    await $room.updateRoomState({ groveKills: PURIFY_GOAL * 0.3 });
+    await server.simulateTick(entry.roomId, 10_000);
+    const before = (await server.getBag()).gold;
+    const arrived = await Promise.all([1, 2, 3].map(() => server.arrive()));
+    expect(arrived.reduce((n: number, a: any) => n + (a.grove?.gold ?? 0), 0)).toBe(200);
+    expect((await server.getBag()).gold).toBe(before + 200);
+  });
+
   test("gifts go only to the building under way, from beside the elder, and no more than it needs", async (server) => {
     const entry = await inVillage(server);
     // The server the room belongs to (rpg-<world>-<zone>-<channel>).

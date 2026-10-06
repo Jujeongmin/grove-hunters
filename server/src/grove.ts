@@ -71,12 +71,22 @@ export async function countGroveKills(roomId: string, n: number): Promise<void> 
   });
 }
 
-// Marks an account as having hunted on this server this week (written once a week).
+// One writer at a time for an account's grove record (the hunt's mark, the arrival's settling and a
+// finished building's thanks all rewrite it whole), so two calls at once cannot both pay the same
+// stages or undo each other's change.
+function withUserGroveLock<T>(account: string, fn: () => Promise<T>): Promise<T> {
+  return $lock(`grove-user:${account}`, fn);
+}
+
+// Marks an account as having hunted on this server this week (written once a week). Read first
+// without the lock, so the kills of a week already marked take no lock at all.
 export async function markHunter(account: string, world: string, now: number): Promise<void> {
-  const all = (await $global.getUserState(account)).grove;
-  const mine = readUserGrove(all && typeof all === "object" ? (all as Record<string, unknown>)[world] : null);
-  const next = markHunted(mine, weekOf(now));
-  if (next) await $global.updateUserState(account, { grove: { ...(all ?? {}), [world]: next } });
+  if (!markHunted(readUserGrove((await userGroves(account))[world]), weekOf(now))) return;
+  await withUserGroveLock(account, async () => {
+    const all = await userGroves(account);
+    const next = markHunted(readUserGrove(all[world]), weekOf(now));
+    if (next) await $global.updateUserState(account, { grove: { ...all, [world]: next } });
+  });
 }
 
 // The guardian comes to this channel's first field only: one for the whole server, where everyone
@@ -145,15 +155,19 @@ async function userGroves(account: string): Promise<Record<string, unknown>> {
 }
 
 // On coming into a zone: the stages owed (this week's and last week's) and what finished buildings
-// left the account, paid once. Answers what to pay; the caller mints the gold and adds the XP.
+// left the account, paid once. Answers what to pay; the caller mints the gold and adds the XP. Read
+// and written under the account's grove lock, and only what this call cleared there is answered, so
+// arrivals sent at once pay it once.
 export async function settleOnArrive(account: string, world: string): Promise<{ gold: number; xp: number }> {
-  const all = await userGroves(account);
-  const user = readUserGrove(all[world]);
   const [{ record }, village] = await Promise.all([readGroveRecord(world), villageOf(world)]);
-  const out = settle(user, record, village);
-  if (out.gold === 0 && out.xp === 0 && JSON.stringify(out.user) === JSON.stringify(user)) return { gold: 0, xp: 0 };
-  await $global.updateUserState(account, { grove: { ...all, [world]: out.user } });
-  return { gold: out.gold, xp: out.xp };
+  return withUserGroveLock(account, async () => {
+    const all = await userGroves(account);
+    const user = readUserGrove(all[world]);
+    const out = settle(user, record, village);
+    if (out.gold === 0 && out.xp === 0 && JSON.stringify(out.user) === JSON.stringify(user)) return { gold: 0, xp: 0 };
+    await $global.updateUserState(account, { grove: { ...all, [world]: out.user } });
+    return { gold: out.gold, xp: out.xp };
+  });
 }
 
 // A gift to the building under way. Takes no more than it needs; a finished building leaves each
@@ -175,10 +189,12 @@ export async function giveToVillage(
     await writeVillageRecord(world, id, next);
     if (next.buildings[gift.building.id].done) {
       for (const [giver, reward] of Object.entries(completionRewards(next.buildings[gift.building.id]))) {
-        const all = await userGroves(giver);
-        const user = readUserGrove(all[world]);
-        await $global.updateUserState(giver, {
-          grove: { ...all, [world]: { ...user, pending: { gold: user.pending.gold + reward.gold, xp: user.pending.xp + reward.xp } } },
+        await withUserGroveLock(giver, async () => {
+          const all = await userGroves(giver);
+          const user = readUserGrove(all[world]);
+          await $global.updateUserState(giver, {
+            grove: { ...all, [world]: { ...user, pending: { gold: user.pending.gold + reward.gold, xp: user.pending.xp + reward.xp } } },
+          });
         });
       }
     }

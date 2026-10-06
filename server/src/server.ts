@@ -118,7 +118,7 @@ function requireText(value: unknown): string {
 // Loads both accounts' friend lists, applies a rule to them and saves whichever side changed.
 async function betweenFriends<T>(other: string, rule: (me: FriendSide, them: FriendSide) => T): Promise<T> {
   const account = $sender.account;
-  return withFriendsLock(async () => {
+  return withFriendsLock(account, other, async () => {
     const me = await readFriendSide(account);
     const them = await readFriendSide(other);
     const before = [JSON.stringify(me.lists), JSON.stringify(them.lists)];
@@ -573,15 +573,25 @@ async function claimLetter(account: string, id: string): Promise<void> {
     async (mail) => {
       if (mail.items.length > 0 && !mailFits(await playing(account), mail, room)) throw new RuleViolation("bag_full");
     },
-    async (mail) => {
+    async (mail, took) => {
       if (mail.items.length > 0) {
         await updateActive(account, (c) => {
           return receiveMail(c, mail.items, newUid, room);
         });
+        took("items");
       }
-      if (mail.gems > 0) await changeGems(account, mail.gems);
-      if (mail.tickets) await changeTickets(account, mail.tickets);
-      if (mail.gold > 0) await $asset.mint(GOLD, mail.gold);
+      if (mail.gems > 0) {
+        await changeGems(account, mail.gems);
+        took("gems");
+      }
+      if (mail.tickets) {
+        await changeTickets(account, mail.tickets);
+        took("tickets");
+      }
+      if (mail.gold > 0) {
+        await $asset.mint(GOLD, mail.gold);
+        took("gold");
+      }
     },
   );
 }
@@ -961,29 +971,34 @@ export class Server {
     return found.map((g) => ({ id: g.id, name: g.name, members: g.members.length, notice: g.notice }));
   }
 
-  // Founds a guild for GUILD_COST gold, with you as its master.
+  // Founds a guild for GUILD_COST gold, with you as its master. That you have no guild yet is checked
+  // and the guild founded in one step under the account's founding lock, so two calls at once found
+  // one guild, not two.
   async createGuild(rawName: unknown): Promise<GuildView> {
     const account = $sender.account;
     const now = Date.now();
-    const character = await playing(account);
-    if (await guildOf(account, character)) throw new RuleViolation("in_guild");
-    if (!mayJoin(character.guildLeftAt, now)) throw new RuleViolation("guild_wait");
-    const { name, key } = parseGuildName(rawName);
-    if (!(await $asset.has(GOLD, GUILD_COST))) throw new RuleViolation("not_enough_gold");
-    await $asset.burn(GOLD, GUILD_COST);
-    try {
-      await withGuildNameLock(key, async () => {
-        if (await findGuildByKey(key)) throw new RuleViolation("guild_name_taken");
-        const id = await addGuild({
-          name, key, notice: "", made: now, applicants: [],
-          members: [{ characterId: character.id, account, name: character.name, role: "master", joined: now }],
+    const character = await $lock(`guild-found:${account}`, async () => {
+      const character = await playing(account);
+      if (await guildOf(account, character)) throw new RuleViolation("in_guild");
+      if (!mayJoin(character.guildLeftAt, now)) throw new RuleViolation("guild_wait");
+      const { name, key } = parseGuildName(rawName);
+      if (!(await $asset.has(GOLD, GUILD_COST))) throw new RuleViolation("not_enough_gold");
+      await $asset.burn(GOLD, GUILD_COST);
+      try {
+        await withGuildNameLock(key, async () => {
+          if (await findGuildByKey(key)) throw new RuleViolation("guild_name_taken");
+          const id = await addGuild({
+            name, key, notice: "", made: now, applicants: [],
+            members: [{ characterId: character.id, account, name: character.name, role: "master", joined: now }],
+          });
+          await updateCharacter(account, character.id, (c) => ({ ...c, guild: { id, name } }));
         });
-        await updateCharacter(account, character.id, (c) => ({ ...c, guild: { id, name } }));
-      });
-    } catch (error) {
-      await $asset.mint(GOLD, GUILD_COST);
-      throw error;
-    }
+      } catch (error) {
+        await $asset.mint(GOLD, GUILD_COST);
+        throw error;
+      }
+      return character;
+    });
     for (const other of character.applied) await withdraw(other, account, character.id);
     const next = await playing(account);
     await refreshFighter(next);
@@ -1131,7 +1146,7 @@ export class Server {
         // Nothing to start with: the elder hands out the first skill and potions (the tutorial).
         ...EMPTY_INVENTORY, ...GUILDLESS, daily: readDaily(null), job: null, quest: QUEST_START, tutorial: TUTORIAL.talk,
       };
-      await withNicknameLock(() => claimName(account, character.id, key, name));
+      await withNicknameLock(key, () => claimName(account, character.id, key, name));
       await saveProfile(account, [...characters, character], character.id);
     });
     return accountView(account);
@@ -1168,7 +1183,7 @@ export class Server {
           return null;
         }
       })();
-      if (key) await withNicknameLock(() => releaseName(account, key));
+      if (key) await withNicknameLock(key, () => releaseName(account, key));
       await dropRanking(doomed.id);
     });
     return accountView(account);
@@ -1609,12 +1624,15 @@ export class Server {
     const cost = price * n;
     if (!(await $asset.has(GOLD, cost))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, cost);
+    // The gold comes back only should the items not be saved; once they are, the sale stands.
+    let next: Character;
     try {
-      return bagView(await updateActive(account, (c) => give(c, bought, false, newUid, room)));
+      next = await updateActive(account, (c) => give(c, bought, false, newUid, room));
     } catch (error) {
       await $asset.mint(GOLD, cost);
       throw error;
     }
+    return bagView(next);
   }
 
   // Sells potions or materials back to the shop: from the stack that may be traded when `trade`.
@@ -1674,8 +1692,11 @@ export class Server {
       throw error;
     }
     let outcome: EnhanceOutcome = "fail";
+    // The gold and gems come back only should the attempt not be saved; once it is, it stands,
+    // whatever fails after.
+    let next: Character;
     try {
-      const next = await updateActive(account, (c) => {
+      next = await updateActive(account, (c) => {
         // Changed since it was priced (another tab): nothing happens and the gold comes back.
         const worn = find(c);
         if (worn?.uid !== piece.uid || worn.plus !== cost.to - 1) throw new RuleViolation("unavailable");
@@ -1696,17 +1717,17 @@ export class Server {
         if (outcome === "fail") return paid;
         return { ...paid, ...put(null) };
       });
-      await refreshFighter(next);
-      // A big one is told to everyone.
-      if ((outcome as EnhanceOutcome) === "success" && cost.to >= ANNOUNCE_PLUS) {
-        await announce("enhance", { name: next.name, world: next.world, item: piece.id, plus: cost.to }, Date.now());
-      }
-      return { outcome, bag: await bagView(next) };
     } catch (error) {
       await $asset.mint(GOLD, cost.gold);
       if (shield !== null) await changeGems(account, shield);
       throw error;
     }
+    await refreshFighter(next);
+    // A big one is told to everyone.
+    if ((outcome as EnhanceOutcome) === "success" && cost.to >= ANNOUNCE_PLUS) {
+      await announce("enhance", { name: next.name, world: next.world, item: piece.id, plus: cost.to }, Date.now());
+    }
+    return { outcome, bag: await bagView(next) };
   }
 
   // Makes something from materials and gold (see RECIPES in forge.ts), anywhere. Gear made here may be
@@ -1723,15 +1744,18 @@ export class Server {
     if (!fits(current, made, trade, room)) throw new RuleViolation("bag_full");
     if (!(await $asset.has(GOLD, recipe.gold))) throw new RuleViolation("not_enough_gold");
     await $asset.burn(GOLD, recipe.gold);
+    // The gold comes back only should the making not be saved; once it is, it stands.
+    let next: Character;
     try {
-      return bagView(await updateActive(account, (c) => {
+      next = await updateActive(account, (c) => {
         const paid = spend(c, recipe.needs.map((need) => ({ id: need.item, n: need.n })));
         return give(paid, made, trade, newUid, room);
-      }));
+      });
     } catch (error) {
       await $asset.mint(GOLD, recipe.gold);
       throw error;
     }
+    return bagView(next);
   }
 
   // Advancement (전직): from ADVANCE_LEVEL, one of the two paths of your class, for good.
@@ -1851,9 +1875,9 @@ export class Server {
       );
       return true;
     });
-    // Up already (another tab): the gold comes back.
+    // Up already (another tab): the gold comes back (a free revive took none).
     if (!stood) {
-      await $asset.mint(GOLD, cost);
+      if (cost > 0) await $asset.mint(GOLD, cost);
       throw new RuleViolation("unavailable");
     }
     return { gold: await $asset.get(GOLD) };

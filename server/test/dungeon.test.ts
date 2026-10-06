@@ -155,6 +155,60 @@ describe("the Trial Dungeon", () => {
     expect(await errorOf(server.queueDungeon())).toContain("no_runs");
   });
 
+  test("the clear pays only the match's members: an outsider who joined the room gets nothing", async (server) => {
+    const field = await hunter(server, "test-a", "던전주인");
+    await hunter(server, "test-b", "구경꾼임");
+    server.connect({ account: "test-a", roomId: field });
+    await server.soloDungeon();
+    const room = await goIn(server, "test-a", field);
+    // A client can join any room; arriving needs the pass, so the outsider just stands there.
+    await server.simulateJoin(room, "test-b");
+    server.connect({ account: "test-b", roomId: room });
+    expect(await errorOf(server.arrive())).toContain("dungeon_over");
+    await server.simulateTick(room, 200);
+    for (let wave = 1; wave <= WAVES + 1; wave++) await clearRoom(server, "test-a", room);
+    expect((await runOf(server, "test-a", room)).status).toBe("cleared");
+    const dungeonMail = async (account: string) => {
+      server.connect({ account });
+      return (await server.getMail()).mail.filter((m: any) => m.kind === "dungeon");
+    };
+    expect(await dungeonMail("test-a")).toHaveLength(1);
+    expect(await dungeonMail("test-b")).toEqual([]);
+  });
+
+  test("an outsider standing in the room does not keep a run alive once every member has fallen", async (server) => {
+    const field = await hunter(server, "test-a", "쓰러진자");
+    await hunter(server, "test-b", "버티는자");
+    server.connect({ account: "test-a", roomId: field });
+    await server.soloDungeon();
+    const room = await goIn(server, "test-a", field);
+    await server.simulateJoin(room, "test-b");
+    await server.simulateTick(room, 200);
+    server.connect({ account: "test-a", roomId: room });
+    await $room.updateMyState({ dead: true, hp: 0 });
+    await server.simulateTick(room, 200);
+    expect((await runOf(server, "test-a", room)).status).toBe("failed");
+  });
+
+  test("ticks at once clear the run once and pay it once", async (server) => {
+    const field = await hunter(server, "test-a", "동시틱틱");
+    server.connect({ account: "test-a", roomId: field });
+    await server.soloDungeon();
+    const room = await goIn(server, "test-a", field);
+    await Promise.all([server.simulateTick(room, 200), server.simulateTick(room, 200)]);
+    for (let wave = 1; wave <= WAVES; wave++) await clearRoom(server, "test-a", room);
+    expect((await runOf(server, "test-a", room)).wave).toBe(WAVES + 1);
+    server.connect({ account: "test-a", roomId: room });
+    const { monsters } = await $room.getRoomState(["monsters"]);
+    await $room.updateRoomState({ monsters: Object.fromEntries(Object.entries(monsters).map(([id, m]: [string, any]) => [id, { ...m, hp: 0, alive: false }])) });
+    await Promise.all([1, 2, 3].map(() => server.simulateTick(room, 200)));
+    expect((await runOf(server, "test-a", room)).status).toBe("cleared");
+    server.connect({ account: "test-a" });
+    const letters = (await server.getMail()).mail.filter((m: any) => m.kind === "dungeon");
+    expect(letters).toHaveLength(1);
+    expect(letters[0].gems).toBe(FIRST_GEMS);
+  });
+
   test("time running out fails the run, and pays nothing", async (server) => {
     const field = await hunter(server, "test-a", "시간초과");
     server.connect({ account: "test-a", roomId: field });

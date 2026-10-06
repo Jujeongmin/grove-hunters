@@ -60,20 +60,25 @@ export async function readRanking(board: Board = "xp"): Promise<RankRow[]> {
   return rankRows(items as unknown as RankRow[], board);
 }
 
-// Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought;
-// should it fail, the receipt is taken back so the platform's retry grants it then.
-export async function onceper(event: PurchaseEvent, grant: () => Promise<void>): Promise<boolean> {
+// Keeps a purchase's receipt, once: false when it was seen before. `grant` gives what was bought and
+// calls `credited` once the gems are the buyer's. Should it fail before that, the receipt is taken
+// back so the platform's retry grants it then; after that, the receipt stays (the retry finds it and
+// grants nothing twice) and only the failure is reported.
+export async function onceper(event: PurchaseEvent, grant: (credited: () => void) => Promise<void>): Promise<boolean> {
   const seen = await $global.getCollectionItems(PURCHASES_COLLECTION, {
     filters: [{ field: "purchaseId", operator: "==", value: event.purchaseId }],
     limit: 1,
   });
   if (seen.length > 0) return false;
   const kept = await $global.addCollectionItem(PURCHASES_COLLECTION, { ...event, at: Date.now() });
+  let paid = false;
   try {
-    await grant();
+    await grant(() => {
+      paid = true;
+    });
   } catch (error) {
     const id = (kept as { __id?: string } | undefined)?.__id;
-    if (id) await $global.deleteCollectionItem(PURCHASES_COLLECTION, id);
+    if (id && !paid) await $global.deleteCollectionItem(PURCHASES_COLLECTION, id);
     throw error;
   }
   return true;
@@ -235,8 +240,10 @@ export const NICKNAMES_COLLECTION = "nicknames";
 
 interface NicknameItem { __id: string; key: string; name: string; account: string; character?: string }
 
-export function withNicknameLock<T>(fn: () => Promise<T>): Promise<T> {
-  return $lock("de-nicknames", fn);
+// One claim or release at a time for a name, by its key: names are unique by key, so two claims of
+// different names never need to wait for each other. (Encoded: a lock key may not hold braces.)
+export function withNicknameLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  return $lock(`nickname:${encodeURIComponent(key)}`, fn);
 }
 
 export async function findNickname(key: string): Promise<NicknameItem | null> {
@@ -267,8 +274,13 @@ export async function readNickname(account: string): Promise<string | null> {
   return typeof nickname === "string" ? nickname : null;
 }
 
-export function withFriendsLock<T>(fn: () => Promise<T>): Promise<T> {
-  return $lock("de-friends", fn);
+// One writer at a time for the friend lists of both accounts of a pair. Each account's lists have
+// their own lock, as two pairs can share an account (you, and two friends at once); both are taken,
+// always in the same order, so two calls on the same pair from either side cannot hold one each.
+export function withFriendsLock<T>(a: string, b: string, fn: () => Promise<T>): Promise<T> {
+  const [first, second] = [a, b].sort();
+  const lock = (account: string, inner: () => Promise<T>) => $lock(`friends:${account}`, inner);
+  return first === second ? lock(first, fn) : lock(first, () => lock(second, fn));
 }
 
 export async function readFriendSide(account: string): Promise<FriendSide> {

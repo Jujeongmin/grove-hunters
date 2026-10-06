@@ -35,6 +35,29 @@ describe("friends", () => {
     expect([view.incoming, view.outgoing]).toEqual([[], []]);
   });
 
+  test("requests sent at once to two players both land on every side", async (server) => {
+    await named(server, "test-b", "Seeker");
+    await named(server, "test-c", "Raider");
+    await named(server, "test-a", "Hunter");
+    await Promise.all([server.requestFriend("Seeker"), server.requestFriend("Raider")]);
+    expect((await server.syncFriends()).outgoing.map((f: any) => f.nickname).sort()).toEqual(["Raider", "Seeker"]);
+    for (const account of ["test-b", "test-c"]) {
+      server.connect({ account });
+      expect((await server.syncFriends()).incoming.map((f: any) => f.account)).toEqual(["test-a"]);
+    }
+  });
+
+  test("two players taking the same name at once: one gets it", async (server) => {
+    server.connect({ account: "test-a" });
+    const first = server.createCharacter("Twin", "warrior", "0000");
+    server.connect({ account: "test-b" });
+    const second = server.createCharacter("twin", "warrior", "0000");
+    const tries = await Promise.allSettled([first, second]);
+    expect(tries.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(String((tries.find((r) => r.status === "rejected") as PromiseRejectedResult).reason?.message)).toContain("nickname_taken");
+    expect(await $global.countCollectionItems("nicknames")).toBe(1);
+  });
+
   test("removing clears the link on both sides", async (server) => {
     await named(server, "test-a", "Hunter");
     await named(server, "test-b", "Seeker");

@@ -41,6 +41,17 @@ describe("VIP perks", () => {
     expect((await $room.getMyState()).dead).toBe(false);
   });
 
+  test("a free revive sent twice at once stands you up once and moves no gold", async (server) => {
+    await makeCharacter(server, "test-a", "두번부활");
+    await $global.updateUserState("test-a", { vipPoints: points(4) });
+    await enterAs(server, "test-a");
+    await $room.updateMyState({ dead: true, hp: 0 });
+    const tries = await Promise.allSettled([server.reviveHere(), server.reviveHere()]);
+    expect(tries.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(String((tries.find((r) => r.status === "rejected") as PromiseRejectedResult).reason?.message)).toContain("unavailable");
+    expect(await $asset.get("gold")).toBe(0);
+  });
+
   test("from VIP 2 the bag holds ten more pieces of gear", async (server) => {
     await makeCharacter(server, "test-a", "가방왕");
     const pieces = Array.from({ length: 50 }, (_, i) => ({ uid: `p${i}`, id: "weapon_1", plus: 0, trade: false }));

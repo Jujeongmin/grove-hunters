@@ -65,10 +65,16 @@ export async function countMail(account: string, now: number): Promise<number> {
   }).length;
 }
 
+// The parts of a letter that are handed over one by one.
+export type MailPart = "items" | "gems" | "tickets" | "gold";
+
 // Takes one letter: `check` refuses it before anything changes (the bag is full), then the row goes
-// and `grant` hands over what it carries; should that fail, the letter goes back in.
+// and `grant` hands over what it carries, calling `took` after each part it has handed over. Should
+// that fail, only the parts not yet handed over go back in (nothing, if all were), so taking it again
+// never pays a part twice.
 export function takeMail(
-  account: string, id: string, now: number, check: (mail: Mail) => Promise<void>, grant: (mail: Mail) => Promise<void>,
+  account: string, id: string, now: number, check: (mail: Mail) => Promise<void>,
+  grant: (mail: Mail, took: (part: MailPart) => void) => Promise<void>,
 ): Promise<void> {
   return withMailLock(account, async () => {
     const row = await $global.getCollectionItem(MAIL_COLLECTION, id).catch(() => null);
@@ -76,11 +82,21 @@ export function takeMail(
     if (!mail || (row as { account?: unknown }).account !== account || mailExpired(mail, now)) throw new RuleViolation("no_mail");
     await check(mail);
     await $global.deleteCollectionItem(MAIL_COLLECTION, id);
+    const taken = new Set<MailPart>();
     try {
-      await grant(mail);
+      await grant(mail, (part) => taken.add(part));
     } catch (error) {
       const { id: _, at, ...letter } = mail;
-      await $global.addCollectionItem(MAIL_COLLECTION, { account, ...letter, at });
+      const rest = {
+        ...letter,
+        items: taken.has("items") ? [] : letter.items,
+        gems: taken.has("gems") ? 0 : letter.gems,
+        gold: taken.has("gold") ? 0 : letter.gold,
+        ...(taken.has("tickets") ? { tickets: 0 } : {}),
+      };
+      if (rest.items.length > 0 || rest.gems > 0 || rest.gold > 0 || (rest.tickets ?? 0) > 0) {
+        await $global.addCollectionItem(MAIL_COLLECTION, { account, ...rest, at });
+      }
       throw error;
     }
   });
