@@ -1,5 +1,10 @@
 import type { GameServer } from "@agent8/gameserver";
+import { withTimeout } from "./linkWatch";
 import type { CallOptions, MatchTransport, RoomUser } from "./transport";
+
+// A call the server never answers gives up after this long, so nothing waits on it for ever (the
+// slowest real calls take a lock or two: a few seconds).
+const CALL_TIMEOUT_MS = 15_000;
 
 export type Verse8Server = Pick<
   GameServer,
@@ -20,7 +25,7 @@ export class Verse8Transport implements MatchTransport {
   }
 
   call<T = unknown>(name: string, args: unknown[] = [], options: CallOptions = {}): Promise<T> {
-    return this.server.remoteFunction(name, args, options) as Promise<T>;
+    return withTimeout(this.server.remoteFunction(name, args, options) as Promise<T>, CALL_TIMEOUT_MS);
   }
 
   subscribeRoomState(roomId: string, cb: (state: Record<string, unknown>) => void): () => void {

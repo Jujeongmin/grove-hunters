@@ -569,6 +569,8 @@ export const ja: Bundle = {
   "mail.marketReturnedBody": "売れなかったか、取り下げた出品をお返しします。",
   "menu.settings": "設定",
 
+  "link.shaky": "接続が不安定です · 再接続中…",
+  "link.reload": "再接続",
   "death.fallen": "倒れました",
   "death.lostXp": "経験値を{n}失いました",
   "death.lostNone": "失った経験値はありません",

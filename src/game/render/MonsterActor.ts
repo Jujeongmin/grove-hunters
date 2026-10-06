@@ -3,7 +3,9 @@ import type { MonsterState } from "../world/monsters";
 import { ActionBlender, clipByName, ownMaterials, skinnedHeight } from "./skinned";
 
 const HIT_FLASH_SECONDS = 0.08;
-const FOLLOW_RATE = 12;
+// How fast a monster closes on where the server last had it: walks are sent only every
+// MONSTER_SYNC_MS (server/src/hunt.ts), so it glides through the gap rather than stop and start.
+const FOLLOW_RATE = 7;
 // The server moves monsters every 200 ms or so; one whose place changed this recently is still walking
 // (a slow stroll would otherwise flick between walking and standing between updates).
 const STILL_WALKING_SECONDS = 0.45;

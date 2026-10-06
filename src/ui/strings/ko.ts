@@ -578,6 +578,8 @@ export const ko = {
   "mail.marketReturnedBody": "팔리지 않았거나 내린 매물을 돌려드려요.",
   "menu.settings": "설정",
 
+  "link.shaky": "연결이 불안정해요 · 다시 연결하는 중…",
+  "link.reload": "다시 접속",
   "death.fallen": "쓰러졌어요",
   "death.lostXp": "경험치 {n}를 잃었어요",
   "death.lostNone": "잃은 경험치는 없어요",

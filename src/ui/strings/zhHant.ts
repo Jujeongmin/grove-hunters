@@ -569,6 +569,8 @@ export const zhHant: Bundle = {
   "mail.marketReturnedBody": "未售出或已下架的商品退回給您。",
   "menu.settings": "設定",
 
+  "link.shaky": "連線不穩定 · 正在重新連線…",
+  "link.reload": "重新連線",
   "death.fallen": "你倒下了",
   "death.lostXp": "失去了 {n} 經驗值",
   "death.lostNone": "沒有失去經驗值",

@@ -14,7 +14,9 @@ import { MOUNT_LOOKS, RIDE_LEGS, type RideLegs } from "./mountLooks";
 
 // The heroes stand a little shorter than a person; the camera and reach are set around this.
 export const PLAYER_HEIGHT = 1.45;
-const FOLLOW_RATE = 12;
+// How fast another hero closes on where its last pose put it: gentle enough to glide through the gap
+// between two poses (POSE_THROTTLE_MS) rather than stop and start.
+const FOLLOW_RATE = 8;
 const FALL_RATE = 6;
 // Still this far from where the pose says (metres) counts as walking.
 const MOVING = 0.03;

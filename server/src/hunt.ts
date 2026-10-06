@@ -25,6 +25,10 @@ const REGEN_MS = 2_000;
 const REGEN_SHARE = 0.05;
 // A room tick after a long pause moves monsters at most this far in time.
 const MAX_TICK_MS = 1_000;
+// Monsters that only walked are written (and so sent to everyone in the room) at most this often;
+// a blow, a swing, a death or a respawn is written at once. Between writes the walk is not lost: the
+// next tick steps them on from where they were last written, by the whole time since.
+export const MONSTER_SYNC_MS = 300;
 
 export function hasMonsters(zone: ZoneId): boolean {
   return ZONE_MONSTERS[zone].length > 0 || !!ZONE_BOSS[zone];
@@ -97,6 +101,21 @@ function tidy(monsters: Record<string, MonsterState>): Record<string, MonsterSta
   return monsters;
 }
 
+// Whether the only change from what is stored is where monsters stand and face.
+function onlyWalked(now: Record<string, MonsterState>, stored: unknown): boolean {
+  if (!stored || typeof stored !== "object") return false;
+  const before = stored as Record<string, MonsterState>;
+  for (const [id, m] of Object.entries(now)) {
+    const was = before[id];
+    if (!was) return false;
+    for (const key of Object.keys(m) as (keyof MonsterState)[]) {
+      if (key === "x" || key === "z" || key === "yaw") continue;
+      if (JSON.stringify(m[key]) !== JSON.stringify(was[key])) return false;
+    }
+  }
+  return true;
+}
+
 async function writeMonsters(monsters: Record<string, MonsterState>): Promise<void> {
   await $room.updateRoomState({ monsters: tidy(monsters) }, { returnState: false });
 }
@@ -108,10 +127,13 @@ async function writeMonsters(monsters: Record<string, MonsterState>): Promise<vo
 // cleric's heal, their blows), then the monsters hunt and strike them like players. Their state is
 // changed in place for the caller to keep.
 export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs?: Record<string, Merc>): Promise<string[]> {
-  const state = await $room.getRoomState(["monsters", "regenAt", "telegraphs"]);
+  const state = await $room.getRoomState(["monsters", "monstersAt", "regenAt", "telegraphs"]);
   const accounts: string[] = state.$users;
   if (accounts.length === 0) return [];
   const monsters = await readMonsters(zone);
+  // How long since the monsters as stored were where they are (see MONSTER_SYNC_MS).
+  const writtenAt = typeof state.monstersAt === "number" ? state.monstersAt : null;
+  const stepMs = Math.min(writtenAt === null ? deltaMs : Math.max(deltaMs, now - writtenAt), MAX_TICK_MS);
   const users: (Record<string, any> & { account: string })[] = await $room.getUserStates(
     accounts, ["pose", "look", "hp", "maxHp", "dead", "hitAt", "safeUntil", "strikeReadyAt", "rolledAt"],
   );
@@ -155,7 +177,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
       if (!m.dead) prey.push({ account: key, x: m.x, z: m.z });
     }
   }
-  const hits = stepMonsters(monsters, prey, zoneLayout(zone), Math.min(deltaMs, MAX_TICK_MS) / 1000, now, marks);
+  const hits = stepMonsters(monsters, prey, zoneLayout(zone), stepMs / 1000, now, marks);
   const struck = resolveTelegraphs(marks, prey.map((p) => ({ ...p, maxHp: fighters.get(p.account)!.maxHp })), now);
   const hurt = new Set<string>();
   const fell: string[] = [];
@@ -201,8 +223,16 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
       await $room.updateUserState(account, { hp: f.hp }, { returnState: false });
     }
   }
-  // Written only when something changed (or they were just spawned): most ticks of a quiet room write nothing.
-  if (JSON.stringify(tidy(monsters)) !== JSON.stringify(state.monsters ?? null)) await writeMonsters(monsters);
+  // Written only when something changed (or they were just spawned): most ticks of a quiet room write
+  // nothing, and a walk alone waits for MONSTER_SYNC_MS (a Trial Dungeon's, with its mercenaries, never).
+  if (JSON.stringify(tidy(monsters)) !== JSON.stringify(state.monsters ?? null)) {
+    const urgent = mercs !== undefined || hits.length > 0 || struck.hits.length > 0 || writtenAt === null
+      || now - writtenAt >= MONSTER_SYNC_MS || !onlyWalked(monsters, state.monsters);
+    if (urgent) {
+      await writeMonsters(monsters);
+      await $room.updateRoomState({ monstersAt: now }, { returnState: false });
+    }
+  }
   if (regen) await $room.updateRoomState({ regenAt: now + REGEN_MS }, { returnState: false });
   if (JSON.stringify(struck.left) !== JSON.stringify(readTelegraphs(state.telegraphs))) {
     await $room.updateRoomState({ telegraphs: struck.left }, { returnState: false });

@@ -1,3 +1,4 @@
+import { LinkWatch } from "./linkWatch";
 import { readSlot } from "../game/combat/skills";
 import type { GroveView } from "../game/world/grove";
 import type { TutorialStep } from "../game/account/tutorial";
@@ -122,6 +123,8 @@ export interface WorldState {
   chat: ChatLine[];
   // Your guild's lines heard this session, and whether you are in a guild (as last asked).
   guildChat: ChatLine[];
+  // The line to the server has stopped answering for a while (see linkWatch.ts).
+  shaky: boolean;
   // The announcements to every server heard this session (the chat shows them), oldest first.
   announced: (Announcement & { heardAt: number })[];
   inGuild: boolean;
@@ -159,8 +162,9 @@ function readPayout(raw: unknown): (Payout & { id: string }) | null {
 }
 
 // Moving, your pose goes out this often; standing still, only this often (nothing changed, so the room
-// needs nothing; it is a keepalive). Every pose is written to the room and sent to everyone in it.
-export const POSE_THROTTLE_MS = 100;
+// needs nothing; it is a keepalive). Every pose is written to the room and sent to everyone in it, so
+// five a second is the most: the others' heroes glide between them (see PlayerActor's follow).
+export const POSE_THROTTLE_MS = 200;
 export const IDLE_POSE_MS = 10_000;
 // Verse8 turns away more than 10 calls a second to one function, so no two poses leave closer than
 // this; a guard, attack or skill that comes sooner goes out with the next one.
@@ -215,8 +219,13 @@ function readVitals(user: Record<string, unknown>): Vitals | null {
 // and your own pose going out to them.
 export class WorldClient {
   private current: WorldState = {
-    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [],
+    phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [], shaky: false,
   };
+  // While in the world, a ping now and then: the screen says when the line has gone quiet.
+  private readonly link = new LinkWatch(
+    () => this.transport.call("getServerVersion"),
+    (shaky) => this.set({ shaky }),
+  );
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
   private members: string[] = [];
@@ -312,6 +321,7 @@ export class WorldClient {
   async leave(): Promise<void> {
     const mine = ++this.generation;
     this.unlisten();
+    this.link.stop();
     this.set({ phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], me: null });
     // Entered again at once (React's development double run): there is nothing to leave.
     await Promise.resolve();
@@ -884,6 +894,7 @@ export class WorldClient {
     this.lastPose = null;
     this.payoutSeen = undefined;
     this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, error: null });
+    this.link.start();
     void this.refreshBag();
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
@@ -949,6 +960,7 @@ export class WorldClient {
   }
 
   private fail(error: unknown): void {
+    this.link.stop();
     this.set({ phase: "error", error: errorCode(error) });
   }
 

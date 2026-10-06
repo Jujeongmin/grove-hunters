@@ -105,7 +105,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
     // poses change many times a second and go straight to the 3D view, not through React.
     const off = client.onChange((next) =>
       setState((prev) => (prev.phase === next.phase && prev.entry === next.entry && prev.error === next.error && prev.bag === next.bag
-        ? prev : next)));
+        && prev.shaky === next.shaky ? prev : next)));
     void client.enter();
     return () => {
       off();
@@ -130,6 +130,8 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
   }
   if (!state.entry) return <div className="overlay">{t("world.entering")}</div>;
   return (
+    <>
+    {state.shaky && <LinkChip />}
     <ZoneScreen
       key={state.entry.roomId}
       entry={state.entry}
@@ -146,6 +148,27 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
       onExit={onExit}
       onTitle={onTitle}
     />
+    </>
+  );
+}
+
+// How long the line may stay quiet before the chip offers to start the game afresh.
+const RELOAD_AFTER_MS = 20_000;
+
+// The line to the server has gone quiet: a small chip at the top says so while the game keeps trying,
+// and after a while offers to start afresh.
+function LinkChip() {
+  const [long, setLong] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setLong(true), RELOAD_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  return (
+    <div className="link-chip" role="status">
+      <i className="link-spin" />
+      <span>{t("link.shaky")}</span>
+      {long && <button type="button" onClick={() => window.location.reload()}>{t("link.reload")}</button>}
+    </div>
   );
 }
 

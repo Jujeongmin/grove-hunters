@@ -5,6 +5,7 @@ import { ROLL } from "../../src/game/combat/roll";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { REVIVE_HP_SHARE, deathXpLoss, levelCost, levelOf, reviveCost } from "../../src/game/account/level";
 import { STEED, enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
+import { MONSTER_SYNC_MS } from "../src/hunt";
 
 // Into the first hunting field, through the village portal, as the client does it.
 async function toForest(server: any, account: string, playerClass = "warrior"): Promise<any> {
@@ -359,5 +360,24 @@ describe("hunting", () => {
     const pose = (await $room.getMyState()).pose;
     expect(pose.x - spawn.x).toBeLessThan(3);
     expect(pose.x).toBeGreaterThan(spawn.x);
+  });
+
+  test("monsters that only walk are sent at most every MONSTER_SYNC_MS, and lose no ground between", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    // A rat that has been hit by you, far off: it walks your way.
+    await only("rat", spawn.x + 12, spawn.z, undefined, "test-a");
+    await server.simulateTick(entry.roomId, 200);
+    const first = (await $room.getRoomState()).monsters.m0;
+    // At once again: it only walked, so nothing is written yet.
+    await server.simulateTick(entry.roomId, 200);
+    expect((await $room.getRoomState()).monsters.m0).toEqual(first);
+    // Past the sync time (as if the last write were that long ago): written, and it has come on by the
+    // whole time since.
+    await $room.updateRoomState({ monstersAt: Date.now() - (MONSTER_SYNC_MS + 50) });
+    await server.simulateTick(entry.roomId, 200);
+    const later = (await $room.getRoomState()).monsters.m0;
+    expect(later.x).toBeLessThan(first.x - MONSTERS.rat.speed * (MONSTER_SYNC_MS / 1000) * 0.8);
   });
 });

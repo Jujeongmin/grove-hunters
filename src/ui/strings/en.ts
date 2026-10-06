@@ -569,6 +569,8 @@ export const en: Bundle = {
   "mail.marketReturnedBody": "It did not sell, or you took it down.",
   "menu.settings": "Settings",
 
+  "link.shaky": "Connection unstable · reconnecting…",
+  "link.reload": "Reconnect",
   "death.fallen": "You fell",
   "death.lostXp": "You lost {n} XP",
   "death.lostNone": "No experience lost",
