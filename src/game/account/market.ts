@@ -8,8 +8,8 @@ import { ITEMS, MAX_PLUS, MAX_STACK, readItemId, readPiece, slotOf, type GearPie
 export const MIN_GEAR_PRICE = 10;
 export const MIN_MATERIAL_PRICE = 1;
 export const MAX_PRICE = 100_000;
-// The market keeps this share of a sale (rounded down, so sales of 19 gems or less keep all of it).
-export const FEE_SHARE = 0.05;
+// The market keeps this share of a sale (rounded down, so sales of 9 gems or less keep all of it).
+export const FEE_SHARE = 0.1;
 // Listings an account may have up at once, and how long each stays up.
 export const MAX_LISTINGS = 10;
 export const LISTING_MS = 48 * 60 * 60 * 1000;

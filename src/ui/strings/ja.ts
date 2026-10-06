@@ -464,7 +464,7 @@ export const ja: Bundle = {
   "market.canceled": "取り下げました。郵便で戻ります。",
   "market.none": "出品はありません",
   "market.ended": "期間終了（まもなく郵便で戻ります）",
-  "market.note": "売上は手数料5%を引いた宝石で郵便に届きます。出品は48時間後に取り下げられ、郵便で戻ります。",
+  "market.note": "売上は手数料10%を引いた宝石で郵便に届きます。出品は48時間後に取り下げられ、郵便で戻ります。",
   "problem.listing_gone": "すでに売れたか、取り下げられた出品です",
   "problem.too_many": "その数は残っていません。先に誰かが買いました。",
   "market.priceEach": "1個あたりの価格（宝石）",

@@ -464,7 +464,7 @@ export const zhHans: Bundle = {
   "market.canceled": "已下架，会以邮件退回。",
   "market.none": "没有上架的商品",
   "market.ended": "已到期（即将以邮件退回）",
-  "market.note": "售出所得会扣除5%手续费后以宝石邮寄。商品48小时后下架并以邮件退回。",
+  "market.note": "售出所得会扣除10%手续费后以宝石邮寄。商品48小时后下架并以邮件退回。",
   "problem.listing_gone": "这件商品已售出或已下架",
   "problem.too_many": "剩下的没那么多，已被别人先买走。",
   "market.priceEach": "单价（宝石）",

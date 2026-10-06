@@ -12,11 +12,11 @@ const row = (over: Record<string, unknown> = {}) => ({
 
 describe("market", () => {
   it("keeps 5% of a sale, rounded down", () => {
-    expect(marketFee(19)).toBe(0);
-    expect(sellerGets(19)).toBe(19);
-    expect(marketFee(20)).toBe(1);
-    expect(sellerGets(20)).toBe(19);
-    expect(marketFee(1000)).toBe(50);
+    expect(marketFee(9)).toBe(0);
+    expect(sellerGets(9)).toBe(9);
+    expect(marketFee(10)).toBe(1);
+    expect(sellerGets(10)).toBe(9);
+    expect(marketFee(1000)).toBe(100);
   });
 
   it("takes prices in range: a piece of gear from 10, one of a material from 1", () => {

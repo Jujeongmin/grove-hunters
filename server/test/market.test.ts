@@ -112,7 +112,7 @@ describe("market", () => {
     expect((await server.getBag()).bagTrade.silk).toBe(20);
     // The seller is paid per sale, less 5% (nothing kept under 20 gems).
     const sold = await marketMail(server, "test-a");
-    expect(sold.map((m: any) => m.gems).sort((x: number, y: number) => x - y)).toEqual([15, sellerGets(45)]);
+    expect(sold.map((m: any) => m.gems).sort((x: number, y: number) => x - y)).toEqual([sellerGets(15), sellerGets(45)]);
   });
 
   test("taken down, or out of time, it comes back by mail", async (server) => {

@@ -24,6 +24,17 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-06-market-fee",
+    date: "2026-10-06",
+    text: {
+      ko: { title: "거래소 수수료 10%", lines: ["거래소 판매 수수료가 5%에서 10%로 올랐어요. VIP 8부터는 여전히 수수료가 없어요."] },
+      en: { title: "Market fee 10%", lines: ["The market's sale fee goes from 5% to 10%. From VIP 8 there is still no fee."] },
+      ja: { title: "取引所手数料10%", lines: ["取引所の販売手数料が5%から10%になりました。VIP 8以上は引き続き手数料無料です。"] },
+      "zh-Hans": { title: "交易所手续费 10%", lines: ["交易所出售手续费由 5% 调整为 10%。VIP 8 起仍免手续费。"] },
+      "zh-Hant": { title: "交易所手續費 10%", lines: ["交易所出售手續費由 5% 調整為 10%。VIP 8 起仍免手續費。"] },
+    },
+  },
+  {
     id: "2026-10-06-gem-packs",
     date: "2026-10-06",
     text: {
@@ -874,7 +885,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "메뉴의 '거래소'에서 거래 가능한 장비와 재료를 보석으로 사고팔 수 있어요. 모든 서버가 같은 거래소를 써요.",
           "장비는 강화 수치 그대로 한 점씩, 재료는 묶음으로 팔아요. 장비는 10보석, 재료 묶음은 1보석부터예요.",
-          "팔리면 수수료 5%를 뺀 보석이, 산 물건은 그대로 우편으로 와요. 거래소에서 산 물건은 다시 팔 수 있어요.",
+          "팔리면 수수료 5%를 뺀 보석이, 산 물건은 그대로 우편으로 와요. 거래소에서 산 물건은 다시 팔 수 있어요. (2026-10-06부터 수수료 10%)",
           "매물은 한 번에 10개까지, 48시간 동안 올라가요. 안 팔리거나 내리면 우편으로 돌아와요.",
           "모은 보석으로 마구간에서 탈것을 뽑아 보세요!",
         ],
@@ -884,7 +895,7 @@ export const NEWS: readonly NewsEntry[] = [
         lines: [
           "Buy and sell tradable gear and materials for gems under 'Market' in the menu. Every server shares one market.",
           "Gear sells a piece at a time with its +, materials as a bundle. Gear starts at 10 gems, a bundle at 1.",
-          "When something sells, the gems (less a 5% fee) come by mail, and what you buy comes by mail as it was. Bought things can be sold again.",
+          "When something sells, the gems (less a 5% fee) come by mail, and what you buy comes by mail as it was. Bought things can be sold again. (The fee is 10% from 2026-10-06.)",
           "Up to 10 listings at once, each up for 48 hours. Anything unsold or taken down comes back by mail.",
           "Spend the gems you earn on mount draws in the stable!",
         ],

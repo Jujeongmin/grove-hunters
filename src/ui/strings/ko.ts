@@ -473,7 +473,7 @@ export const ko = {
   "market.canceled": "내렸어요. 우편으로 돌아와요.",
   "market.none": "등록한 매물이 없어요",
   "market.ended": "기간 끝남 (곧 우편으로 돌아와요)",
-  "market.note": "판매 대금은 수수료 5%를 뺀 보석으로 우편에 와요. 매물은 48시간 뒤 내려가 우편으로 돌아와요.",
+  "market.note": "판매 대금은 수수료 10%를 뺀 보석으로 우편에 와요. 매물은 48시간 뒤 내려가 우편으로 돌아와요.",
   "problem.listing_gone": "이미 팔렸거나 내려간 매물이에요",
   "problem.too_many": "그만큼 남아 있지 않아요. 다른 사람이 먼저 샀어요.",
   "market.priceEach": "개당 가격 (보석)",

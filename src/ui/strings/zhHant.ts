@@ -464,7 +464,7 @@ export const zhHant: Bundle = {
   "market.canceled": "已下架，會以郵件退回。",
   "market.none": "沒有上架的商品",
   "market.ended": "已到期（即將以郵件退回）",
-  "market.note": "售出所得會扣除5%手續費後以寶石郵寄。商品48小時後下架並以郵件退回。",
+  "market.note": "售出所得會扣除10%手續費後以寶石郵寄。商品48小時後下架並以郵件退回。",
   "problem.listing_gone": "這件商品已售出或已下架",
   "problem.too_many": "剩下的沒那麼多，已被別人先買走。",
   "market.priceEach": "單價（寶石）",

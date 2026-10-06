@@ -464,7 +464,7 @@ export const en: Bundle = {
   "market.canceled": "Taken down. It will come back by mail.",
   "market.none": "You have nothing listed",
   "market.ended": "Time is up (coming back by mail)",
-  "market.note": "What sells is paid in gems by mail, less a 5% fee. Listings come down after 48 hours and return by mail.",
+  "market.note": "What sells is paid in gems by mail, less a 10% fee. Listings come down after 48 hours and return by mail.",
   "problem.listing_gone": "That listing was already sold or taken down",
   "problem.too_many": "Not that many left: someone else bought first.",
   "market.priceEach": "Price each (gems)",
