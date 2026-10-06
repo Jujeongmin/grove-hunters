@@ -28,7 +28,7 @@ interface CellProps {
   keyLabel: string;
   name: string;
   icon: string | null;
-  // Shown in the corner: a count, or the seconds left.
+  // Shown in the corner: a count, or the level a skill opens at.
   corner: string;
   // Share of the cooldown still to run (0 when ready); null for a slot not yet open.
   cooling: number | null;
@@ -140,7 +140,8 @@ export function SkillBar({ hud, playerClass, job, onSkill, onPotion, glow }: Ski
           keyLabel={String(i + 1)}
           name={skill ? skillName(playerClass, job, skill.skill) : t("bar.emptySlot")}
           icon={skill ? iconFor(skillIconId(playerClass, job, skill.skill)) : null}
-          corner={!skill ? "" : !skill.open ? `Lv${skill.level}` : skill.readyInMs > 0 ? `${Math.ceil(skill.readyInMs / 1000)}` : ""}
+          // The cooldown shows only as the shade over the icon, no seconds in the corner.
+          corner={skill && !skill.open ? `Lv${skill.level}` : ""}
           cooling={skill?.open ? skill.readyInMs / skill.cooldownMs : null}
           locked={!skill || !skill.open}
           isAuto={auto.skills[i] === true}
