@@ -30,6 +30,11 @@ const HATCH_WAIT_MS = 3500;
 // Gems per VX at the smallest pack: a bigger pack's bonus is measured against it.
 const BASE_RATE = 1;
 
+// The shop's pictures are kept a day by the host's cache: a new set of pictures bumps this, so nobody
+// is shown yesterday's.
+const SHOP_ART_VERSION = "2026-10-06b";
+const shopArt = (productId: string) => publicUrl(`assets/ui/shop/${productId}.png?v=${SHOP_ART_VERSION}`);
+
 type Tab = "stable" | "hatch" | "shop";
 
 // A chance as a percent, with as many decimals as it takes to be exact (two mythics sharing 0.1% are
@@ -410,7 +415,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                       onClick={() => VERSE && buyProduct(VERSE, productId)}
                     >
                       {bonus > 0 && <span className="stable-bonus">{t("mount.bonus", { n: bonus })}</span>}
-                      <img src={publicUrl(`assets/ui/shop/${productId}.png`)} alt="" />
+                      <img src={shopArt(productId)} alt="" />
                       <b>{t("mount.pack", { n: n.toLocaleString(locale()) })}</b>
                       <span className="stable-price">{price !== null ? `${price.toLocaleString(locale())} VX` : "—"}</span>
                     </button>
@@ -428,7 +433,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                       type="button" className="stable-pack pass" disabled={!VERSE || waiting}
                       onClick={() => VERSE && buyProduct(VERSE, PASS_PRODUCT)}
                     >
-                      <img src={publicUrl(`assets/ui/shop/${PASS_PRODUCT}.png`)} alt="" />
+                      <img src={shopArt(PASS_PRODUCT)} alt="" />
                       <span className="stable-pass-name">
                         <b>{t("mount.pass")}</b>
                         {value !== null && value > 100 && <strong className="stable-pass-value">{t("mount.passValue", { n: value })}</strong>}
