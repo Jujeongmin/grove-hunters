@@ -7,11 +7,12 @@ import { GEM_PRODUCTS } from "./mounts";
 // (its global user state), so every character shares them. All the numbers live here.
 
 // The monthly pass: its Verse8 product, gems at once and each day it runs, its XP, and the VIP
-// points each one counts for.
+// points each one counts for. At its suggested 500 VX its gems come to three times a plain pack's
+// (1,500 against 500); the shop shows the share from the live prices.
 export const PASS_PRODUCT = "monthly-pass";
 export const PASS_DAYS = 30;
 export const PASS_GEMS_NOW = 300;
-export const PASS_GEMS_DAILY = 50;
+export const PASS_GEMS_DAILY = 40;
 export const PASS_XP = 0.1;
 export const PASS_POINTS = 600;
 const DAY_MS = 24 * 60 * 60 * 1000;

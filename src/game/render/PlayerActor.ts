@@ -10,7 +10,7 @@ import type { Effects } from "./effects";
 import { createLabel, setLabel } from "./labels";
 import { ActionBlender, clipByName, skinnedHeight } from "./skinned";
 import type { MountId } from "../account/mounts";
-import { MOUNT_LOOKS } from "./mountLooks";
+import { MOUNT_LOOKS, RIDE_LEGS, type RideLegs } from "./mountLooks";
 
 // The heroes stand a little shorter than a person; the camera and reach are set around this.
 export const PLAYER_HEIGHT = 1.45;
@@ -67,8 +67,6 @@ export interface MountModel {
   clips: THREE.AnimationClip[];
 }
 
-// How a rider sits (radians, about its own body): thighs forward, knees bent back down, legs apart over the mount.
-const RIDE_LEGS = { thigh: 1.25, knee: 1.35, spread: 0.7 };
 
 // Getting on or off takes this long (seconds): the mount pops up (or shrinks away) in a puff while the
 // rider hops up onto it (or down), this high at the top of the hop.
@@ -90,6 +88,8 @@ interface Riding {
   blender: ActionBlender;
   idle: THREE.AnimationAction;
   move: THREE.AnimationAction;
+  // How the legs bend over it (radians, about the rider's own body; see mountLooks.ts).
+  legs: RideLegs;
 }
 
 // A leg's bones, and where its foot sits in the lower leg's frame at rest: the rig keeps its feet
@@ -250,7 +250,7 @@ export class PlayerActor {
     const seatY = PLAYER_HEIGHT * look.height * look.seat + (look.hover ?? 0) - this.standingHips;
     this.riding = {
       id: model.id, object, scale, seat: new THREE.Vector3(0, seatY, look.forward), on: 0,
-      mixer, idle, move, blender: new ActionBlender(idle),
+      mixer, idle, move, blender: new ActionBlender(idle), legs: look.legs ?? RIDE_LEGS,
     };
     object.scale.setScalar(scale * 0.01);
     this.effects?.ring(this.object.position, 0.8, PUFF_COLOR);
@@ -274,7 +274,7 @@ export class PlayerActor {
     ride.blender.fadeTo(moving ? ride.move : ride.idle);
     ride.mixer.update(dt);
     this.object.updateMatrixWorld(true);
-    this.sitLegs(smooth(k));
+    this.sitLegs(smooth(k), ride.legs);
     if (!on && k <= 0) this.drop(ride);
   }
 
@@ -292,16 +292,16 @@ export class PlayerActor {
   // The legs bent over the mount, after the clip has posed the rest of the body.
   // The bends are about the body's own axes (its right, and the way it faces): about the world's, the
   // legs knelt backwards facing one way and swung sideways facing another.
-  private sitLegs(weight: number): void {
+  private sitLegs(weight: number, bend: RideLegs): void {
     if (!this.legs || weight <= 0) return;
     this.body.updateMatrixWorld(true);
     const frame = this.body.getWorldQuaternion(new THREE.Quaternion());
     const across = X_AXIS.clone().applyQuaternion(frame);
     const ahead = Z_AXIS.clone().applyQuaternion(frame);
     for (const leg of this.legs) {
-      turnInWorld(leg.upper, across, -RIDE_LEGS.thigh * weight);
-      turnInWorld(leg.upper, ahead, leg.side * RIDE_LEGS.spread * weight);
-      turnInWorld(leg.lower, across, RIDE_LEGS.knee * weight);
+      turnInWorld(leg.upper, across, -bend.thigh * weight);
+      turnInWorld(leg.upper, ahead, leg.side * bend.spread * weight);
+      turnInWorld(leg.lower, across, bend.knee * weight);
       const foot = leg.lower.localToWorld(leg.footInLower.clone());
       leg.foot.position.copy(leg.foot.parent!.worldToLocal(foot));
       leg.foot.updateMatrixWorld(true);

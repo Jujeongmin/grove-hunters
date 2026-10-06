@@ -53,7 +53,8 @@ import { MapPanel, MinimapCorner } from "./Minimap";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
-import { QUESTS, questDone } from "../game/account/quests";
+import { DAILY_QUESTS, QUESTS, questDone } from "../game/account/quests";
+import { RewardToast, type Reward } from "./RewardToast";
 import { SettingsPanel } from "./SettingsPanel";
 import { ChannelPanel } from "./ChannelPanel";
 import type { FriendsView } from "../game/account/friends";
@@ -311,6 +312,8 @@ function ZoneScreen({
   const [menuOpen, setMenuOpen] = useState(false);
   // Power saving (절전): a dark summary over the world, which goes on undrawn.
   const [saving, setSaving] = useState(false);
+  // The last claimed quest's reward, shown at the top for a few seconds (see RewardToast).
+  const [reward, setReward] = useState<Reward | null>(null);
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
   // The first tutorial: what to do next, and what lights up for it.
   const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false, panel === "skills");
@@ -752,6 +755,7 @@ function ZoneScreen({
           {entry.zone === "arena" && <ArenaHud client={client} />}
           {inDungeon && <DungeonHud client={client} />}
           <AnnounceBanner client={client} />
+          <RewardToast reward={reward} />
           <ZoneTitle entry={entry} />
           {hud.dead && entry.zone !== "arena" && !inDungeon && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} vip={bag?.vip ?? 0} travelling={travelling} />
@@ -762,8 +766,12 @@ function ZoneScreen({
         <DialogueBox
           id={talkingTo} bag={bag} building={grove?.buildings.some((b) => b.state === "building") ?? false}
           onClaim={async () => {
+            const quest = bag ? QUESTS[bag.quest.index] : undefined;
             const code = await client.claimQuest();
-            if (!code) endTalk();
+            if (!code) {
+              endTalk();
+              if (quest) setReward((r) => ({ key: (r?.key ?? 0) + 1, daily: false, xp: quest.xp, gold: quest.gold, items: quest.items }));
+            }
             return code;
           }}
           onChoice={(choice) => {
@@ -839,7 +847,13 @@ function ZoneScreen({
         <QuestLog
           bag={bag} inVillage={inVillage}
           onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
-          onClaimDaily={(id) => client.claimDaily(id)} onClose={() => setPanel(null)}
+          onClaimDaily={async (id) => {
+            const code = await client.claimDaily(id);
+            const daily = DAILY_QUESTS.find((q) => q.id === id);
+            if (!code && daily) setReward((r) => ({ key: (r?.key ?? 0) + 1, daily: true, xp: 0, gold: daily.gold, items: daily.items }));
+            return code;
+          }}
+          onClose={() => setPanel(null)}
         />
       )}
       {finished !== null && QUESTS[finished] && (

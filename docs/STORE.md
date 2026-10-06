@@ -154,7 +154,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 | `gems-100` | 보석 100개 / 100 Gems | 탈것 뽑기 한 번 분량의 보석. 첫 구매는 2배. / Enough for one mount draw. Double on your first purchase. |
 | `gems-550` | 보석 550개 / 550 Gems | 보석 한 주머니. 첫 구매는 2배. / A pouch of gems. Double on your first purchase. |
 | `gems-1200` | 보석 1,200개 / 1,200 Gems | 보석이 가득한 상자. 첫 구매는 2배. / A chest full of gems. Double on your first purchase. |
-| `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 50개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 50 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
+| `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 40개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 40 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
 
 ## 릴리스 노트 (이번 업데이트, 2026-10-02)
 

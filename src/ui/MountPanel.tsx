@@ -407,14 +407,26 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                 {(() => {
                   const price = productPrice(PASS_PRODUCT);
                   const left = view?.premium.passDaysLeft ?? 0;
+                  const total = PASS_GEMS_NOW + PASS_GEMS_DAILY * PASS_DAYS;
+                  // Gems a VX against the smallest pack's, from the live prices (to the nearest ten).
+                  const packPrice = productPrice("gems-100");
+                  const value = price && packPrice ? Math.round(((total / price) / (GEM_PRODUCTS["gems-100"] / packPrice)) * 10) * 10 : null;
                   return (
                     <button
                       type="button" className="stable-pack pass" disabled={!VERSE || waiting}
                       onClick={() => VERSE && buyProduct(VERSE, PASS_PRODUCT)}
                     >
                       <img src={publicUrl(`assets/ui/shop/${PASS_PRODUCT}.png`)} alt="" />
-                      <b>{t("mount.pass")}</b>
-                      <small>{t("mount.passWhat", { now: PASS_GEMS_NOW, daily: PASS_GEMS_DAILY, days: PASS_DAYS, xp: Math.round(PASS_XP * 100) })}</small>
+                      <span className="stable-pass-name">
+                        <b>{t("mount.pass")}</b>
+                        {value !== null && value > 100 && <strong className="stable-pass-value">{t("mount.passValue", { n: value })}</strong>}
+                      </span>
+                      <ul className="stable-pass-what">
+                        <li><span>{t("mount.passNow")}</span><em><img src={iconFor("ui_gem") ?? undefined} alt="" />{PASS_GEMS_NOW}</em></li>
+                        <li><span>{t("mount.passDaily", { days: PASS_DAYS })}</span><em><img src={iconFor("ui_gem") ?? undefined} alt="" />{PASS_GEMS_DAILY}</em></li>
+                        <li><span>{t("mount.passXp")}</span><em>+{Math.round(PASS_XP * 100)}%</em></li>
+                        <li className="total"><span>{t("mount.passTotal")}</span><em><img src={iconFor("ui_gem") ?? undefined} alt="" />{total.toLocaleString(locale())}</em></li>
+                      </ul>
                       {left > 0 && <small className="stable-pass-left">{t("mount.passLeft", { n: left })}</small>}
                       <span className="stable-price">{price !== null ? `${price.toLocaleString(locale())} VX` : "—"}</span>
                     </button>

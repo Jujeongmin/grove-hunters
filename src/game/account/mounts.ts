@@ -63,15 +63,17 @@ export const MOUNTS: Record<MountId, Mount> = {
 export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
 
 // The mount you have picked makes you stronger whether you ride it or not: a share more damage and
-// more health, more the rarer it is (the deer, everyone's own, counts as below common).
+// more health, far more the rarer it is (the deer, everyone's own, counts as below common). Each tier
+// starts about where the one below ends at ★5, so a rarer mount is never beaten by stars on a commoner
+// one: a legendary at ★1 doubles your damage.
 export interface MountBonus { power: number; hp: number }
 const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
   base: { power: 0.1, hp: 30 },
   common: { power: 0.15, hp: 45 },
-  rare: { power: 0.2, hp: 60 },
-  epic: { power: 0.25, hp: 80 },
-  legendary: { power: 0.3, hp: 100 },
-  mythic: { power: 0.4, hp: 140 },
+  rare: { power: 0.25, hp: 75 },
+  epic: { power: 0.42, hp: 125 },
+  legendary: { power: 0.85, hp: 250 },
+  mythic: { power: 1.4, hp: 420 },
 };
 export function mountBonus(id: MountId | null | undefined, stars = 0): MountBonus {
   if (!id) return { power: 0, hp: 0 };

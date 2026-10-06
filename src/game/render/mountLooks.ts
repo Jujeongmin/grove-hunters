@@ -14,7 +14,15 @@ export interface MountLook {
   idle: string;
   move: string;
   hover?: number;
+  // How the rider's legs bend over it (radians), where the plain pose does not fit: a dragon's head
+  // is narrow on top, so the legs hang down its sides instead of tucking up.
+  legs?: RideLegs;
 }
+
+export interface RideLegs { thigh: number; knee: number; spread: number }
+// Thighs forward, knees bent back down, legs apart over a round little beast.
+export const RIDE_LEGS: RideLegs = { thigh: 1.25, knee: 1.35, spread: 0.7 };
+const STRADDLE: RideLegs = { thigh: 0.85, knee: 0.75, spread: 0.95 };
 
 export const MOUNT_LOOKS: Record<MountId, MountLook> = {
   deer: { height: 0.62, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
@@ -26,20 +34,20 @@ export const MOUNT_LOOKS: Record<MountId, MountLook> = {
   cat: { height: 0.6, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
   dog: { height: 0.6, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
   pigeon: { height: 0.6, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
-  armabee: { height: 0.75, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
-  glub: { height: 0.9, seat: 0.75, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
-  squidle: { height: 0.75, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
-  hywirl: { height: 0.8, seat: 0.72, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
-  alpaking: { height: 0.8, seat: 0.82, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
-  queen_armabee: { height: 0.85, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
-  elder_glub: { height: 1.3, seat: 0.72, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
-  alpaking_emperor: { height: 0.95, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
+  armabee: { height: 0.62, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
+  glub: { height: 0.7, seat: 0.75, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
+  squidle: { height: 0.62, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
+  hywirl: { height: 0.65, seat: 0.72, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.35 },
+  alpaking: { height: 0.65, seat: 0.82, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
+  queen_armabee: { height: 0.68, seat: 0.8, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
+  elder_glub: { height: 0.95, seat: 0.72, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
+  alpaking_emperor: { height: 0.75, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
   yeti: { height: 0.66, seat: 0.9, forward: 0, idle: "Idle", move: "Walk" },
-  drake: { height: 0.75, seat: 0.97, forward: -0.2, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4 },
-  dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
-  golden_dragon: { height: 0.95, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5 },
-  celestial_dragon: { height: 1.0, seat: 0.92, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.55 },
-  void_emperor: { height: 0.95, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
+  drake: { height: 0.6, seat: 0.9, forward: -0.2, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.4, legs: STRADDLE },
+  dragon: { height: 0.72, seat: 0.84, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45, legs: STRADDLE },
+  golden_dragon: { height: 0.72, seat: 0.84, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45, legs: STRADDLE },
+  celestial_dragon: { height: 0.76, seat: 0.84, forward: -0.25, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.5, legs: STRADDLE },
+  void_emperor: { height: 0.75, seat: 0.86, forward: 0, idle: "Flying_Idle", move: "Fast_Flying", hover: 0.45 },
 };
 
 // How much of a dyed mount's own colour gives way to its dye.
