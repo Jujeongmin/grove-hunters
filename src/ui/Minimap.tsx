@@ -304,12 +304,17 @@ export function Minimap({ zone, me, width, height, labels = false, onPick, bosse
 
 const CORNER = 88;
 
-// The little map in the corner, always there while you play.
-export function MinimapCorner({ zone, me, bosses }: { zone: ZoneId; me: MinimapPose; bosses?: readonly { x: number; z: number }[] }) {
+// The little map in the corner, always there while you play. Tapped, it opens the whole zone's map.
+export function MinimapCorner({ zone, me, bosses, onOpen }: {
+  zone: ZoneId; me: MinimapPose; bosses?: readonly { x: number; z: number }[]; onOpen?: () => void;
+}) {
   return (
-    <div className="minimap">
+    <button
+      type="button" className={`minimap${onOpen ? " opens" : ""}`} onClick={onOpen} disabled={!onOpen}
+      aria-label={t("menu.map")} title={t("menu.map")}
+    >
       <Minimap zone={zone} me={me} width={CORNER} height={CORNER} bosses={bosses} />
-    </div>
+    </button>
   );
 }
 

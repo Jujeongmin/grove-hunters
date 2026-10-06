@@ -683,7 +683,7 @@ function ZoneScreen({
             {/* The party sits beside the map, not under it, so it never reaches down to the touch pad. */}
             {!saving && (
               <div className="hud-left-row">
-                <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />
+                <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} onOpen={() => toggle("map")} />
                 <PartyFrame
                   state={party} me={client.account} others={client.state.others} here={{ zone: hud.zoneId, channel: hud.channel }}
                   onOpen={() => toggle("party")}

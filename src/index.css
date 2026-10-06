@@ -474,7 +474,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The map: a little one at the top left under the vitals while you play, and the whole zone over the
    game with N. Both are drawn north up, so a glance means the same thing every time, and both sit on
    plain black. */
-.minimap { position: relative; align-self: flex-start; margin-top: 6px; isolation: isolate; pointer-events: none; }
+.minimap {
+  position: relative; align-self: flex-start; margin-top: 6px; isolation: isolate; pointer-events: none;
+  /* A button, to open the whole map: none of a button's own looks. */
+  display: block; padding: 0; border: 0; background: none; font: inherit; color: inherit;
+}
+.minimap.opens { pointer-events: auto; cursor: var(--cursor-press), pointer; }
+.minimap.opens:active { transform: scale(0.97); }
+.minimap.opens:focus-visible { outline: 2px solid #ffd36a; outline-offset: 6px; }
 /* A plain black frame round the corner map. */
 .minimap::before {
   content: "";
