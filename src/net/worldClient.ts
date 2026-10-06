@@ -166,6 +166,8 @@ function readPayout(raw: unknown): (Payout & { id: string }) | null {
 // five a second is the most: the others' heroes glide between them (see PlayerActor's follow).
 export const POSE_THROTTLE_MS = 200;
 export const IDLE_POSE_MS = 10_000;
+// A player whose pose has not changed for this long is no longer drawn (two idle sends missed).
+export const STALE_POSE_MS = 25_000;
 // Verse8 turns away more than 10 calls a second to one function, so no two poses leave closer than
 // this; a guard, attack or skill that comes sooner goes out with the next one.
 export const MIN_POSE_GAP_MS = 110;
@@ -222,10 +224,20 @@ export class WorldClient {
     phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, bag: null, error: null, chat: [], guildChat: [], inGuild: false, announced: [], shaky: false,
   };
   // While in the world, a ping now and then: the screen says when the line has gone quiet.
+  // The room's own connection down counts as quiet too: calls still go out then, but nothing comes in.
   private readonly link = new LinkWatch(
-    () => this.transport.call("getServerVersion"),
+    () => this.roomDown ? Promise.reject(new Error("room link down")) : this.transport.call("getServerVersion"),
     (shaky) => this.set({ shaky }),
   );
+  // Whether the room's connection is down just now, and the watch on it while in a room.
+  private roomDown = false;
+  private roomLinkOff: (() => void) | null = null;
+  // When each other player's pose last changed (this clock): one silent for STALE_POSE_MS is gone
+  // (a closed tab, a crash) though the room still lists them.
+  private poseSeen = new Map<string, { key: string; at: number }>();
+  // The client that last went into the world: one left behind by a dropped connection must not take
+  // the room away from it on its way out (the SDK's room is shared).
+  private static lastEntered: WorldClient | null = null;
   private readonly listeners = new Set<(s: WorldState) => void>();
   private unsubscribers: (() => void)[] = [];
   private members: string[] = [];
@@ -273,6 +285,7 @@ export class WorldClient {
   // Into the world where you left it.
   async enter(): Promise<void> {
     const mine = ++this.generation;
+    WorldClient.lastEntered = this;
     this.set({ phase: "entering", error: null });
     try {
       const version = await this.transport.call<{ protocol: number }>("getServerVersion");
@@ -321,6 +334,7 @@ export class WorldClient {
   async leave(): Promise<void> {
     const mine = ++this.generation;
     this.unlisten();
+    this.watchRoomLink(null);
     this.link.stop();
     this.set({ phase: "idle", entry: null, others: [], monsters: {}, telegraphs: [], me: null });
     // Entered again at once (React's development double run): there is nothing to leave.
@@ -328,7 +342,7 @@ export class WorldClient {
     if (mine !== this.generation) return;
     // Keeps your spot from inside the room, then leaves it (unless you have come back meanwhile).
     await this.transport.call("leaveWorld").catch(() => undefined);
-    if (mine === this.generation) this.transport.leaveRoom();
+    if (mine === this.generation && WorldClient.lastEntered === this) this.transport.leaveRoom();
   }
 
   // Says a line in your channel. Answers null once it went out, or why it was refused.
@@ -510,6 +524,16 @@ export class WorldClient {
 
   // Parties (see party.ts): your party and invitations (null when it cannot be read), the players you
   // could invite, and every change, each answering null when done or why it was refused.
+  // Calls back whenever the server says your party or your invitations changed (see nudge in party.ts).
+  onPartyNudge(cb: () => void): () => void {
+    let last: string | undefined;
+    return this.transport.subscribeMyState((state) => {
+      const key = `${String(state.party ?? "")}|${String(state.partyRev ?? "")}`;
+      if (last !== undefined && key !== last) cb();
+      last = key;
+    });
+  }
+
   async partyState(): Promise<PartyState | null> {
     if (this.current.phase !== "in") return null;
     return await this.transport.call<PartyState>("partyState").catch(() => null);
@@ -860,6 +884,7 @@ export class WorldClient {
 
   dispose(): void {
     this.unlisten();
+    this.watchRoomLink(null);
     this.listeners.clear();
   }
 
@@ -893,9 +918,49 @@ export class WorldClient {
     this.users = [];
     this.lastPose = null;
     this.payoutSeen = undefined;
+    this.poseSeen.clear();
     this.set({ phase: "in", entry, others: [], monsters: {}, telegraphs: [], arenaMax: null, dungeon: null, mercs: {}, me: null, error: null });
     this.link.start();
     void this.refreshBag();
+    this.listen(entry);
+    this.watchRoomLink(entry);
+  }
+
+  // The room's connection, watched while in it. Remade by the platform, it has forgotten every
+  // subscription (others then still saw your lines, but nothing of theirs came to you): they are made
+  // again. Given up by the platform, the room is joined again.
+  private watchRoomLink(entry: ZoneEntry | null): void {
+    this.roomLinkOff?.();
+    this.roomLinkOff = null;
+    this.roomDown = false;
+    if (!entry || !this.transport.onRoomLink) return;
+    this.roomLinkOff = this.transport.onRoomLink((connected, roomId) => {
+      if (this.current.phase !== "in" || this.current.entry?.roomId !== entry.roomId) return;
+      if (!connected) {
+        this.roomDown = true;
+        if (roomId === null) void this.rejoin(entry);
+        return;
+      }
+      if (roomId !== entry.roomId || !this.roomDown) return;
+      this.roomDown = false;
+      this.unlisten();
+      this.listen(entry);
+      void this.link.check();
+    });
+  }
+
+  // Back into the room the platform gave up on, where you stood.
+  private async rejoin(entry: ZoneEntry): Promise<void> {
+    const mine = this.generation;
+    this.set({ phase: "travelling" });
+    try {
+      await this.moveTo(entry);
+    } catch (error) {
+      if (mine === this.generation) this.fail(error);
+    }
+  }
+
+  private listen(entry: ZoneEntry): void {
     this.unsubscribers = [
       this.transport.subscribeRoomState(entry.roomId, (state) => {
         const users = (state as { $users?: unknown }).$users;
@@ -934,6 +999,12 @@ export class WorldClient {
       const look = readLook(user.look);
       if (!look || !isPose(user.pose)) continue;
       const p = user.pose;
+      // Even standing still a player's pose comes again every IDLE_POSE_MS, with a new time on it.
+      const poseKey = `${p.x},${p.z},${p.yaw},${(p as { at?: unknown }).at}`;
+      const seen = this.poseSeen.get(account);
+      const nowMs = this.now();
+      if (!seen || seen.key !== poseKey) this.poseSeen.set(account, { key: poseKey, at: nowMs });
+      else if (nowMs - seen.at > STALE_POSE_MS) continue;
       others.push({
         account, look, riding: readMountId(user.riding), dead: user.dead === true,
         hp: typeof user.hp === "number" ? user.hp : null, maxHp: typeof user.maxHp === "number" ? user.maxHp : null,

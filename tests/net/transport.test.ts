@@ -126,8 +126,8 @@ describe("Verse8Transport", () => {
     await expect(t.call("reportPose", [1], { needResponse: false, throttle: 100 })).resolves.toBe("ok");
     expect(server.remoteFunction).toHaveBeenCalledWith("reportPose", [1], { needResponse: false, throttle: 100 });
     const cb = () => {};
-    expect(t.subscribeRoomState("r", cb)).toBe(off);
-    expect(t.subscribeRoomUsers("r", cb)).toBe(off);
+    t.subscribeRoomState("r", cb)();
+    t.subscribeRoomUsers("r", cb)();
     expect(t.onRoomMessage("r", "pain", cb)).toBe(off);
     expect(t.subscribeMyState(cb)).toBe(off);
     expect(server.subscribeGlobalMyState).toHaveBeenCalledWith(cb);
@@ -138,5 +138,29 @@ describe("Verse8Transport", () => {
     t.leaveRoom();
     expect(rooms.joinRoom).toHaveBeenCalledWith("rpg-w1-village-1");
     expect(rooms.leaveRoom).toHaveBeenCalled();
+  });
+
+  it("puts back room subscription counts a remade connection left below zero", () => {
+    const counts: Record<string, number> = {};
+    const server = {
+      account: "0xabc",
+      rsSubscribeCount: counts,
+      subscribeRoomState: vi.fn(() => () => {
+        counts["rooms:r:state:changed"] = (counts["rooms:r:state:changed"] ?? 0) - 1;
+      }),
+    };
+    const t = new Verse8Transport(server as unknown as Verse8Server, { joinRoom: vi.fn(), leaveRoom: vi.fn() });
+    t.subscribeRoomState("r", () => {})();
+    expect(counts).toEqual({});
+  });
+
+  it("passes the room connection's changes on", () => {
+    const t = new Verse8Transport({ account: "0xabc" } as unknown as Verse8Server, { joinRoom: vi.fn(), leaveRoom: vi.fn() });
+    const heard: [boolean, string | null][] = [];
+    const off = t.onRoomLink((connected, roomId) => heard.push([connected, roomId]));
+    t.roomLink(false, "r");
+    off();
+    t.roomLink(true, "r");
+    expect(heard).toEqual([[false, "r"]]);
   });
 });

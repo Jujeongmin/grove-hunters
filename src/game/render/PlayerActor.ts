@@ -37,6 +37,10 @@ export interface PlayerModel {
 const RELEASE_SECONDS = 0.25;
 // Shots leave from about chest height.
 const SHOT_HEIGHT = 0.9;
+// Out of view a hero's clips stand still; back in view they catch up by at most this many seconds.
+const MAX_CATCH_UP = 2;
+// Whether a hero is in view is read from a ball this wide around them (a mount and a raised blade included).
+const VIEW_RADIUS = 2.4;
 // An attack or skill holds you in place this long (at most its clip); moving after that cuts the rest
 // of the clip short, so a hero never slides along the ground mid-swing.
 const ATTACK_COMMIT = 0.45;
@@ -267,9 +271,14 @@ export class PlayerActor {
 
   // Getting on (the mount grows in, the rider hops up and sits) or off (the other way round), and the
   // mount's own walk or stand.
-  private stepMount(ride: Riding, on: boolean, moving: boolean, dt: number): void {
+  // Unposed (out of view), only the getting on or off moves along.
+  private stepMount(ride: Riding, on: boolean, moving: boolean, dt: number, posed = true): void {
     ride.on = Math.max(0, Math.min(1, ride.on + (on ? dt : -dt) / MOUNT_SECONDS));
     const k = ride.on;
+    if (!posed) {
+      if (!on && k <= 0) this.drop(ride);
+      return;
+    }
     ride.object.scale.setScalar(ride.scale * Math.max(0.01, on ? easeOutBack(k) : smooth(k)));
     const hop = MOUNT_HOP * Math.sin(Math.PI * k);
     this.body.position.set(0, ride.seat.y * smooth(k) + (k < 1 ? hop : 0), ride.seat.z * smooth(k));
@@ -352,7 +361,8 @@ export class PlayerActor {
     };
   }
 
-  sync(pose: Pose | null, status: PlayerStatus, dt: number): void {
+  // With a view, a hero outside it is hidden and its clips and mount are not posed until it comes back.
+  sync(pose: Pose | null, status: PlayerStatus, dt: number, view: THREE.Frustum | null = null): void {
     this.clock += dt;
     if (!pose) {
       this.object.visible = false;
@@ -439,11 +449,25 @@ export class PlayerActor {
     }
     // A rider sits still; the mount does the walking.
     else a.blender.fadeTo(this.riding ? a.ride : this.moveClip(a, dx, dz, pose.yaw));
-    a.mixer.update(dt);
-    if (this.riding) this.stepMount(this.riding, true, moving, dt);
-    else if (this.leaving) this.stepMount(this.leaving, false, moving, dt);
-    this.object.visible = true;
+    this.bounds.center.set(p.x, p.y + 1, p.z);
+    const seen = view === null || view.intersectsSphere(this.bounds);
+    this.object.visible = seen;
+    if (!seen) {
+      this.unseen = Math.min(MAX_CATCH_UP, this.unseen + dt);
+      if (this.riding) this.stepMount(this.riding, true, moving, dt, false);
+      else if (this.leaving) this.stepMount(this.leaving, false, moving, dt, false);
+      return;
+    }
+    const step = dt + this.unseen;
+    this.unseen = 0;
+    a.mixer.update(step);
+    if (this.riding) this.stepMount(this.riding, true, moving, step);
+    else if (this.leaving) this.stepMount(this.leaving, false, moving, step);
   }
+
+  private readonly bounds = new THREE.Sphere(new THREE.Vector3(), VIEW_RADIUS);
+  // Time gone by unanimated, out of view.
+  private unseen = 0;
 
   private fireShots(dt: number, yaw: number): void {
     if (this.pendingShots.length === 0) return;

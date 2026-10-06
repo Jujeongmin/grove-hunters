@@ -3,7 +3,7 @@
 // second: a 120 Hz screen running at 60 is not worth blurring for.
 
 // Steps of pixels a point, and the fewest it goes down to: one pixel a point, never fewer (below it
-// a phone's picture turned visibly blurry).
+// a phone's picture turned visibly blurry), unless the settings allow fewer (low graphics does).
 const STEP = 0.25;
 export const FLOOR_RATIO = 1;
 // How often it judges, over how many frames, and how late the middle frame may be.
@@ -27,8 +27,8 @@ export class FrameGovernor {
   private noRaiseUntil = 0;
   private ratio: number;
 
-  // cap: the most pixels a point the settings allow.
-  constructor(private cap: number) {
+  // cap: the most pixels a point the settings allow; floor: the fewest.
+  constructor(private cap: number, private floor = FLOOR_RATIO) {
     this.ratio = cap;
   }
 
@@ -37,8 +37,9 @@ export class FrameGovernor {
   }
 
   // The settings changed: start again from their cap.
-  setCap(cap: number): void {
+  setCap(cap: number, floor = FLOOR_RATIO): void {
     this.cap = cap;
+    this.floor = floor;
     this.ratio = cap;
     this.reset(performance.now());
     this.noRaiseUntil = 0;
@@ -58,8 +59,8 @@ export class FrameGovernor {
       this.calmSince = now;
       // Sharpening just now brought this on: back down, and no more tries for a while.
       if (now - this.raisedAt < CALM_MS) this.noRaiseUntil = now + BURNED_MS;
-      if (this.ratio <= FLOOR_RATIO) return null;
-      return this.change(Math.max(FLOOR_RATIO, this.ratio - STEP), now);
+      if (this.ratio <= this.floor) return null;
+      return this.change(Math.max(this.floor, this.ratio - STEP), now);
     }
     if (middle > ON_TIME_MS) {
       this.calmSince = now;

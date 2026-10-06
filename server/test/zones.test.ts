@@ -82,6 +82,18 @@ describe("entering the world", () => {
     expect(field).toMatchObject({ zone: "forest1", channel: 4 });
   });
 
+  test("going through a portal takes you off the ground of the room you leave at once", async (server) => {
+    await makeCharacter(server, "test-a", "에이");
+    const entry = await enterAs(server, "test-a");
+    const portal = portalsOf(entry.zone)[0];
+    await walkTo(server, portal.x, portal.z);
+    await server.travel(portal.to);
+    // The platform lists you there a while longer; no one there draws you any more.
+    const left = await $room.getMyState();
+    expect(left.pose ?? null).toBeNull();
+    expect(left.party ?? null).toBeNull();
+  });
+
   test("you come in on the channel you last played on, or else your friends'", async (server) => {
     await makeCharacter(server, "test-a", "에이");
     await makeCharacter(server, "test-b", "비이");

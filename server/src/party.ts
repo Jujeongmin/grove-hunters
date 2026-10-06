@@ -30,6 +30,13 @@ async function readPartyById(id: string): Promise<Party | null> {
 async function writeParty(party: Party): Promise<void> {
   const { id, ...row } = party;
   await $global.updateCollectionItem(PARTIES_COLLECTION, { __id: id, ...row });
+  for (const m of party.members) await nudge(m.account);
+}
+
+// Tells an account's screen its party (or its invitations) changed: the screen listens to its own
+// account state and asks for the party at once, rather than at its next poll.
+async function nudge(account: string): Promise<void> {
+  await $global.updateUserState(account, { partyRev: Date.now() });
 }
 
 // The party id kept on the account (it may be stale: the party gone, or the account let go).
@@ -156,6 +163,7 @@ export async function invite(account: string, character: Character, target: stri
   const row = { to: target, from: account, fromName: character.name, party: party?.id ?? null, world: character.world, at: now };
   if (mine) await $global.updateCollectionItem(INVITES_COLLECTION, { __id: mine.id, ...row });
   else await $global.addCollectionItem(INVITES_COLLECTION, row);
+  await nudge(target);
 }
 
 // Taking (or turning down) an invitation. Taken, you join the inviter's party, or make one with them,
@@ -167,7 +175,11 @@ export async function answer(
   const invite = readInvite(await $global.getCollectionItem(INVITES_COLLECTION, inviteId).catch(() => null));
   if (!invite || invite.to !== account) throw new RuleViolation("no_invite");
   await $global.deleteCollectionItem(INVITES_COLLECTION, invite.id).catch(() => undefined);
-  if (!accept) return { partyId: null, channel: null };
+  // The inviter's screen hears of the answer either way.
+  if (!accept) {
+    await nudge(invite.from);
+    return { partyId: null, channel: null };
+  }
   await markSeen(account, now);
   if (!inviteLive(invite, now) || invite.world !== character.world) throw new RuleViolation("no_invite");
   return withMemberLock(account, async () => {

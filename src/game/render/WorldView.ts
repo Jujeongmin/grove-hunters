@@ -79,7 +79,7 @@ export const WORLD_MODELS = [...new Set([...LEVEL_MODELS, ...HERO_MODELS, ARROW_
 // Outdoors nothing roofs the camera in; this only keeps it from flying off.
 const SKY_CEILING = 30;
 // Share of walking speed kept while the guard is up.
-const HUD_INTERVAL_MS = 100;
+const HUD_INTERVAL_MS = 150;
 // A HUD that changed nothing still goes out this often (the screen's clocks ride on it).
 const HUD_HEARTBEAT_MS = 1000;
 // A portal only takes you once you have stepped this far clear of it (you arrive right beside one).
@@ -232,7 +232,7 @@ export class WorldView {
   private readonly effects = new Effects(this.scene);
   // The marks of telegraphed attacks on the ground.
   private readonly marks = new TelegraphLayer();
-  private readonly others = new Map<string, { actor: PlayerActor; key: string }>();
+  private readonly others = new Map<string, { actor: PlayerActor; key: string; look?: OtherPlayer["look"]; showNames?: boolean }>();
   private readonly monsters = new Map<string, MonsterActor>();
   private readonly npcs: { id: NpcId; actor: NpcActor; at: Point2 }[] = [];
   private readonly raycaster = new THREE.Raycaster();
@@ -329,16 +329,20 @@ export class WorldView {
     // As many pixels a point as the graphics quality allows (phones start at 1.5: small screens, warm
     // chips), fewer while frames come late (see frameGovernor.ts).
     const cap = () => Math.min(window.devicePixelRatio, QUALITY[settings().quality].pixelRatio);
-    this.governor = new FrameGovernor(cap());
+    const floor = () => Math.min(cap(), QUALITY[settings().quality].floor);
+    this.governor = new FrameGovernor(cap(), floor());
     this.renderer.setPixelRatio(this.governor.pixelRatio);
     this.stopQuality = onSettings(() => {
-      if (cap() === this.governorCap) return;
+      // A ratio of one draws the same at every quality; the floor still differs.
+      if (cap() === this.governorCap && floor() === this.governorFloor) return;
       this.governorCap = cap();
-      this.governor.setCap(this.governorCap);
+      this.governorFloor = floor();
+      this.governor.setCap(this.governorCap, floor());
       this.renderer.setPixelRatio(this.governor.pixelRatio);
       this.resize();
     });
     this.governorCap = cap();
+    this.governorFloor = floor();
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(this.renderer.domElement);
     this.input = new FpsInput(this.renderer.domElement);
@@ -653,6 +657,7 @@ export class WorldView {
   private readonly viewMatrix = new THREE.Matrix4();
   private readonly governor: FrameGovernor;
   private governorCap: number;
+  private governorFloor: number;
   // Trees and ground cover near you in full, further off as pictures or not at all.
   private lod: LodBatch | null = null;
   private lastSavedStep = 0;
@@ -740,7 +745,9 @@ export class WorldView {
     // You face the way you last walked (the camera turns on its own, by dragging).
     let facingYaw = this.pose.yaw;
     if (here) {
-      this.bodies = state.others.map((o) => ({ x: o.pose.x, z: o.pose.z, r: PLAYER_BODY * 2 }));
+      // Other players are walked through (two standing on one spot could otherwise lock each other in);
+      // monsters and the village folk still stand in the way.
+      this.bodies = [];
       for (const m of Object.values(state.monsters)) {
         if (m.alive) this.bodies.push({ x: m.x, z: m.z, r: PLAYER_BODY + MONSTERS[m.type].body });
       }
@@ -1230,7 +1237,7 @@ export class WorldView {
       npc.actor.setMarker(marker && this.dialogue?.id !== npc.id ? iconFor(MARKER_ICONS[marker]) : null);
       npc.actor.faceToward(this.dialogue?.id === npc.id && !this.dialogue.closing ? this.pose : null);
       npc.actor.inTalk = this.dialogue?.id === npc.id;
-      npc.actor.sync(dt, this.distanceTo(npc.at), this.camera.position.distanceTo(npc.actor.object.position));
+      npc.actor.sync(dt, this.distanceTo(npc.at), this.camera.position.distanceTo(npc.actor.object.position), this.view);
     }
     const seen = new Set<string>();
     for (const other of others) {
@@ -1247,17 +1254,23 @@ export class WorldView {
         entry = { actor, key };
         this.others.set(other.account, entry);
       }
-      const vip = other.look.vip ? `VIP${other.look.vip} · ` : "";
-      // A mercenary says so before its name, in its own colour.
-      const tag = other.merc ? `${t("merc.tag")} ` : "";
-      entry.actor.label(
-        settings().showNames ? `${vip}Lv${other.look.level} ${tag}${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "",
-        // VIP 5 and above: the name in gold.
-        other.merc ? "#9fd8ff" : (other.look.vip ?? 0) >= VIP_MIGHT ? "#ffd36a" : undefined,
-      );
-      entry.actor.path = readJob(other.look.job);
+      // The name is written again only when the look (or the names setting) changes, not every frame.
+      const showNames = settings().showNames;
+      if (entry.look !== other.look || entry.showNames !== showNames) {
+        entry.look = other.look;
+        entry.showNames = showNames;
+        const vip = other.look.vip ? `VIP${other.look.vip} · ` : "";
+        // A mercenary says so before its name, in its own colour.
+        const tag = other.merc ? `${t("merc.tag")} ` : "";
+        entry.actor.label(
+          showNames ? `${vip}Lv${other.look.level} ${tag}${jobLabel(other.look.job) ? `${jobLabel(other.look.job)} ` : ""}${other.look.name}${other.look.guild ? ` <${other.look.guild}>` : ""}` : "",
+          // VIP 5 and above: the name in gold.
+          other.merc ? "#9fd8ff" : (other.look.vip ?? 0) >= VIP_MIGHT ? "#ffd36a" : undefined,
+        );
+        entry.actor.path = readJob(other.look.job);
+      }
       this.applyMount(entry.actor, other.riding);
-      entry.actor.sync(other.pose, other.merc && other.dead ? "dead" : "active", dt);
+      entry.actor.sync(other.pose, other.merc && other.dead ? "dead" : "active", dt, this.view);
       entry.actor.fadeLabel(this.camera.position.distanceTo(entry.actor.object.position));
     }
     for (const [account, entry] of this.others) {
@@ -1421,8 +1434,11 @@ export class WorldView {
     };
     // The whole screen redraws on each one, so one that changes nothing (standing about, no cooldowns)
     // is held back, though one still goes out every HUD_HEARTBEAT_MS.
-    const key = JSON.stringify(hud, (k, v) => (typeof v === "number" && (k === "x" || k === "z" || k === "yaw") ? Math.round(v * 10)
-      : typeof v === "number" && k === "readyInMs" ? Math.ceil(v / 100) : typeof v === "number" && k === "hurt" ? Math.round(v * 20) : v));
+    // Steps of half a metre, a twentieth of a turn's worth of yaw and a quarter second of cooldown are
+    // as fine as the minimap and the skill buttons can show.
+    const key = JSON.stringify(hud, (k, v) => (typeof v === "number" && (k === "x" || k === "z") ? Math.round(v * 2)
+      : typeof v === "number" && k === "yaw" ? Math.round(v * 6)
+      : typeof v === "number" && k === "readyInMs" ? Math.ceil(v / 250) : typeof v === "number" && k === "hurt" ? Math.round(v * 10) : v));
     if (key === this.lastHudKey && now - this.lastHudSentAt < HUD_HEARTBEAT_MS) return;
     this.lastHudKey = key;
     this.lastHudSentAt = now;

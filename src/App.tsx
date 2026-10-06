@@ -24,11 +24,13 @@ const ONLINE_AVAILABLE = Boolean(import.meta.env.VITE_AGENT8_VERSE);
 const GALLERY = import.meta.env.DEV && new URLSearchParams(window.location.search).has("gallery");
 const ModelGallery = GALLERY ? lazy(() => import("./ui/ModelGallery").then((m) => ({ default: m.ModelGallery }))) : null;
 const DEV_LOCAL = devLocalTransport();
+const RETRY_MS = 8_000;
+const RETRIES = 8;
 
 export default function App() {
   const [inWorld, setInWorld] = useState(false);
   const [returning, setReturning] = useState(false);
-  const { server, connected, connectionStatus, joinRoom, leaveRoom } = useGameServer();
+  const { server, connected, connectionStatus, rsConnected, currentRoomId, connect, disconnect, joinRoom, leaveRoom } = useGameServer();
   const connection = DEV_LOCAL ? "ready" : connectionOf({ available: ONLINE_AVAILABLE, connected, phase: connectionStatus?.phase });
   // Thrown back to the menu by a dropped connection, to say so there.
   const [lost, setLost] = useState(false);
@@ -46,6 +48,29 @@ export default function App() {
   useShop(transport);
   const friends = useFriends(transport);
   const world = useMemo(() => (transport ? new WorldClient(transport) : null), [transport]);
+
+  // The room's own connection, passed on to the world (it subscribes again when the room comes back).
+  useEffect(() => {
+    if (transport instanceof Verse8Transport) transport.roomLink(rsConnected, currentRoomId);
+  }, [transport, rsConnected, currentRoomId]);
+
+  // Given up on the server (started without a line, or it stayed away too long): tried again every
+  // RETRY_MS, a few times, before only the menu's restart button is left. Not when another tab took
+  // the account over: trying would throw that one out in turn.
+  const retries = useRef(0);
+  useEffect(() => {
+    if (connection !== "failed") {
+      if (connection === "ready") retries.current = 0;
+      return;
+    }
+    if (/dup/i.test(connectionStatus?.reason ?? "") || retries.current >= RETRIES) return;
+    const timer = setTimeout(() => {
+      retries.current++;
+      disconnect();
+      void connect({});
+    }, RETRY_MS);
+    return () => clearTimeout(timer);
+  }, [connection, connectionStatus?.reason, connect, disconnect]);
 
   // The bar's set-up follows the account.
   useEffect(() => (transport ? syncControls(transport) : undefined), [transport]);

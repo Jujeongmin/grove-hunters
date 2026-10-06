@@ -21,4 +21,7 @@ export interface MatchTransport {
   // with that room as $room. Joining another room leaves the one you were in.
   joinRoom(roomId: string): Promise<void>;
   leaveRoom(): void;
+  // How the room's own connection stands (the platform drops and remakes it by itself): told on
+  // every change, with the room it is for (null once the platform has given the room up).
+  onRoomLink?(cb: (connected: boolean, roomId: string | null) => void): () => void;
 }

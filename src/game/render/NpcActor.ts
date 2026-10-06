@@ -114,8 +114,9 @@ export class NpcActor {
     return new THREE.Box3().setFromObject(this.object);
   }
 
-  // `you` is your distance from them, `camera` the camera's (for the name's fade).
-  sync(dt: number, you: number, camera: number): void {
+  // `you` is your distance from them, `camera` the camera's (for the name's fade). With a view, one
+  // outside it is hidden and stands unposed until it comes back.
+  sync(dt: number, you: number, camera: number, view: THREE.Frustum | null = null): void {
     // The model faces +z, so a yaw toward a point is its body's rotation as it stands.
     const target = this.faceYaw ?? this.restYaw;
     let turn = (target - this.body.rotation.y) % (2 * Math.PI);
@@ -141,6 +142,18 @@ export class NpcActor {
     const shown = camera < LABEL_FAR && !this.inTalk;
     this.tag.visible = shown;
     if (shown) this.tag.material.opacity = camera <= LABEL_NEAR ? 1 : 1 - (camera - LABEL_NEAR) / (LABEL_FAR - LABEL_NEAR);
-    this.mixer.update(dt);
+    this.bounds.center.set(this.object.position.x, this.object.position.y + 1.2, this.object.position.z);
+    const seen = view === null || view.intersectsSphere(this.bounds);
+    this.object.visible = seen;
+    if (!seen) {
+      this.unseen = Math.min(2, this.unseen + dt);
+      return;
+    }
+    this.mixer.update(dt + this.unseen);
+    this.unseen = 0;
   }
+
+  private readonly bounds = new THREE.Sphere(new THREE.Vector3(), 2.5);
+  // Time gone by unanimated, out of view.
+  private unseen = 0;
 }

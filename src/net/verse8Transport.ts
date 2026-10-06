@@ -11,6 +11,16 @@ export type Verse8Server = Pick<
   "account" | "remoteFunction" | "subscribeRoomState" | "subscribeRoomAllUserStates" | "onRoomMessage" | "subscribeGlobalMyState"
 >;
 
+// The SDK counts each room subscription so it asks the room only once, and wipes the counts whenever
+// the room connection is remade. Letting go of one made before the wipe then leaves its count below
+// zero, and the next subscription to it is never asked for (no room state, no players): those are
+// put back to none.
+function mendCounts(server: Verse8Server): void {
+  const counts = (server as { rsSubscribeCount?: Record<string, number> }).rsSubscribeCount;
+  if (!counts) return;
+  for (const key of Object.keys(counts)) if (counts[key] < 0) delete counts[key];
+}
+
 // Room joins go through the useGameServer hook, so its store tracks the room and reconnects to it.
 export interface RoomControl {
   joinRoom(roomId: string): Promise<void>;
@@ -18,7 +28,21 @@ export interface RoomControl {
 }
 
 export class Verse8Transport implements MatchTransport {
+  private readonly links = new Set<(connected: boolean, roomId: string | null) => void>();
+
   constructor(private readonly server: Verse8Server, private readonly rooms: RoomControl) {}
+
+  // Told by the app (from the SDK's store) whenever the room connection changes.
+  roomLink(connected: boolean, roomId: string | null): void {
+    for (const cb of this.links) cb(connected, roomId);
+  }
+
+  onRoomLink(cb: (connected: boolean, roomId: string | null) => void): () => void {
+    this.links.add(cb);
+    return () => {
+      this.links.delete(cb);
+    };
+  }
 
   get account(): string {
     return this.server.account;
@@ -29,11 +53,19 @@ export class Verse8Transport implements MatchTransport {
   }
 
   subscribeRoomState(roomId: string, cb: (state: Record<string, unknown>) => void): () => void {
-    return this.server.subscribeRoomState(roomId, cb);
+    const off = this.server.subscribeRoomState(roomId, cb);
+    return () => {
+      off();
+      mendCounts(this.server);
+    };
   }
 
   subscribeRoomUsers(roomId: string, cb: (users: RoomUser[]) => void): () => void {
-    return this.server.subscribeRoomAllUserStates(roomId, cb);
+    const off = this.server.subscribeRoomAllUserStates(roomId, cb);
+    return () => {
+      off();
+      mendCounts(this.server);
+    };
   }
 
   onRoomMessage(roomId: string, type: string, cb: (message: unknown) => void): () => void {

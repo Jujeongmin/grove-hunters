@@ -155,6 +155,14 @@ async function playing(account: string): Promise<Character> {
 
 // Puts your character in `zone` of `channel` and keeps (x, z) as its spot. The client then joins
 // the room and calls arrive, which puts you there.
+// On from this channel room to another place (a portal, a channel, a dungeon, the menu): the platform
+// keeps you listed here until its reconnect grace runs out, so you are taken off the ground at once.
+// The others stop drawing you, the monsters stop chasing you and you share no more kills here.
+async function offTheGround(): Promise<void> {
+  if (!readChannelRoom($sender.roomId)) return;
+  await $room.updateMyState({ pose: null, party: null, riding: null }, { returnState: false });
+}
+
 async function enter(account: string, character: Character, zone: ZoneId, x: number, z: number, channel: number): Promise<ZoneEntry> {
   if (levelOf(character.xp).level < ZONES[zone].minLevel) throw new RuleViolation("too_low");
   await saveSpot(account, { zone, x, z });
@@ -670,6 +678,7 @@ export class Server {
     // As you are in the field is how you come back to it.
     await carryVitals(account, mine);
     const at = zoneLayout("dungeon").playerSpawn;
+    await offTheGround();
     return { roomId, zone: "dungeon", channel: here.channel, x: at.x, z: at.z };
   }
 
@@ -937,6 +946,7 @@ export class Server {
     const until = now + ARENA_MS;
     await $global.updateUserState(account, { arena: { roomId, until, channel: here.channel } });
     const at = zoneLayout("arena").playerSpawn;
+    await offTheGround();
     return { roomId, zone: "arena", channel: n, x: at.x, z: at.z, until };
   }
 
@@ -1383,7 +1393,9 @@ export class Server {
     const at = arrivalFrom(target, here.zone);
     await carryVitals(account, mine);
     // You keep your channel: whoever you walked with is on the other side too.
-    return enter(account, await playing(account), target, at.x, at.z, here.channel);
+    const entry = await enter(account, await playing(account), target, at.x, at.z, here.channel);
+    await offTheGround();
+    return entry;
   }
 
   // After the client has joined the room enterWorld or travel picked: stands your character at
@@ -1444,6 +1456,7 @@ export class Server {
     // Back on the menu your friends no longer see you in the world (the channel is still kept for
     // coming back; see channelToEnter).
     await writeWhereabouts(account, null);
+    await offTheGround();
   }
 
   // Where you are in your zone. The room carries it to everyone there; the account keeps a copy
@@ -1893,7 +1906,9 @@ export class Server {
     const town = here ? townOf(here.zone) : START_ZONE;
     const home = zoneLayout(town).playerSpawn;
     await updateActive(account, (c) => ({ ...c, vitals: null }));
-    return enter(account, character, town, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
+    const entry = await enter(account, character, town, home.x, home.z, here?.channel ?? await channelToEnter(account, character));
+    await offTheGround();
+    return entry;
   }
 
   // The channels of your server, with how many play on each, for choosing one to move to.
@@ -1917,7 +1932,9 @@ export class Server {
     const players = await channelPlayers(here.world, channel);
     if (!players.includes(account) && players.length >= CHANNEL_CAPACITY) throw new RuleViolation("channel_full");
     await carryVitals(account, mine);
-    return enter(account, await playing(account), here.zone, mine.pose.x, mine.pose.z, channel);
+    const entry = await enter(account, await playing(account), here.zone, mine.pose.x, mine.pose.z, channel);
+    await offTheGround();
+    return entry;
   }
 
   // Every room tick (Verse8 runs it about every 200 ms): the monsters of a hunting zone move and fight.

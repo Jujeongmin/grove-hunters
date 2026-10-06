@@ -73,10 +73,12 @@ const STORAGE_KEY = "traitor-hunt:settings";
 export type Quality = "low" | "mid" | "high";
 // A phone's screen has 3 pixels a point: at 1.5 the world looked soft there, so the middle (a phone's
 // start) draws at 2, and the top at 2.5.
-export const QUALITY: Record<Quality, { pixelRatio: number; near: number }> = {
-  low: { pixelRatio: 1, near: 26 },
-  mid: { pixelRatio: 2, near: 38 },
-  high: { pixelRatio: 2.5, near: 55 },
+// floor: the fewest pixels a point the frame keeper may go down to while frames come late. Low lets the
+// picture soften below one so a weak chip still keeps time.
+export const QUALITY: Record<Quality, { pixelRatio: number; near: number; floor: number }> = {
+  low: { pixelRatio: 1, near: 22, floor: 0.6 },
+  mid: { pixelRatio: 2, near: 38, floor: 1 },
+  high: { pixelRatio: 2.5, near: 55, floor: 1 },
 };
 // Phones and tablets start at the middle; computers at the top.
 const COARSE = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;

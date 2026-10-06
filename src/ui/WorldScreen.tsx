@@ -40,7 +40,7 @@ const MarketPanel = lazy(() => import("./MarketPanel").then((m) => ({ default: m
 const GuildPanel = lazy(() => import("./GuildPanel").then((m) => ({ default: m.GuildPanel })));
 const RewardsPanel = lazy(() => import("./RewardsPanel").then((m) => ({ default: m.RewardsPanel })));
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
-import { PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
+import { INVITE_MS, PARTY_POLL_HURRY_MS, PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
 import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
 import { ArenaHud } from "./ArenaHud";
@@ -391,12 +391,24 @@ function ZoneScreen({
     });
   };
   const partyBusy = !!party?.party || (party?.invites.length ?? 0) > 0;
+  // After a change from the party screen (an invitation sent, above all) the answer is looked for often.
+  const [partyHurry, setPartyHurry] = useState(false);
+  const hurryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hurryParty = () => {
+    setPartyHurry(true);
+    clearTimeout(hurryTimer.current);
+    hurryTimer.current = setTimeout(() => setPartyHurry(false), INVITE_MS);
+  };
+  useEffect(() => () => clearTimeout(hurryTimer.current), []);
   useEffect(() => {
     if (!ready) return;
     pollParty.current();
-    const timer = setInterval(() => pollParty.current(), partyBusy ? PARTY_POLL_MS : PARTY_POLL_IDLE_MS);
+    const every = partyHurry ? PARTY_POLL_HURRY_MS : partyBusy ? PARTY_POLL_MS : PARTY_POLL_IDLE_MS;
+    const timer = setInterval(() => pollParty.current(), every);
     return () => clearInterval(timer);
-  }, [ready, partyBusy]);
+  }, [ready, partyBusy, partyHurry]);
+  // The server says when the party changed (someone took your invitation, joined or left): asked at once.
+  useEffect(() => (ready ? client.onPartyNudge(() => pollParty.current()) : undefined), [ready, client]);
   // The Trial Dungeon: how things stand, asked every DUNGEON_POLL_MS while queued, matched or looking
   // at its screen (asking also works the queue through). A started match you said yes to takes you in.
   const [dungeon, setDungeon] = useState<DungeonView | null>(null);
@@ -668,12 +680,15 @@ function ZoneScreen({
               <div className="hud-bar xp"><i style={{ width: `${Math.round((hud.xpInto / hud.xpNeed) * 100)}%` }} /></div>
             </div>
             {/* Under the vitals in the same column, so a taller vitals box pushes it down, never under. */}
-            {!saving && <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />}
+            {/* The party sits beside the map, not under it, so it never reaches down to the touch pad. */}
             {!saving && (
-              <PartyFrame
-                state={party} me={client.account} others={client.state.others} here={{ zone: hud.zoneId, channel: hud.channel }}
-                onOpen={() => toggle("party")}
-              />
+              <div className="hud-left-row">
+                <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} />
+                <PartyFrame
+                  state={party} me={client.account} others={client.state.others} here={{ zone: hud.zoneId, channel: hud.channel }}
+                  onOpen={() => toggle("party")}
+                />
+              </div>
             )}
           </div>
           {party && party.invites.length > 0 && (
@@ -834,7 +849,10 @@ function ZoneScreen({
       {panel === "party" && hud && (
         <PartyPanel
           client={client} state={party} me={client.account} here={{ zone: hud.zoneId, channel: hud.channel }}
-          onChanged={() => pollParty.current()} onClose={() => setPanel(null)}
+          onChanged={() => {
+            pollParty.current();
+            hurryParty();
+          }} onClose={() => setPanel(null)}
         />
       )}
       {panel === "grove" && <GrovePanel view={grove} failed={groveFailed} onClose={() => setPanel(null)} />}

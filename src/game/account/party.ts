@@ -14,6 +14,9 @@ export const INVITE_MS = 60_000;
 // The screen asks for the party this often while in one or invited; otherwise less often.
 export const PARTY_POLL_MS = 10_000;
 export const PARTY_POLL_IDLE_MS = 20_000;
+// Just after inviting someone (or another change from the party screen), for INVITE_MS: the answer is
+// looked for this often, should the server's nudge not come through.
+export const PARTY_POLL_HURRY_MS = 3_000;
 // A member away this long is let go when the party is next read.
 export const PARTY_OFFLINE_MS = 10 * 60_000;
 
