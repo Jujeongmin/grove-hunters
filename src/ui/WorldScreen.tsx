@@ -315,6 +315,8 @@ function ZoneScreen({
   // The last claimed quest's reward, shown at the top for a few seconds (see RewardToast).
   const [reward, setReward] = useState<Reward | null>(null);
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
+  // The stable covers the whole screen: the world need not be drawn under it.
+  useEffect(() => view.current?.setCovered(panel === "mounts"), [panel]);
   // The first tutorial: what to do next, and what lights up for it.
   const tutorial = useTutorial(client, bag, playerClass, hud?.auto ?? false, panel === "skills");
   // A character new to the game finds its bar empty, for the tutorial to have it fill the first slot.

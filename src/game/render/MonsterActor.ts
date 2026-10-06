@@ -57,7 +57,8 @@ export class MonsterActor {
   // Where the next blow comes from (set by the view before sync), to push away from.
   private blowFrom: { x: number; z: number } | null = null;
 
-  constructor(readonly id: string, readonly body: THREE.Object3D, clips: THREE.AnimationClip[], look: MonsterLook, private readonly maxHp = 100) {
+  // name: shown over the health bar once it is hurt (empty: none).
+  constructor(readonly id: string, readonly body: THREE.Object3D, clips: THREE.AnimationClip[], look: MonsterLook, private readonly maxHp = 100, name = "") {
     body.scale.setScalar(look.height / skinnedHeight(body));
     this.materials = ownMaterials(body);
     if (look.tint !== null) {
@@ -85,6 +86,7 @@ export class MonsterActor {
     back.renderOrder = 10;
     this.barFill.renderOrder = 11;
     this.bar.add(back, this.barFill);
+    if (name) this.bar.add(nameTag(name));
     this.bar.position.y = look.height + 0.35;
     this.bar.visible = false;
     this.object = new THREE.Group();
@@ -189,7 +191,54 @@ export class MonsterActor {
     return change;
   }
 
+  // Gone from the world: its own materials, the bar and the name tag are freed (the model's geometry
+  // is the library's, shared, and stays).
+  dispose(): void {
+    this.mixer.stopAllAction();
+    for (const m of this.materials) m.dispose();
+    this.bar.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.dispose();
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      material.map?.dispose();
+      material.dispose();
+    });
+  }
+
   private readonly bounds = new THREE.Sphere();
   // Time gone by unanimated, out of view.
   private unseen = 0;
+}
+
+// A monster's name in small white letters with a dark rim, just over its health bar (a child of the
+// bar, so it turns to the camera with it and shows only while the bar does).
+const NAME_HEIGHT = 0.2;
+const NAME_PX = 40;
+function nameTag(name: string): THREE.Mesh {
+  const canvas = document.createElement("canvas");
+  const g = canvas.getContext("2d")!;
+  const font = `700 ${NAME_PX}px "Jua", "Gowun Dodum", sans-serif`;
+  g.font = font;
+  canvas.width = Math.ceil(g.measureText(name).width) + 16;
+  canvas.height = NAME_PX + 14;
+  g.font = font;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.lineJoin = "round";
+  g.lineWidth = 7;
+  g.strokeStyle = "rgba(10, 6, 4, 0.9)";
+  g.strokeText(name, canvas.width / 2, canvas.height / 2);
+  g.fillStyle = "#fff4dc";
+  g.fillText(name, canvas.width / 2, canvas.height / 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const height = NAME_HEIGHT * (canvas.height / NAME_PX);
+  const tag = new THREE.Mesh(
+    new THREE.PlaneGeometry(height * (canvas.width / canvas.height), height),
+    new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthTest: false }),
+  );
+  tag.position.y = 0.2;
+  tag.renderOrder = 12;
+  return tag;
 }

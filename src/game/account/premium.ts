@@ -13,7 +13,7 @@ export const PASS_PRODUCT = "monthly-pass";
 export const PASS_DAYS = 30;
 export const PASS_GEMS_NOW = 300;
 export const PASS_GEMS_DAILY = 40;
-export const PASS_XP = 0.1;
+export const PASS_XP = 0.2;
 export const PASS_POINTS = 600;
 const DAY_MS = 24 * 60 * 60 * 1000;
 

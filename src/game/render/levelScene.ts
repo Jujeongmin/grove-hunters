@@ -31,6 +31,9 @@ const PATH_FRAY = 0.9;
 // Beyond the map the ground runs on this many cells so the forest never floats over the void.
 const GROUND_BORDER = 6;
 const GROUND_STEP = 1;
+// The ground is laid in square pieces this wide (metres), so the camera skips the ones it does not see
+// (one plane over the whole map was drawn whole, behind the camera too).
+const GROUND_CHUNK = 24;
 
 // Where to draw a platform's model so the crate you see is the box you stand on: stretched to its
 // width, depth and top, and lifted until its own foot rests on the floor.
@@ -46,19 +49,40 @@ export function platformMatrix(platform: Platform, bounds: THREE.Box3): THREE.Ma
 
 // A ground plane coloured per vertex: meadow where you can walk, in broad patches of lighter, deeper
 // and sun-dried grass; darker under the trees; worn to dirt along the paths. Over the colours lie the
-// grain of real grass, forest floor and path pictures (see groundTextures.ts).
-function buildGround(layout: LevelLayout, paths: readonly Point2[][], look: RegionLook): THREE.Mesh {
+// grain of real grass, forest floor and path pictures (see groundTextures.ts). Laid in pieces (see
+// GROUND_CHUNK); the points along their seams are worked out alike on both sides, so no seam shows.
+function buildGround(layout: LevelLayout, paths: readonly Point2[][], look: RegionLook): THREE.Group {
+  const t = layout.tileSize;
+  const left = -GROUND_BORDER * t;
+  const top = -GROUND_BORDER * t;
+  const width = (layout.cols + GROUND_BORDER * 2) * t;
+  const depth = (layout.rows + GROUND_BORDER * 2) * t;
+  const group = new THREE.Group();
+  const material = groundMaterial();
+  for (let z0 = 0; z0 < depth; z0 += GROUND_CHUNK) {
+    for (let x0 = 0; x0 < width; x0 += GROUND_CHUNK) {
+      const w = Math.min(GROUND_CHUNK, width - x0);
+      const d = Math.min(GROUND_CHUNK, depth - z0);
+      const geometry = new THREE.PlaneGeometry(w, d, Math.max(1, Math.round(w / GROUND_STEP)), Math.max(1, Math.round(d / GROUND_STEP)));
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(left + x0 + w / 2, 0, top + z0 + d / 2);
+      paintGround(geometry, layout, paths, look);
+      const piece = new THREE.Mesh(geometry, material);
+      piece.receiveShadow = true;
+      group.add(piece);
+    }
+  }
+  return group;
+}
+
+// The colours and the ground pictures' shares at every point of one piece of ground.
+function paintGround(geometry: THREE.BufferGeometry, layout: LevelLayout, paths: readonly Point2[][], look: RegionLook): void {
   const PATH_COLOR = new THREE.Color(look.meadow);
   const DEEP_GRASS = new THREE.Color(look.deep);
   const DRY_GRASS = new THREE.Color(look.dry);
   const FOREST_COLOR = new THREE.Color(look.forest);
   const DIRT_COLOR = new THREE.Color(look.dirt);
   const t = layout.tileSize;
-  const width = (layout.cols + GROUND_BORDER * 2) * t;
-  const depth = (layout.rows + GROUND_BORDER * 2) * t;
-  const geometry = new THREE.PlaneGeometry(width, depth, Math.round(width / GROUND_STEP), Math.round(depth / GROUND_STEP));
-  geometry.rotateX(-Math.PI / 2);
-  geometry.translate((layout.cols * t) / 2, 0, (layout.rows * t) / 2);
   const positions = geometry.getAttribute("position");
   const colors = new Float32Array(positions.count * 3);
   // How much of each ground picture shows at each point: grass, forest floor, path.
@@ -91,9 +115,6 @@ function buildGround(layout: LevelLayout, paths: readonly Point2[][], look: Regi
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geometry.setAttribute("splat", new THREE.BufferAttribute(splat, 3));
-  const ground = new THREE.Mesh(geometry, groundMaterial());
-  ground.receiveShadow = true;
-  return ground;
 }
 
 // Builds the sky, the sun, the ground, the forest and the platforms. Shared by the world view and

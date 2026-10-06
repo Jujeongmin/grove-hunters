@@ -24,9 +24,9 @@ const SIMPLIFY = {
   sn_tree_1: { ratio: 0.35, error: 0.02 }, sn_tree_2: { ratio: 0.4, error: 0.02 }, sn_tree_3: { ratio: 0.5, error: 0.02 },
   sn_tree_4: { ratio: 0.5, error: 0.02 }, sn_pine_1: { ratio: 0.5, error: 0.02 }, sn_pine_3: { ratio: 0.4, error: 0.02 },
   sn_flowers: { ratio: 0.4, error: 0.03 }, sn_clover: { ratio: 0.5, error: 0.03 }, sn_mushroom: { ratio: 0.3, error: 0.03 },
-  sn_bush_flowers: { ratio: 0.5, error: 0.03 },
-  // The tower only stands in the far-off castle now: an eighth of its carving does from there.
-  bld_tower: { ratio: 0.12, error: 0.04 },
+  sn_bush_flowers: { ratio: 0.25, error: 0.12 },
+  // The tower only stands in the far-off castle now, hundreds of metres off: a silhouette does.
+  bld_tower: { ratio: 0.03, error: 0.3 },
 };
 mkdirSync(outDir, { recursive: true });
 

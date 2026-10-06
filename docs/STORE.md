@@ -73,7 +73,7 @@ PC는 마우스만으로(WASD 이동도 됩니다), 모바일은 손가락만으
 ■ 전부 무료
 6개 직업과 모든 지역을 레벨 제한 없이 무료로 즐길 수 있습니다(지역마다 필요한 레벨만 있습니다).
 보석은 탈것 부화, 거래소, 강화 파괴 방지에 씁니다. 보석 상품마다 첫 구매는 2배이고, 보석을 살수록 VIP 등급(1~10)과 혜택이 올라갑니다.
-월정액은 30일 동안 매일 보석과 경험치 +10%를 드립니다.
+월정액은 30일 동안 매일 보석과 경험치 +20%를 드립니다.
 
 ■ 출석부와 업적
 매일 처음 들어오면 출석부에 도장이 찍히고 골드·보석·강화석을, 매주 두 번은 탈것 소환권도 받습니다. 빠진 날이 있어도 이어서 찍힙니다.
@@ -132,7 +132,7 @@ Your skill bar is saved to your account, the same on PC and mobile.
 ■ Free to play
 All six classes and every region are free, with no level cap (each region only asks for a level).
 Gems hatch mounts, trade at the market and protect gear from breaking. Each gem pack's first purchase is doubled, and buying gems raises your VIP rank (1-10) and its perks.
-The monthly pass brings gems every day and +10% XP for 30 days.
+The monthly pass brings gems every day and +20% XP for 30 days.
 
 ■ Attendance and achievements
 Your first visit each day stamps the attendance sheet for gold, gems or whetstones, and twice a week a mount ticket; missed days don't break it.
@@ -154,7 +154,42 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 | `gems-100` | 보석 100개 / 100 Gems | 탈것 뽑기 한 번 분량의 보석. 첫 구매는 2배. / Enough for one mount draw. Double on your first purchase. |
 | `gems-550` | 보석 550개 / 550 Gems | 보석 한 주머니. 첫 구매는 2배. / A pouch of gems. Double on your first purchase. |
 | `gems-1200` | 보석 1,200개 / 1,200 Gems | 보석이 가득한 상자. 첫 구매는 2배. / A chest full of gems. Double on your first purchase. |
-| `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 40개, 기간 중 경험치 +10%. 다시 사면 30일 연장. / 300 gems now, 40 gems on your first visit each day for 30 days, and +10% XP while it lasts. Buying again adds 30 days. |
+| `monthly-pass` | 월정액 / Monthly Pass | 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 40개, 기간 중 경험치 +20%. 다시 사면 30일 연장. / 300 gems now, 40 gems on your first visit each day for 30 days, and +20% XP while it lasts. Buying again adds 30 days. |
+
+## 확률 공개 (Draw odds)
+
+탈것 부화(뽑기)의 확률. 코드(`GACHA_ODDS`, `rollMounts`, `PITY`, `MYTHIC_PITY`, src/game/account/mounts.ts)와 게임 안
+'뽑기 확률' 표가 같은 숫자를 낸다. 숫자를 바꾸면 이 표도 같이 고친다. 등급이 정해지면 그 등급의 탈것 중 하나가 같은
+확률로 나온다. VIP 10 전용 천상의 용은 뽑기에서 나오지 않는다. 보석 100개 1회, 900개 10회, 소환권 1장 1회.
+
+The odds of hatching (the mount draw), as the code and the in-game odds table give them. A tier is drawn first, then
+one of its mounts, each as likely as the others. The Celestial Dragon (VIP 10's own) is never drawn.
+
+| 등급 / Tier | 탈것 / Mounts | 1회 부화 / One hatch | 10회 부화 10번째 보장 / Ten-hatch guaranteed slot | 전설 천장 / Legendary pity | 신화 천장 / Mythic pity |
+|---|---|---|---|---|---|
+| 일반 / Common | 돼지 Pig · 닭 Chicken · 펭귄 Penguin · 고양이 Cat · 강아지 Dog · 비둘기 Pigeon | 60% (각 each 10%) | 0% | 0% | 0% |
+| 희귀 / Rare | 판다 Panda · 게 Crab · 갑옷벌 Armabee · 글럽 Glub · 날개오징어 Squidle | 30% (각 each 6%) | 90% (각 each 18%) | 0% | 0% |
+| 영웅 / Epic | 예티 Yeti · 새끼 용 Drake · 회오리 Hywirl · 알파킹 Alpaking · 여왕 갑옷벌 Queen Armabee | 9% (각 each 1.8%) | 9% (각 each 1.8%) | 0% | 0% |
+| 전설 / Legendary | 고대 글럽 Elder Glub · 황제 알파킹 Alpaking Emperor · 용 Dragon | 0.9% (각 each 0.3%) | 0.9% (각 each 0.3%) | 99.9% (각 each 33.3%) | 0% |
+| 신화 / Mythic | 황금 용 Golden Dragon · 심연의 황제 Void Emperor | 0.1% (각 each 0.05%) | 0.1% (각 each 0.05%) | 0.1% (각 each 0.05%) | 100% (각 each 50%) |
+
+한국어:
+
+- 1회 부화(보석·소환권)와 10회 부화의 1~9번째는 '1회 부화' 열의 확률이다.
+- 10회 부화 보장: 앞의 9개가 모두 일반이면 10번째는 희귀 이상이다. 1회 확률에서 일반이 나올 자리가 희귀가 된다(희귀 90%·영웅 9%·전설 0.9%·신화 0.1%). 앞 9개 중 하나라도 희귀 이상이면 10번째도 '1회 부화' 확률이다.
+- 전설 천장: 마지막 전설(또는 신화) 뒤 100번째 부화는 전설 이상이다(전설 99.9%·신화 0.1%).
+- 신화 천장: 마지막 신화 뒤 500번째 부화는 신화다(신화 100%).
+- 겹치면 신화 천장, 전설 천장, 10회 보장 순으로 하나만 적용된다. 천장 횟수는 계정에 저장되고 부화 탭에 남은 횟수가 보인다.
+- 이미 가진 탈것이 나오면 별(★)이 오르고(최대 ★5), ★5 뒤에는 보석 30개로 돌려준다.
+
+English:
+
+- A single hatch (gems or a ticket) and draws 1 to 9 of a ten-hatch use the One hatch column.
+- Ten-hatch guarantee: when the first nine are all common, the tenth is rare or better. A common roll becomes rare (rare 90%, epic 9%, legendary 0.9%, mythic 0.1%). If any of the first nine is rare or better, the tenth uses the One hatch odds.
+- Legendary pity: the 100th hatch since the last legendary (or mythic) is legendary or better (legendary 99.9%, mythic 0.1%).
+- Mythic pity: the 500th hatch since the last mythic is mythic (100%).
+- When more than one applies, only one does: mythic pity, then legendary pity, then the ten-hatch guarantee. The counts are kept on the account, and the hatch tab shows how many are left.
+- A mount you already own adds a star (up to ★5); past ★5 it comes back as 30 gems.
 
 ## 릴리스 노트 (이번 업데이트, 2026-10-02)
 
@@ -173,7 +208,7 @@ Product ID는 코드와 철자까지 같아야 한다(`GEM_PRODUCTS`, src/game/a
 ```
 - 이제 게임 전체가 무료입니다: 모든 지역과 6개 직업, 모든 계정에 사슴 탈것
 - 보석 상품마다 첫 구매 2배, 보석을 살수록 오르는 VIP 1~10 (등급마다 사냥 경험치·골드 +20%와 고유 혜택, VIP 10 전용 신화 탈것)
-- 월정액: 즉시 보석 300개, 30일 동안 매일 보석 50개, 기간 중 경험치 +10%
+- 월정액: 즉시 보석 300개, 30일 동안 매일 첫 접속 때 보석 40개(우편), 기간 중 경험치 +20%
 - 대장간 강화가 +15까지 열리고, +6 이상은 보석으로 파괴를 막을 수 있습니다
 - 신화 탈것, 10연속 부화(희귀 이상 보장), 천장(전설 100회·신화 500회)
 - 랭킹에 전투력 탭이 생겼습니다
@@ -196,7 +231,7 @@ The update before (2026-10-01):
 ```
 - The whole game is free: every region, all six classes, and a deer for every account
 - Each gem pack's first purchase is doubled, and buying gems raises your VIP rank 1-10 (+20% hunting XP and gold a rank, a perk for each, and a mythic mount of VIP 10's own)
-- Monthly pass: 300 gems now, 50 gems a day for 30 days, and +10% XP while it lasts
+- Monthly pass: 300 gems now, 40 gems on your first visit each day for 30 days (by mail), and +20% XP while it lasts
 - Enhancing goes up to +15, and gems can keep attempts at +6 and up from breaking your gear
 - Mythic mounts, hatch ten (a rare or better promised), and pity at 100 draws for legendary and 500 for mythic
 - A power board in the ranking

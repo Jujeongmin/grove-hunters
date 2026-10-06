@@ -265,6 +265,13 @@ export class MountStage {
     return url;
   }
 
+  // Every card drawn: the painter's context goes now rather than when the stable closes.
+  releasePainter(): void {
+    this.painter?.dispose();
+    this.painter?.forceContextLoss();
+    this.painter = null;
+  }
+
   // The stage's context and the card painter's both go: each opening of the stable makes a new canvas,
   // and contexts left behind made the browser drop the world's own (its models came out black).
   dispose(): void {

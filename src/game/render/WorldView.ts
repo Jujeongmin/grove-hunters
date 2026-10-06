@@ -222,7 +222,9 @@ export interface WorldViewOptions {
 // drawn here and sent through the WorldClient; the server decides what they hit. Auto-battle (its button)
 // walks you to the nearest monster, fights it and uses your skill when it helps.
 export class WorldView {
-  private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
+  // Smoothed edges only at the high graphics quality: a phone's GPU pays dearly for them (the world is
+  // built again on every travel, so a changed quality takes hold at the next one).
+  private readonly renderer = new THREE.WebGLRenderer({ antialias: settings().quality === "high" });
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(70, 1, 0.1, VIEW_FAR);
   private readonly clock = new THREE.Clock();
@@ -396,7 +398,10 @@ export class WorldView {
           const g = mesh.geometry;
           const tris = (g.index ? g.index.count : g.getAttribute("position").count) / 3;
           const n = mesh.isInstancedMesh ? mesh.count ?? 1 : 1;
-          const key = (mesh.name.split(":")[0].split("|")[0] || mesh.parent?.name || "?").slice(0, 40);
+          // Named by the mesh, or the nearest named thing it hangs from.
+          let named: THREE.Object3D | null = mesh;
+          while (named && !named.name) named = named.parent;
+          const key = (named?.name.split(":")[0].split("|")[0] || `?${mesh.type}:${(mesh.material as THREE.Material).type}:${n}`).slice(0, 40);
           by.set(key, (by.get(key) ?? 0) + tris * n);
         });
         return [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25);
@@ -633,7 +638,8 @@ export class WorldView {
       this.step(Math.min(this.clock.getDelta(), BACKGROUND_MAX_DT), false);
       return;
     }
-    this.step(Math.min(this.clock.getDelta(), 0.1), true);
+    this.step(Math.min(this.clock.getDelta(), 0.1), !this.covered);
+    if (this.covered) return;
     const ratio = this.governor.frame(performance.now());
     if (ratio !== null) {
       this.renderer.setPixelRatio(ratio);
@@ -655,6 +661,13 @@ export class WorldView {
   setPowerSave(on: boolean): void {
     this.powerSave = on;
   }
+
+  // A window over the whole screen (the stable): the world goes on but is not drawn under it.
+  setCovered(on: boolean): void {
+    this.covered = on;
+  }
+
+  private covered = false;
 
   // A hidden tab gets no animation frames: then a worker's timer steps the game (moving, fighting,
   // potions, poses to the server) without drawing it, so auto-battle goes on while you look elsewhere.
@@ -1286,7 +1299,7 @@ export class WorldView {
         // A kind this zone did not load (a server ahead of this client): not drawn, rather than the
         // whole view stopping on it.
         if (!library.has(skin.model)) continue;
-        actor = new MonsterActor(id, library.instance(skin.model), library.get(skin.model).animations, skin.look, state.maxHp ?? MONSTERS[state.type].hp);
+        actor = new MonsterActor(id, library.instance(skin.model), library.get(skin.model).animations, skin.look, state.maxHp ?? MONSTERS[state.type].hp, `Lv${MONSTERS[state.type].level} ${monsterName(state.type)}`);
         this.monsters.set(id, actor);
         this.scene.add(actor.object);
       }
@@ -1308,6 +1321,7 @@ export class WorldView {
     for (const [id, actor] of this.monsters) {
       if (monsters[id]) continue;
       this.scene.remove(actor.object);
+      actor.dispose();
       this.monsters.delete(id);
     }
   }

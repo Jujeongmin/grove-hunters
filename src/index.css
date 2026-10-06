@@ -88,7 +88,7 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   padding: 18px 40px;
   border: 0;
   background: none;
-  cursor: pointer;
+  cursor: var(--cursor-press), pointer;
   transition: transform 0.12s, color 0.12s;
 }
 .brush-button::before {
@@ -146,13 +146,13 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 }
 .hud-prompt.low { top: 67%; }
 /* The same prompt at a locked portal, which opens what the portal asks for. */
-button.hud-prompt { border: 0; background: none; color: var(--ember); cursor: pointer; pointer-events: auto; }
+button.hud-prompt { border: 0; background: none; color: var(--ember); cursor: var(--cursor-press), pointer; pointer-events: auto; }
 button.hud-prompt:hover { color: #ffe0b0; }
 /* Why the grove is hazy, once a week on coming in, top centre under the target's bar; a tap opens the
    grove. Narrow enough to pass between the vitals and the unfolded menu. */
 .hud-haze {
   position: absolute; left: calc(50% - 20px); top: 64px; transform: translateX(-50%); width: max-content; max-width: 320px;
-  text-align: center; white-space: pre-line; line-height: 1.45; cursor: pointer; pointer-events: auto;
+  text-align: center; white-space: pre-line; line-height: 1.45; cursor: var(--cursor-press), pointer; pointer-events: auto;
   border: 0; background: none; color: #ffe08a; font: 600 14px var(--font-head);
 }
 .hud-error { position: absolute; left: 50%; top: 74%; transform: translateX(-50%); color: var(--ember); font: 600 14px var(--font-head); white-space: nowrap; pointer-events: none; }
@@ -198,7 +198,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The menu's icon buttons, top right. */
 /* The menu's buttons: the picture alone, no box, its name laid over its foot in outlined letters. */
 .hud-icon-button {
-  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; cursor: pointer;
+  position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; cursor: var(--cursor-press), pointer;
   background: none; border: 0; color: #fff4e0; font: 700 10px var(--font-head);
 }
 .hud-icon-button img {
@@ -278,7 +278,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The moment a quest is done: a panel in the middle, once, fading in and out. */
 .quest-complete {
   position: absolute; left: 50%; top: 28%; transform: translateX(-50%); min-width: 280px; max-width: 90%; padding: 16px 26px;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; cursor: var(--cursor-press), pointer;
   background: rgba(14, 11, 9, 0.9); border: 2px solid #ffd36a; border-radius: 12px;
   box-shadow: 0 0 30px rgba(255, 211, 106, 0.35); animation: quest-complete 4.5s ease forwards; font-size: 13px; color: var(--ink-dim);
 }
@@ -309,7 +309,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* Gold and gems, right under the pinned menu buttons. */
 .hud-wallet { display: flex; gap: 4px; pointer-events: auto; }
 .hud-wallet button {
-  display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 4px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px 2px 4px; cursor: var(--cursor-press), pointer;
   background: rgba(14, 11, 9, 0.8); border: 1px solid rgba(255, 211, 106, 0.35); border-radius: 999px;
   font: 700 12px var(--font-head); color: #ffe08a; font-variant-numeric: tabular-nums; white-space: nowrap;
 }
@@ -332,7 +332,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .hud-slot { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 46px; }
 /* A square slot, like a hotbar's: the icon fills it, the key sits in a corner. */
 .hud-cell {
-  position: relative; width: 42px; height: 42px; flex: none; border-radius: 5px; overflow: hidden; cursor: pointer;
+  position: relative; width: 42px; height: 42px; flex: none; border-radius: 5px; overflow: hidden; cursor: var(--cursor-press), pointer;
   background: rgba(14, 11, 9, 0.85); border: 2px solid rgba(255, 179, 90, 0.55);
   box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.5); touch-action: none; user-select: none;
   transition: transform 0.18s ease-out;
@@ -377,7 +377,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: rgba(14, 11, 9, 0.7); border: 1px solid rgba(255, 211, 106, 0.3); border-radius: 8px;
   font-size: 12px; color: var(--ink-dim);
 }
-.hud-quest.clickable { cursor: pointer; }
+.hud-quest.clickable { cursor: var(--cursor-press), pointer; }
 .hud-quest.clickable:hover { border-color: var(--ember); }
 .hud-quest.seeking { border-color: var(--ember); box-shadow: 0 0 12px rgba(255, 179, 90, 0.35); }
 /* Done and not yet reported: it pulses gold and a shine sweeps across it until tapped (which walks you
@@ -426,7 +426,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   position: absolute; width: 62px; height: 62px; border-radius: 50%; padding: 0; pointer-events: auto;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
   background: rgba(14, 11, 9, 0.32); border: 2px solid rgba(255, 255, 255, 0.28); color: rgba(242, 232, 213, 0.9);
-  font: 700 10px var(--font-head); text-shadow: var(--shadow); touch-action: none; user-select: none; cursor: pointer;
+  font: 700 10px var(--font-head); text-shadow: var(--shadow); touch-action: none; user-select: none; cursor: var(--cursor-press), pointer;
 }
 .pad-button img { width: 34px; height: 34px; image-rendering: pixelated; opacity: 0.85; pointer-events: none; }
 .pad-button span { pointer-events: none; }
@@ -482,7 +482,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: rgba(0, 0, 0, 0.85);
 }
 .minimap-canvas { display: block; }
-.minimap-canvas.pickable { cursor: pointer; }
+.minimap-canvas.pickable { cursor: var(--cursor-press), pointer; }
 .map-panel { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(4, 3, 2, 0.7); }
 .map-sheet {
   /* Sized by the stage, not the window: the sheet never hangs past the game's black bars. */
@@ -567,7 +567,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .news-list > li { border-radius: 6px; background: rgba(255, 255, 255, 0.05); }
 .news-list > li.open { background: rgba(255, 179, 90, 0.1); }
 .news-head {
-  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 10px; cursor: pointer; text-align: left;
+  display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 10px; cursor: var(--cursor-press), pointer; text-align: left;
   background: none; border: 0; color: var(--ink); font: 600 14px var(--font-head);
 }
 .news-date { flex: none; font-size: 12px; color: var(--ink-dim); }
@@ -612,7 +612,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stepper { display: inline-flex; align-items: center; gap: 4px; }
 .stepper b { min-width: 56px; text-align: center; font: 700 15px var(--font-head); color: #bff0ff; font-variant-numeric: tabular-nums; }
 .stepper-arrow {
-  width: 30px; height: 28px; padding: 0; border-radius: 6px; cursor: pointer; touch-action: none; user-select: none;
+  width: 30px; height: 28px; padding: 0; border-radius: 6px; cursor: var(--cursor-press), pointer; touch-action: none; user-select: none;
   border: 1px solid rgba(255, 179, 90, 0.5); background: rgba(255, 179, 90, 0.12); color: var(--ink); font: 700 15px var(--font-head);
 }
 .stepper-arrow:active:not(:disabled) { background: rgba(255, 179, 90, 0.35); }
@@ -620,7 +620,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .market-tab > .note { margin: 0; font-size: 12px; color: var(--ink-dim); }
 .market-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .market-chip {
-  padding: 4px 12px; border-radius: 14px; cursor: pointer; font: 600 12px var(--font-head); color: var(--ink);
+  padding: 4px 12px; border-radius: 14px; cursor: var(--cursor-press), pointer; font: 600 12px var(--font-head); color: var(--ink);
   background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 179, 90, 0.3);
 }
 .market-chip.on { color: #1a120b; background: var(--ember); border-color: var(--ember); }
@@ -665,7 +665,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .guild-list > li > .note { font-size: 12px; color: var(--ink-dim); }
 .guild-what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
 .guild-what .note { font-size: 12px; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.guild-member { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0; background: none; border: 0; color: var(--ink); text-align: left; cursor: pointer; }
+.guild-member { flex: 1; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 0; background: none; border: 0; color: var(--ink); text-align: left; cursor: var(--cursor-press), pointer; }
 .guild-members li.online .presence { background: #7fd36a; box-shadow: 0 0 6px rgba(127, 211, 106, 0.7); }
 .guild-role { margin-left: 4px; padding: 0 5px; border-radius: 4px; font: 600 11px var(--font-head); color: var(--ink-dim); background: rgba(255, 255, 255, 0.08); }
 .guild-role.master { color: #1a120b; background: #ffd36a; }
@@ -733,7 +733,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* A talk with someone in the village (as in Lineage M or Lost Ark): the camera at their face, the HUD
    gone, and their words across the bottom, the ways on at the right. */
 /* The whole screen takes the tap that moves the talk on (and keeps it from reaching the world). */
-.dialogue-layer { position: absolute; inset: 0; pointer-events: auto; cursor: pointer; }
+.dialogue-layer { position: absolute; inset: 0; pointer-events: auto; cursor: var(--cursor-press), pointer; }
 .dialogue {
   position: absolute; left: 0; right: 0; bottom: 0; min-height: 132px; padding: 14px 24px 18px;
   display: flex; gap: 20px; align-items: flex-end;
@@ -790,7 +790,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-left { display: flex; flex-direction: column; gap: 8px; }
 .bag-inventory .bag-gear { gap: 4px; padding-bottom: 6px; }
 .bag-worn {
-  display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; text-align: left; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px; text-align: left; cursor: var(--cursor-press), pointer;
   border: 1px solid transparent; background: rgba(255, 255, 255, 0.04); color: inherit;
 }
 .bag-worn b { font: 700 14px var(--font-head); }
@@ -798,7 +798,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* Nine to a row: every kind of item there is fits in two rows. */
 .bag-grid { display: grid; grid-template-columns: repeat(9, 44px); gap: 6px; }
 .bag-cell {
-  position: relative; width: 44px; height: 44px; padding: 4px; border-radius: 6px; cursor: pointer;
+  position: relative; width: 44px; height: 44px; padding: 4px; border-radius: 6px; cursor: var(--cursor-press), pointer;
   border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.35);
 }
 .bag-cell img { width: 34px; height: 34px; image-rendering: pixelated; display: block; }
@@ -827,7 +827,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 
 /* Development model viewer (?gallery) */
 .gallery-list { position: absolute; left: 8px; top: 8px; bottom: 8px; width: 170px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; background: rgba(12, 10, 9, 0.85); padding: 6px; font: 12px system-ui, sans-serif; }
-.gallery-list button { font: inherit; text-align: left; padding: 2px 6px; background: transparent; color: #e8e2d6; border: 0; cursor: pointer; }
+.gallery-list button { font: inherit; text-align: left; padding: 2px 6px; background: transparent; color: #e8e2d6; border: 0; cursor: var(--cursor-press), pointer; }
 .gallery-list button.on { background: #4a4038; }
 .gallery-info { position: absolute; left: 190px; top: 8px; padding: 4px 8px; background: rgba(12, 10, 9, 0.85); font: 13px system-ui, sans-serif; }
 
@@ -884,7 +884,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: none;
   border: 0;
   padding: 6px 12px;
-  cursor: pointer;
+  cursor: var(--cursor-press), pointer;
   text-shadow: var(--shadow);
 }
 .text-button:hover:not(:disabled), .text-button.chosen { color: var(--ember); }
@@ -892,76 +892,115 @@ button.hud-prompt:hover { color: #ffe0b0; }
 
 .menu-modal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3, 2, 2, 0.55); }
 .menu-modal h2 { font: 800 26px var(--font-head); margin: 0 0 14px; text-align: center; }
-/* Everything on the smallest stage (800x450) without a scroll: two columns, and the keys on a page of
-   their own behind the tab at the top. */
+/* Everything on the smallest stage (800x450) without a scroll: two columns of cards, and the keys on a
+   page of their own behind the tab at the top. Each setting is a line: its name, its control, and
+   its value in a small gold pill, so the eye finds the number without hunting along the row. */
 .settings-panel {
-  width: 700px; max-width: calc(100% - 32px); padding: 16px 24px; border-radius: 12px;
-  background: rgba(14, 11, 9, 0.94); border: 1px solid rgba(255, 179, 90, 0.35);
+  width: 720px; max-width: calc(100% - 32px); padding: 16px 20px 14px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(34, 25, 17, 0.97), rgba(14, 10, 8, 0.97));
+  border: 1px solid rgba(255, 196, 110, 0.45);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 230, 180, 0.12);
 }
-.settings-tabs { display: flex; justify-content: center; gap: 18px; margin-bottom: 4px; }
-.settings-tabs .text-button { font: 800 19px var(--font-head); }
-.settings-tabs .on { color: var(--ember); text-decoration: underline; text-underline-offset: 5px; }
-.settings-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+/* The two pages, as a pair of pills: the open one gold. */
+.settings-tabs {
+  display: flex; justify-content: center; gap: 4px; width: max-content; margin: 0 auto 10px; padding: 3px;
+  border-radius: 999px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 179, 90, 0.22);
+}
+.settings-tabs .text-button { padding: 5px 22px; border-radius: 999px; font: 800 16px var(--font-head); text-shadow: none; transition: background 0.15s, color 0.15s; }
+.settings-tabs .on { color: #1a120c; background: linear-gradient(180deg, #ffe7a8, #f0b85a); text-decoration: none; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+.settings-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.settings-columns > section {
+  padding: 2px 12px 8px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 179, 90, 0.14);
+}
+/* A section's name, small and gold, with a hairline running out after it. */
+.settings-panel h3 {
+  display: flex; align-items: center; gap: 8px; margin: 9px 0 2px;
+  font: 700 12px var(--font-head); color: #f0b85a; letter-spacing: 0.08em;
+}
+.settings-panel h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255, 179, 90, 0.35), transparent); }
 /* The label column holds the longest of the five languages on one line ("他のプレイヤーの名前" is
    the one that sets it); the row's type is a size down from the panel's so they all have room. */
-.settings-panel .setting-row { grid-template-columns: 132px 1fr 52px; gap: 10px; margin: 7px 0; font-size: 13px; }
+.settings-panel .setting-row { grid-template-columns: 118px 1fr 54px; gap: 10px; margin: 6px 0; font-size: 13px; color: var(--ink); }
 /* The languages, each written in itself, wrapping onto a second line when they do not fit. */
 .setting-langs { grid-template-columns: 1fr !important; }
-.setting-langs .setting-choice { flex-wrap: wrap; gap: 4px 6px; }
-.setting-langs .text-button { padding: 2px 3px; font-size: 13px; }
-.settings-panel h3 { margin: 10px 0 0; font: 700 13px var(--font-head); color: var(--ember); letter-spacing: 0.05em; }
-.setting-flag input { justify-self: start; width: 18px; height: 18px; accent-color: var(--ember); }
-.setting-choice { display: flex; gap: 6px; }
-.setting-choice .on { color: var(--ember); text-decoration: underline; }
-.setting-note { margin: 0 0 4px; font-size: 12px; color: var(--ink-dim); }
-.setting-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin: 14px 0; font-size: 13px; }
-.setting-keys div { display: flex; gap: 8px; }
-.setting-keys dt { min-width: 104px; color: #ffd36a; font-weight: 700; }
-.setting-keys dd { margin: 0; color: var(--ink-dim); }
+.setting-langs .setting-choice { flex-wrap: wrap; gap: 4px; }
+/* A choice of a few (language, graphics): pills, the chosen one gold. */
+.setting-choice { display: flex; gap: 4px; }
+.setting-choice .text-button {
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; text-shadow: none; color: var(--ink-dim);
+  border: 1px solid rgba(255, 179, 90, 0.25); background: rgba(0, 0, 0, 0.3); transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.setting-choice .text-button:hover { color: var(--ink); border-color: rgba(255, 196, 110, 0.6); }
+.setting-choice .on, .setting-choice .on:hover { color: #1a120c; text-decoration: none; border-color: transparent; background: linear-gradient(180deg, #ffe7a8, #f0b85a); }
+.setting-note { margin: 0 0 4px; font-size: 11px; color: var(--ink-dim); }
+.setting-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 8px 0 12px; font-size: 13px; }
+.setting-keys div { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.035); }
+.setting-keys dt {
+  min-width: 96px; padding: 1px 8px; border-radius: 5px; text-align: center; font: 700 12px var(--font-head); color: #ffd36a;
+  background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 211, 106, 0.35); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+.setting-keys dd { margin: 0; color: var(--ink); }
 .setting-row { display: grid; grid-template-columns: 100px 1fr 60px; align-items: center; gap: 14px; margin: 10px 0; font-size: 14px; }
 .setting-row input { accent-color: var(--ember); }
-/* The sliders: one dark trough, one ember fill, and a handle cut from the brush the rest of the UI
-   is drawn with. The trough keeps a clean edge — masking it with the brush frayed both ends away,
-   and a slider frayed at both ends looks the same empty as it does full — and the fill is a single
-   flat colour, since a gradient under a grain read as two bars stacked on each other. */
+/* The sliders: a slim rounded track, filled gold to ember up to the value, and a round gold knob
+   ringed in a soft glow that grows under the finger. */
 .setting-row input[type="range"] {
   -webkit-appearance: none; appearance: none;
-  height: 22px; background: none; margin: 0; cursor: pointer;
+  height: 24px; background: none; margin: 0; cursor: var(--cursor-press), pointer;
 }
 .setting-row input[type="range"]::-webkit-slider-runnable-track {
-  height: 12px; border-radius: 6px;
-  border: 1px solid rgba(255, 179, 90, 0.28);
+  height: 8px; border-radius: 999px; border: 0;
   background:
-    linear-gradient(var(--ember), var(--ember)) 0 0 / var(--fill, 0%) 100% no-repeat,
-    rgba(0, 0, 0, 0.6);
+    linear-gradient(90deg, #ffd36a, #ff9a3a) 0 0 / var(--fill, 0%) 100% no-repeat,
+    rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .setting-row input[type="range"]::-moz-range-track {
-  height: 12px; border-radius: 6px;
-  border: 1px solid rgba(255, 179, 90, 0.28);
+  height: 8px; border-radius: 999px; border: 0;
   background:
-    linear-gradient(var(--ember), var(--ember)) 0 0 / var(--fill, 0%) 100% no-repeat,
-    rgba(0, 0, 0, 0.6);
+    linear-gradient(90deg, #ffd36a, #ff9a3a) 0 0 / var(--fill, 0%) 100% no-repeat,
+    rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
 }
-/* The handle stands above the fill it sits on: paler, taller than the trough, and thrown forward by
-   a shadow, or it disappears into the ember behind it. Its rough edge is the brush's, which is
-   where a ragged outline says "hand-painted" without costing the slider its meaning. */
 .setting-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
-  width: 14px; height: 24px; margin-top: -7px; border: 0;
-  background: linear-gradient(180deg, #fffaea, #ffd98a 50%, #e0a03a);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
-  -webkit-mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
-  mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
+  width: 18px; height: 18px; margin-top: -5px; border-radius: 50%; border: 2px solid #3a2410;
+  background: radial-gradient(circle at 35% 35%, #fffaea, #ffd36a 60%, #e09a3a);
+  box-shadow: 0 0 0 4px rgba(255, 190, 90, 0.18), 0 2px 4px rgba(0, 0, 0, 0.7);
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 .setting-row input[type="range"]::-moz-range-thumb {
-  width: 14px; height: 24px; border: 0;
-  background: linear-gradient(180deg, #fffaea, #ffd98a 50%, #e0a03a);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
-  mask: var(--ui-grunge-band) center / 300% 170% no-repeat;
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid #3a2410;
+  background: radial-gradient(circle at 35% 35%, #fffaea, #ffd36a 60%, #e09a3a);
+  box-shadow: 0 0 0 4px rgba(255, 190, 90, 0.18), 0 2px 4px rgba(0, 0, 0, 0.7);
 }
-/* The checkbox keeps the browser's own box; only the sliders are dressed. */
+.setting-row input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(255, 190, 90, 0.28), 0 2px 4px rgba(0, 0, 0, 0.7); }
+.setting-row input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(255, 190, 90, 0.32), 0 2px 4px rgba(0, 0, 0, 0.7); }
+.setting-row input[type="range"]:focus-visible { outline: none; }
+.setting-row input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px #fff8e0, 0 0 0 6px rgba(255, 190, 90, 0.5); }
+/* On or off: a switch, its knob sliding over to gold. */
+.setting-flag input[type="checkbox"] {
+  -webkit-appearance: none; appearance: none; justify-self: start; position: relative; margin: 0; cursor: var(--cursor-press), pointer;
+  width: 38px; height: 20px; border-radius: 999px; background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6); transition: background 0.18s;
+}
+.setting-flag input[type="checkbox"]::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: #cfc6b4; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); transition: transform 0.18s cubic-bezier(0.3, 1.4, 0.5, 1), background 0.18s;
+}
+.setting-flag input[type="checkbox"]:checked { background: linear-gradient(90deg, #ffb35a, #ffd36a); }
+.setting-flag input[type="checkbox"]:checked::before { transform: translateX(18px); background: #fffaea; }
+.setting-flag input[type="checkbox"]:focus-visible { outline: 2px solid #fff8e0; outline-offset: 2px; }
+/* The value: a small dark pill with the number in gold. */
 .setting-value { text-align: right; color: var(--ink-dim); font-size: 13px; }
-.settings-actions { display: flex; justify-content: center; gap: 12px; margin-top: 8px; }
+.settings-panel .setting-value:not(:empty) {
+  justify-self: end; min-width: 46px; padding: 2px 8px; border-radius: 999px; text-align: center;
+  font: 700 12px var(--font-head); color: #ffd36a; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 211, 106, 0.2);
+}
+.settings-actions { display: flex; justify-content: center; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 179, 90, 0.15); }
+.settings-actions .text-button { padding: 5px 16px; border-radius: 8px; font-size: 14px; text-shadow: none; border: 1px solid rgba(255, 179, 90, 0.25); background: rgba(0, 0, 0, 0.3); }
+.settings-actions .text-button:hover { border-color: rgba(255, 196, 110, 0.65); }
 
 .friends-panel {
   position: absolute;
@@ -1045,7 +1084,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stats-board { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 2px; }
 .stats-board li { display: grid; grid-template-columns: 24px 1fr 88px 48px; align-items: baseline; gap: 10px; padding: 3px 8px; border-radius: 4px; }
 .stats-board li.head { font: 600 12px var(--font-head); color: var(--ink-dim); }
-.stats-board li.pick { cursor: pointer; }
+.stats-board li.pick { cursor: var(--cursor-press), pointer; }
 .stats-board li.pick:hover { background: rgba(255, 255, 255, 0.07); }
 .stats-board li .note { margin: 0; }
 .rank-detail h3 { font: 700 18px var(--font-head); margin: 0 0 10px; }
@@ -1082,7 +1121,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .wardrobe-card:hover, .wardrobe-chip:hover { background: rgba(255, 255, 255, 0.09); }
 .wardrobe-presets { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .wardrobe-chip {
-  padding: 4px 12px; border-radius: 999px; cursor: pointer; color: inherit; font: 600 12px var(--font-head);
+  padding: 4px 12px; border-radius: 999px; cursor: var(--cursor-press), pointer; color: inherit; font: 600 12px var(--font-head);
   border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.04);
 }
 .wardrobe-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
@@ -1093,7 +1132,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .wardrobe-part-label { font: 700 12px var(--font-head); color: var(--ink-dim); }
 .wardrobe-part-value { text-align: center; font: 600 13px var(--font-head); }
 .wardrobe-arrow {
-  width: 26px; height: 26px; border-radius: 50%; cursor: pointer; color: inherit; font: 700 16px/1 var(--font-head);
+  width: 26px; height: 26px; border-radius: 50%; cursor: var(--cursor-press), pointer; color: inherit; font: 700 16px/1 var(--font-head);
   border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.06);
 }
 .wardrobe-arrow:hover { border-color: var(--ember); }
@@ -1116,7 +1155,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .world-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .world-card {
   width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px;
-  cursor: pointer; color: inherit; border-radius: 6px;
+  cursor: var(--cursor-press), pointer; color: inherit; border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.05);
 }
 .world-card b { font: 700 16px var(--font-head); }
@@ -1145,12 +1184,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .crash h1 { font: 800 28px var(--font-logo); letter-spacing: 0.12em; margin: 0; }
 .crash pre { max-width: 90%; white-space: pre-wrap; font-size: 12px; color: var(--ink-dim); }
-.crash button { font: 700 15px var(--font-head); color: var(--ink); background: none; border: 1px solid var(--ink-dim); padding: 8px 18px; cursor: pointer; }
+.crash button { font: 700 15px var(--font-head); color: var(--ink); background: none; border: 1px solid var(--ink-dim); padding: 8px 18px; cursor: var(--cursor-press), pointer; }
 
 /* Title: the logo over the village; a tap anywhere goes on. */
 .title-screen {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 18px; cursor: pointer; background: radial-gradient(ellipse at 50% 55%, transparent 30%, rgba(0, 0, 0, 0.35));
+  gap: 18px; cursor: var(--cursor-press), pointer; background: radial-gradient(ellipse at 50% 55%, transparent 30%, rgba(0, 0, 0, 0.35));
 }
 .game-title {
   margin: 0; font: 800 clamp(34px, 6vw, 72px) var(--font-logo); letter-spacing: 0.1em; color: #fff4dc;
@@ -1173,7 +1212,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 /* Compact enough that all six stay in one row on the smallest stage (the 800-wide layout). */
 .class-tab {
-  padding: 5px 9px; border-radius: 999px; cursor: pointer; color: #fff; font: 700 13px var(--font-head); white-space: nowrap;
+  padding: 5px 9px; border-radius: 999px; cursor: var(--cursor-press), pointer; color: #fff; font: 700 13px var(--font-head); white-space: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(14, 11, 9, 0.75);
 }
 .class-tab.picked { border-color: var(--ember); background: rgba(255, 179, 90, 0.3); }
@@ -1227,7 +1266,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .character-card {
   width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 12px;
-  cursor: pointer; color: inherit; text-align: left; border-radius: 8px;
+  cursor: var(--cursor-press), pointer; color: inherit; text-align: left; border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(14, 11, 9, 0.72);
 }
 /* A long name shortens rather than widening its card out of the row. */
@@ -1252,7 +1291,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
    and a tap on the lines beside it still opens it. */
 .chat:not(.open) { z-index: -1; }
 .chat-log {
-  max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; pointer-events: auto; cursor: pointer;
+  max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; pointer-events: auto; cursor: var(--cursor-press), pointer;
   font: 500 14px var(--font-body); text-shadow: 0 1px 2px #000, 0 0 4px #000;
 }
 .chat.open .chat-log { max-height: 180px; background: rgba(14, 11, 9, 0.55); border-radius: 6px; padding: 6px 8px; cursor: default; }
@@ -1267,7 +1306,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .chat-guild-tag { margin-right: 4px; font-size: 11px; opacity: 0.85; }
 .chat-tabs { display: flex; gap: 4px; pointer-events: auto; }
 .chat-tab {
-  position: relative; padding: 2px 12px; border-radius: 6px 6px 0 0; cursor: pointer; font: 600 12px var(--font-head); color: var(--ink-dim);
+  position: relative; padding: 2px 12px; border-radius: 6px 6px 0 0; cursor: var(--cursor-press), pointer; font: 600 12px var(--font-head); color: var(--ink-dim);
   background: rgba(14, 11, 9, 0.55); border: 1px solid rgba(255, 179, 90, 0.25); border-bottom: 0;
 }
 .chat-tab.on { color: var(--ink); border-color: var(--ember); }
@@ -1277,14 +1316,14 @@ button.hud-prompt:hover { color: #ffe0b0; }
   background: rgba(14, 11, 9, 0.8); color: var(--ink); font: 500 15px var(--font-body); outline: none;
 }
 .chat-form input:focus { border-color: #ffd36a; }
-.chat-send { padding: 6px 12px; border-radius: 6px; border: 0; background: #ffb35a; color: #1a120b; font: 700 13px var(--font-body); cursor: pointer; }
+.chat-send { padding: 6px 12px; border-radius: 6px; border: 0; background: #ffb35a; color: #1a120b; font: 700 13px var(--font-body); cursor: var(--cursor-press), pointer; }
 .chat-close { padding: 6px 10px; border-radius: 6px; border: 0; background: rgba(255, 255, 255, 0.15); color: var(--ink); font: 600 13px var(--font-body); }
 .chat-problem { width: 100%; color: var(--blood); font: 600 13px var(--font-body); }
-.chat-open { align-self: flex-start; pointer-events: auto; font: 600 14px var(--font-body); border: 0; background: none; color: var(--ink); cursor: pointer; }
+.chat-open { align-self: flex-start; pointer-events: auto; font: 600 14px var(--font-body); border: 0; background: none; color: var(--ink); cursor: var(--cursor-press), pointer; }
 /* The chat's bar on a keyboard, at the bottom left: Enter to talk. */
 .chat-bar {
   align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 6px 12px; min-width: 200px;
-  pointer-events: auto; cursor: pointer; border-radius: 6px; border: 1px solid rgba(242, 232, 213, 0.18);
+  pointer-events: auto; cursor: var(--cursor-press), pointer; border-radius: 6px; border: 1px solid rgba(242, 232, 213, 0.18);
   background: rgba(14, 11, 9, 0.55); color: var(--ink-dim); font: 600 13px var(--font-body);
 }
 .chat-bar:hover { border-color: rgba(255, 179, 90, 0.6); color: var(--ink); }
@@ -1300,7 +1339,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .smith-risk { color: var(--blood); font-style: normal; }
 .smith-safe { color: #9dffb0; font-style: normal; }
 /* Protecting attempts from breaking: a box to tick, and the gems there are to spend. */
-.smith-protect { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.smith-protect { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ink); cursor: var(--cursor-press), pointer; }
 .smith-protect input { accent-color: #ffd36a; }
 .smith-protect-gems { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 12px var(--font-head); color: #bff0ff; }
 .smith-protect-gems img { width: 16px; height: 16px; image-rendering: pixelated; }
@@ -1316,7 +1355,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; background: rgba(3, 2, 2, 0.94); backdrop-filter: blur(4px); cursor: default;
 }
-.enhance-show.success, .enhance-show.fail, .enhance-show.broken { cursor: pointer; }
+.enhance-show.success, .enhance-show.fail, .enhance-show.broken { cursor: var(--cursor-press), pointer; }
 .enhance-piece {
   width: 110px; height: 110px; display: grid; place-items: center; border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 179, 90, 0.3), transparent 70%);
@@ -1398,7 +1437,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .potion-setting { position: relative; align-self: flex-start; margin-top: 4px; }
 .potion-setting-button {
   display: flex; flex-direction: column; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0;
-  border-radius: 6px; border: 1px solid rgba(255, 179, 90, 0.45); background: rgba(14, 11, 9, 0.75); color: var(--ink); cursor: pointer;
+  border-radius: 6px; border: 1px solid rgba(255, 179, 90, 0.45); background: rgba(14, 11, 9, 0.75); color: var(--ink); cursor: var(--cursor-press), pointer;
   font: 600 10px var(--font-head);
 }
 .potion-setting-button b { font: 700 12px var(--font-head); color: #ffd36a; }
@@ -1440,7 +1479,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .channel-card {
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; padding: 7px 10px;
-  border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(14, 11, 9, 0.72); color: inherit; cursor: pointer; text-align: left;
+  border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(14, 11, 9, 0.72); color: inherit; cursor: var(--cursor-press), pointer; text-align: left;
 }
 .channel-card:hover:not(:disabled) { border-color: rgba(255, 179, 90, 0.7); }
 .channel-card b { font: 700 14px var(--font-head); }
@@ -1450,7 +1489,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .channel-card.full { opacity: 0.5; cursor: default; }
 .channel-friends { flex-basis: 100%; font-size: 11px; color: #7fd36a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* The zone's name at the top opens the channel list. */
-.hud-channel { position: relative; align-self: flex-start; cursor: pointer; color: inherit; background: none; border: 0; pointer-events: auto; }
+.hud-channel { position: relative; align-self: flex-start; cursor: var(--cursor-press), pointer; color: inherit; background: none; border: 0; pointer-events: auto; }
 .hud-channel > .hud-key { top: -6px; right: -6px; }
 
 /* Deleting a character: the name typed back before the button works. */
@@ -1504,7 +1543,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The tags hang from the beam; the one you are on hangs lower and catches the light. */
 .stable-tabs { display: flex; gap: 6px; align-self: stretch; align-items: flex-end; margin-bottom: -14px; }
 .stable-tab {
-  position: relative; padding: 7px 16px 8px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
+  position: relative; padding: 7px 16px 8px; cursor: var(--cursor-press), pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
   border: 1px solid #0e0906; border-radius: 3px 3px 10px 10px; background: linear-gradient(180deg, #4a3624, #36271a);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); transform: translateY(-8px); transition: transform 0.15s, color 0.15s;
 }
@@ -1527,7 +1566,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 .stable-gems img { width: 22px; height: 22px; image-rendering: pixelated; }
 .stable-close {
-  margin: 0 0 9px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--ink);
+  margin: 0 0 9px; width: 32px; height: 32px; border-radius: 50%; cursor: var(--cursor-press), pointer; color: var(--ink);
   font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
 }
 .stable-close:hover { border-color: var(--straw); }
@@ -1609,7 +1648,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stable-card {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px 8px;
-  cursor: pointer; color: var(--ink); border-radius: 6px; overflow: hidden;
+  cursor: var(--cursor-press), pointer; color: var(--ink); border-radius: 6px; overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background:
     radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--tier) 18%, transparent), transparent 70%),
@@ -1638,7 +1677,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 /* The hatch button: warm, big, the gem price under the word. */
 .stable-hatch {
   align-self: center; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 200px; padding: 10px 30px 8px;
-  cursor: pointer; color: #1a120c; border: 1px solid #7a5a2a; border-radius: 40px;
+  cursor: var(--cursor-press), pointer; color: #1a120c; border: 1px solid #7a5a2a; border-radius: 40px;
   background: linear-gradient(180deg, #ffe7a8, #e0b25a 60%, #b8862f);
   box-shadow: 0 4px 0 #6b4b1e, 0 8px 18px rgba(0, 0, 0, 0.5), 0 0 22px rgba(255, 200, 110, 0.3);
 }
@@ -1660,7 +1699,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-pulls li small { font-size: 9px; color: var(--ink-dim); }
 .stable-pulls li.repeat { opacity: 0.65; }
 /* Every VIP rank: what it needs and gives; the reader's own lit. */
-.stable-vip { cursor: pointer; }
+.stable-vip { cursor: var(--cursor-press), pointer; }
 .stable-vip-more { margin-left: auto; font-size: 10px; color: var(--ink-dim); }
 .stable-vip-table { width: 100%; border-collapse: collapse; font-size: 11px; color: var(--ink); }
 .stable-vip-table th { font: 600 10px var(--font-head); color: var(--ink-dim); text-align: left; padding: 2px 4px; }
@@ -1714,6 +1753,10 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-pass-what em img { width: 14px; height: 14px; mix-blend-mode: normal; }
 .stable-pass-what li.total { margin-top: 2px; padding-top: 3px; border-top: 1px solid rgba(255, 211, 106, 0.35); color: #ffe08a; }
 .stable-pass-what li.total em { font-size: 15px; color: #ffe08a; }
+/* A label too long for its line (the daily gems, in some languages) wraps rather than spilling out. */
+.stable-pass-what li > span { white-space: normal; line-height: 1.25; }
+/* The purchase and refund notice, small under the packs. */
+.stable-refund { font-size: 11px; opacity: 0.85; }
 /* The pass's value, loud: a red-gold stamp under its name that beats now and then. */
 .stable-pass-value {
   padding: 2px 10px; border-radius: 6px; font: 400 15px var(--font-logo); letter-spacing: 0.04em; color: #fff8e0;
@@ -1732,7 +1775,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .vip-mark { font: 800 11px var(--font-head); color: #1a120c; background: linear-gradient(180deg, #ffe7a8, #d4a017); border-radius: 4px; padding: 0 5px; margin-right: 4px; }
 .stable-pack {
   position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px;
-  cursor: pointer; color: var(--ink); border-radius: 8px; overflow: hidden;
+  cursor: var(--cursor-press), pointer; color: var(--ink); border-radius: 8px; overflow: hidden;
   border: 1px solid rgba(127, 196, 255, 0.3);
   background: radial-gradient(circle at 50% 38%, rgba(127, 196, 255, 0.22), transparent 62%), linear-gradient(180deg, #1c2430, #10141b);
   transition: transform 0.12s, border-color 0.12s;
@@ -1840,13 +1883,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .full-bar .bag-head .bag-power { margin-left: 0; }
 .full-tabs { display: flex; gap: 6px; }
 .full-tab {
-  padding: 6px 16px; cursor: pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
+  padding: 6px 16px; cursor: var(--cursor-press), pointer; color: var(--ink-dim); font: 400 15px var(--font-head);
   border: 1px solid #0e0906; border-radius: 8px; background: linear-gradient(180deg, #4a3624, #36271a);
 }
 .full-tab:hover { color: var(--ink); }
 .full-tab.on { color: #1a120c; background: linear-gradient(180deg, #f3d99a, #d9b86a); border-color: #7a5a2a; }
 .full-close {
-  margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: var(--ink);
+  margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: var(--cursor-press), pointer; color: var(--ink);
   font: 400 16px/1 var(--font-head); border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
 }
 .full-close:hover { border-color: #d9b86a; }
@@ -1912,7 +1955,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .stable-hatches .stable-hatch.ticket { grid-column: 1 / -1; border-color: #b49cff; background: linear-gradient(180deg, #4a3a7a, #2e2350); }
 /* The stable's hatch: the skip toggle at the stage's top right, and the hint while an egg plays out. */
 .stable-skip {
-  position: absolute; top: 10px; right: 10px; z-index: 3; padding: 5px 12px; cursor: pointer; border-radius: 14px;
+  position: absolute; top: 10px; right: 10px; z-index: 3; padding: 5px 12px; cursor: var(--cursor-press), pointer; border-radius: 14px;
   font: 400 13px var(--font-head); color: var(--ink-dim); border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(0, 0, 0, 0.5);
 }
 .stable-skip b { margin-left: 4px; font-weight: 400; color: var(--ink-dim); }
@@ -1930,7 +1973,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
    rest), the invitation band at the top, and the party screen's lists. */
 .party-frame {
   pointer-events: auto; width: 230px; box-sizing: border-box; padding: 6px 10px; display: flex; flex-direction: column; gap: 5px;
-  text-align: left; cursor: pointer; color: var(--ink); font: inherit;
+  text-align: left; cursor: var(--cursor-press), pointer; color: var(--ink); font: inherit;
   background: rgba(14, 11, 9, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
 }
 .party-frame:empty { display: none; }
@@ -1946,7 +1989,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
   padding: 8px 14px; white-space: nowrap; font-size: 14px; pointer-events: auto;
 }
 .party-invite .brush-button.small { padding: 6px 14px; font-size: 13px; }
-.party-note { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 6px 14px; font-size: 13px; color: #ff8a7a; cursor: pointer; pointer-events: auto; }
+.party-note { position: absolute; top: 112px; left: 50%; transform: translateX(-50%); z-index: 5; padding: 6px 14px; font-size: 13px; color: #ff8a7a; cursor: var(--cursor-press), pointer; pointer-events: auto; }
 .party-lead { margin: 0; font-size: 13px; }
 .party-panel .note.good { color: #9fd88a; }
 .party-panel .note.bad { color: #ff8a7a; }
@@ -2024,6 +2067,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
    5): a panel opened from the menu is never under it. The layer itself lets taps through to the world. */
 .world-panels { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
 :where(.world-panels) > * { pointer-events: auto; }
+/* Windows open rather than appear: the shade behind fades in and the window grows up out of it with a
+   small overshoot. The scale and translate properties leave each window's own transform alone. */
+.menu-modal { animation: window-shade 0.2s ease-out; }
+.menu-modal > *, .world-panels > :not(.stable):not(.menu-modal) { animation: window-open 0.26s cubic-bezier(0.2, 1.3, 0.4, 1); }
+@keyframes window-shade { from { opacity: 0; } }
+@keyframes window-open { from { opacity: 0; scale: 0.92; translate: 0 10px; } }
+@media (prefers-reduced-motion: reduce) { .menu-modal, .menu-modal > *, .world-panels > * { animation: none; } }
 /* Where a dragged skill will go (the nearest slot within reach). */
 .hud-cell.drop-target { border-color: #ffd36a; box-shadow: 0 0 12px rgba(255, 211, 106, 0.9), inset 0 0 0 2px rgba(0, 0, 0, 0.5); }
 
@@ -2048,3 +2098,13 @@ button.hud-prompt:hover { color: #ffe0b0; }
   100% { opacity: 0; transform: translate(-50%, -6px); }
 }
 @media (prefers-reduced-motion: reduce) { .reward-toast { animation: none; } }
+
+/* With a mouse, the game's own pointer: a gilded arrowhead, glowing over anything that can be pressed
+   (every "cursor: pointer" above says the glowing one first). Looking round the world locks the
+   pointer away, so this is only seen over the menus and the HUD. */
+@media (hover: hover) and (pointer: fine) {
+  html, body, #root, .app canvas { cursor: var(--cursor-pointer), auto; }
+  button:not(:disabled), a, [role="button"], label, select, summary, input[type="range"], input[type="checkbox"] {
+    cursor: var(--cursor-press), pointer;
+  }
+}

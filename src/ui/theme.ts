@@ -19,4 +19,12 @@ export function installUiTheme(): void {
     const href = new URL(publicUrl(`assets/ui/${piece}.webp`), document.baseURI).href;
     style.setProperty(`--ui-${piece.replace(/_/g, "-")}`, `url("${href}")`);
   }
+  // The mouse pointer: a gilded arrowhead, brighter over anything that can be pressed (see
+  // index.css; only where there is a mouse). Its tip is its top-left pixel.
+  for (const cursor of CURSORS) {
+    const href = new URL(publicUrl(`cursor/${cursor}.png`), document.baseURI).href;
+    style.setProperty(`--cursor-${cursor}`, `url("${href}") 1 1`);
+  }
 }
+
+const CURSORS = ["pointer", "press"] as const;

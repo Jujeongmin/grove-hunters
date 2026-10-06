@@ -17,7 +17,7 @@
     },
     "bld_tower": {
       "url": "assets/models/bld_tower.glb",
-      "bytes": 522368,
+      "bytes": 276028,
       "animations": []
     },
     "fx_arrow": {
@@ -651,7 +651,7 @@
     },
     "sn_bush_flowers": {
       "url": "assets/models/sn_bush_flowers.glb",
-      "bytes": 120704,
+      "bytes": 103760,
       "animations": []
     },
     "sn_clover": {

@@ -12,9 +12,8 @@ import { crossedCards, spriteMaterial, type TreeSprites } from "./treeSprites";
 // Within this distance a piece is its model; beyond it, its picture (or nothing). Set by the graphics
 // quality (see QUALITY in settings.ts).
 export const LOD_NEAR = 38;
-// Refill after the camera moves this far, or this long after the last refill anyway.
+// Refill after the camera moves this far.
 const REFILL_MOVE = 3;
-const REFILL_MS = 1000;
 // Refill after the camera turns this far (radians), but no oftener than this while it keeps turning.
 const REFILL_TURN = 0.2;
 const REFILL_MIN_MS = 90;
@@ -70,6 +69,9 @@ export class LodBatch {
         const instanced = new THREE.InstancedMesh(mesh.geometry, mesh.material, list.length);
         instanced.name = `${model}:${mesh.name}`;
         instanced.count = 0;
+        // Filled only with what lies in view (see update): no bounds to test, and none to work out
+        // over every instance at each refill.
+        instanced.frustumCulled = false;
         parts.push({ mesh: instanced, relative: rootInverse.clone().multiply(mesh.matrixWorld) });
         this.object.add(instanced);
       });
@@ -88,6 +90,7 @@ export class LodBatch {
         const mesh = new THREE.InstancedMesh(cards, spriteMaterial(sprite), list.length);
         mesh.name = `${model}:picture`;
         mesh.count = 0;
+        mesh.frustumCulled = false;
         this.object.add(mesh);
         far = { mesh, matrices };
       }
@@ -103,7 +106,7 @@ export class LodBatch {
     const turned = view !== null && last !== null && (last.yaw === null || Math.abs(angleBetween(view.yaw, last.yaw)) > REFILL_TURN);
     if (!force && last) {
       const moved = Math.hypot(x - last.x, z - last.z) >= REFILL_MOVE;
-      if (!moved && !turned && now - last.at < REFILL_MS) return;
+      if (!moved && !turned) return;
       if (now - last.at < REFILL_MIN_MS) return;
     }
     this.last = { x, z, at: now, yaw: view?.yaw ?? null };
@@ -132,12 +135,10 @@ export class LodBatch {
       for (const part of kind.parts) {
         part.mesh.count = near;
         part.mesh.instanceMatrix.needsUpdate = true;
-        part.mesh.computeBoundingSphere();
       }
       if (kind.far) {
         kind.far.mesh.count = far;
         kind.far.mesh.instanceMatrix.needsUpdate = true;
-        kind.far.mesh.computeBoundingSphere();
       }
     }
   }

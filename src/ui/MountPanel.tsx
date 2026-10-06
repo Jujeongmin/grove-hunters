@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, PULL10, PULL10_COST, PULL_COST, mountBonus, mountsOfTier,
+  BASE_MOUNT, DUPLICATE_REFUND, GACHA_ODDS, GEM_PRODUCTS, MAX_STARS, MOUNTS, MOUNT_IDS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST,
+  mountBonus, mountsOfTier,
   type MountId, type MountTier,
 } from "../game/account/mounts";
 import {
@@ -31,9 +32,19 @@ const BASE_RATE = 1;
 
 type Tab = "stable" | "hatch" | "shop";
 
-const pct = (n: number) => `${(Math.round(n * 1000) / 10).toLocaleString(locale())}%`;
+// A chance as a percent, with as many decimals as it takes to be exact (two mythics sharing 0.1% are
+// 0.05% each), trailing zeros dropped.
+const pct = (n: number) => `${(n * 100).toLocaleString(locale(), { maximumFractionDigits: 3 })}%`;
 export const mountName = (id: MountId) => t(`mount.name.${id}` as Key);
 const tierName = (tier: MountTier | "base") => t(`mount.tier.${tier}` as Key);
+
+// The tier odds of a draw no lower than `least`, as rollMount gives them: every tier below it lands on
+// it instead (a ten-draw's promised rare, a pity draw). Written out as "rare 90% · epic 9% · …".
+function oddsFrom(least: MountTier): string {
+  const at = GACHA_ODDS.findIndex((o) => o.tier === least);
+  const below = GACHA_ODDS.slice(0, at).reduce((sum, o) => sum + o.chance, 0);
+  return GACHA_ODDS.slice(at).map((o, i) => `${tierName(o.tier)} ${pct(o.chance + (i === 0 ? below : 0))}`).join(" · ");
+}
 
 interface MountPanelProps {
   client: WorldClient;
@@ -92,6 +103,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
       const s = new MountStage(canvas.current, library, { playerClass, costume });
       stage.current = s;
       setPortraits(Object.fromEntries(MOUNT_IDS.map((id) => [id, s.portrait(id)])));
+      s.releasePainter();
       setReady(true);
     });
     return () => {
@@ -337,6 +349,10 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
                     </div>
                   );
                 })}
+                {/* The draws whose odds differ: a ten-draw's last after nine commons, and the pity draws. */}
+                <small>{t("mount.oddsFloor", { n: PULL10, m: PULL10 - 1, odds: oddsFrom("rare") })}</small>
+                <small>{t("mount.oddsPity", { n: PITY, odds: oddsFrom("legendary") })}</small>
+                <small>{t("mount.oddsMythicPity", { n: MYTHIC_PITY, odds: oddsFrom("mythic") })}</small>
                 <small>{t("mount.repeatNote", { n: DUPLICATE_REFUND, max: MAX_STARS })}</small>
               </div>
             </>
@@ -435,6 +451,7 @@ export function MountPanel({ client, library, playerClass, costume, onClose }: M
               </div>
               {waiting && <p className="stable-hint">{t("mount.gemsComing")}</p>}
               <p className="stable-hint">{t("mount.shopNote")}</p>
+              <p className="stable-hint stable-refund">{t("mount.refundNote")}</p>
             </>
           )}
           {note && <p className={`smith-note ${note.tone}`}>{note.text}</p>}

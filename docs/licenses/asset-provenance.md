@@ -252,3 +252,29 @@ digital media"에 넣는 것을 허락하고 Unity 엔진을 조건으로 두지
 마을 집은 `node scripts/build-houses.mjs`(art-src/medieval-village/glTF 조각 → art-src/_glb/bld_*.glb) 다음 `npm run models`.
 동물 5종은 FBX라 Unity(`unity/ExportGlb.cs`, `embeddedClips`)로 GLB를 뽑았다. 같은 때 받은 Bestiary - Dungeon Monsters Kit는
 애니메이션이 없고 QAL 라이선스라 쓰지 않았다.
+
+## 빠져 있던 기록 (2026-10-06 정리)
+
+develop 브랜치의 `public/`에 있으나 위 표에 따로 적히지 않았던 파일. 출처는 develop의 커밋 기록(`git log -- <경로>`),
+그 파일을 만든 스크립트, 원본 팩과의 픽셀 비교로 확인했다. 모두 develop 브랜치에만 있다.
+
+| 게임 파일 | 쓰임 | 출처 | 라이선스 | 근거 |
+|---|---|---|---|---|
+| `public/assets/models/bld_tower.glb` | 마을 북쪽 돌 망루 | Medieval Village MegaKit [Standard] 조각을 `scripts/build-houses.mjs`가 조립 (Quaternius) | CC0 1.0 | 2026-09-22 커밋 0e6ed05, develop 3b2be6a·eea5653, 이후 beb8bec(텍스처 축소)·ce9d105(단순화) |
+| `public/assets/ui/icons/ui_bag.png` | 메뉴 가방 | 496 RPG icons `I_Chest01` 그대로 (Henrique Lazarini) | CC0 1.0 | 원본과 픽셀이 같음, develop 7cd007f (2026-09-22) |
+| `public/assets/ui/icons/ui_quests.png` | 메뉴 퀘스트 | 496 RPG icons `I_Scroll02` 그대로 | CC0 1.0 | 원본과 픽셀이 같음, develop 7cd007f |
+| `public/assets/ui/icons/ui_ranking.png` | 메뉴 랭킹 | 496 RPG icons `Ac_Medal01` 그대로 | CC0 1.0 | 원본과 픽셀이 같음, develop 7cd007f |
+| `public/assets/ui/icons/ui_shop.png` | 메뉴 상점 | 496 RPG icons `E_Gold02` 그대로 | CC0 1.0 | 원본과 픽셀이 같음, develop 7cd007f |
+| `public/assets/ui/icons/ui_skills.png` | 메뉴 스킬 | 496 RPG icons `W_Book02` 그대로 | CC0 1.0 | 원본과 픽셀이 같음, develop 7cd007f |
+| `public/assets/ui/icons/ui_upgrade.png` | 메뉴 정식판 | 496 RPG icons `I_Key01` 그대로 | CC0 1.0 | 원본과 픽셀이 같음, 커밋 2741ed3 (2026-09-28) |
+| `public/assets/ui/icons/ui_gold.png` | HUD 골드 | `scripts/menu-icons.py`가 직접 그림 (외부 에셋 없음, 이 저장소의 것) | 이 저장소 | develop 0611583, 커밋 9d8bef7 (2026-09-30) |
+| `public/assets/ui/icons/ui_dungeon.png` | 메뉴 던전 | PixelLab 생성 (36x36) | PixelLab 약관 | develop bdc8678 "PixelLab Trial Dungeon menu icon" (2026-10-02) |
+| `public/assets/ui/icons/ui_party.png` | 메뉴 파티 | PixelLab 생성 (36x36) | PixelLab 약관 | develop 2d53e77 "PixelLab party menu icon" (2026-10-02) |
+| `public/assets/ui/icons/ui_rewards.png` | 메뉴 보상, 트로피 | PixelLab 생성 (36x36) | PixelLab 약관 | develop d92278e (2026-10-02, 그리기 스크립트판 84df685를 대체), 커밋 2327660 |
+| `public/assets/ui/icons/ui_ticket.png` | 탈것 소환권 | PixelLab 생성 (36x36) | PixelLab 약관 | 위와 같음 |
+| `public/assets/ui/icons/guardian_3.png`, `tracker_3.png`, `warder_3.png`, `paladin_3.png`, `scout_3.png`, `iron_monk_3.png` | 전직 4번째 스킬 | 같은 전직의 `_2` 아이콘(위 PixelLab 생성분)을 `scripts/fourth-skill-icons.py`가 금테로 가공 | PixelLab 약관 (파생물) | develop de61be5 (2026-09-30), 커밋 f785aef |
+| `public/assets/ui/icons/berserker_3.png`, `sniper_3.png`, `elementalist_3.png`, `high_priest_3.png`, `assassin_3.png`, `fist_master_3.png` | 전직 4번째 스킬 | 원래 직업의 `_2` 아이콘(496 RPG icons)을 같은 스크립트가 금테로 가공 | CC0 1.0 (파생물) | 위와 같음 |
+| `public/assets/ui/items/weapon_1_{bow,staff,holy,dagger,fist}.png` | 직업별 1등급 무기 그림(활·마법사 지팡이·성직자 지팡이·단검·권갑) | PixelLab 생성 (34x34) | PixelLab 약관 | develop c51752c (2026-09-30), 커밋 8dcac77 |
+| `public/assets/ui/items/weapon_{2..7}_{bow,staff,holy,dagger,fist}.png` | 2~7등급 무기 그림 | 위 1등급 그림을 `scripts/weapon-icons.py`가 등급 색으로 다시 칠함 | PixelLab 약관 (파생물) | 위와 같음 |
+| `public/assets/ui/shop/monthly-pass.png` | 보석 상점 월정액 그림 (256x256, 두루마리와 왕관 방패) | **확인 필요** (도트 생성 그림으로 보이나 커밋 343b3ab에 출처가 적혀 있지 않음) | **확인 필요** | develop 343b3ab (2026-10-01) |
+| `public/cursor/pointer.png`, `press.png` | PC 마우스 포인터 (금빛 화살촉, 누를 수 있는 곳에서는 빛나는 것) | 직접 그림 (Python/Pillow) | 자체 제작 | 2026-10-06, master에도 있음 |
