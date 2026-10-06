@@ -22,7 +22,7 @@ import {
   GROUNDED, MAX_STEP_SECONDS, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
   type SolidTest,
 } from "../rules/movement";
-import { gridRoute, lineClear } from "../rules/pathing";
+import { lineClear, walkRoute } from "../rules/pathing";
 import { groundAt, platformBlocks } from "../rules/platforms";
 import { CHASE, chaseCamera, shoulderFor } from "../rules/chaseCamera";
 import {
@@ -884,12 +884,12 @@ export class WorldView {
     }
     const stuck = this.stuckFor(now) > STUCK_REROUTE_MS;
     if (!this.route || now - this.route.at > ROUTE_MS || stuck) {
-      const points = gridRoute(this.layout, this.pose, m);
+      const points = walkRoute(this.layout, this.pose, m, PLAYER_RADIUS + 0.1);
       this.route = points ? { points, at: now } : null;
     }
     const points = this.route?.points;
     if (!points || points.length === 0) return { yaw: this.yawTo(m), walk: true };
-    while (points.length > 1 && this.distanceTo(points[0]) < WAYPOINT_REACH) points.shift();
+    while (points.length > 1 && this.passed(points)) points.shift();
     return { yaw: this.yawTo(points[0]), walk: true };
   }
 
@@ -984,12 +984,12 @@ export class WorldView {
     if (lineClear(this.layout, this.pose, goal.to, PLAYER_RADIUS + 0.1)) return { yaw: this.yawTo(goal.to), walk: true };
     const now = performance.now();
     if (!this.route || now - this.route.at > ROUTE_MS) {
-      const points = gridRoute(this.layout, this.pose, goal.to);
+      const points = walkRoute(this.layout, this.pose, goal.to, PLAYER_RADIUS + 0.1);
       this.route = points ? { points, at: now } : null;
     }
     const points = this.route?.points;
     if (!points || points.length === 0) return { yaw: this.yawTo(goal.to), walk: true };
-    while (points.length > 1 && this.distanceTo(points[0]) < WAYPOINT_REACH) points.shift();
+    while (points.length > 1 && this.passed(points)) points.shift();
     return { yaw: this.yawTo(points[0]), walk: true };
   }
 
@@ -1030,6 +1030,14 @@ export class WorldView {
       this.scene.add(actor.object);
       this.npcs.push({ id: npc.id, actor, at });
     }
+  }
+
+  // Whether the route's next turn is reached: right on it, or near it with the one after already in
+  // a clear straight line (so a corner round a log pile is never cut into it).
+  private passed(points: Point2[]): boolean {
+    const d = this.distanceTo(points[0]);
+    if (d < 0.35) return true;
+    return d < WAYPOINT_REACH && lineClear(this.layout, this.pose, points[1], PLAYER_RADIUS + 0.05);
   }
 
   // How long auto-battle has been walking without getting anywhere, in ms.
