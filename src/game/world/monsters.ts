@@ -59,7 +59,7 @@ export const BOSS_MOVES = {
   rageDamage: 1.3,
 };
 
-const common = { range: 1.5, attackMs: 1400, speed: 1.8, aggro: 9, body: 0.4, respawnMs: 15_000 };
+const common = { range: 1.5, attackMs: 1400, speed: 1.8, aggro: 9, body: 0.5, respawnMs: 15_000 };
 // What the first field's monsters carry, and the second's.
 const field1 = {
   ...common, gold: [3, 8] as [number, number],

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { gearName, itemBlurb, itemName } from "./names";
-import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
+import { itemBlurb, itemName } from "./names";
+import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL, jobsOf, type JobId } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName, pathSkillName } from "./names";
@@ -11,6 +11,7 @@ import type { Key } from "./strings/ko";
 import type { WorldClient } from "../net/worldClient";
 import { MAX_LISTINGS } from "../game/account/market";
 import { FullScreen } from "./FullScreen";
+import { EnhanceStage, Icon, Purse, SideSheet, useEnhance, type Target } from "./Anvil";
 
 // What the server said went wrong, in the reader's language. Anything it does not know about is
 // still said, in the plainest way there is.
@@ -42,9 +43,11 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
   }];
 }
 
-// Your gold, what you wear and what you carry. The things carried are a grid of pictures; the one
-// picked (or a worn piece) is told about on the right with what can be done with it — wear it,
-// drink it, take it off, sell it in the village — so a full bag never needs a scroll.
+// Your gold, what you wear and what you carry, laid out like the forge: what you carry is a grid of
+// squares in the column on the right (what you wear above it), and the one picked stands on the left
+// with what can be done with it. A piece of gear goes on the anvil there, to enhance it, wear it, take
+// it off or sell it; a potion or material can be drunk or sold. With nothing picked the left side
+// shows your class and, when the time comes, the paths to advance on.
 export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }: PanelProps & {
   inVillage: boolean;
   playerClass: PlayerClass;
@@ -56,132 +59,160 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
   const [path, setPath] = useState<JobId | null>(null);
   const cells = bag ? bagCells(bag) : [];
   const job = bag?.job ?? null;
-  // What the right side tells about: the worn piece or the carried thing picked, while it is still there.
   const shown = bag && picked ? showing(bag, picked) : null;
-  return (
-    <FullScreen
-      title={t("bag.title")} className="bag-panel bag-inventory"
-      bar={(
-        <span className="bag-head">
-          <span className="bag-gold">{bag ? t("common.gold", { n: bag.gold.toLocaleString(locale()) }) : t("common.loading")}</span>
-          {bag && <span className="bag-power">{t("bag.power", { n: combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd).toLocaleString(locale()) })}</span>}
-        </span>
+  // The piece of gear on the anvil, if what is picked is one.
+  const target: Target | null = picked?.kind === "worn" ? picked.slot : picked?.kind === "piece" ? picked.piece.uid : null;
+  const run = useEnhance(client, bag, target);
+  const pick = (next: Picked) => {
+    if (run.busy) return;
+    // Tapping the one picked again goes back to your class.
+    setPicked(picked && samePick(picked, next) ? null : next);
+  };
+  const power = bag ? combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd) : null;
+
+  // What can be done with the thing picked, under it.
+  const actions = shown && (
+    <div className="bag-actions forge-actions">
+      {shown.worn && (
+        <button
+          type="button" className="text-button"
+          onClick={() => {
+            const piece = shown.piece!;
+            act(() => client.unequip(shown.worn!));
+            setPicked({ kind: "piece", id: piece.id, trade: piece.trade, piece });
+          }}
+        >
+          {t("bag.unequip")}
+        </button>
       )}
-      onClose={onClose}
-    >
-      <div className="bag-job">
-        {job ? (
-          <span>{t("bag.job")} · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
-        ) : level < ADVANCE_LEVEL ? (
-          <span>{t("bag.advanceAt", { at: ADVANCE_LEVEL, level })}</span>
-        ) : (
-          <>
-            <span>{t("bag.pickPath")}</span>
-            {path && (
-              <div className="bag-job-confirm">
-                <span>{t("bag.confirmPath", { name: jobName(path) })}</span>
-                <button
-                  type="button" className="brush-button small"
-                  onClick={() => {
-                    setPath(null);
-                    act(() => client.advance(path));
-                  }}
-                >
-                  {t("bag.advanceGo")}
-                </button>
-                <button type="button" className="text-button" onClick={() => setPath(null)}>{t("common.cancel")}</button>
-              </div>
-            )}
-            <div className="bag-job-paths">
-              {jobsOf(playerClass).map((id) => (
-                <button key={id} type="button" className={`world-card${path === id ? " picked" : ""}`} onClick={() => setPath(id)}>
-                  <b>{jobName(id)}</b>
-                  <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)} · {pathSkillName(id, 2)}</span>
-                  <span>{jobBlurb(id)}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      <div className="bag-body">
-        <div className="bag-left">
-          <div className="bag-gear">
-            {(["weapon", "armor"] as Slot[]).map((slot) => {
-              const worn = bag?.gear[slot] ?? null;
-              const on = picked?.kind === "worn" && picked.slot === slot;
-              return (
-                <button key={slot} type="button" className={`bag-worn${on ? " picked" : ""}`} disabled={!worn} onClick={() => setPicked({ kind: "worn", slot })}>
-                  <span className="bag-slot">{slotLabel(slot)}</span>
-                  {worn && <img className="bag-icon" src={iconFor(worn.id) ?? undefined} alt="" />}
-                  <b>{worn ? gearName(worn) : t("common.nothing")}</b>
-                </button>
-              );
-            })}
-          </div>
-          {cells.length === 0 ? (
-            <p className="note">{t("bag.empty")}</p>
-          ) : (
-            <div className="bag-grid">
-              {cells.map((cell) => {
-                const on = !!picked && sameCell(picked, cell);
+      {!shown.worn && ITEMS[shown.id].kind === "potion" && (
+        <button type="button" className="text-button" onClick={() => act(() => client.drink(shown.id))}>{t("bag.drink")}</button>
+      )}
+      {!shown.worn && shown.piece && (
+        <button
+          type="button" className="text-button"
+          onClick={() => {
+            act(() => client.equip(shown.piece!.uid));
+            const slot = slotOf(shown.id);
+            if (slot) setPicked({ kind: "worn", slot });
+          }}
+        >
+          {t("bag.equip")}
+        </button>
+      )}
+      {!shown.worn && inVillage && (
+        <button
+          type="button" className="text-button"
+          onClick={() => act(() => (shown.piece ? client.sellPiece(shown.piece.uid) : client.sell(shown.id, 1, shown.trade === true)))}
+        >
+          {t("bag.sell", { n: sellPrice(shown.id) })}
+        </button>
+      )}
+    </div>
+  );
+
+  const square = (key: string, next: Picked, id: ItemId, extra: { n?: number; plus?: number; trade?: boolean }) => {
+    const on = !!picked && samePick(picked, next);
+    return (
+      <button
+        key={key} type="button" className={`forge-cell${on ? " picked" : ""}${extra.trade ? " trade" : ""}`}
+        onClick={() => pick(next)} title={itemName(id)}
+      >
+        <Icon id={id} />
+        {extra.n !== undefined && <span className="forge-cell-count">{extra.n}</span>}
+        {(extra.plus ?? 0) > 0 && <span className="forge-cell-plus">+{extra.plus}</span>}
+      </button>
+    );
+  };
+
+  return (
+    <SideSheet
+      title={t("bag.title")} onClose={onClose}
+      side={(
+        <>
+          <Purse bag={bag} extra={power !== null && <span className="power">{t("bag.power", { n: power.toLocaleString(locale()) })}</span>} />
+          <div className="forge-rack">
+            <span className="forge-label">{t("forge.worn")}</span>
+            <div className="forge-worn">
+              {(["weapon", "armor"] as Slot[]).map((slot) => {
+                const worn = bag?.gear[slot] ?? null;
                 return (
-                  <button
-                    key={cellKey(cell)} type="button" className={`bag-cell${on ? " picked" : ""}${cell.trade ? " trade" : ""}`}
-                    onClick={() => setPicked(cell)} title={itemName(cell.id)}
-                  >
-                    <img src={iconFor(cell.id) ?? undefined} alt={itemName(cell.id)} />
-                    {cell.kind === "stack" && <span className="bag-cell-count">{cell.n}</span>}
-                    {cell.kind === "piece" && cell.piece.plus > 0 && <span className="bag-cell-plus">+{cell.piece.plus}</span>}
-                    {cell.trade && <i className="bag-cell-trade" title={t("item.trade")} />}
-                  </button>
+                  <div key={slot} className="forge-worn-slot">
+                    {worn ? square(slot, { kind: "worn", slot }, worn.id, { plus: worn.plus, trade: worn.trade }) : <span className="forge-cell empty" />}
+                    <small>{slotLabel(slot)}</small>
+                  </div>
                 );
               })}
             </div>
+            <span className="forge-label">{t("bag.title")}</span>
+            {cells.length === 0 ? (
+              <p className="note">{t("bag.empty")}</p>
+            ) : (
+              <div className="forge-grid">
+                {cells.map((cell) => square(cellKey(cell), cell, cell.id, cell.kind === "stack"
+                  ? { n: cell.n, trade: cell.trade }
+                  : { plus: cell.piece.plus, trade: cell.trade }))}
+              </div>
+            )}
+            <span className="forge-hint">{t("bag.keys")}</span>
+          </div>
+        </>
+      )}
+    >
+      {!bag ? (
+        <p className="note">{t("common.loading")}</p>
+      ) : target !== null && (shown || run.attempt) ? (
+        <EnhanceStage bag={bag} target={target} run={run}>{actions}</EnhanceStage>
+      ) : shown ? (
+        <div className="forge-craft ready">
+          <div className="forge-hearth heat-cold"><div className="forge-piece"><Icon id={shown.id} /></div></div>
+          <b className="forge-name">{itemName(shown.id)}{shown.n !== null && <span className="forge-count"> ×{shown.n}</span>}</b>
+          {shown.trade !== null && (
+            <span className="forge-where"><em className={shown.trade ? "trade" : ""}>{t(shown.trade ? "item.trade" : "item.bound")}</em></span>
           )}
+          <p className="forge-blurb">{itemBlurb(shown.id)}</p>
+          {actions}
         </div>
-        <div className="bag-detail">
-          {!shown ? (
-            <p className="note">{t("bag.pickHint")}</p>
+      ) : (
+        <div className="bag-job forge-job">
+          {job ? (
+            <span>{t("bag.job")} · <b>{jobName(job)}</b> ({jobBlurb(job)})</span>
+          ) : level < ADVANCE_LEVEL ? (
+            <span>{t("bag.advanceAt", { at: ADVANCE_LEVEL, level })}</span>
           ) : (
             <>
-              <div className="bag-detail-head">
-                <img className="bag-icon" src={iconFor(shown.id) ?? undefined} alt="" />
-                <b>{shown.piece ? gearName(shown.piece) : itemName(shown.id)}</b>
-                {shown.n !== null && <span className="bag-count">×{shown.n}</span>}
-              </div>
-              {shown.trade !== null && (
-                <p className={`bag-trade${shown.trade ? " on" : ""}`}>{t(shown.trade ? "item.trade" : "item.bound")}</p>
-              )}
-              <p className="bag-blurb">{itemBlurb(shown.id)}</p>
-              <div className="bag-actions">
-                {shown.worn && (
-                  <button type="button" className="text-button" onClick={() => act(() => client.unequip(shown.worn!))}>{t("bag.unequip")}</button>
-                )}
-                {!shown.worn && ITEMS[shown.id].kind === "potion" && (
-                  <button type="button" className="text-button" onClick={() => act(() => client.drink(shown.id))}>{t("bag.drink")}</button>
-                )}
-                {!shown.worn && shown.piece && (
-                  <button type="button" className="text-button" onClick={() => act(() => client.equip(shown.piece!.uid))}>{t("bag.equip")}</button>
-                )}
-                {!shown.worn && inVillage && (
+              <span>{t("bag.pickPath")}</span>
+              {path && (
+                <div className="bag-job-confirm">
+                  <span>{t("bag.confirmPath", { name: jobName(path) })}</span>
                   <button
-                    type="button" className="text-button"
-                    onClick={() => act(() => (shown.piece ? client.sellPiece(shown.piece.uid) : client.sell(shown.id, 1, shown.trade === true)))}
+                    type="button" className="brush-button small"
+                    onClick={() => {
+                      setPath(null);
+                      act(() => client.advance(path));
+                    }}
                   >
-                    {t("bag.sell", { n: sellPrice(shown.id) })}
+                    {t("bag.advanceGo")}
                   </button>
-                )}
+                  <button type="button" className="text-button" onClick={() => setPath(null)}>{t("common.cancel")}</button>
+                </div>
+              )}
+              <div className="bag-job-paths">
+                {jobsOf(playerClass).map((id) => (
+                  <button key={id} type="button" className={`world-card${path === id ? " picked" : ""}`} onClick={() => setPath(id)}>
+                    <b>{jobName(id)}</b>
+                    <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)} · {pathSkillName(id, 2)}</span>
+                    <span>{jobBlurb(id)}</span>
+                  </button>
+                ))}
               </div>
             </>
           )}
+          <p className="forge-hint">{t("bag.pickHint")}</p>
         </div>
-      </div>
-      {problem && <p className="bag-problem">{problem}</p>}
-      <footer className="bag-foot">
-        <span className="note">{t("bag.keys")}</span>
-      </footer>
-    </FullScreen>
+      )}
+      {problem && <p className="forge-note bad">{problem}</p>}
+    </SideSheet>
   );
 }
 
@@ -207,8 +238,9 @@ function cellKey(cell: Cell): string {
   return cell.kind === "piece" ? cell.piece.uid : `${cell.id}:${cell.trade}`;
 }
 
-function sameCell(picked: Picked, cell: Cell): boolean {
-  return picked.kind !== "worn" && cellKey(picked) === cellKey(cell);
+function samePick(a: Picked, b: Picked): boolean {
+  if (a.kind === "worn") return b.kind === "worn" && a.slot === b.slot;
+  return b.kind !== "worn" && cellKey(a) === cellKey(b);
 }
 
 // What the detail side says about the thing picked, as it is now (null once it is gone). n: how many
