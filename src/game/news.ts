@@ -24,6 +24,32 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-08-character-wallet",
+    date: "2026-10-08",
+    text: {
+      ko: { title: "보석·탈것은 캐릭터마다 따로", lines: [
+        "이제 보석, 탈것 소환권, 탈것(별 포함)은 캐릭터마다 따로 가져요. 보석을 사면 그때 플레이 중인 캐릭터에게 들어가요.",
+        "지금까지 모은 보석과 탈것은 계정에서 레벨이 가장 높은 캐릭터에게 옮겨졌어요. VIP 전용 탈것은 모든 캐릭터가 써요.",
+      ] },
+      en: { title: "Gems and mounts are each character's", lines: [
+        "Gems, mount tickets and mounts (stars included) now belong to each character. Gems you buy go to the character you are playing.",
+        "What you had gathered went to your account's highest-level character. VIP-only mounts are for every character.",
+      ] },
+      ja: { title: "宝石と乗り物はキャラクターごとに", lines: [
+        "宝石・乗り物召喚券・乗り物（星を含む）はキャラクターごとになりました。宝石を買うと、そのときプレイ中のキャラクターに入ります。",
+        "これまでの宝石と乗り物は、アカウントで最もレベルの高いキャラクターに移りました。VIP専用の乗り物は全キャラクターで使えます。",
+      ] },
+      "zh-Hans": { title: "宝石与坐骑按角色分开", lines: [
+        "宝石、坐骑召唤券和坐骑（含星级）现在按角色分别持有。购买的宝石会进入当时正在游玩的角色。",
+        "此前的宝石与坐骑已转移到账号中等级最高的角色。VIP 专属坐骑所有角色都可使用。",
+      ] },
+      "zh-Hant": { title: "寶石與坐騎按角色分開", lines: [
+        "寶石、坐騎召喚券和坐騎（含星級）現在按角色分別持有。購買的寶石會進入當時正在遊玩的角色。",
+        "此前的寶石與坐騎已轉移到帳號中等級最高的角色。VIP 專屬坐騎所有角色都可使用。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-08-take-quests",
     date: "2026-10-08",
     text: {

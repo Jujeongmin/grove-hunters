@@ -1,3 +1,4 @@
+import { writeWallet } from "../src/store";
 import { BASE_MOUNT, mountBonus } from "../../src/game/account/mounts";
 import { TUTORIAL_POTIONS } from "../../src/game/account/tutorial";
 import { npcSpot } from "../../src/game/world/npcs";
@@ -85,4 +86,9 @@ export async function walkTo(server: any, x: number, z: number, yaw = 0): Promis
   const mine = await $room.getMyState();
   await $room.updateMyState({ pose: { ...mine.pose, at: 0 } });
   await server.reportPose({ x, z, yaw });
+}
+
+// Sets the active character's gems, tickets, mounts or pity, where the game keeps them (see store.ts).
+export async function setWallet(account: string, patch: Record<string, unknown>): Promise<void> {
+  await writeWallet(account, patch);
 }

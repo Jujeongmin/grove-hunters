@@ -66,7 +66,7 @@ import {
   herdBonus, rollMounts, tierOf, vipMounts, type MountBonus, type MountId, type Pity,
 } from "../../src/game/account/mounts";
 import {
-  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, changeTickets, readTickets, markSeen,
+  channelPlayers, claimName, deleteCharacter, updateCharacter, dropRanking, findNickname, friendChannels, friendEntry, changeGems, readGems, changeTickets, readTickets, readWallet, writeWallet, markSeen,
   pickChannel, readAccountWorld, readFriendSide, readNickname, readProfile, readRanking, releaseName,
   returnSpot, saveProfile, saveSpot, token, updateActive, withFriendsLock, withNicknameLock, withProfileLock,
   writeFriendSide, writeRanking, writeWhereabouts, writeZonePose, zoneLook,
@@ -197,7 +197,7 @@ interface MountsView {
 }
 async function mountsView(account: string): Promise<MountsView> {
   const { owned, selected, stars } = await accountMounts(account);
-  const since = readPity((await $global.getUserState(account)).pity);
+  const since = readPity(await readWallet(account, "pity"));
   const pity = { legendary: PITY - since.legendary, mythic: MYTHIC_PITY - since.mythic };
   return { gems: await readGems(account), tickets: await readTickets(account), owned, selected, stars, premium: premiumView(await accountPremium(account), Date.now()), pity };
 }
@@ -213,10 +213,9 @@ async function drawMounts(account: string, n: number, cost: number, ticket = fal
   const pulls = await $lock(`mounts:${account}`, async () => {
     if (ticket) await changeTickets(account, -n);
     else await changeGems(account, -cost);
-    const state = await $global.getUserState(account);
-    const rolled = rollMounts(n, readPity(state.pity), Math.random);
-    const owned = ownedMounts(state.mounts);
-    const stars = readStars(state.mountStars);
+    const rolled = rollMounts(n, readPity(await readWallet(account, "pity")), Math.random);
+    const owned = ownedMounts(await readWallet(account, "mounts"));
+    const stars = readStars(await readWallet(account, "mountStars"));
     const out: Pull[] = [];
     let refund = 0;
     for (const mount of rolled.mounts) {
@@ -231,7 +230,7 @@ async function drawMounts(account: string, n: number, cost: number, ticket = fal
         out.push({ mount, repeat: true, star: null, refund: DUPLICATE_REFUND });
       }
     }
-    await $global.updateUserState(account, { mounts: owned.filter((id) => id !== BASE_MOUNT), mountStars: stars, pity: rolled.since });
+    await writeWallet(account, { mounts: owned.filter((id) => id !== BASE_MOUNT), mountStars: stars, pity: rolled.since });
     if (refund > 0) await changeGems(account, refund);
     return out;
   });
@@ -253,9 +252,10 @@ async function accountMounts(account: string): Promise<{ owned: MountId[]; selec
   const state = await $global.getUserState(account);
   const vip = vipOf(readPremium(state).vipPoints);
   // VIP rank's own mounts come with the rank.
-  const owned = [...new Set([...ownedMounts(state.mounts), ...vipMounts(vip)])];
-  const picked = readMountId(state.mount);
-  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(state.mountStars), vip };
+  // VIP rank's own mounts (the account's) come with the rank for every character.
+  const owned = [...new Set([...ownedMounts(await readWallet(account, "mounts")), ...vipMounts(vip)])];
+  const picked = readMountId(await readWallet(account, "mount"));
+  return { owned, selected: picked && owned.includes(picked) ? picked : owned[0] ?? null, stars: readStars(await readWallet(account, "mountStars")), vip };
 }
 
 // A character with its account's picked mount and its stars, and what all its owned mounts add, which
@@ -1320,7 +1320,7 @@ export class Server {
     const mount = readMountId(id);
     const view = await mountsView(account);
     if (!mount || !view.owned.includes(mount)) throw new RuleViolation("no_mount");
-    await $global.updateUserState(account, { mount });
+    await writeWallet(account, { mount });
     await refreshMounted(account);
     return { ...view, selected: mount };
   }

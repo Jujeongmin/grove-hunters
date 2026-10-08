@@ -1,5 +1,5 @@
 import { LISTING_MS, MAX_LISTINGS, sellerGets } from "../../src/game/account/market";
-import { editActive, errorOf, makeCharacter } from "./helpers";
+import { editActive, errorOf, makeCharacter, setWallet } from "./helpers";
 
 const piece = (uid: string, plus = 0, trade = true) => ({ uid, id: "weapon_3", plus, trade });
 
@@ -7,7 +7,7 @@ const piece = (uid: string, plus = 0, trade = true) => ({ uid, id: "weapon_3", p
 // buyer (test-b) with gems. Leaves the seller connected.
 async function stalls(server: any, buyerGems = 500): Promise<void> {
   await makeCharacter(server, "test-b", "사는사람");
-  await $global.updateUserState("test-b", { gems: buyerGems });
+  await setWallet("test-b", { gems: buyerGems });
   await makeCharacter(server, "test-a", "파는사람");
   await editActive("test-a", (c) => ({ ...c, pieces: [piece("good", 4), piece("bound", 0, false)], bagTrade: { silk: 30 }, bag: { ...c.bag, silk: 5 } }));
 }

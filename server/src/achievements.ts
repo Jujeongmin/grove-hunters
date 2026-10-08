@@ -5,7 +5,7 @@ import { readAttendance } from "../../src/game/account/attendance";
 import { MAX_STARS, ownedMounts, readStars, vipMounts } from "../../src/game/account/mounts";
 import { readPremium, vipOf } from "../../src/game/account/premium";
 import { RuleViolation } from "../../src/game/world/types";
-import { changeGems, readProfile } from "./store";
+import { changeGems, readProfile, splitWallet } from "./store";
 
 // Achievements (see achievements.ts): measured on every character the account has, on every server,
 // and claimed one at a time under the account's own lock.
@@ -14,10 +14,13 @@ function withAchieveLock<T>(account: string, fn: () => Promise<T>): Promise<T> {
 }
 
 export async function achievementsOf(account: string): Promise<AchievementsView> {
+  await splitWallet(account);
   const state = await $global.getUserState(account);
   const { characters } = await readProfile(account);
-  const owned = new Set([...ownedMounts(state.mounts), ...vipMounts(vipOf(readPremium(state).vipPoints))]);
-  const star5 = Object.values(readStars(state.mountStars)).filter((n) => n === MAX_STARS).length;
+  // Mounts are each character's: counted across all of them (and VIP's, the account's), for the
+  // account's achievements.
+  const owned = new Set([...characters.flatMap((c) => ownedMounts(state[`mounts@${c.id}`])), ...vipMounts(vipOf(readPremium(state).vipPoints))]);
+  const star5 = new Set(characters.flatMap((c) => Object.entries(readStars(state[`mountStars@${c.id}`])).filter(([, n]) => n === MAX_STARS).map(([id]) => id))).size;
   const facts = factsOf(characters, { mounts: owned.size, star5, attend: readAttendance(state.attendance).total });
   return achievementsView(facts, readAchieved(state.achieved));
 }

@@ -85,32 +85,79 @@ export async function onceper(event: PurchaseEvent, grant: (credited: () => void
 }
 
 // An account's gems (kept in its global user state; see mounts.ts).
+// The paid side belongs to a character, not the account (2026-10-08): its gems, mount tickets, mounts
+// (owned, picked, their stars) and its count toward the draw's pity, each under `<field>@<characterId>`
+// in the account's state, for the character playing. Before any character exists (gems bought first)
+// they wait in the account's own field and go to the first character with the split below.
+export const WALLET_FIELDS = ["gems", "tickets", "mounts", "mount", "mountStars", "pity"] as const;
+export type WalletField = typeof WALLET_FIELDS[number];
+
+// Once per account: what it held as an account (from before the split) goes to its strongest
+// character, the one with the most XP; the others start from the deer and no gems.
+export async function splitWallet(account: string): Promise<void> {
+  if ((await $global.getUserState(account)).walletSplit === true) return;
+  await $lock(`wallet:${account}`, async () => {
+    const state = await $global.getUserState(account);
+    if (state.walletSplit === true) return;
+    const { characters } = await readProfile(account);
+    if (characters.length === 0) return;
+    const heir = characters.reduce((best, c) => (c.xp > best.xp ? c : best));
+    const patch: Record<string, unknown> = { walletSplit: true };
+    for (const field of WALLET_FIELDS) {
+      if (state[field] === undefined || state[field] === null) continue;
+      patch[`${field}@${heir.id}`] = state[field];
+      patch[field] = null;
+    }
+    await $global.updateUserState(account, patch);
+  });
+}
+
+// Where a field of the paid side is kept for the character playing now.
+export async function walletKey(account: string, field: WalletField, characterId?: string): Promise<string> {
+  await splitWallet(account);
+  const id = characterId ?? (await readProfile(account)).active?.id ?? null;
+  return id ? `${field}@${id}` : field;
+}
+
+export async function readWallet(account: string, field: WalletField, characterId?: string): Promise<unknown> {
+  const key = await walletKey(account, field, characterId);
+  return (await $global.getUserState(account))[key];
+}
+
+export async function writeWallet(account: string, patch: Partial<Record<WalletField, unknown>>): Promise<void> {
+  const out: Record<string, unknown> = {};
+  for (const [field, value] of Object.entries(patch)) out[await walletKey(account, field as WalletField)] = value;
+  await $global.updateUserState(account, out);
+}
+
 export async function readGems(account: string): Promise<number> {
-  const gems = (await $global.getUserState(account)).gems;
+  const gems = await readWallet(account, "gems");
   return typeof gems === "number" && Number.isInteger(gems) && gems > 0 ? gems : 0;
 }
 
 // Adds (or, negative, takes) gems under the account's gem lock; taking more than there are is refused.
-export function changeGems(account: string, delta: number): Promise<number> {
+export async function changeGems(account: string, delta: number): Promise<number> {
+  await splitWallet(account);
   return $lock(`gems:${account}`, async () => {
     const next = (await readGems(account)) + delta;
     if (next < 0) throw new RuleViolation("not_enough_gems");
-    await $global.updateUserState(account, { gems: next });
+    await writeWallet(account, { gems: next });
     return next;
   });
 }
 
 // An account's mount tickets (소환권: one free hatch each; see attendance.ts), kept like its gems.
 export async function readTickets(account: string): Promise<number> {
-  const tickets = (await $global.getUserState(account)).tickets;
+  const tickets = await readWallet(account, "tickets");
   return typeof tickets === "number" && Number.isInteger(tickets) && tickets > 0 ? tickets : 0;
 }
 
-export function changeTickets(account: string, delta: number): Promise<number> {
+export async function changeTickets(account: string, delta: number): Promise<number> {
+  await splitWallet(account);
   return $lock(`tickets:${account}`, async () => {
     const next = (await readTickets(account)) + delta;
     if (next < 0) throw new RuleViolation("no_ticket");
-    await $global.updateUserState(account, { tickets: next });
+    await writeWallet(account, { tickets: next });
     return next;
   });
 }

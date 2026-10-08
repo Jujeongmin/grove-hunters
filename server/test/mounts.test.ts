@@ -2,7 +2,7 @@ import {
   BASE_MOUNT, DUPLICATE_REFUND, MAX_STARS, MYTHIC_PITY, PITY, PULL10, PULL10_COST, PULL_COST, mountBonus, ownedBonus,
 } from "../../src/game/account/mounts";
 import { maxHpAt } from "../../src/game/world/monsters";
-import { enterAs, errorOf, makeCharacter } from "./helpers";
+import { enterAs, errorOf, makeCharacter, setWallet } from "./helpers";
 
 const BUYER = "0x2222222222222222222222222222222222222222";
 const gems = (id: string, productId = "gems-100", quantity = 1) => ({ account: BUYER, purchaseId: id, productId, quantity });
@@ -96,7 +96,7 @@ describe("the mount draw", () => {
 
 describe("ten at once, and the pity", () => {
   test("ten draws for PULL10_COST, the last rare when nine were common; the pity counts down", async (server) => {
-    await $global.updateUserState(BUYER, { gems: 2000 });
+    await setWallet(BUYER, { gems: 2000 });
     server.connect({ account: BUYER });
     const ten = await drawing(0, () => server.pullMount10());
     expect(ten.pulls.length).toBe(PULL10);
@@ -104,12 +104,12 @@ describe("ten at once, and the pity", () => {
     // The pig: new, five stars, then three back as gems.
     expect(ten.gems).toBe(2000 - PULL10_COST + 3 * DUPLICATE_REFUND);
     expect(ten.pity).toEqual({ legendary: PITY - PULL10, mythic: MYTHIC_PITY - PULL10 });
-    await $global.updateUserState(BUYER, { gems: PULL10_COST - 1 });
+    await setWallet(BUYER, { gems: PULL10_COST - 1 });
     expect(await errorOf(drawing(0, () => server.pullMount10()))).toContain("not_enough_gems");
   });
 
   test("the hundredth draw without a legendary is one", async (server) => {
-    await $global.updateUserState(BUYER, { gems: 500, pity: { legendary: PITY - 1, mythic: 0 } });
+    await setWallet(BUYER, { gems: 500, pity: { legendary: PITY - 1, mythic: 0 } });
     server.connect({ account: BUYER });
     const pulled = await drawing(0, () => server.pullMount());
     expect(pulled.mount).toBe("elder_glub");

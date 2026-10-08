@@ -2,7 +2,7 @@ import { RECIPES, enhanceCost } from "../../src/game/account/forge";
 import { protectCost } from "../../src/game/account/premium";
 import { TRADE_CRAFT_CHANCE } from "../../src/game/account/inventory";
 import { ITEMS, MAX_PLUS } from "../../src/game/account/items";
-import { enterAs, errorOf, makeCharacter, toNpc } from "./helpers";
+import { enterAs, errorOf, makeCharacter, setWallet, toNpc } from "./helpers";
 import { readProfile, updateActive } from "../src/store";
 
 // A worn weapon_2 at `plus`.
@@ -89,7 +89,7 @@ describe("the smith", () => {
 
   test("protected with gems, a failure from +6 never breaks the piece; below +6 there is nothing to protect", async (server) => {
     await atTheForge(server, 40, 50000);
-    await $global.updateUserState("test-a", { gems: 25 });
+    await setWallet("test-a", { gems: 25 });
     expect(await errorOf(server.enhanceGear("weapon", true))).toContain("unavailable");
     await updateActive("test-a", (c) => ({ ...c, gear: { ...c.gear, weapon: weapon(5) } }));
     // A failed roll and a breaking one: protected, it only fails, and the gems are spent.
