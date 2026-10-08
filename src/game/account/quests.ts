@@ -1,4 +1,5 @@
-import type { MonsterType } from "../world/monsters";
+import { ZONE_BOSS, ZONE_MONSTERS, type MonsterType } from "../world/monsters";
+import { ZONES, type ZoneId } from "../world/zones";
 import type { ItemId } from "./items";
 
 // The village's quests, taken one after another: each asks for a number of monsters of some kinds,
@@ -156,8 +157,10 @@ export function readDailyId(value: unknown): DailyQuest | null {
 }
 
 // Where a character is in the chain: the quest it is on (QUESTS.length when all are done), how many
-// it has felled for it, and which shape of the chain the index counts in (v; see QUEST_CHAIN).
-export interface QuestProgress { index: number; count: number; v?: number }
+// it has felled for it, which shape of the chain the index counts in (v; see QUEST_CHAIN), and
+// whether it has taken that quest from the elder (taken; kills count only then). Saves from before
+// taking began read as taken, so no one loses a quest they were on.
+export interface QuestProgress { index: number; count: number; v?: number; taken?: boolean }
 
 // The chain's shape, raised each time quests go in between others; a save counts in the chain its v
 // names (none: the first), and is moved along through every change since, to the same quest with
@@ -181,21 +184,63 @@ function movedAlong(index: number, from: number): number {
   return at;
 }
 
-export const QUEST_START: QuestProgress = { index: 0, count: 0, v: QUEST_CHAIN };
+export const QUEST_START: QuestProgress = { index: 0, count: 0, v: QUEST_CHAIN, taken: false };
 
-export function readQuest(raw: unknown): QuestProgress {
+// The level a quest's hunting ground asks for (its first kind's zone).
+export function questLevel(index: number): number {
+  const quest = QUESTS[index];
+  if (!quest) return 0;
+  const zones = (Object.keys(ZONES) as ZoneId[]).filter((z) => ZONE_MONSTERS[z].includes(quest.targets[0]) || ZONE_BOSS[z] === quest.targets[0]);
+  return zones.length === 0 ? 0 : Math.min(...zones.map((z) => ZONES[z].minLevel));
+}
+
+// Where, in the chain as it is now, the quests every change put in stand.
+function insertedNow(): Set<number> {
+  let marks: boolean[] = [];
+  let length = QUESTS.length - CHAIN_CHANGES.reduce((n, c) => n + c.inserted.reduce((m, i) => m + i.n, 0), 0);
+  marks = Array.from({ length }, () => false);
+  for (const change of CHAIN_CHANGES) {
+    const next: boolean[] = [];
+    marks.forEach((mark, i) => {
+      for (const ins of change.inserted) if (ins.at === i) for (let k = 0; k < ins.n; k++) next.push(true);
+      next.push(mark);
+    });
+    for (const ins of change.inserted) if (ins.at >= marks.length) for (let k = 0; k < ins.n; k++) next.push(true);
+    marks = next;
+    length = marks.length;
+  }
+  return new Set(marks.flatMap((mark, i) => (mark ? [i] : [])));
+}
+const INSERTED_NOW = insertedNow();
+
+// `level`, when known: a save moved along onto a quest whose ground is above the character (they
+// were stuck there, which is why quests went in before it) goes back to the first of the new ones
+// before it it can do, to be taken from the elder.
+export function readQuest(raw: unknown, level?: number): QuestProgress {
   const q = (raw ?? {}) as Record<string, unknown>;
   const whole = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : 0);
   const from = typeof q.v === "number" && Number.isInteger(q.v) && q.v >= 1 && q.v <= QUEST_CHAIN ? q.v : 1;
-  const index = Math.min(movedAlong(whole(q.index), from), QUESTS.length);
+  let index = Math.min(movedAlong(whole(q.index), from), QUESTS.length);
+  let taken = q.taken !== false;
+  let count = whole(q.count);
+  if (from < QUEST_CHAIN && level !== undefined && questLevel(index) > level && INSERTED_NOW.has(index - 1)) {
+    while (INSERTED_NOW.has(index - 1)) index--;
+    taken = false;
+    count = 0;
+  }
   const quest = QUESTS[index];
-  return { index, count: quest ? Math.min(whole(q.count), quest.count) : 0, v: QUEST_CHAIN };
+  return { index, count: quest ? Math.min(count, quest.count) : 0, v: QUEST_CHAIN, taken };
+}
+
+// Whether the quest on is one taken from the elder (saves from before taking began are).
+export function questTaken(progress: QuestProgress): boolean {
+  return progress.taken !== false;
 }
 
 // Progress after felling these monsters.
 export function countKills(progress: QuestProgress, felled: readonly MonsterType[]): QuestProgress {
   const quest = QUESTS[progress.index];
-  if (!quest) return progress;
+  if (!quest || !questTaken(progress)) return progress;
   const hits = felled.filter((t) => quest.targets.includes(t)).length;
   return hits === 0 ? progress : { ...progress, count: Math.min(quest.count, progress.count + hits) };
 }

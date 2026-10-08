@@ -22,9 +22,12 @@ describe("the first tutorial", () => {
     const spawn = zoneLayout("village").playerSpawn;
     await walkTo(server, spawn.x, spawn.z);
     expect(await errorOf(server.tutorialTalk())).toContain("not_near");
+    // A newcomer's first quest waits at the elder; the lesson gives it.
+    expect((await server.getBag()).quest.taken).toBe(false);
     await toNpc(server, "elder");
     const taught = await server.tutorialTalk();
     expect(taught.tutorial).toBe(TUTORIAL.register);
+    expect(taught.quest.taken).toBe(true);
     expect(taught.bag.potion_small).toBe(TUTORIAL_POTIONS);
     expect(await errorOf(server.useSkill(0))).toBe("");
     const again = await server.tutorialTalk();

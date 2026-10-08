@@ -24,7 +24,7 @@ describe("bag and gold", () => {
     await inVillage(server);
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
-      gold: 0, gems: 0, bag: { potion_small: 5 }, bagTrade: {}, pieces: [], gear: { weapon: null, armor: null }, job: null, quest: { index: 0, count: 0, v: QUEST_CHAIN }, tutorial: null,
+      gold: 0, gems: 0, bag: { potion_small: 5 }, bagTrade: {}, pieces: [], gear: { weapon: null, armor: null }, job: null, quest: { index: 0, count: 0, v: QUEST_CHAIN, taken: true }, tutorial: null,
       mount: "deer", mountStars: 0, vip: 0, herd: { power: 0, hp: 0 },
     });
     expect(daily.counts).toEqual({});

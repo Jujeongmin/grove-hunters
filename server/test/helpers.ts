@@ -27,7 +27,8 @@ export async function makeCharacter(
   if (!tutorial) {
     const state = await $global.getUserState(account);
     const map = { ...state.characterMap };
-    map[state.active] = { ...map[state.active], tutorial: null, bag: { potion_small: TUTORIAL_POTIONS } };
+    // As the elder's lesson leaves it: past the tutorial, the first quest taken.
+    map[state.active] = { ...map[state.active], tutorial: null, bag: { potion_small: TUTORIAL_POTIONS }, quest: { ...map[state.active].quest, taken: true } };
     await $global.updateUserState(account, { characterMap: map });
   }
   return view;

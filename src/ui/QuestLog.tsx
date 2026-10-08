@@ -3,7 +3,7 @@ import { t } from "./lang";
 import { usePages } from "./Pager";
 import { dailyGoal, dailyName, itemName, questGoal, questName } from "./names";
 import { type BagView } from "../game/account/items";
-import { DAILY_QUESTS, QUESTS, dailyToday, questDone, type Quest } from "../game/account/quests";
+import { DAILY_QUESTS, QUESTS, dailyToday, questDone, questTaken, type Quest } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 
 // A quest's reward as one line: XP, gold and any items.
@@ -101,7 +101,9 @@ export function QuestLog({ bag, inVillage, onSeek, onReport, onClaimDaily, onClo
               <div className="hud-bar xp"><i style={{ width: `${Math.round((bag.quest.count / quest.count) * 100)}%` }} /></div>
               <span className="quest-count">{bag.quest.count} / {quest.count}</span>
               <span className="quest-reward">{t("common.reward", { what: rewardText(quest) })}</span>
-              {done ? (
+              {!questTaken(bag.quest) ? (
+                <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>{t("quest.goTake")}</button>
+              ) : done ? (
                 inVillage
                   ? <button type="button" className="brush-button small" onClick={() => { onReport(); onClose(); }}>{t("quests.goReport")}</button>
                   : <span className="hint">{t("quests.reportHint")}</span>

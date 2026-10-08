@@ -2,7 +2,7 @@ import type { BagView } from "../game/account/items";
 import { t } from "./lang";
 import { questGoal, questName } from "./names";
 import { questHint } from "./questHint";
-import { QUESTS, questDone } from "../game/account/quests";
+import { QUESTS, questDone, questTaken } from "../game/account/quests";
 import type { MonsterType } from "../game/world/monsters";
 
 interface QuestTrackerProps {
@@ -33,6 +33,17 @@ export function QuestTracker({ bag, seeking, toElder, fighting, way, onSeek, onR
     return (
       <div className="hud-quest">
         <b>{t("quest.allDone")}</b>
+      </div>
+    );
+  }
+  // Not yet taken: it waits at the elder, and a tap walks you there to take it.
+  if (!questTaken(bag.quest)) {
+    return (
+      <div className={`hud-quest clickable${toElder ? " seeking" : ""}`} role="button" onClick={onReport}>
+        <b>{questName(index)}</b>
+        <span>{t("quest.notTaken")}</span>
+        <span className="hint">{toElder ? t("quest.goingToTake") : t("quest.goTake")}</span>
+        {keyLabel && <kbd className="hud-key">{keyLabel}</kbd>}
       </div>
     );
   }

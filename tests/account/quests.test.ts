@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QUESTS, QUEST_CHAIN, countKills, questDone, readQuest } from "../../src/game/account/quests";
+import { QUESTS, QUEST_CHAIN, QUEST_START, countKills, questDone, questLevel, questTaken, readQuest } from "../../src/game/account/quests";
 import { levelOf } from "../../src/game/account/level";
 import { CLASSES } from "../../src/game/combat/classes";
 import { ADVANCE_LEVEL, JOBS, jobsOf } from "../../src/game/combat/jobs";
@@ -17,26 +17,47 @@ describe("quests", () => {
   });
 
   it("read back safely, and stay done past the last", () => {
-    expect(readQuest(undefined)).toEqual({ index: 0, count: 0, v: QUEST_CHAIN });
-    expect(readQuest({ index: 0, count: 999 })).toEqual({ index: 0, count: QUESTS[0].count, v: QUEST_CHAIN });
-    expect(readQuest({ index: 99, count: 3 })).toEqual({ index: QUESTS.length, count: 0, v: QUEST_CHAIN });
+    expect(readQuest(undefined)).toEqual({ index: 0, count: 0, v: QUEST_CHAIN, taken: true });
+    expect(readQuest({ index: 0, count: 999 })).toEqual({ index: 0, count: QUESTS[0].count, v: QUEST_CHAIN, taken: true });
+    expect(readQuest({ index: 99, count: 3 })).toEqual({ index: QUESTS.length, count: 0, v: QUEST_CHAIN, taken: true });
     expect(questDone({ index: QUESTS.length, count: 0 })).toBe(false);
   });
 
   it("moves a save from before the two inserted quests along to the same quest, its count kept", () => {
     // Old index 3 was the second field's spiders and snakes; it is 5 now.
     expect(QUESTS[5].targets).toEqual(["spider", "snake"]);
-    expect(readQuest({ index: 3, count: 7 })).toEqual({ index: 5, count: 7, v: QUEST_CHAIN });
+    expect(readQuest({ index: 3, count: 7 })).toEqual({ index: 5, count: 7, v: QUEST_CHAIN, taken: true });
     // Before the insertion point nothing moves; a save already in the new chain is read as it is.
-    expect(readQuest({ index: 2, count: 4 })).toEqual({ index: 2, count: 4, v: QUEST_CHAIN });
-    expect(readQuest({ index: 3, count: 7, v: QUEST_CHAIN })).toEqual({ index: 3, count: 7, v: QUEST_CHAIN });
+    expect(readQuest({ index: 2, count: 4 })).toEqual({ index: 2, count: 4, v: QUEST_CHAIN, taken: true });
+    expect(readQuest({ index: 3, count: 7, v: QUEST_CHAIN, taken: true })).toEqual({ index: 3, count: 7, v: QUEST_CHAIN, taken: true });
     // A save from chain 2 moves through chain 3's insertions: its index 8 (the Mushroom King) is 10.
     expect(QUESTS[10].targets).toEqual(["mushroom_king"]);
-    expect(readQuest({ index: 8, count: 0, v: 2 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN });
+    expect(readQuest({ index: 8, count: 0, v: 2 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN, taken: true });
     // A first-chain save goes through both: its 6 (the Mushroom King then) is 10 as well.
-    expect(readQuest({ index: 6, count: 0 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN });
+    expect(readQuest({ index: 6, count: 0 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN, taken: true });
     // Read twice, it does not move again.
-    expect(readQuest(readQuest({ index: 3, count: 0 }))).toEqual({ index: 5, count: 0, v: QUEST_CHAIN });
+    expect(readQuest(readQuest({ index: 3, count: 0 }))).toEqual({ index: 5, count: 0, v: QUEST_CHAIN, taken: true });
+  });
+
+  it("counts kills only for a quest taken from the elder; saves from before taking read as taken", () => {
+    const first = QUESTS[0];
+    expect(countKills({ index: 0, count: 0, taken: false }, [first.targets[0]]).count).toBe(0);
+    expect(countKills({ index: 0, count: 0, taken: true }, [first.targets[0]]).count).toBe(1);
+    expect(questTaken(readQuest({ index: 0, count: 0, v: QUEST_CHAIN }))).toBe(true);
+    expect(questTaken(readQuest({ index: 0, count: 0, v: QUEST_CHAIN, taken: false }))).toBe(false);
+    expect(questTaken(QUEST_START)).toBe(false);
+  });
+
+  it("sends a hunter stuck on a quest above them back to the new quests before it, to take at the elder", () => {
+    // Level 6 on the old chain's index 3 (the second field, level 10): the new first-field quests.
+    expect(questLevel(5)).toBe(10);
+    expect(readQuest({ index: 3, count: 12 }, 6)).toEqual({ index: 3, count: 0, v: QUEST_CHAIN, taken: false });
+    // Level 10 or more there is not stuck: on to the same quest, its count kept.
+    expect(readQuest({ index: 3, count: 12 }, 12)).toEqual({ index: 5, count: 12, v: QUEST_CHAIN, taken: true });
+    // A chain-2 save at the Mushroom King (index 8 then) at level 18: the new second-field quests.
+    expect(readQuest({ index: 8, count: 0, v: 2 }, 18)).toEqual({ index: 8, count: 0, v: QUEST_CHAIN, taken: false });
+    // A save already in today's chain never moves.
+    expect(readQuest({ index: 10, count: 0, v: QUEST_CHAIN }, 18).index).toBe(10);
   });
 
   it("carries a hunter of the first field to level 10, where the second opens", () => {

@@ -85,7 +85,7 @@ export function readCharacters(raw: unknown): Character[] {
     const made = typeof c.made === "number" && Number.isFinite(c.made) ? c.made : 0;
     out.push({
       id: c.id, world: c.world, name: c.name, playerClass, costume: costume.id, xp: readXp(c.xp), spot: readSpot(c.spot), made,
-      ...readInventory(c as Record<string, unknown>, c.id), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest),
+      ...readInventory(c as Record<string, unknown>, c.id), daily: readDaily(c.daily), job: readOwnJob(c.job, playerClass), quest: readQuest(c.quest, levelOf(readXp(c.xp)).level),
       tutorial: readTutorial(c.tutorial), vitals: readVitals(c.vitals),
       guild: readGuildTag(c.guild),
       guildLeftAt: typeof c.guildLeftAt === "number" && Number.isFinite(c.guildLeftAt) ? c.guildLeftAt : 0,

@@ -402,6 +402,10 @@ export class WorldClient {
     return this.bagCall("advance", [job]);
   }
 
+  takeQuest(): Promise<string | null> {
+    return this.bagCall("takeQuest", []);
+  }
+
   claimQuest(): Promise<string | null> {
     return this.bagCall("claimQuest", []);
   }

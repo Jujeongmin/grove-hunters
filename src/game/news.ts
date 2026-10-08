@@ -24,6 +24,37 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-08-take-quests",
+    date: "2026-10-08",
+    text: {
+      ko: { title: "퀘스트는 촌장에게 받아요", lines: [
+        "퀘스트를 완료하면 다음 퀘스트는 촌장(설원에서는 대장)에게 말을 걸어 '퀘스트 받기'를 눌러야 시작돼요. 받기 전에는 처치 수가 올라가지 않아요.",
+        "퀘스트 창을 누르면 촌장에게 자동으로 걸어가요. 촌장 머리 위 !는 받을 퀘스트, ?는 완료할 퀘스트예요.",
+        "숲 필드 2 퀘스트에서 레벨이 모자라 막혀 있던 분은 새로 생긴 숲 필드 1 퀘스트로 옮겨졌어요.",
+      ] },
+      en: { title: "Quests are taken from the elder", lines: [
+        "After a quest is done, the next one starts once you talk to the elder (the captain in the snow) and press 'Take the quest'. Kills do not count before that.",
+        "Tap the quest tracker to walk to the elder. Over the elder, ! is a quest to take and ? one to hand in.",
+        "If you were stuck on a Forest Field 2 quest below its level, you have been moved to the new Forest Field 1 quests.",
+      ] },
+      ja: { title: "クエストは村長から受けます", lines: [
+        "クエストを完了したら、次のクエストは村長（雪原では隊長）に話しかけて「クエストを受ける」を押すと始まります。受ける前は討伐数が増えません。",
+        "クエスト欄をタップすると村長のもとへ自動で歩きます。村長の頭上の！は受けられるクエスト、？は完了できるクエストです。",
+        "レベル不足で森フィールド2のクエストに止まっていた方は、新しい森フィールド1のクエストに移りました。",
+      ] },
+      "zh-Hans": { title: "任务需向村长领取", lines: [
+        "完成任务后，下一个任务需要和村长（雪原为队长）对话并点击“接受任务”才会开始，接受前击杀数不会增加。",
+        "点击任务栏会自动走向村长。村长头上的！表示可接任务，？表示可交任务。",
+        "因等级不足卡在森林原野 2 任务的玩家，已移到新增的森林原野 1 任务。",
+      ] },
+      "zh-Hant": { title: "任務需向村長領取", lines: [
+        "完成任務後，下一個任務需要和村長（雪原為隊長）對話並點擊「接受任務」才會開始，接受前擊殺數不會增加。",
+        "點擊任務欄會自動走向村長。村長頭上的！表示可接任務，？表示可交任務。",
+        "因等級不足卡在森林原野 2 任務的玩家，已移到新增的森林原野 1 任務。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-08-quest-chain",
     date: "2026-10-08",
     text: {

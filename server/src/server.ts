@@ -42,7 +42,7 @@ import {
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
 import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
-  QUESTS, QUEST_CHAIN, QUEST_START, countDaily, countKills, dailyToday, questDone, readDaily, readDailyId,
+  QUESTS, QUEST_CHAIN, QUEST_START, countDaily, questTaken, countKills, dailyToday, questDone, readDaily, readDailyId,
 } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS, readJob } from "../../src/game/combat/jobs";
 import { TALK_RANGE, TALK_SLACK, npcSpot, npcsIn, type NpcRole } from "../../src/game/world/npcs";
@@ -1795,8 +1795,9 @@ export class Server {
     const account = $sender.account;
     await playing(account);
     await requireNpc("elder");
+    // The elder's lesson gives the first quest too.
     const next = await updateActive(account, (c) => (c.tutorial === TUTORIAL.talk
-      ? { ...c, tutorial: TUTORIAL.register, bag: addItem(c.bag, "potion_small", TUTORIAL_POTIONS) }
+      ? { ...c, tutorial: TUTORIAL.register, bag: addItem(c.bag, "potion_small", TUTORIAL_POTIONS), quest: { ...c.quest, taken: true } }
       : c));
     await refreshFighter(next);
     return bagView(next);
@@ -1840,12 +1841,25 @@ export class Server {
       return {
         ...give(c, quest.items, false, newUid, room),
         xp: c.xp + quest.xp,
-        quest: { index: c.quest.index + 1, count: 0, v: QUEST_CHAIN },
+        // The next one waits at the elder, to be taken (see takeQuest).
+        quest: { index: c.quest.index + 1, count: 0, v: QUEST_CHAIN, taken: false },
       };
     });
     if (paid > 0) await $asset.mint(GOLD, paid);
     await writeRanking(account, next);
     await refreshFighter(next);
+    return bagView(next);
+  }
+
+  // Takes the quest on from the elder (any town's): from then its kills count.
+  async takeQuest(): Promise<BagView> {
+    const account = $sender.account;
+    await playing(account);
+    await requireNpc("elder");
+    const next = await updateActive(account, (c) => {
+      if (!QUESTS[c.quest.index]) throw new RuleViolation("unavailable");
+      return questTaken(c.quest) ? c : { ...c, quest: { ...c.quest, count: 0, taken: true } };
+    });
     return bagView(next);
   }
 

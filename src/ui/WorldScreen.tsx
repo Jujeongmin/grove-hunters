@@ -61,7 +61,7 @@ import { MapPanel, MinimapCorner } from "./Minimap";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
-import { DAILY_QUESTS, QUESTS, questDone } from "../game/account/quests";
+import { DAILY_QUESTS, QUESTS, questDone, questTaken } from "../game/account/quests";
 import { RewardToast, type Reward } from "./RewardToast";
 import { SettingsPanel } from "./SettingsPanel";
 import { ChannelPanel } from "./ChannelPanel";
@@ -607,7 +607,8 @@ function ZoneScreen({
     }
     const quest = bag ? QUESTS[bag.quest.index] : undefined;
     if (!bag || !quest) return;
-    if (!questDone(bag.quest)) view.current?.seekQuest(quest.targets);
+    // A quest not yet taken, or done, sends you to the elder; one under way, after its monsters.
+    if (questTaken(bag.quest) && !questDone(bag.quest)) view.current?.seekQuest(quest.targets);
     else view.current?.goToElder();
   };
   // A clicked button lets go of the focus at once, or Space (jump) and Enter (chat) would press it again.
@@ -815,11 +816,14 @@ function ZoneScreen({
       {/* Kept mounted through a talk (only hidden then): taken down with the rest of the HUD, they
           played again when it came back, the last reward and the zone's name popping up out of nowhere. */}
       {hud && (
-        <div style={{ display: talkingTo ? "none" : "contents" }}>
-          <AnnounceBanner client={client} />
+        <>
+          <div style={{ display: talkingTo ? "none" : "contents" }}>
+            <AnnounceBanner client={client} />
+            <ZoneTitle entry={entry} />
+          </div>
+          {/* Shown over a talk too: a quest is claimed at the elder, and the talk goes on to the next. */}
           <RewardToast reward={reward} />
-          <ZoneTitle entry={entry} />
-        </div>
+        </>
       )}
       {talkingTo && (
         <DialogueBox
@@ -827,12 +831,11 @@ function ZoneScreen({
           onClaim={async () => {
             const quest = bag ? QUESTS[bag.quest.index] : undefined;
             const code = await client.claimQuest();
-            if (!code) {
-              endTalk();
-              if (quest) setReward((r) => ({ key: (r?.key ?? 0) + 1, daily: false, xp: quest.xp, gold: quest.gold, items: quest.items }));
-            }
+            // The talk goes on: the elder offers the next quest straight away (see takeQuest).
+            if (!code && quest) setReward((r) => ({ key: (r?.key ?? 0) + 1, daily: false, xp: quest.xp, gold: quest.gold, items: quest.items }));
             return code;
           }}
+          onAccept={() => client.takeQuest()}
           onChoice={(choice) => {
             endTalk();
             const quest = bag ? QUESTS[bag.quest.index] : undefined;

@@ -143,7 +143,8 @@ export async function readProfile(account: string): Promise<Profile> {
       ...GUILDLESS,
       daily: readDaily(null),
       job: null,
-      quest: QUEST_START,
+      // Past the tutorial (it came before it), so the first quest is taken already.
+      quest: { ...QUEST_START, taken: true },
       tutorial: null,
     }];
   } else if (oldXp > 0) {
