@@ -30,6 +30,11 @@ describe("quests", () => {
     // Before the insertion point nothing moves; a save already in the new chain is read as it is.
     expect(readQuest({ index: 2, count: 4 })).toEqual({ index: 2, count: 4, v: QUEST_CHAIN });
     expect(readQuest({ index: 3, count: 7, v: QUEST_CHAIN })).toEqual({ index: 3, count: 7, v: QUEST_CHAIN });
+    // A save from chain 2 moves through chain 3's insertions: its index 8 (the Mushroom King) is 10.
+    expect(QUESTS[10].targets).toEqual(["mushroom_king"]);
+    expect(readQuest({ index: 8, count: 0, v: 2 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN });
+    // A first-chain save goes through both: its 6 (the Mushroom King then) is 10 as well.
+    expect(readQuest({ index: 6, count: 0 })).toEqual({ index: 10, count: 0, v: QUEST_CHAIN });
     // Read twice, it does not move again.
     expect(readQuest(readQuest({ index: 3, count: 0 }))).toEqual({ index: 5, count: 0, v: QUEST_CHAIN });
   });

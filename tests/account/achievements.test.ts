@@ -49,11 +49,11 @@ describe("achievements", () => {
   });
 
   it("counts the bosses a character's finished quests asked for, and the + it carries, from before records", () => {
-    // Past the fourteenth quest: the Mushroom King once, then three times more.
-    const past = character("a", { quest: { index: 14, count: 0 } });
+    // Past the sixteenth quest: the Mushroom King once, then three times more.
+    const past = character("a", { quest: { index: 16, count: 0 } });
     const worn = character("b", { gear: { weapon: { uid: "w", id: "weapon_1", plus: 9, trade: false }, armor: null } });
     const facts = factsOf([past, worn], NOTHING);
-    expect(facts.quests).toBe(14);
+    expect(facts.quests).toBe(16);
     expect(facts.mushroom_king).toBe(4);
     expect(facts.frost_emperor).toBe(0);
     expect(facts.plus).toBe(9);

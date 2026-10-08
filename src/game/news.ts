@@ -24,6 +24,32 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-08-quest-chain",
+    date: "2026-10-08",
+    text: {
+      ko: { title: "퀘스트가 끝까지 이어져요", lines: [
+        "숲 필드 2에 2개, 설산 기슭에 1개, 얼음 협곡에 2개 퀘스트가 더 생겼어요. 이제 퀘스트만 따라가도 다음 사냥터의 입장 레벨에 닿아요.",
+        "이미 그 뒤 퀘스트를 하던 분은 진행이 그대로 이어져요.",
+      ] },
+      en: { title: "The quests now run all the way", lines: [
+        "Two more in Forest Field 2, one in the Snowy Foothills and two in the Ice Canyon: the quests alone now reach each next field's level.",
+        "If you were already past them, your progress carries on as it was.",
+      ] },
+      ja: { title: "クエストが最後までつながります", lines: [
+        "森フィールド2に2つ、雪山のふもとに1つ、氷の峡谷に2つクエストが増えました。クエストだけで次の狩場の入場レベルに届きます。",
+        "すでに先のクエストを進めていた方は、そのまま続きます。",
+      ] },
+      "zh-Hans": { title: "任务一路衔接到底", lines: [
+        "森林原野 2 新增 2 个、雪山山麓 1 个、冰之峡谷 2 个任务，只做任务也能达到下一个猎场的进入等级。",
+        "已经在做后续任务的玩家，进度照常延续。",
+      ] },
+      "zh-Hant": { title: "任務一路銜接到底", lines: [
+        "森林原野 2 新增 2 個、雪山山麓 1 個、冰之峽谷 2 個任務，只做任務也能達到下一個獵場的進入等級。",
+        "已經在做後續任務的玩家，進度照常延續。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-08-first-field-quests",
     date: "2026-10-08",
     text: {

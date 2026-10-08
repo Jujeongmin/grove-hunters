@@ -24,6 +24,13 @@ export const QUESTS: readonly Quest[] = [
   { targets: ["spider", "snake"], count: 50, xp: 9000, gold: 600, items: [{ id: "potion_big", n: 5 }] },
   { targets: ["wasp", "bat"], count: 60, xp: 18000, gold: 1000, items: [] },
   { targets: ["goleling"], count: 60, xp: 30000, gold: 1500, items: [{ id: "weapon_2", n: 1 }] },
+  // Added in chain 3 (2026-10-08): the second field's own carry a hunter to 25, where the Mushroom
+  // King's clearing and the deep wood open (they used to end around 17).
+  { targets: ["wasp", "bat", "goleling"], count: 120, xp: 60000, gold: 2500, items: [{ id: "stone", n: 5 }] },
+  {
+    targets: ["spider", "snake", "wasp", "bat", "goleling"], count: 200, xp: 120000, gold: 3500,
+    items: [{ id: "potion_big", n: 10 }, { id: "silk", n: 10 }],
+  },
   { targets: ["mushroom_king"], count: 1, xp: 40000, gold: 3000, items: [] },
   { targets: ["dire_spider", "venom_snake"], count: 60, xp: 60000, gold: 4000, items: [{ id: "potion_big", n: 10 }] },
   { targets: ["hornet", "vampire_bat"], count: 80, xp: 90000, gold: 6000, items: [] },
@@ -45,9 +52,20 @@ export const QUESTS: readonly Quest[] = [
   // The snow region's, from the outpost's captain (any town's elder takes the reports).
   { targets: ["frost_blob", "snow_hare"], count: 60, xp: 90000, gold: 8000, items: [{ id: "potion_big", n: 10 }] },
   { targets: ["snow_wolf", "frost_spider"], count: 80, xp: 110000, gold: 10000, items: [{ id: "frost_shard", n: 10 }] },
+  // Chain 3: the foothills' carry a hunter to 47, where the canyon opens.
+  {
+    targets: ["frost_blob", "snow_hare", "snow_wolf", "frost_spider"], count: 150, xp: 200000, gold: 14000,
+    items: [{ id: "snow_fur", n: 8 }, { id: "stone", n: 10 }],
+  },
   { targets: ["frost_bat", "penguin_brute"], count: 80, xp: 140000, gold: 12000, items: [{ id: "snow_fur", n: 10 }] },
   { targets: ["frost_snake", "ice_golem"], count: 90, xp: 170000, gold: 15000, items: [{ id: "armor_6", n: 1 }] },
   { targets: ["ice_golem"], count: 100, xp: 200000, gold: 18000, items: [{ id: "stone", n: 30 }] },
+  // Chain 3: the canyon's carry a hunter to 54, where the peaks open.
+  {
+    targets: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"], count: 150, xp: 250000, gold: 20000,
+    items: [{ id: "frost_shard", n: 12 }, { id: "potion_big", n: 20 }],
+  },
+  { targets: ["penguin_brute", "ice_golem"], count: 150, xp: 250000, gold: 22000, items: [{ id: "snow_fur", n: 12 }, { id: "stone", n: 20 }] },
   { targets: ["peak_yeti"], count: 80, xp: 250000, gold: 22000, items: [{ id: "ever_ice", n: 3 }] },
   { targets: ["frost_drake", "glacier_alpaking"], count: 100, xp: 300000, gold: 26000, items: [{ id: "weapon_6", n: 1 }] },
   { targets: ["frost_emperor"], count: 1, xp: 400000, gold: 30000, items: [{ id: "ever_ice", n: 6 }] },
@@ -141,20 +159,35 @@ export function readDailyId(value: unknown): DailyQuest | null {
 // it has felled for it, and which shape of the chain the index counts in (v; see QUEST_CHAIN).
 export interface QuestProgress { index: number; count: number; v?: number }
 
-// The chain's shape. 2: two quests went in at index 3 (2026-10-08); a save without it counts in the
-// older chain, and from index 3 on it is moved along by two (the same quest, its count kept).
-export const QUEST_CHAIN = 2;
-const INSERTED_AT = 3;
-const INSERTED = 2;
+// The chain's shape, raised each time quests go in between others; a save counts in the chain its v
+// names (none: the first), and is moved along through every change since, to the same quest with
+// its count kept. Each change lists where its quests went in, in the chain as it stood before it.
+export const QUEST_CHAIN = 3;
+const CHAIN_CHANGES: { to: number; inserted: { at: number; n: number }[] }[] = [
+  // 2026-10-08: two in the first field, so its quests reach level 10.
+  { to: 2, inserted: [{ at: 3, n: 2 }] },
+  // 2026-10-08: two in the second field (to 25), one in the foothills (to 47), two in the canyon (to 54).
+  { to: 3, inserted: [{ at: 8, n: 2 }, { at: 17, n: 1 }, { at: 20, n: 2 }] },
+];
+
+// A saved index in chain `from`, as it reads in the chain now.
+function movedAlong(index: number, from: number): number {
+  let at = index;
+  for (const change of CHAIN_CHANGES) {
+    if (change.to <= from) continue;
+    at += change.inserted.reduce((n, ins) => n + (index >= ins.at ? ins.n : 0), 0);
+    index = at;
+  }
+  return at;
+}
 
 export const QUEST_START: QuestProgress = { index: 0, count: 0, v: QUEST_CHAIN };
 
 export function readQuest(raw: unknown): QuestProgress {
   const q = (raw ?? {}) as Record<string, unknown>;
   const whole = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : 0);
-  let saved = whole(q.index);
-  if (q.v !== QUEST_CHAIN && saved >= INSERTED_AT) saved += INSERTED;
-  const index = Math.min(saved, QUESTS.length);
+  const from = typeof q.v === "number" && Number.isInteger(q.v) && q.v >= 1 && q.v <= QUEST_CHAIN ? q.v : 1;
+  const index = Math.min(movedAlong(whole(q.index), from), QUESTS.length);
   const quest = QUESTS[index];
   return { index, count: quest ? Math.min(whole(q.count), quest.count) : 0, v: QUEST_CHAIN };
 }
