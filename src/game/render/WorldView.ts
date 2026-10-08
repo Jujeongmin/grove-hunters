@@ -8,11 +8,11 @@ import { ITEMS, POTION_GAP_MS } from "../account/items";
 import { levelOf } from "../account/level";
 import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
 import { npcMarker, type NpcMarker } from "../world/dialogue";
-import { iconFor } from "./icons";
+import { iconFor, preloadIcons } from "./icons";
 import { GroveScene, HOUSE_YAW, groveModels } from "./groveScene";
 import type { GroveView } from "../world/grove";
 import { ModelLibrary } from "../assets/ModelLibrary";
-import { WEAPONS, type PlayerClass } from "../combat/classes";
+import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
 import { AIM_GRACE, facing, inStrikeReach } from "../combat/melee";
 import { SKILL_KEYS, SKILL_SLOTS, skillAt, skillTargets, type Skill } from "../combat/skills";
 import { readJob, type JobId } from "../combat/jobs";
@@ -144,6 +144,11 @@ const BACKGROUND_MAX_DT = 0.25;
 
 // The monster models a zone needs.
 function zoneMonsterModels(zone: ZoneId): string[] {
+  return [...new Set(zoneMonsterTypes(zone).map((t) => MONSTER_SKINS[t].model))];
+}
+
+// Every kind of monster a zone can hold.
+function zoneMonsterTypes(zone: ZoneId): MonsterType[] {
   const types: MonsterType[] = [...ZONE_MONSTERS[zone]];
   const boss = ZONE_BOSS[zone];
   // A boss brings its brood; the first field may be visited by the grove's guardian.
@@ -153,8 +158,12 @@ function zoneMonsterModels(zone: ZoneId): string[] {
   if (zone === "arena") types.push(...GUILD_BOSSES, "glub_brood");
   // The Trial Dungeon may hold any bracket's waves and boss.
   if (zone === "dungeon") for (const b of BRACKETS) types.push(...b.waves, b.boss, "glub_brood");
-  return [...new Set(types.map((t) => MONSTER_SKINS[t].model))];
+  return [...new Set(types)];
 }
+
+// Every mount's model: anyone in the zone may ride any of them, and one fetched only then would stall
+// the game the moment they got on.
+const MOUNT_MODELS = [...new Set(Object.values(MOUNTS).map((m) => m.model))];
 
 export interface WorldHud {
   zone: string;
@@ -359,10 +368,14 @@ export class WorldView {
     const library = await ModelLibrary.load();
     const npcModels = [...new Set(npcsIn(this.options.entry.zone).map((n) => n.model))];
     const houseModels = [...new Set((ZONES[this.options.entry.zone].houses ?? []).map((h) => h.model))];
+    // Everything the zone can show is fetched behind the loading screen: its monsters, every hero and
+    // every mount, and the pictures the screens use (the loading takes longer; the game never stalls).
+    const icons = preloadIcons(this.options.playerClass);
     await library.preload(
-      [...WORLD_MODELS, ...zoneMonsterModels(this.options.entry.zone), ...npcModels, ...houseModels, ...groveModels(this.options.entry.zone)],
+      [...WORLD_MODELS, ...zoneMonsterModels(this.options.entry.zone), ...npcModels, ...houseModels, ...groveModels(this.options.entry.zone), ...MOUNT_MODELS],
       this.options.onProgress,
     );
+    await icons;
     // React StrictMode mounts twice; the first view may be gone by now.
     if (this.disposed) return;
     this.library = library;
@@ -376,12 +389,63 @@ export class WorldView {
     this.me = this.hero(this.options.playerClass, this.options.costume);
     this.addNpcs();
     // Every shader of what stands in the zone made now, behind the loading screen, rather than on the
-    // frame something first comes into view.
-    this.renderer.compile(this.scene, this.camera);
+    // frame something first comes into view; and so too for what only comes later (monsters, other
+    // heroes, mounts), drawn once out of sight first.
+    try {
+      this.warmUp();
+    } catch (error) {
+      // Never worth keeping the zone from opening: only the first sight of each thing may stutter.
+      console.warn("warm-up failed", error);
+      this.renderer.compile(this.scene, this.camera);
+    }
     this.clock.start();
     preloadCues();
     this.frame = requestAnimationFrame(this.tick);
     this.startBackgroundSteps();
+  }
+
+  // One of each thing the zone may show later stood in front of the camera and drawn once, behind the
+  // loading screen: every shader is made and every model and picture goes to the graphics card now,
+  // not on the frame a monster respawns, another hero walks in or someone gets on a mount. Then they go.
+  private warmUp(): void {
+    const library = this.library!;
+    const group = new THREE.Group();
+    const monsters: MonsterActor[] = [];
+    for (const type of zoneMonsterTypes(this.options.entry.zone)) {
+      const skin = MONSTER_SKINS[type];
+      if (!library.has(skin.model)) continue;
+      const actor = new MonsterActor(`warm:${type}`, library.instance(skin.model), library.get(skin.model).animations, skin.look, 100, `Lv${MONSTERS[type].level} ${monsterName(type)}`);
+      monsters.push(actor);
+      group.add(actor.object);
+    }
+    for (const c of CLASSES) {
+      const actor = this.hero(c, this.options.costume);
+      this.scene.remove(actor.object);
+      actor.label("warm");
+      group.add(actor.object);
+    }
+    for (const id of Object.keys(MOUNTS) as MountId[]) {
+      if (library.has(MOUNTS[id].model)) group.add(mountObject(library, id));
+    }
+    // In a row a few metres ahead of the camera, each shown whatever the frustum says.
+    this.camera.position.set(this.pose.x, 3, this.pose.z + 6);
+    this.camera.lookAt(this.pose.x, 1, this.pose.z);
+    this.camera.updateMatrixWorld();
+    const ahead = new THREE.Vector3();
+    this.camera.getWorldDirection(ahead);
+    const side = new THREE.Vector3().crossVectors(ahead, this.camera.up).normalize();
+    const n = group.children.length;
+    group.children.forEach((o, i) => {
+      o.position.copy(this.camera.position).addScaledVector(ahead, 8).addScaledVector(side, (i - n / 2) * 0.4);
+      o.traverse((m) => {
+        m.frustumCulled = false;
+      });
+    });
+    this.scene.add(group);
+    this.renderer.compile(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
+    this.scene.remove(group);
+    for (const actor of monsters) actor.dispose();
   }
 
   // For checking the game from the browser console in development.

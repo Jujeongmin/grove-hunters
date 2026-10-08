@@ -75,6 +75,25 @@ export function iconFor(id: string): string | null {
   return null;
 }
 
+// Every picture the screens may show (menu and pad buttons, skills, the items as this class sees
+// them), fetched and decoded ahead, behind the loading screen, so nothing pops in or stalls a frame
+// when a screen first opens. Gives up after a while: a missing picture is not worth holding the game.
+export function preloadIcons(playerClass: PlayerClass): Promise<void> {
+  if (typeof Image === "undefined") return Promise.resolve();
+  const urls = new Set<string>();
+  for (const id of [...ICON_IDS, ...Object.keys(ICON_FILES)]) {
+    const url = iconFor(id);
+    if (url) urls.add(url);
+  }
+  for (const id of Object.keys(ITEMS)) urls.add(publicUrl(`assets/ui/items/${itemPicture(id, playerClass)}.png`));
+  const all = [...urls].map((url) => {
+    const img = new Image();
+    img.src = url;
+    return img.decode().catch(() => undefined);
+  });
+  return Promise.race([Promise.all(all).then(() => undefined), new Promise<void>((resolve) => setTimeout(resolve, 8000))]);
+}
+
 // The icon for the skill in a slot (see skillAt): the path's own picture where it has one, otherwise
 // the class's for that slot (the class has three; a fourth slot waiting for its path shows the third's).
 export function skillIconId(playerClass: string, job: string | null, slot: number): string {

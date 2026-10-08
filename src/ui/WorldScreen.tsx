@@ -39,6 +39,14 @@ const MountPanel = lazy(() => import("./MountPanel").then((m) => ({ default: m.M
 const MarketPanel = lazy(() => import("./MarketPanel").then((m) => ({ default: m.MarketPanel })));
 const GuildPanel = lazy(() => import("./GuildPanel").then((m) => ({ default: m.GuildPanel })));
 const RewardsPanel = lazy(() => import("./RewardsPanel").then((m) => ({ default: m.RewardsPanel })));
+// Their code is fetched as soon as the world opens (behind the loading screen), so a first open never
+// waits on the network.
+function prefetchPanels(): void {
+  void import("./MountPanel");
+  void import("./MarketPanel");
+  void import("./GuildPanel");
+  void import("./RewardsPanel");
+}
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
 import { INVITE_MS, PARTY_POLL_HURRY_MS, PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
@@ -107,6 +115,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
       setState((prev) => (prev.phase === next.phase && prev.entry === next.entry && prev.error === next.error && prev.bag === next.bag
         && prev.shaky === next.shaky ? prev : next)));
     void client.enter();
+    prefetchPanels();
     return () => {
       off();
       void client.leave();
