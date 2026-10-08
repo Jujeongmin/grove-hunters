@@ -639,7 +639,7 @@ export const zhHant: Bundle = {
 
   "bar.potion": "藥水",
   "bar.emptySlot": "空格",
-  "bar.swipeHint": "向下滑動：自動使用",
+  "bar.swipeHint": "向下拖動：開關自動使用",
   "bar.autoPotion": "自動藥水",
   "bar.autoPotionTitle": "自動藥水設定",
   "bar.autoPotionAt": "生命低於 {n}% 時會喝藥水",

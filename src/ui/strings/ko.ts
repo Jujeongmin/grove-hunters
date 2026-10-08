@@ -648,7 +648,7 @@ export const ko = {
 
   "bar.potion": "물약",
   "bar.emptySlot": "빈 칸",
-  "bar.swipeHint": "아래로 밀면 자동 사용",
+  "bar.swipeHint": "아래로 끌어 자동 사용 켜기·끄기",
   "bar.autoPotion": "자동 물약",
   "bar.autoPotionTitle": "자동 물약 설정",
   "bar.autoPotionAt": "HP가 {n}% 이하가 되면 물약을 마셔요",

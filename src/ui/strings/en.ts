@@ -639,7 +639,7 @@ export const en: Bundle = {
 
   "bar.potion": "Potion",
   "bar.emptySlot": "Empty",
-  "bar.swipeHint": "Swipe down: auto-use",
+  "bar.swipeHint": "Drag down: auto-use on/off",
   "bar.autoPotion": "Auto potion",
   "bar.autoPotionTitle": "Auto potion settings",
   "bar.autoPotionAt": "Drinks a potion at {n}% health or less",

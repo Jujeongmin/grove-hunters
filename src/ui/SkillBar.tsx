@@ -152,15 +152,26 @@ export function SkillBar({ hud, playerClass, job, onSkill, onPotion, glow }: Ski
   const [auto, setAuto] = useState(() => ({ potion: settings().autoPotion, skills: settings().autoSkills }));
   useEffect(() => onSettings((s) => setAuto({ potion: s.autoPotion, skills: s.autoSkills })), []);
   const [hintDone, setHintDone] = useState(swipeHintDone);
-  // The first open skill auto-battle does not use yet (none while the tutorial points elsewhere).
-  const hintSlot = hintDone || glow ? -1 : hud.skills.findIndex((s, i) => !!s && s.open && auto.skills[i] !== true);
+  // Where the finger shows the drag (none while the tutorial points elsewhere): the first open skill
+  // auto-battle does not use yet, else the potion if it is not drunk by itself, else the first open
+  // skill all the same (a low level has only the one, already on): the gesture is what is taught.
+  // -1 is the potion.
+  const offSkill = hud.skills.findIndex((s, i) => !!s && s.open && auto.skills[i] !== true);
+  const firstSkill = hud.skills.findIndex((s) => !!s && s.open);
+  const hintSlot = hintDone || glow ? null : offSkill >= 0 ? offSkill : !auto.potion ? -1 : firstSkill >= 0 ? firstSkill : null;
   return (
     <div className={`hud-skills${glow === "bar" ? " tutorial-glow" : ""}`}>
       <PotionSetting on={auto.potion} />
       <Cell
         slot={-1} keyLabel="Q" name={t("bar.potion")} icon={iconFor("potion_small")} corner={String(hud.potions)} cooling={null}
-        locked={hud.potions === 0} isAuto={auto.potion} glow={false} hint={false} use={onPotion}
-        flip={() => updateSettings({ autoPotion: !settings().autoPotion })}
+        locked={hud.potions === 0} isAuto={auto.potion} glow={false} hint={hintSlot === -1} use={onPotion}
+        flip={() => {
+          updateSettings({ autoPotion: !settings().autoPotion });
+          if (!hintDone) {
+            markSwipeHintDone();
+            setHintDone(true);
+          }
+        }}
       />
       {hud.skills.map((skill, i) => (
         <Cell
