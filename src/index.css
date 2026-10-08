@@ -268,7 +268,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .skill-row-text b { font: 700 14px var(--font-head); color: var(--ink); }
 .skill-row-note { color: var(--ember); }
 .skill-drag-ghost {
-  position: fixed; width: 44px; height: 44px; margin: -22px 0 0 -22px; image-rendering: pixelated; pointer-events: none; z-index: 9;
+  /* On the page (see SkillPanel), so sized by the overlay's scale to match the icons it came from. */
+  position: fixed; width: calc(44px * var(--ui-scale, 1)); height: calc(44px * var(--ui-scale, 1)); transform: translate(-50%, -50%);
+  image-rendering: pixelated; pointer-events: none; z-index: 100;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
 }
 /* A red flash round the screen's edge when you are hit. */

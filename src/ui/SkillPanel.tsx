@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import { t } from "./lang";
 import type { PlayerClass } from "../game/combat/classes";
@@ -153,13 +154,16 @@ export function SkillPanel({ playerClass, job, level, tutorial, onPlaced, onClos
         </div>
         <button type="button" className="text-button" onClick={onClose}>{t("common.close")}</button>
       </div>
-      {drag && (
+      {/* Drawn on the page itself, not inside the scaled overlay: there a fixed position is measured in
+          the overlay's own shrunken pixels, and on a big screen the icon trailed below the pointer. */}
+      {drag && createPortal(
         <img
           className="skill-drag-ghost"
           src={iconFor(skillIconId(playerClass, job, drag.skill)) ?? undefined}
           alt=""
           style={{ left: drag.x, top: drag.y }}
-        />
+        />,
+        document.body,
       )}
     </>
   );
