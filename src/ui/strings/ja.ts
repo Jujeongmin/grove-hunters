@@ -639,6 +639,7 @@ export const ja: Bundle = {
 
   "bar.potion": "ポーション",
   "bar.emptySlot": "空き",
+  "bar.swipeHint": "下へスワイプで自動使用",
   "bar.autoPotion": "オートポーション",
   "bar.autoPotionTitle": "オートポーション設定",
   "bar.autoPotionAt": "HPが{n}%以下になるとポーションを飲みます",
