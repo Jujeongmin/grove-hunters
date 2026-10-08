@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { QUESTS, countKills, questDone, readQuest } from "../../src/game/account/quests";
+import { QUESTS, QUEST_CHAIN, countKills, questDone, readQuest } from "../../src/game/account/quests";
+import { levelOf } from "../../src/game/account/level";
 import { CLASSES } from "../../src/game/combat/classes";
 import { ADVANCE_LEVEL, JOBS, jobsOf } from "../../src/game/combat/jobs";
 import { CLASS_SKILLS, FOURTH_SKILL_LEVEL, JOB_SKILLS, THIRD_SKILL_LEVEL, skillAt } from "../../src/game/combat/skills";
@@ -16,10 +17,27 @@ describe("quests", () => {
   });
 
   it("read back safely, and stay done past the last", () => {
-    expect(readQuest(undefined)).toEqual({ index: 0, count: 0 });
-    expect(readQuest({ index: 0, count: 999 })).toEqual({ index: 0, count: QUESTS[0].count });
-    expect(readQuest({ index: 99, count: 3 })).toEqual({ index: QUESTS.length, count: 0 });
+    expect(readQuest(undefined)).toEqual({ index: 0, count: 0, v: QUEST_CHAIN });
+    expect(readQuest({ index: 0, count: 999 })).toEqual({ index: 0, count: QUESTS[0].count, v: QUEST_CHAIN });
+    expect(readQuest({ index: 99, count: 3 })).toEqual({ index: QUESTS.length, count: 0, v: QUEST_CHAIN });
     expect(questDone({ index: QUESTS.length, count: 0 })).toBe(false);
+  });
+
+  it("moves a save from before the two inserted quests along to the same quest, its count kept", () => {
+    // Old index 3 was the second field's spiders and snakes; it is 5 now.
+    expect(QUESTS[5].targets).toEqual(["spider", "snake"]);
+    expect(readQuest({ index: 3, count: 7 })).toEqual({ index: 5, count: 7, v: QUEST_CHAIN });
+    // Before the insertion point nothing moves; a save already in the new chain is read as it is.
+    expect(readQuest({ index: 2, count: 4 })).toEqual({ index: 2, count: 4, v: QUEST_CHAIN });
+    expect(readQuest({ index: 3, count: 7, v: QUEST_CHAIN })).toEqual({ index: 3, count: 7, v: QUEST_CHAIN });
+    // Read twice, it does not move again.
+    expect(readQuest(readQuest({ index: 3, count: 0 }))).toEqual({ index: 5, count: 0, v: QUEST_CHAIN });
+  });
+
+  it("carries a hunter of the first field to level 10, where the second opens", () => {
+    let xp = 0;
+    for (const q of QUESTS.slice(0, 5)) xp += q.xp;
+    expect(levelOf(xp).level).toBeGreaterThanOrEqual(10);
   });
 });
 

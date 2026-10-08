@@ -1,5 +1,5 @@
 import { levelCost } from "../../src/game/account/level";
-import { QUESTS } from "../../src/game/account/quests";
+import { QUESTS, QUEST_CHAIN } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS } from "../../src/game/combat/jobs";
 import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
@@ -97,13 +97,13 @@ describe("quests", () => {
     expect(await errorOf(server.claimQuest())).toContain("not_in_village");
     await ring("rat", 3);
     await server.useSkill(0);
-    expect((await server.getBag()).quest).toEqual({ index: 0, count: 0 });
+    expect((await server.getBag()).quest).toEqual({ index: 0, count: 0, v: QUEST_CHAIN });
 
     await ring(first.targets[0], first.count);
     await $room.updateMyState({ skillReady: {} });
     await server.useSkill(0);
     const done = await server.getBag();
-    expect(done.quest).toEqual({ index: 0, count: first.count });
+    expect(done.quest).toEqual({ index: 0, count: first.count, v: QUEST_CHAIN });
     const xpBefore = (await server.getAccount()).xp;
     // Reported to the elder, in the village.
     expect(await errorOf(server.claimQuest())).toContain("not_in_village");
@@ -114,7 +114,7 @@ describe("quests", () => {
     expect(await errorOf(server.claimQuest())).toContain("not_near");
     await toNpc(server, "elder");
     const claimed = await server.claimQuest();
-    expect(claimed.quest).toEqual({ index: 1, count: 0 });
+    expect(claimed.quest).toEqual({ index: 1, count: 0, v: QUEST_CHAIN });
     expect(claimed.gold).toBeGreaterThanOrEqual(first.gold);
     expect(claimed.bag.potion_small).toBeGreaterThanOrEqual(5 + first.items[0].n);
     expect((await server.getAccount()).xp).toBe(xpBefore + first.xp);

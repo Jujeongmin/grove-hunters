@@ -24,6 +24,37 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-08-first-field-quests",
+    date: "2026-10-08",
+    text: {
+      ko: { title: "숲 필드 1 퀘스트 추가 · 채팅 위치", lines: [
+        "들쥐·개구리 퀘스트 다음에 '개구리 늪의 소란'과 '초록숲 정화'가 생겼어요. 이제 퀘스트만 따라가도 숲 필드 2가 열리는 10레벨까지 갈 수 있어요.",
+        "이미 그 뒤 퀘스트를 하던 분은 진행이 그대로 이어져요.",
+        "채팅 미리보기가 미니맵 오른쪽으로 옮겨졌고, 최근 4줄까지 보여요.",
+      ] },
+      en: { title: "New Forest Field 1 quests · chat moved", lines: [
+        "After the rats and frogs come 'Trouble at the Frog Pond' and 'Cleansing the Green Wood': the quests alone now carry you to level 10, where Forest Field 2 opens.",
+        "If you were already past them, your progress carries on as it was.",
+        "The chat preview sits right of the minimap now, with the last four lines.",
+      ] },
+      ja: { title: "森フィールド1のクエスト追加 · チャットの位置", lines: [
+        "野ネズミ・カエルの次に「カエル沼の騒ぎ」と「緑の森の浄化」が加わりました。クエストを進めるだけで森フィールド2が開くレベル10まで届きます。",
+        "すでに先のクエストを進めていた方は、そのまま続きます。",
+        "チャットのプレビューがミニマップの右に移り、最新4行まで表示します。",
+      ] },
+      "zh-Hans": { title: "新增森林区域1任务 · 聊天位置", lines: [
+        "田鼠·青蛙任务之后新增“青蛙沼的骚动”和“净化绿森林”，只做任务也能升到开放森林区域2的 10 级。",
+        "已经在做后续任务的玩家，进度照常延续。",
+        "聊天预览移到小地图右侧，显示最近 4 行。",
+      ] },
+      "zh-Hant": { title: "新增森林區域1任務 · 聊天位置", lines: [
+        "田鼠·青蛙任務之後新增「青蛙沼的騷動」和「淨化綠森林」，只做任務也能升到開放森林區域2的 10 級。",
+        "已經在做後續任務的玩家，進度照常延續。",
+        "聊天預覽移到小地圖右側，顯示最近 4 行。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-06-mount-herd",
     date: "2026-10-06",
     text: {

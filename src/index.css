@@ -470,7 +470,7 @@ button.hud-prompt:hover { color: #ffe0b0; }
 }
 /* The quest sits at the right, just above the pad's buttons and under the unfolded menu, so neither
    covers it. Its height is fixed rather than a share of the stage. */
-.hud-quest { top: 210px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }
+.hud-quest { top: auto; bottom: 172px; right: 16px; transform: none; width: 210px; padding: 6px 10px; gap: 2px; }
 /* The map: a little one at the top left under the vitals while you play, and the whole zone over the
    game with N. Both are drawn north up, so a glance means the same thing every time, and both sit on
    plain black. */
@@ -1327,6 +1327,12 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .chat-close { padding: 6px 10px; border-radius: 6px; border: 0; background: rgba(255, 255, 255, 0.15); color: var(--ink); font: 600 13px var(--font-body); }
 .chat-problem { width: 100%; color: var(--blood); font: 600 13px var(--font-body); }
 .chat-open { align-self: flex-start; pointer-events: auto; font: 600 14px var(--font-body); border: 0; background: none; color: var(--ink); cursor: var(--cursor-press), pointer; }
+/* Closed, beside the minimap: the latest few lines on a faint dark ground, and the button under them. */
+.chat-slot { pointer-events: none; }
+.chat.preview { position: static; width: 230px; margin-top: 6px; gap: 4px; }
+.chat.preview .chat-log { max-height: none; padding: 4px 7px; border-radius: 6px; background: rgba(14, 11, 9, 0.42); font-size: 12px; gap: 1px; }
+.chat.preview .chat-open { font-size: 12px; padding: 3px 10px; }
+.chat.preview .chat-bar { min-width: 0; padding: 4px 10px; font-size: 12px; }
 /* The chat's bar on a keyboard, at the bottom left: Enter to talk. */
 .chat-bar {
   align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 6px 12px; min-width: 200px;

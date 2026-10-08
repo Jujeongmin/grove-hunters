@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, memo } from "react";
+import { createPortal } from "react-dom";
 import { t } from "./lang";
 import type { Key } from "./strings/ko";
 import { typing } from "../game/render/FpsInput";
@@ -8,8 +9,9 @@ import { announceText } from "./announceText";
 import { settings } from "./settings";
 import { VIP_MIGHT } from "../game/account/premium";
 
-// Open, it shows this many to scroll back through.
+// Open, it shows this many to scroll back through; closed, the preview beside the minimap this many.
 const OPEN_LINES = 30;
+const PREVIEW_LINES = 4;
 // Guild chat is asked for this often: while its tab is open, and otherwise.
 const GUILD_POLL_OPEN_MS = 5_000;
 // In no guild, asked only this often (to notice joining one).
@@ -26,8 +28,9 @@ const PROBLEM: Record<string, Key> = {
 // screen (and the send button beside the box, or the keyboard's own), and a tap on the preview
 // anywhere; closing it (the button, Escape, or the focus leaving the box, as when a phone's keyboard is
 // put away) also clears the lines seen so far off the screen, and keeps what was typed for next time.
-// Open, it stands in the middle above the skill bar, off the pad.
-function ChatBoxView({ client, keyHints }: { client: WorldClient; keyHints: boolean }) {
+// Open, it stands in the middle above the skill bar, off the pad. Closed, the preview (the latest
+// PREVIEW_LINES and the button) goes into `slot`, beside the minimap, when the screen gives one.
+function ChatBoxView({ client, keyHints, slot = null }: { client: WorldClient; keyHints: boolean; slot?: HTMLElement | null }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
   const [inGuild, setInGuild] = useState(client.state.inGuild);
@@ -104,10 +107,10 @@ function ChatBoxView({ client, keyHints }: { client: WorldClient; keyHints: bool
   const heard = [...channel, ...guildLines.map((l) => ({ ...l, guild: true, system: false }))].sort((a, b) => a.heardAt - b.heardAt);
   const shown = open
     ? (mode === "guild" ? guildLines.map((l) => ({ ...l, guild: true, system: false })) : channel).slice(-OPEN_LINES)
-    : heard.slice(-1);
+    : heard.slice(-PREVIEW_LINES);
   const guildNew = guildLines.some((l) => l.heardAt > guildSeen && !l.mine);
-  return (
-    <div className={`chat${open ? " open" : ""}`}>
+  const box = (
+    <div className={`chat${open ? " open" : ""}${!open && slot ? " preview" : ""}`}>
       {open && inGuild && (
         <div className="chat-tabs">
           {(["channel", "guild"] as const).map((m) => (
@@ -188,6 +191,7 @@ function ChatBoxView({ client, keyHints }: { client: WorldClient; keyHints: bool
       )}
     </div>
   );
+  return !open && slot ? createPortal(box, slot) : box;
 }
 
 // Its props never change while the world is up, so the HUD's updates pass it by.

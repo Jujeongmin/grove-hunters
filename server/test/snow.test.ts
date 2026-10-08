@@ -1,6 +1,6 @@
 import { levelCost } from "../../src/game/account/level";
 import { GOLD, ITEMS } from "../../src/game/account/items";
-import { DAILY_QUESTS, QUESTS } from "../../src/game/account/quests";
+import { DAILY_QUESTS, QUESTS, QUEST_CHAIN } from "../../src/game/account/quests";
 import { npcSpot } from "../../src/game/world/npcs";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { editActive, enterAs, errorOf, giveXp, join, makeCharacter, walkTo } from "./helpers";
@@ -67,7 +67,7 @@ describe("the snow region", () => {
     await standingIn(server, "outpost", 50);
     const armour = QUESTS.findIndex((q) => q.items.some((i) => i.id === "armor_6"));
     expect(armour).toBeGreaterThan(12);
-    await editActive("test-a", (c) => ({ ...c, quest: { index: armour, count: QUESTS[armour].count } }));
+    await editActive("test-a", (c) => ({ ...c, quest: { index: armour, count: QUESTS[armour].count, v: QUEST_CHAIN } }));
     const captain = npcSpot("captain");
     await walkTo(server, captain.x + 1, captain.z);
     const paid = await server.claimQuest();

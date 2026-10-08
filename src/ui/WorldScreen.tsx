@@ -346,6 +346,8 @@ function ZoneScreen({
   const [saving, setSaving] = useState(false);
   // The last claimed quest's reward, shown at the top for a few seconds (see RewardToast).
   const [reward, setReward] = useState<Reward | null>(null);
+  // Beside the minimap, where the closed chat shows its latest lines.
+  const [chatSlot, setChatSlot] = useState<HTMLDivElement | null>(null);
   useEffect(() => view.current?.setPowerSave(saving), [saving]);
   // The stable covers the whole screen: the world need not be drawn under it.
   useEffect(() => view.current?.setCovered(panel === "mounts"), [panel]);
@@ -693,6 +695,8 @@ function ZoneScreen({
             {!saving && (
               <div className="hud-left-row">
                 <MinimapCorner zone={hud.zoneId} me={hud.me} bosses={hud.bosses} onOpen={() => toggle("map")} />
+                {/* The chat's preview lands here while it is closed (see ChatBox). */}
+                <div className="chat-slot" ref={setChatSlot} />
                 <PartyFrame
                   state={party} me={client.account} others={client.state.others} here={{ zone: hud.zoneId, channel: hud.channel }}
                   onOpen={() => toggle("party")}
@@ -794,7 +798,7 @@ function ZoneScreen({
               />
             )
           )}
-          <ChatBox client={client} keyHints={keyHints} />
+          <ChatBox client={client} keyHints={keyHints} slot={chatSlot} />
           {hud.hurt > 0 && <div className="hud-hurt" style={{ opacity: hud.hurt }} />}
           {saving && (
             <PowerSaveScreen
@@ -803,13 +807,19 @@ function ZoneScreen({
           )}
           {entry.zone === "arena" && <ArenaHud client={client} />}
           {inDungeon && <DungeonHud client={client} />}
-          <AnnounceBanner client={client} />
-          <RewardToast reward={reward} />
-          <ZoneTitle entry={entry} />
           {hud.dead && entry.zone !== "arena" && !inDungeon && (
             <DeathPanel client={client} level={hud.level} lostXp={hud.lostXp} gold={bag?.gold ?? null} vip={bag?.vip ?? 0} travelling={travelling} />
           )}
         </>
+      )}
+      {/* Kept mounted through a talk (only hidden then): taken down with the rest of the HUD, they
+          played again when it came back, the last reward and the zone's name popping up out of nowhere. */}
+      {hud && (
+        <div style={{ display: talkingTo ? "none" : "contents" }}>
+          <AnnounceBanner client={client} />
+          <RewardToast reward={reward} />
+          <ZoneTitle entry={entry} />
+        </div>
       )}
       {talkingTo && (
         <DialogueBox

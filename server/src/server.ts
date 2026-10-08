@@ -42,7 +42,7 @@ import {
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
 import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
-  QUESTS, QUEST_START, countDaily, countKills, dailyToday, questDone, readDaily, readDailyId,
+  QUESTS, QUEST_CHAIN, QUEST_START, countDaily, countKills, dailyToday, questDone, readDaily, readDailyId,
 } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS, readJob } from "../../src/game/combat/jobs";
 import { TALK_RANGE, TALK_SLACK, npcSpot, npcsIn, type NpcRole } from "../../src/game/world/npcs";
@@ -1840,7 +1840,7 @@ export class Server {
       return {
         ...give(c, quest.items, false, newUid, room),
         xp: c.xp + quest.xp,
-        quest: { index: c.quest.index + 1, count: 0 },
+        quest: { index: c.quest.index + 1, count: 0, v: QUEST_CHAIN },
       };
     });
     if (paid > 0) await $asset.mint(GOLD, paid);

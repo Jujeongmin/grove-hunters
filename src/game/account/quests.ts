@@ -17,6 +17,10 @@ export const QUESTS: readonly Quest[] = [
   { targets: ["green_blob"], count: 15, xp: 250, gold: 40, items: [{ id: "potion_small", n: 5 }] },
   { targets: ["mushnub"], count: 20, xp: 700, gold: 80, items: [] },
   { targets: ["rat", "frog"], count: 40, xp: 2500, gold: 200, items: [{ id: "armor_1", n: 1 }] },
+  // Added 2026-10-08 so the first field's quests carry a hunter to level 10, where the second field
+  // opens (they used to end around level 6). Saves from before are moved along (see readQuest).
+  { targets: ["rat", "frog"], count: 60, xp: 5000, gold: 300, items: [{ id: "weapon_1", n: 1 }] },
+  { targets: ["green_blob", "mushnub", "rat", "frog"], count: 80, xp: 7000, gold: 400, items: [{ id: "potion_small", n: 10 }, { id: "stone", n: 3 }] },
   { targets: ["spider", "snake"], count: 50, xp: 9000, gold: 600, items: [{ id: "potion_big", n: 5 }] },
   { targets: ["wasp", "bat"], count: 60, xp: 18000, gold: 1000, items: [] },
   { targets: ["goleling"], count: 60, xp: 30000, gold: 1500, items: [{ id: "weapon_2", n: 1 }] },
@@ -24,7 +28,8 @@ export const QUESTS: readonly Quest[] = [
   { targets: ["dire_spider", "venom_snake"], count: 60, xp: 60000, gold: 4000, items: [{ id: "potion_big", n: 10 }] },
   { targets: ["hornet", "vampire_bat"], count: 80, xp: 90000, gold: 6000, items: [] },
   { targets: ["stone_golem"], count: 60, xp: 130000, gold: 9000, items: [{ id: "armor_2", n: 1 }] },
-  // Past the chain's first end: new ones only ever go on the end, so saved progress keeps its meaning.
+  // Past the chain's first end. New ones go on the end, or, inserted (as the two above), with
+  // QUEST_CHAIN raised and readQuest moving older saves along.
   {
     targets: ["stone_golem"], count: 100, xp: 200000, gold: 12000,
     items: [{ id: "core", n: 12 }, { id: "stone", n: 10 }],
@@ -132,18 +137,26 @@ export function readDailyId(value: unknown): DailyQuest | null {
   return DAILY_QUESTS.find((q) => q.id === value) ?? null;
 }
 
-// Where a character is in the chain: the quest it is on (QUESTS.length when all are done) and how
-// many it has felled for it.
-export interface QuestProgress { index: number; count: number }
+// Where a character is in the chain: the quest it is on (QUESTS.length when all are done), how many
+// it has felled for it, and which shape of the chain the index counts in (v; see QUEST_CHAIN).
+export interface QuestProgress { index: number; count: number; v?: number }
 
-export const QUEST_START: QuestProgress = { index: 0, count: 0 };
+// The chain's shape. 2: two quests went in at index 3 (2026-10-08); a save without it counts in the
+// older chain, and from index 3 on it is moved along by two (the same quest, its count kept).
+export const QUEST_CHAIN = 2;
+const INSERTED_AT = 3;
+const INSERTED = 2;
+
+export const QUEST_START: QuestProgress = { index: 0, count: 0, v: QUEST_CHAIN };
 
 export function readQuest(raw: unknown): QuestProgress {
   const q = (raw ?? {}) as Record<string, unknown>;
   const whole = (v: unknown) => (typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : 0);
-  const index = Math.min(whole(q.index), QUESTS.length);
+  let saved = whole(q.index);
+  if (q.v !== QUEST_CHAIN && saved >= INSERTED_AT) saved += INSERTED;
+  const index = Math.min(saved, QUESTS.length);
   const quest = QUESTS[index];
-  return { index, count: quest ? Math.min(whole(q.count), quest.count) : 0 };
+  return { index, count: quest ? Math.min(whole(q.count), quest.count) : 0, v: QUEST_CHAIN };
 }
 
 // Progress after felling these monsters.
