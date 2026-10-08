@@ -4,7 +4,7 @@ import { inStrikeReach } from "./melee";
 import type { Pose, Vec2 } from "../world/types";
 
 // What a skill needs to know of a monster.
-interface Target extends Vec2 { alive: boolean; returning?: boolean }
+interface Target extends Vec2 { alive: boolean; returning?: boolean; type?: unknown }
 
 // Four skills, on keys 1 to 4, each on its own cooldown. The first is the class's own, from the
 // start. The other three come with the path taken at advancement (전직, see jobs.ts): the second on
@@ -129,16 +129,17 @@ export function readSlot(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 && value < SKILL_SLOTS ? value : null;
 }
 
-// The living monsters a skill used from pose lands on, nearest first. The server passes slack for lag.
+// The living monsters a skill used from pose lands on, nearest first, reach counted to each one's edge
+// (`bodyOf`, its footprint radius). The server passes slack for lag.
 export function skillTargets(
-  pose: Pose, monsters: Record<string, Target>, skill: Skill, slack = false,
+  pose: Pose, monsters: Record<string, Target>, skill: Skill, slack = false, bodyOf: (m: Target) => number = () => 0,
 ): string[] {
   if (skill.damage <= 0 && skill.stunMs <= 0) return [];
   const reachOf = {
     damage: skill.damage, intervalMs: 0, reach: skill.reach, arc: skill.arc, ranged: false,
   };
   const hit = Object.entries(monsters)
-    .filter(([, m]) => m.alive && !m.returning && inStrikeReach(pose, m, reachOf, slack))
+    .filter(([, m]) => m.alive && !m.returning && inStrikeReach(pose, m, reachOf, slack, bodyOf(m)))
     .sort(([, a], [, b]) => dist(pose, a) - dist(pose, b))
     .map(([id]) => id);
   return skill.maxTargets > 0 ? hit.slice(0, skill.maxTargets) : hit;

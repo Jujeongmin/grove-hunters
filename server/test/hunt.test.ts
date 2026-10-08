@@ -162,6 +162,15 @@ describe("hunting", () => {
     expect(pose.z).toBe(open!.z);
   });
 
+  test("a wizard's bolt at the very end of its reach lands: reach is to the monster's edge", async (server) => {
+    await toForest(server, "test-a", "wizard");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    await standAt(server, spawn.x, spawn.z);
+    const edge = WEAPONS.wizard.reach + MONSTERS.green_blob.body;
+    await only("green_blob", spawn.x, spawn.z - (edge - 0.05));
+    expect((await server.strike("m0", 0)).hit).toEqual(["m0"]);
+  });
+
   test("your blow lands only in reach, not faster than your weapon, and a kill pays XP", async (server) => {
     const entry = await toForest(server, "test-a");
     const spawn = zoneLayout("forest1").playerSpawn;

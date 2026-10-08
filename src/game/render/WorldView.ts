@@ -13,7 +13,7 @@ import { GroveScene, HOUSE_YAW, groveModels } from "./groveScene";
 import type { GroveView } from "../world/grove";
 import { ModelLibrary } from "../assets/ModelLibrary";
 import { WEAPONS, type PlayerClass } from "../combat/classes";
-import { facing, inStrikeReach } from "../combat/melee";
+import { AIM_GRACE, facing, inStrikeReach } from "../combat/melee";
 import { SKILL_KEYS, SKILL_SLOTS, skillAt, skillTargets, type Skill } from "../combat/skills";
 import { readJob, type JobId } from "../combat/jobs";
 import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
@@ -26,7 +26,7 @@ import { lineClear, walkRoute } from "../rules/pathing";
 import { groundAt, platformBlocks } from "../rules/platforms";
 import { CHASE, chaseCamera, shoulderFor } from "../rules/chaseCamera";
 import {
-  BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
+  BOSS_MOVES, GROVE_GUARDIAN_ZONE, MONSTERS, bodyOf, ZONE_BOSS, ZONE_MONSTERS, type MonsterState, type MonsterType,
 } from "../world/monsters";
 import { Threats } from "../world/threats";
 import { MOUNTS, type MountId } from "../account/mounts";
@@ -1081,8 +1081,9 @@ export class WorldView {
     for (const [id, m] of Object.entries(monsters)) {
       if (!m.alive) continue;
       const d = this.distanceTo(m);
-      if (d > weapon.reach || !facing({ ...this.pose, yaw }, m, AIM_ASSIST)) continue;
-      const score = inStrikeReach({ ...this.pose, yaw }, m, weapon) ? d : d + 100;
+      const edge = bodyOf(m) + AIM_GRACE;
+      if (d > weapon.reach + edge || !facing({ ...this.pose, yaw }, m, AIM_ASSIST)) continue;
+      const score = inStrikeReach({ ...this.pose, yaw }, m, weapon, false, edge) ? d : d + 100;
       if (!best || score < best.score) best = { id, score };
     }
     return best?.id ?? null;
@@ -1097,7 +1098,7 @@ export class WorldView {
     const c = this.options.playerClass;
     const weapon = WEAPONS[c];
     const chasing = this.auto && this.target && monsters[this.target]?.alive ? this.target : null;
-    const inReach = chasing && this.distanceTo(monsters[chasing]) <= weapon.reach ? chasing : null;
+    const inReach = chasing && this.distanceTo(monsters[chasing]) <= weapon.reach + bodyOf(monsters[chasing]) + AIM_GRACE ? chasing : null;
     const firing = this.input.consumePress("VirtualFire") || this.input.firing;
     if ((firing || inReach) && now - this.lastAttackAt >= weapon.intervalMs) {
       const target = inReach ?? this.aim(monsters, yaw);
@@ -1166,7 +1167,7 @@ export class WorldView {
   private skillHelps(skill: Skill, monsters: Record<string, MonsterState>, yaw: number): boolean {
     const me = this.client.state.me;
     const hurt = !!me && me.hp < me.maxHp * AUTO_HEAL_BELOW;
-    const hits = skill.damage > 0 && skillTargets({ ...this.pose, yaw }, monsters, skill).length > 0;
+    const hits = skill.damage > 0 && skillTargets({ ...this.pose, yaw }, monsters, skill, false, bodyOf).length > 0;
     return skill.heal > 0 ? hurt || hits : hits;
   }
 

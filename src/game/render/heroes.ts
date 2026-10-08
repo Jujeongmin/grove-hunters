@@ -1,4 +1,5 @@
 import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
+import { AIM_GRACE } from "../combat/melee";
 import type { Skill } from "../combat/skills";
 import type * as THREE from "three";
 import type { ShotKind } from "./effects";
@@ -42,7 +43,7 @@ const RING_COLOR: Record<PlayerClass, number> = {
 };
 
 function rig(c: PlayerClass, clips: Clips): HeroRig {
-  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, swingCue: SWING_CUES[c] ?? "swing", skillCue: SKILL_CUES[c] ?? "skill", reach: WEAPONS[c].reach, ringColor: RING_COLOR[c] };
+  return { ...clips, playerClass: c, shot: SHOTS[c] ?? null, swingCue: SWING_CUES[c] ?? "swing", skillCue: SKILL_CUES[c] ?? "skill", reach: WEAPONS[c].reach + AIM_GRACE, ringColor: RING_COLOR[c] };
 }
 
 // What a skill shows: the ring of light it leaves (size and colour), and how far the one long shot of

@@ -7,7 +7,7 @@ import type { FightBonus } from "../../src/game/combat/power";
 import { stepMonsters, type Prey } from "../../src/game/world/monsterAi";
 import { readTelegraphs, resolveTelegraphs } from "../../src/game/world/telegraphs";
 import {
-  ZONE_BOSS, ZONE_MONSTERS, damageAt, maxHpAt, readMonsterType, respawnDelay, spawnMonsters, type MonsterState,
+  ZONE_BOSS, ZONE_MONSTERS, bodyOf, damageAt, maxHpAt, readMonsterType, respawnDelay, spawnMonsters, type MonsterState,
   type MonsterType,
 } from "../../src/game/world/monsters";
 import { RANGE_SLACK, RuleViolation, isPose, type Pose } from "../../src/game/world/types";
@@ -317,7 +317,7 @@ export async function strike(zone: ZoneId, account: string, monsterId: unknown, 
   if (!m) throw new RuleViolation("no_monster");
   if (!m.alive) throw new RuleViolation("monster_dead");
   const weapon = WEAPONS[f.playerClass];
-  if (!inStrikeReach(f.pose, m, weapon, true)) throw new RuleViolation("out_of_range");
+  if (!inStrikeReach(f.pose, m, weapon, true, bodyOf(m))) throw new RuleViolation("out_of_range");
   // Striking takes a rider off the mount.
   await $room.updateMyState({ strikeReadyAt: now + weapon.intervalMs * COOLDOWN_GRACE, riding: null }, { returnState: false });
   const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power), 0, now, account, await huntersHere());
@@ -357,7 +357,7 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
     }
   }
   const monsters = await readMonsters(zone);
-  const targets = skillTargets(f.pose, monsters, skill, true);
+  const targets = skillTargets(f.pose, monsters, skill, true, bodyOf);
   if (targets.length === 0) return { ...NOTHING, dealt: {} };
   const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power), skill.stunMs, now, account, await huntersHere());
   await writeMonsters(monsters);

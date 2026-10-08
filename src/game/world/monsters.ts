@@ -188,6 +188,11 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
   },
 };
 
+// A monster's footprint radius by its kind (0 for one the table does not know), for reaching its edge.
+export function bodyOf(m: { type?: unknown }): number {
+  return typeof m.type === "string" && m.type in MONSTERS ? MONSTERS[m.type as MonsterType].body : 0;
+}
+
 // What felling a monster pays: gold and the items that dropped. random gives numbers in [0, 1).
 export interface Loot { gold: number; items: ItemId[] }
 
