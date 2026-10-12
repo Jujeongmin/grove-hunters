@@ -16,7 +16,7 @@ import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
 import { AIM_GRACE, facing, inStrikeReach } from "../combat/melee";
 import { SKILL_KEYS, SKILL_SLOTS, skillAt, skillTargets, type Skill } from "../combat/skills";
 import { readJob, type JobId } from "../combat/jobs";
-import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
+import { PLAYER_BODY, crowdBlocks, stepPastCrowd, type Body } from "../rules/crowd";
 import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
   GROUNDED, MAX_STEP_SECONDS, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
@@ -322,8 +322,9 @@ export class WorldView {
   private frame = 0;
   private disposed = false;
 
-  private readonly isSolid = (x: number, z: number) =>
-    this.walls(x, z) || platformBlocks(this.layout.platforms, x, z, this.air.y) || crowdBlocks(this.bodies, this.pose, x, z);
+  // What stops you: the forest and the platforms (isWalled), and the monsters and the village folk too.
+  private readonly isWalled = (x: number, z: number) => this.walls(x, z) || platformBlocks(this.layout.platforms, x, z, this.air.y);
+  private readonly isSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.bodies, this.pose, x, z);
 
   constructor(
     private readonly container: HTMLElement,
@@ -856,7 +857,8 @@ export class WorldView {
         facingYaw = chase.yaw;
         // The camera swings round behind you to the fight, unless you are looking about yourself.
         if (look.dx === 0) this.yaw = turnToward(this.yaw, chase.yaw, dt, AUTO_CAMERA_RATE);
-        if (chase.walk) this.pose = stepAround({ ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, speed);
+        // Hemmed in by monsters on the way, it slips through them (see stepPastCrowd).
+        if (chase.walk) this.pose = stepPastCrowd({ ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isWalled, speed);
       } else {
         // The pad walks you round the camera; you turn to face the way you go.
         const heading = walkYaw(this.yaw, move);
