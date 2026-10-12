@@ -935,7 +935,7 @@ function ZoneScreen({
       {menu && <SettingsPanel onClose={() => setMenu(false)} onExit={onExit} onTitle={onTitle} />}
       {panel === "bag" && (
         <BagPanel
-          client={client} bag={bag} inVillage={inVillage} playerClass={playerClass} level={hud?.level ?? 1}
+          client={client} bag={bag} playerClass={playerClass} level={hud?.level ?? 1}
           onAdvance={() => setPanel("job")} onClose={() => setPanel(null)}
         />
       )}

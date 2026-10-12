@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { itemBlurb, itemName } from "./names";
-import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
+import { ITEMS, ITEM_IDS, SHOP_ITEMS, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName } from "./names";
@@ -48,10 +48,9 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
 // with what can be done with it. A piece of gear goes on the anvil there, to enhance it, wear it, take
 // it off or sell it; a potion or material can be drunk or sold. With nothing picked the left side
 // shows your class and its path, or the way to the advancement screen once it may advance.
-export function BagPanel({ client, bag, onClose, onAdvance, inVillage, playerClass, level }: PanelProps & {
+export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }: PanelProps & {
   // Opens the advancement screen (전직), where the paths are chosen.
   onAdvance: () => void;
-  inVillage: boolean;
   playerClass: PlayerClass;
   level: number;
 }) {
@@ -107,14 +106,6 @@ export function BagPanel({ client, bag, onClose, onAdvance, inVillage, playerCla
           }}
         >
           {t("bag.equip")}
-        </button>
-      )}
-      {!shown.worn && inVillage && (
-        <button
-          type="button" className="text-button"
-          onClick={() => act(() => (shown.piece ? client.sellPiece(shown.piece.uid) : client.sell(shown.id, 1, shown.trade === true)))}
-        >
-          {t("bag.sell", { n: sellPrice(shown.id) })}
         </button>
       )}
       {!shown.worn && (discarding ? (
