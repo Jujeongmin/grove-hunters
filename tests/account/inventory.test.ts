@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_CARRY } from "../../src/game/account/items";
 import {
   EMPTY_INVENTORY, MAX_PIECES, TRADE_DROP_CHANCE, allStacks, countOf, equipPiece, fits, give, loot, putPiece, readInventory, spend,
   takePiece, takeStack, unequipSlot, type Inventory,
@@ -49,10 +50,13 @@ describe("inventory", () => {
     expect(traded.bagTrade).toEqual({ stone: 4 });
     expect(traded.bag).toEqual({ potion_small: 6, stone: 2 });
     expect(traded.pieces[1]).toEqual(piece("t", "weapon_3", 0, true));
-    expect(() => give(inv, [{ id: "potion_small", n: 95 }], false, uids())).toThrow("bag_full");
+    expect(give(inv, [{ id: "potion_small", n: 95 }], false, uids()).bag.potion_small).toBe(100);
+    expect(() => give(inv, [{ id: "potion_small", n: MAX_CARRY }], false, uids())).toThrow("bag_full");
     const full: Inventory = { ...EMPTY_INVENTORY, pieces: Array.from({ length: MAX_PIECES }, (_, i) => piece(`p${i}`, "weapon_1")) };
     expect(fits(full, [{ id: "armor_1", n: 1 }], false)).toBe(false);
     expect(fits(full, [{ id: "stone", n: 1 }], false)).toBe(true);
+    // A full square of potions takes a quest's ten more: they start the next square.
+    expect(fits({ ...EMPTY_INVENTORY, bag: { potion_small: 95 } }, [{ id: "potion_small", n: 10 }], false)).toBe(true);
   });
 
   it("loot: materials may be traded, gear on its chance, and a full bag loses the rest", () => {

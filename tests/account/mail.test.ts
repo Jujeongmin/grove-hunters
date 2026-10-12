@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_CARRY } from "../../src/game/account/items";
 import {
   GIFTS, MAIL_KEEP_MS, daysLeft, giftById, giftsDue, mailExpired, mailFits, readGiftsTaken, readMail,
 } from "../../src/game/account/mail";
@@ -32,10 +33,11 @@ describe("mail", () => {
 
   it("is only taken when all of it fits the bag", () => {
     const holding = (potions: number) => ({ ...EMPTY_INVENTORY, bag: { potion_big: potions } });
-    expect(mailFits(holding(89), { items: [{ id: "potion_big", n: 10 }] })).toBe(true);
-    expect(mailFits(holding(90), { items: [{ id: "potion_big", n: 10 }] })).toBe(false);
+    // Past a square's 99 the potions go on in the next; only MAX_CARRY of a kind is too many.
+    expect(mailFits(holding(95), { items: [{ id: "potion_big", n: 10 }] })).toBe(true);
+    expect(mailFits(holding(MAX_CARRY - 9), { items: [{ id: "potion_big", n: 10 }] })).toBe(false);
     // The same item twice adds up.
-    expect(mailFits(holding(80), { items: [{ id: "potion_big", n: 10 }, { id: "potion_big", n: 10 }] })).toBe(false);
+    expect(mailFits(holding(MAX_CARRY - 19), { items: [{ id: "potion_big", n: 10 }, { id: "potion_big", n: 10 }] })).toBe(false);
     expect(mailFits(EMPTY_INVENTORY, { items: [] })).toBe(true);
   });
 

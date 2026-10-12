@@ -1,6 +1,6 @@
 import { RuleViolation } from "../world/types";
 import {
-  ITEMS, MAX_PLUS, MAX_STACK, NO_GEAR, addItem, readBag, readItemId, readPiece, slotOf,
+  ITEMS, MAX_CARRY, MAX_PLUS, NO_GEAR, addItem, readBag, readItemId, readPiece, slotOf,
   type Bag, type Gear, type GearPiece, type ItemId, type Slot,
 } from "./items";
 
@@ -64,7 +64,7 @@ function fromLegacy(raw: Record<string, unknown>, characterId: string): Inventor
   if (raw.bag && typeof raw.bag === "object") {
     for (const [id, n] of Object.entries(raw.bag as Record<string, unknown>)) {
       const item = readItemId(id);
-      if (item && typeof n === "number" && Number.isInteger(n) && n > 0) counts[item] = Math.min(n, MAX_STACK);
+      if (item && typeof n === "number" && Number.isInteger(n) && n > 0) counts[item] = Math.min(n, MAX_CARRY);
     }
   }
   const plus: Partial<Record<ItemId, number>> = {};
@@ -115,7 +115,7 @@ export function allStacks(inv: Inventory): Bag {
   return out;
 }
 
-// Whether `items` all fit: no stack past MAX_STACK, no more than MAX_PIECES pieces. `trade` says which
+// Whether `items` all fit: no kind past MAX_CARRY, no more than MAX_PIECES pieces. `trade` says which
 // stack materials go to.
 export function fits(inv: Inventory, items: readonly ItemCount[], trade: boolean, room = MAX_PIECES): boolean {
   let gear = 0;
@@ -125,7 +125,7 @@ export function fits(inv: Inventory, items: readonly ItemCount[], trade: boolean
     else adding[id] = (adding[id] ?? 0) + n;
   }
   if (gear > 0 && inv.pieces.length + gear > room) return false;
-  return (Object.entries(adding) as [ItemId, number][]).every(([id, n]) => (stackFor(inv, id, trade)[id] ?? 0) + n <= MAX_STACK);
+  return (Object.entries(adding) as [ItemId, number][]).every(([id, n]) => (stackFor(inv, id, trade)[id] ?? 0) + n <= MAX_CARRY);
 }
 
 // Potions have no market; a material goes to the stack its trade says.

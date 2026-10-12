@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { MAX_STACK, addItem, gearStats, readBag, readPiece, slotOf } from "../../src/game/account/items";
+import { MAX_CARRY, MAX_STACK, addItem, gearStats, readBag, readPiece, slotOf } from "../../src/game/account/items";
 import { MONSTERS, rollLoot } from "../../src/game/world/monsters";
 
 describe("items", () => {
   it("stacks up to a limit, and refuses to take away what is not there", () => {
     expect(addItem({}, "potion_small", 2)).toEqual({ potion_small: 2 });
     expect(addItem({ potion_small: 2 }, "potion_small", -2)).toEqual({});
-    expect(addItem({ potion_small: 98 }, "potion_small", 5)).toEqual({ potion_small: MAX_STACK });
+    // Past a square's 99 the stack goes on in the next square: only MAX_CARRY of a kind stops it.
+    expect(addItem({ potion_small: 98 }, "potion_small", 5)).toEqual({ potion_small: 103 });
+    expect(addItem({ potion_small: MAX_CARRY - 1 }, "potion_small", 5)).toEqual({ potion_small: MAX_CARRY });
+    expect(MAX_CARRY).toBeGreaterThan(MAX_STACK * 50);
+    expect(readBag({ stone: 250 })).toEqual({ stone: 250 });
     expect(() => addItem({}, "potion_small", -1)).toThrow("no_item");
   });
 

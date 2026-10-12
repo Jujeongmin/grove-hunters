@@ -50,4 +50,21 @@ describe("stepPastCrowd", () => {
     }
     expect(pose.z).toBeGreaterThanOrEqual(0.35);
   });
+
+  it("lets a trip sent elsewhere pass through monsters but not fixed walls", () => {
+    const bodies = [{ x: 0, z: 0, r: 0.85 }];
+    let pose = { x: 0, z: 1.2, yaw: 0 };
+    for (let i = 0; i < 12; i++) {
+      const from = pose;
+      pose = stepPastCrowd(
+        pose, 0, 0.1, (x, z) => crowdBlocks(bodies, from, x, z), open, 4, true,
+      );
+    }
+    expect(pose.z).toBeLessThan(-3);
+
+    const wall = (_x: number, z: number) => z < 0;
+    pose = { x: 0, z: 1.2, yaw: 0 };
+    for (let i = 0; i < 12; i++) pose = stepPastCrowd(pose, 0, 0.1, wall, wall, 4, true);
+    expect(pose.z).toBeGreaterThanOrEqual(0.35);
+  });
 });

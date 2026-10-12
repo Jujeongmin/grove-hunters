@@ -288,6 +288,9 @@ export class WorldView {
   // The level the last HUD went out with, so a level going up rings once.
   private lastLevel: number | null = null;
   private bodies: Body[] = [];
+  // Village folk are still walked round on an automatic trip. Monsters are deliberately absent:
+  // a pack between the player and a portal or another target must not hold the trip in place.
+  private fixedBodies: Body[] = [];
   // No portal takes you until you have walked clear of the one you came through.
   private portalArmed = false;
   private travelling = false;
@@ -327,6 +330,7 @@ export class WorldView {
   // What stops you: the forest and the platforms (isWalled), and the monsters and the village folk too.
   private readonly isWalled = (x: number, z: number) => this.walls(x, z) || platformBlocks(this.layout.platforms, x, z, this.air.y);
   private readonly isSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.bodies, this.pose, x, z);
+  private readonly isAutoSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.fixedBodies, this.pose, x, z);
 
   constructor(
     private readonly container: HTMLElement,
@@ -820,10 +824,15 @@ export class WorldView {
       // Other players are walked through (two standing on one spot could otherwise lock each other in);
       // monsters and the village folk still stand in the way.
       this.bodies = [];
+      this.fixedBodies = [];
       for (const m of Object.values(state.monsters)) {
         if (m.alive) this.bodies.push({ x: m.x, z: m.z, r: PLAYER_BODY + MONSTERS[m.type].body });
       }
-      for (const npc of this.npcs) this.bodies.push({ x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 });
+      for (const npc of this.npcs) {
+        const body = { x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 };
+        this.bodies.push(body);
+        this.fixedBodies.push(body);
+      }
       const speed = WALK_SPEED * (this.riding ? MOUNTS[this.riding].speed : 1);
       const move = talking ? { forward: 0, strafe: 0 } : this.input.moveInput();
       const idle = move.forward === 0 && move.strafe === 0;
@@ -864,8 +873,11 @@ export class WorldView {
         facingYaw = chase.yaw;
         // The camera swings round behind you to the fight, unless you are looking about yourself.
         if (look.dx === 0) this.yaw = turnToward(this.yaw, chase.yaw, dt, AUTO_CAMERA_RATE);
-        // Hemmed in by monsters on the way, it slips through them (see stepPastCrowd).
-        if (chase.walk) this.pose = stepPastCrowd({ ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isWalled, speed);
+        // An automatic trip passes through monsters, while still going round terrain and village
+        // folk. Otherwise a pack can make it orbit forever on the way to a portal or another target.
+        if (chase.walk) this.pose = stepPastCrowd(
+          { ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isAutoSolid, speed, true,
+        );
       } else {
         // The pad walks you round the camera; you turn to face the way you go.
         const heading = walkYaw(this.yaw, move);

@@ -1,7 +1,7 @@
-import { GOLD } from "../../src/game/account/items";
+import { GOLD, MAX_CARRY } from "../../src/game/account/items";
 import { MAIL_KEEP_MS, giftsDue } from "../../src/game/account/mail";
 import { TUTORIAL_POTIONS } from "../../src/game/account/tutorial";
-import { errorOf, makeCharacter } from "./helpers";
+import { editActive, errorOf, makeCharacter } from "./helpers";
 
 // A letter straight into an account's mailbox, as the market will send them.
 async function post(account: string, letter: { gold?: number; gems?: number; items?: { id: string; n: number }[]; at?: number }) {
@@ -75,10 +75,11 @@ describe("mail", () => {
 
   test("a full bag leaves the letter where it is", async (server) => {
     await makeCharacter(server, "test-a", "우편왕");
-    const id = await post("test-a", { items: [{ id: "potion_small", n: 99 - TUTORIAL_POTIONS + 1 }] });
+    await editActive("test-a", (c) => ({ ...c, bag: { potion_small: MAX_CARRY - TUTORIAL_POTIONS } }));
+    const id = await post("test-a", { items: [{ id: "potion_small", n: TUTORIAL_POTIONS + 1 }] });
     expect(await errorOf(server.claimMail(id))).toContain("bag_full");
     expect(posted((await server.getMail()).mail).map((m: { id: string }) => m.id)).toEqual([id]);
-    expect((await server.getBag()).bag.potion_small).toBe(TUTORIAL_POTIONS);
+    expect((await server.getBag()).bag.potion_small).toBe(MAX_CARRY - TUTORIAL_POTIONS);
   });
 
   test("without a character only gold and gems can be taken", async (server) => {
@@ -95,6 +96,7 @@ describe("mail", () => {
     await makeCharacter(server, "test-a", "우편왕");
     await server.getMail();
     await post("test-a", { gold: 10 });
+    await editActive("test-a", (c) => ({ ...c, bag: { potion_small: MAX_CARRY - 50 } }));
     await post("test-a", { items: [{ id: "potion_small", n: 99 }] });
     await post("test-a", { items: [{ id: "potion_big", n: 2 }] });
     const result = await server.claimAllMail();

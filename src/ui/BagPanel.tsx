@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { itemBlurb, itemName } from "./names";
-import { ITEMS, ITEM_IDS, SHOP_ITEMS, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
+import { ITEMS, SHOP_ITEMS, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
 import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName } from "./names";
@@ -12,6 +12,7 @@ import type { WorldClient } from "../net/worldClient";
 import { MAX_LISTINGS } from "../game/account/market";
 import { FullScreen } from "./FullScreen";
 import { EnhanceStage, Icon, Purse, SideSheet, useEnhance, type Target } from "./Anvil";
+import { bagCells, cellKey, squareCount, type Cell } from "./bagGrid";
 
 // What the server said went wrong, in the reader's language. Anything it does not know about is
 // still said, in the plainest way there is.
@@ -202,27 +203,7 @@ export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }
   );
 }
 
-// One square of the bag's grid: a stack of potions or materials (materials that may be traded
-// stand apart from those that may not), or one piece of gear.
-type Cell =
-  | { kind: "stack"; id: ItemId; trade: boolean; n: number }
-  | { kind: "piece"; id: ItemId; trade: boolean; piece: GearPiece };
 type Picked = Cell | { kind: "worn"; slot: Slot };
-
-// The grid in the item table's order, each kind's pieces together.
-export function bagCells(bag: Pick<BagView, "bag" | "bagTrade" | "pieces">): Cell[] {
-  const out: Cell[] = [];
-  for (const id of ITEM_IDS) {
-    if ((bag.bag[id] ?? 0) > 0) out.push({ kind: "stack", id, trade: false, n: bag.bag[id]! });
-    if ((bag.bagTrade[id] ?? 0) > 0) out.push({ kind: "stack", id, trade: true, n: bag.bagTrade[id]! });
-    for (const piece of bag.pieces) if (piece.id === id) out.push({ kind: "piece", id, trade: piece.trade, piece });
-  }
-  return out;
-}
-
-function cellKey(cell: Cell): string {
-  return cell.kind === "piece" ? cell.piece.uid : `${cell.id}:${cell.trade}`;
-}
 
 function samePick(a: Picked, b: Picked): boolean {
   if (a.kind === "worn") return b.kind === "worn" && a.slot === b.slot;
@@ -242,7 +223,8 @@ function showing(bag: BagView, picked: Picked): {
     const piece = bag.pieces.find((p) => p.uid === picked.piece.uid);
     return piece ? { id: piece.id, piece, n: null, trade: piece.trade, worn: null } : null;
   }
-  const n = (picked.trade ? bag.bagTrade : bag.bag)[picked.id] ?? 0;
+  // The square picked, as full as it is now.
+  const n = squareCount((picked.trade ? bag.bagTrade : bag.bag)[picked.id] ?? 0, picked.part);
   if (n === 0) return null;
   return { id: picked.id, piece: null, n, trade: ITEMS[picked.id].kind === "material" ? picked.trade : null, worn: null };
 }

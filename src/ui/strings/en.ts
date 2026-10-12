@@ -414,7 +414,7 @@ export const en: Bundle = {
   "problem.not_enough_gold": "Not enough gold",
   "problem.not_in_village": "The shop is in the village",
   "problem.no_item": "It is not in your bag",
-  "problem.bag_full": "Your bag is full (gear has so many places, a stack holds 99). Throw something away or sell it and try again",
+  "problem.bag_full": "Your bag has no room for more gear. Throw some away and try again",
   "problem.too_low_advance": "Advancement opens at Lv {n}",
 
   "slot.weapon": "Weapon",

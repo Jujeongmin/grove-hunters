@@ -1,4 +1,4 @@
-import { ITEMS, sellPrice } from "../../src/game/account/items";
+import { ITEMS, MAX_CARRY, sellPrice } from "../../src/game/account/items";
 import { QUEST_CHAIN } from "../../src/game/account/quests";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
@@ -157,12 +157,14 @@ describe("bag and gold", () => {
     expect(await errorOf(server.buyItem("potion_small"))).toContain("not_in_village");
   });
 
-  test("a buy that would stack past 99 is refused before the gold is taken", async (server) => {
+  test("a buy goes on past a square's 99; one past what may be carried is refused before the gold is taken", async (server) => {
     await inVillage(server);
     await toNpc(server, "merchant");
     await $asset.mint("gold", 10_000);
     await server.buyItem("potion_small", 90);
-    expect((await server.buyItem("potion_small", 4)).bag.potion_small).toBe(99);
+    expect((await server.buyItem("potion_small", 10)).bag.potion_small).toBe(105);
+    await editActive("test-a", (c) => ({ ...c, bag: { potion_small: MAX_CARRY - 1 } }));
+    expect((await server.buyItem("potion_small", 1)).bag.potion_small).toBe(MAX_CARRY);
     const before = await $asset.get("gold");
     expect(await errorOf(server.buyItem("potion_small", 1))).toContain("bag_full");
     expect(await $asset.get("gold")).toBe(before);

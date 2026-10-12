@@ -82,8 +82,11 @@ export const ITEMS: Record<ItemId, ItemSpec> = {
 export const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
 // What the shop sells, in shelf order.
 export const SHOP_ITEMS = ITEM_IDS.filter((id) => ITEMS[id].price !== null);
-// No stack grows past this.
+// What one square of the bag holds: a stack past it goes on in the next square (the bag screen draws
+// it so), and the shop, the market and throwing away deal at most this many at a time.
 export const MAX_STACK = 99;
+// How many of one kind a character may carry in all, across its squares.
+export const MAX_CARRY = 9999;
 // Potions go down no faster than this (the server holds the client to it, with a little grace).
 export const POTION_GAP_MS = 1000;
 
@@ -124,7 +127,7 @@ export function readBag(raw: unknown): Bag {
   if (!raw || typeof raw !== "object") return out;
   for (const [id, n] of Object.entries(raw as Record<string, unknown>)) {
     const item = readItemId(id);
-    if (item && !slotOf(item) && typeof n === "number" && Number.isInteger(n) && n > 0) out[item] = Math.min(n, MAX_STACK);
+    if (item && !slotOf(item) && typeof n === "number" && Number.isInteger(n) && n > 0) out[item] = Math.min(n, MAX_CARRY);
   }
   return out;
 }
@@ -137,14 +140,14 @@ export function readPiece(raw: unknown): GearPiece | null {
   return { uid: p.uid, id, plus, trade: p.trade === true };
 }
 
-// The bag with n more of an item (never past MAX_STACK), or n fewer; fewer than it has is refused.
+// The bag with n more of an item (never past MAX_CARRY), or n fewer; fewer than it has is refused.
 export function addItem(bag: Bag, id: ItemId, n: number): Bag {
   const have = bag[id] ?? 0;
   const next = have + n;
   if (next < 0) throw new RuleViolation("no_item");
   const out = { ...bag };
   if (next === 0) delete out[id];
-  else out[id] = Math.min(next, MAX_STACK);
+  else out[id] = Math.min(next, MAX_CARRY);
   return out;
 }
 

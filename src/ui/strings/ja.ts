@@ -414,7 +414,7 @@ export const ja: Bundle = {
   "problem.not_enough_gold": "ゴールドが足りません",
   "problem.not_in_village": "ショップは村にあります",
   "problem.no_item": "カバンにありません",
-  "problem.bag_full": "カバンがいっぱいです（装備は枠の数まで、1枠99個まで）。捨てるか売ってからもう一度どうぞ",
+  "problem.bag_full": "カバンの装備枠がいっぱいです。いらない装備を捨ててからもう一度どうぞ",
   "problem.too_low_advance": "Lv{n}から転職できます",
 
   "slot.weapon": "武器",

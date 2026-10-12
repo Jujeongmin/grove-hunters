@@ -423,7 +423,7 @@ export const ko = {
   "problem.not_enough_gold": "골드가 모자라요",
   "problem.not_in_village": "상점은 마을에 있어요",
   "problem.no_item": "가방에 없어요",
-  "problem.bag_full": "가방이 가득 찼어요 (장비는 칸 수, 물건은 한 칸에 99개까지). 버리거나 팔고 다시 해 보세요",
+  "problem.bag_full": "가방의 장비 칸이 가득 찼어요. 필요 없는 장비를 버리고 다시 해 보세요",
   "problem.too_low_advance": "Lv{n}부터 전직할 수 있어요",
 
   "slot.weapon": "무기",

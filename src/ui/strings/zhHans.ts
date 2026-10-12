@@ -414,7 +414,7 @@ export const zhHans: Bundle = {
   "problem.not_enough_gold": "金币不足",
   "problem.not_in_village": "商店在村子里",
   "problem.no_item": "背包里没有",
-  "problem.bag_full": "背包已满（装备有格数上限，每格最多99个）。丢弃或出售后再试",
+  "problem.bag_full": "背包的装备格已满。丢弃不需要的装备后再试",
   "problem.too_low_advance": "Lv{n} 起可以转职",
 
   "slot.weapon": "武器",

@@ -91,7 +91,7 @@ export function receiveMail<I extends Inventory>(inv: I, items: readonly MailIte
   return next;
 }
 
-// Whether everything a letter carries fits the bag (no stack past MAX_STACK, no gear past
+// Whether everything a letter carries fits the bag (no kind past MAX_CARRY, no gear past
 // MAX_PIECES). One that does not is left in the mailbox rather than half taken.
 export function mailFits(inv: Inventory, mail: Pick<Mail, "items">, room?: number): boolean {
   try {
