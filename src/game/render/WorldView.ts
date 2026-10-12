@@ -224,6 +224,8 @@ export interface WorldViewOptions {
   // the next zone's view can carry it on.
   trip: QuestTrip | null;
   onTrip: (trip: QuestTrip | null) => void;
+  // Auto-battle on as you come in (it was on in the zone before).
+  auto?: boolean;
 }
 
 // One zone of the open world on screen: the forest and its portals, you (over the shoulder) and the
@@ -334,6 +336,7 @@ export class WorldView {
     this.layout = zoneLayout(options.entry.zone);
     this.portals = portalsOf(options.entry.zone);
     this.tripToResume = options.trip;
+    this.auto = options.auto ?? false;
     this.walls = solidWith(this.layout, Infinity);
     this.pose = { x: options.entry.x, z: options.entry.z, yaw: 0 };
     // As many pixels a point as the graphics quality allows (phones start at 1.5: small screens, warm
@@ -484,6 +487,10 @@ export class WorldView {
         if (p.yaw !== undefined) this.yaw = p.yaw;
       },
     };
+  }
+
+  isAuto(): boolean {
+    return this.auto;
   }
 
   // Auto-battle on or off (the HUD button).

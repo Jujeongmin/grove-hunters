@@ -107,6 +107,9 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
   const [problem, setProblem] = useState<{ text: string; at: number } | null>(null);
   // A quest trip under way, kept here as you go from zone to zone (each zone has its own view).
   const trip = useRef<QuestTrip | null>(null);
+  // Whether auto-battle was on when you left the zone before, so it stays on in the next (a portal,
+  // the Trial Dungeon and back).
+  const autoOn = useRef(false);
 
   useEffect(() => {
     // The screen only cares where you are and whether you are moving between zones; the others'
@@ -152,7 +155,7 @@ export function WorldScreen({ client, playerClass, costume, name, friends, onExi
       travelling={state.phase === "travelling"}
       bag={state.bag}
       problem={problem}
-      trip={trip}
+      trip={trip} autoOn={autoOn}
       onProblem={(code) => setProblem({ text: t(TRAVEL_PROBLEM[code] ?? "problem.cannotTravel"), at: performance.now() })}
       onExit={onExit}
       onTitle={onTitle}
@@ -191,6 +194,7 @@ interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   problem: { text: string; at: number } | null;
   // The quest trip carried from zone to zone.
   trip: MutableRefObject<QuestTrip | null>;
+  autoOn: MutableRefObject<boolean>;
   onProblem: (code: string) => void;
   onExit: () => void;
 }
@@ -207,7 +211,7 @@ const HAZE_HINT_MS = 12_000;
 const PROBLEM_MS = 3000;
 
 function ZoneScreen({
-  entry, client, playerClass, costume, name, friends, travelling, bag, problem, trip, onProblem, onExit, onTitle,
+  entry, client, playerClass, costume, name, friends, travelling, bag, problem, trip, autoOn, onProblem, onExit, onTitle,
 }: ZoneScreenProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<WorldView | null>(null);
@@ -300,6 +304,7 @@ function ZoneScreen({
     const next = new WorldView(host.current!, client, {
       entry, playerClass, costume, name,
       trip: trip.current,
+      auto: autoOn.current,
       onTrip: (next) => {
         trip.current = next;
       },
@@ -333,6 +338,7 @@ function ZoneScreen({
     return () => {
       off();
       offNoMount();
+      autoOn.current = next.isAuto();
       next.dispose();
       view.current = null;
     };
@@ -458,6 +464,16 @@ function ZoneScreen({
       if (problem) setPartyNote(problemText(problem));
     });
   }, [dungeon, inDungeon, client]);
+  // A match found takes you in as soon as it is: yes is said for you once, the screens close, and the
+  // run starts the moment everyone's yes is in.
+  const saidYes = useRef<string | null>(null);
+  useEffect(() => {
+    const match = dungeon?.match;
+    if (inDungeon || !match || match.ready || readying || saidYes.current === match.id) return;
+    saidYes.current = match.id;
+    setPanel(null);
+    void readyDungeon();
+  }, [dungeon, inDungeon, readying]);
   const readyDungeon = async () => {
     setReadying(true);
     const r = await client.dungeonCall("readyDungeon");
