@@ -3,6 +3,7 @@ import { resolveTelegraphs, type Telegraph } from "../../src/game/world/telegrap
 import { LEASH, WANDER, stepMonsters } from "../../src/game/world/monsterAi";
 import { BOSS_MOVES, MONSTERS, spawnMonsters, type MonsterState } from "../../src/game/world/monsters";
 import { zoneLayout } from "../../src/game/world/zones";
+import { PLAYER_BODY } from "../../src/game/rules/crowd";
 
 const layout = zoneLayout("forest1");
 const home = layout.playerSpawn;
@@ -126,6 +127,24 @@ describe("monsters", () => {
     stepMonsters(monsters, [archer], layout, 0.5, 2000);
     expect(monsters.m.returning).toBeUndefined();
     expect(monsters.m.hp).toBe(MONSTERS.rat.hp);
+  });
+
+  it("get past two others standing side by side in the way, to the one who hit them and home again", () => {
+    // Two resting rats 1.6 m apart across the way; two rats keep 1 m between centres, so no way between.
+    const wall = (x: number) => rat(x, home.z - 3, { restUntil: Number.POSITIVE_INFINITY });
+    const prey = [{ account: "a", x: home.x, z: home.z }];
+    const monsters = { l: wall(home.x - 0.8), r: wall(home.x + 0.8), m: rat(home.x, home.z - 5, { hitters: { a: 1 } }) };
+    let hits: ReturnType<typeof stepMonsters> = [];
+    for (let t = 0; t < 40 && hits.length === 0; t++) hits = stepMonsters(monsters, prey, layout, 0.25, 1000 + t * 250);
+    expect(hits).toEqual([{ monsterId: "m", account: "a", damage: MONSTERS.rat.damage }]);
+    // Never into the player it bites.
+    expect(Math.hypot(monsters.m.x - home.x, monsters.m.z - home.z)).toBeGreaterThanOrEqual(MONSTERS.rat.body + PLAYER_BODY - 1e-6);
+
+    monsters.m.homeZ = home.z - 6;
+    monsters.m.returning = true;
+    delete monsters.m.hitters;
+    for (let t = 0; t < 60 && monsters.m.returning; t++) stepMonsters(monsters, prey, layout, 0.25, 20_000 + t * 250);
+    expect(monsters.m.returning).toBeUndefined();
   });
 
   it("give up past the leash and go home", () => {

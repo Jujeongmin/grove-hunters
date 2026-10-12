@@ -1,6 +1,6 @@
-import { crowdBlocks, PLAYER_BODY, type Body } from "../rules/crowd";
+import { crowdBlocks, PLAYER_BODY, stepPastCrowd, type Body } from "../rules/crowd";
 import { solidWith, type LevelLayout } from "../rules/levelLayout";
-import { MAX_STEP_SECONDS, stepAround, type SolidTest } from "../rules/movement";
+import { MAX_STEP_SECONDS, type SolidTest } from "../rules/movement";
 import { BOSS_MOVES, MONSTERS, respawned, type MonsterState } from "./monsters";
 import type { Telegraph } from "./telegraphs";
 import {
@@ -112,23 +112,26 @@ export function stepMonsters(
 }
 
 // Walks a monster along yaw at speed for dt, round the forest, the other monsters and the players.
+// Hemmed in by other monsters (between two standing side by side, or behind the pack round a hunter)
+// it slips through them rather than standing there; never through a player (see stepPastCrowd).
 function walk(
   id: string, m: MonsterState, monsters: Record<string, MonsterState>, prey: readonly Prey[], walls: SolidTest,
   yaw: number, speed: number, dt: number,
 ): void {
   const spec = MONSTERS[m.type];
-  const bodies: Body[] = [];
+  const kin: Body[] = [];
   for (const [otherId, other] of Object.entries(monsters)) {
-    if (otherId !== id && other.alive) bodies.push({ x: other.x, z: other.z, r: spec.body + MONSTERS[other.type].body });
+    if (otherId !== id && other.alive) kin.push({ x: other.x, z: other.z, r: spec.body + MONSTERS[other.type].body });
   }
-  for (const p of prey) bodies.push({ x: p.x, z: p.z, r: spec.body + PLAYER_BODY });
+  const players: Body[] = prey.map((p) => ({ x: p.x, z: p.z, r: spec.body + PLAYER_BODY }));
   // The movement rules take at most MAX_STEP_SECONDS at a time.
   let left = dt;
   while (left > 1e-6) {
     const step = Math.min(left, MAX_STEP_SECONDS);
     left -= step;
-    const blocked: SolidTest = (x, z) => walls(x, z) || crowdBlocks(bodies, m, x, z);
-    const moved = stepAround({ x: m.x, z: m.z, yaw }, yaw, step, blocked, speed);
+    const walled: SolidTest = (x, z) => walls(x, z) || crowdBlocks(players, m, x, z);
+    const blocked: SolidTest = (x, z) => walled(x, z) || crowdBlocks(kin, m, x, z);
+    const moved = stepPastCrowd({ x: m.x, z: m.z, yaw }, yaw, step, blocked, walled, speed);
     m.x = moved.x;
     m.z = moved.z;
   }
