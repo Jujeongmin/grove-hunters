@@ -8,7 +8,7 @@ const CALL_TIMEOUT_MS = 15_000;
 
 export type Verse8Server = Pick<
   GameServer,
-  "account" | "remoteFunction" | "subscribeRoomState" | "subscribeRoomAllUserStates" | "onRoomMessage" | "subscribeGlobalMyState"
+  "account" | "remoteFunction" | "subscribeRoomState" | "subscribeRoomAllUserStates" | "onRoomMessage" | "onGlobalMessage" | "subscribeGlobalMyState"
 >;
 
 // The SDK counts each room subscription so it asks the room only once, and wipes the counts whenever
@@ -70,6 +70,11 @@ export class Verse8Transport implements MatchTransport {
 
   onRoomMessage(roomId: string, type: string, cb: (message: unknown) => void): () => void {
     return this.server.onRoomMessage(roomId, type, cb);
+  }
+
+  // The server's $global.sendMessageToUser comes in as a global message of its type.
+  onUserMessage(type: string, cb: (message: unknown) => void): () => void {
+    return this.server.onGlobalMessage(type, cb);
   }
 
   subscribeMyState(cb: (state: Record<string, unknown>) => void): () => void {

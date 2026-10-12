@@ -118,6 +118,7 @@ describe("Verse8Transport", () => {
       subscribeRoomState: vi.fn(() => off),
       subscribeRoomAllUserStates: vi.fn(() => off),
       onRoomMessage: vi.fn(() => off),
+      onGlobalMessage: vi.fn(() => off),
       subscribeGlobalMyState: vi.fn(() => off),
     };
     const rooms = { joinRoom: vi.fn(async () => undefined), leaveRoom: vi.fn() };
@@ -134,6 +135,8 @@ describe("Verse8Transport", () => {
     expect(server.subscribeRoomState).toHaveBeenCalledWith("r", cb);
     expect(server.subscribeRoomAllUserStates).toHaveBeenCalledWith("r", cb);
     expect(server.onRoomMessage).toHaveBeenCalledWith("r", "pain", cb);
+    expect(t.onUserMessage("chat", cb)).toBe(off);
+    expect(server.onGlobalMessage).toHaveBeenCalledWith("chat", cb);
     await t.joinRoom("rpg-w1-village-1");
     t.leaveRoom();
     expect(rooms.joinRoom).toHaveBeenCalledWith("rpg-w1-village-1");

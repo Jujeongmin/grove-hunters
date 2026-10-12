@@ -119,7 +119,8 @@ export interface WorldState {
   // Your gold, bag and gear; null until the server has said.
   bag: BagView | null;
   error: string | null;
-  // The lines said in the channels you have been in this session, oldest first (at most CHAT_KEEP).
+  // The lines said in the channels you have been in this session (in any of their zones), oldest
+  // first (at most CHAT_KEEP).
   chat: ChatLine[];
   // Your guild's lines heard this session, and whether you are in a guild (as last asked).
   guildChat: ChatLine[];
@@ -361,6 +362,8 @@ export class WorldClient {
   private heard(raw: unknown): void {
     const message = readChatMessage(raw);
     if (!message) return;
+    // Caught walking through a portal as it was said, a line can come both ways: once is enough.
+    if (this.current.chat.some((l) => l.account === message.account && l.at === message.at)) return;
     this.chatCount += 1;
     const line: ChatLine = { ...message, id: this.chatCount, heardAt: this.now(), mine: message.account === this.account };
     this.set({ chat: [...this.current.chat, line].slice(-CHAT_KEEP) });
@@ -990,7 +993,9 @@ export class WorldClient {
         if (mercs !== undefined) this.set({ mercs: readMercs(mercs) });
         this.refreshOthers();
       }),
+      // Your zone's lines come as the room's; the channel's other zones' are sent to you.
       this.transport.onRoomMessage(entry.roomId, "chat", (message) => this.heard(message)),
+      this.transport.onUserMessage("chat", (message) => this.heard(message)),
       this.transport.subscribeRoomUsers(entry.roomId, (users) => {
         this.users = users as unknown as Record<string, unknown>[];
         this.refreshOthers();

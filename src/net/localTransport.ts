@@ -44,6 +44,12 @@ export class LocalTransport implements MatchTransport {
     });
   }
 
+  onUserMessage(type: string, cb: (message: unknown) => void): () => void {
+    return this.world.subscribe((e) => {
+      if (e.kind === "userMessage" && e.to === this.account && e.type === type) cb(e.message);
+    });
+  }
+
   async joinRoom(roomId: string): Promise<void> {
     if (this.roomId && this.roomId !== roomId) await this.world.leave(this.account, this.roomId);
     this.roomId = roomId;

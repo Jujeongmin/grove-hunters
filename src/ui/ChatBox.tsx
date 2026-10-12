@@ -22,14 +22,13 @@ const PROBLEM: Record<string, Key> = {
   too_fast: "problem.tooFast",
 };
 
-// The chat, at the bottom left: the channel's lines and your guild's (marked), and a box to say one
-// in either (tabs, once you are in a guild). Closed, the latest line stays in view on one line above
-// the chat button, as a preview. Enter opens it on a keyboard (and sends), the chat button on a touch
-// screen (and the send button beside the box, or the keyboard's own), and a tap on the preview
-// anywhere; closing it (the button, Escape, or the focus leaving the box, as when a phone's keyboard is
-// put away) also clears the lines seen so far off the screen, and keeps what was typed for next time.
-// Open, it stands in the middle above the skill bar, off the pad. Closed, the preview (the latest
-// PREVIEW_LINES and the button) goes into `slot`, beside the minimap, when the screen gives one.
+// The chat, at the bottom left: the channel's lines (from every zone of it) and your guild's
+// (marked), and a box to say one in either (tabs, once you are in a guild). Enter opens it on a
+// keyboard (and sends), the chat button on a touch screen (and the send button beside the box, or the
+// keyboard's own), and a tap on the preview anywhere; closing it (the button, Escape, or the focus
+// leaving the box, as when a phone's keyboard is put away) keeps what was typed for next time.
+// Open, it stands in the middle above the skill bar, off the pad. Closed, the latest PREVIEW_LINES
+// stay in view as a preview, with the button, in `slot` beside the minimap when the screen gives one.
 function ChatBoxView({ client, keyHints, slot = null }: { client: WorldClient; keyHints: boolean; slot?: HTMLElement | null }) {
   const [lines, setLines] = useState<ChatLine[]>(client.state.chat);
   const [guildLines, setGuildLines] = useState<ChatLine[]>(client.state.guildChat);
@@ -75,9 +74,10 @@ function ChatBoxView({ client, keyHints, slot = null }: { client: WorldClient; k
   useEffect(() => {
     if (open) input.current?.focus();
   }, [open]);
+  // To the latest line whenever one comes, on either tab, or the tab changes.
   useEffect(() => {
     if (log.current) log.current.scrollTop = log.current.scrollHeight;
-  }, [lines, open]);
+  }, [lines, guildLines, announced, mode, open]);
 
   const close = () => {
     setOpen(false);

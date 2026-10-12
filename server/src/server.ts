@@ -58,7 +58,7 @@ import { PROTOCOL_VERSION, RuleViolation, isPose, readSwing, type Pose } from ".
 import { ROLL, rollReady } from "../../src/game/combat/roll";
 import {
   CHANNEL_CAPACITY, MAX_CHANNELS, START_ZONE, ZONES, townOf, arrivalFrom, channelRoomId, portalsOf, readChannel, readChannelRoom,
-  readWhereabouts, readZone, zoneLayout, type ZoneEntry, type ZoneId,
+  ZONE_IDS, readWhereabouts, readZone, zoneLayout, type ZoneEntry, type ZoneId,
 } from "../../src/game/world/zones";
 import { arrivalVitals, readVitals } from "../../src/game/account/vitals";
 import {
@@ -1496,21 +1496,30 @@ export class Server {
     }
   }
 
-  // A line said in your channel: tidied, held to the chat's pace, and sent to everyone in the room
-  // (you too) with the name the room shows for you. Answers with the line as it went out.
+  // A line said in your channel: tidied, held to the chat's pace, and heard in every zone of the
+  // channel, with the name the room shows for you. Your own zone's room (you too) hears it as a room;
+  // the players in its other zones are each sent it. The pace is kept on the account, so a portal does
+  // not start it over. Answers with the line as it went out.
   async say(raw: unknown): Promise<ChatMessage> {
     const text = readChat(raw);
     if (text === null) throw new RuleViolation("unavailable");
-    currentChannel();
+    const { roomId, zone } = currentChannel();
+    const { world, channel } = readChannelRoom(roomId)!;
+    const account = $sender.account;
     const now = Date.now();
-    const mine = await $room.getMyState();
-    const said: number[] = Array.isArray(mine.chatAt) ? mine.chatAt.filter((t: unknown): t is number => typeof t === "number") : [];
+    const kept = (await $global.getUserState(account)).chatAt;
+    const said: number[] = Array.isArray(kept) ? kept.filter((t: unknown): t is number => typeof t === "number") : [];
     if (!chatAllowed(said, now)) throw new RuleViolation("too_fast");
-    await $room.updateMyState({ chatAt: [...said.filter((t) => now - t < CHAT_WINDOW_MS), now] }, { returnState: false });
+    await $global.updateUserState(account, { chatAt: [...said.filter((t) => now - t < CHAT_WINDOW_MS), now] });
+    const mine = await $room.getMyState();
     const name = typeof mine.look?.name === "string" ? mine.look.name : "";
     const vip = typeof mine.look?.vip === "number" ? mine.look.vip : 0;
-    const message: ChatMessage = { account: $sender.account, name, text, at: now, ...(vip > 0 ? { vip } : {}) };
+    const message: ChatMessage = { account, name, text, at: now, ...(vip > 0 ? { vip } : {}) };
     await $room.broadcastToRoom("chat", message);
+    // Once your own zone has heard it, the line is said: the other zones failing does not undo that.
+    await Promise.all(ZONE_IDS.filter((z) => z !== zone).map((z) => $global.getRoomUserAccounts(channelRoomId(world, z, channel))))
+      .then((rooms) => Promise.all([...new Set(rooms.flat())].filter((a) => a !== account).map((a) => $global.sendMessageToUser("chat", a, message))))
+      .catch(() => undefined);
     return message;
   }
 

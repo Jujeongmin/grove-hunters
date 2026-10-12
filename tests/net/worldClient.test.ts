@@ -55,6 +55,7 @@ describe("WorldClient", () => {
       subscribeRoomState: (id, cb) => transport.subscribeRoomState(id, cb),
       subscribeRoomUsers: (id, cb) => transport.subscribeRoomUsers(id, cb),
       onRoomMessage: (id, type, cb) => transport.onRoomMessage(id, type, cb),
+      onUserMessage: (type, cb) => transport.onUserMessage(type, cb),
       subscribeMyState: (cb) => transport.subscribeMyState(cb),
       joinRoom: (id) => transport.joinRoom(id),
       leaveRoom: () => transport.leaveRoom(),
@@ -113,6 +114,24 @@ describe("WorldClient chat", () => {
     expect(a.state.chat[0]).toMatchObject({ text: "안녕!", mine: true });
     expect(await a.say("또")).toBe("too_fast");
     expect(await a.say("   ")).toBe("unavailable");
+  });
+
+  it("is heard in every zone of the channel, once, and not on another channel", async () => {
+    const { world, list: [a, b, c] } = await clients("test-a", "test-b", "test-c");
+    await a.enter();
+    await b.enter();
+    await c.enter();
+    const portal = portalsOf("village").find((p) => p.to === "forest1")!;
+    aMinuteLater();
+    b.reportPose({ x: portal.x, z: portal.z, yaw: 0 });
+    await world.idle();
+    expect(await b.travel("forest1")).toBeNull();
+    expect(await c.changeChannel(2)).toBeNull();
+    expect(await a.say("다들 어디야")).toBeNull();
+    await world.idle();
+    expect(b.state.chat).toEqual([expect.objectContaining({ account: "test-a", text: "다들 어디야", mine: false })]);
+    expect(a.state.chat).toEqual([expect.objectContaining({ text: "다들 어디야", mine: true })]);
+    expect(c.state.chat).toEqual([]);
   });
 });
 

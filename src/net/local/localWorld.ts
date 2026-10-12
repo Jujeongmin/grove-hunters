@@ -4,7 +4,8 @@ export type WorldEvent =
   | { kind: "roomState"; roomId: string; state: Json }
   | { kind: "roomUsers"; roomId: string; users: Json[] }
   | { kind: "userState"; account: string; state: Json }
-  | { kind: "message"; roomId: string; to: string | null; type: string; message: unknown };
+  | { kind: "message"; roomId: string; to: string | null; type: string; message: unknown }
+  | { kind: "userMessage"; to: string; type: string; message: unknown };
 
 interface RoomRecord {
   state: Json;
@@ -207,6 +208,9 @@ export class LocalWorld {
       getAllRoomIds: async () => [...this.rooms.entries()].filter(([, r]) => r.members.length > 0).map(([id]) => id),
       getRoomUserAccounts: async (roomId: string) => [...(this.rooms.get(roomId)?.members ?? [])],
       countRoomUsers: async (roomId: string) => this.rooms.get(roomId)?.members.length ?? 0,
+      sendMessageToUser: (type: string, to: string, message: unknown) => {
+        this.pendingMessages.push({ kind: "userMessage", to, type, message: copy(message) });
+      },
       getUserState: async (user: string) => copy(this.userStates.get(user) ?? {}),
       updateUserState: async (user: string, patch: Json) => {
         const state = this.userStates.get(user) ?? {};
