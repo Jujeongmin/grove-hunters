@@ -287,9 +287,8 @@ export class WorldView {
   private lastSlot = 0;
   // The level the last HUD went out with, so a level going up rings once.
   private lastLevel: number | null = null;
-  private bodies: Body[] = [];
-  // Village folk are still walked round on an automatic trip. Monsters are deliberately absent:
-  // a pack between the player and a portal or another target must not hold the trip in place.
+  // Players and monsters pass through each other, so neither can pin the player in a crowd. Village
+  // folk remain fixed bodies and are still walked round, by hand or on an automatic trip.
   private fixedBodies: Body[] = [];
   // No portal takes you until you have walked clear of the one you came through.
   private portalArmed = false;
@@ -327,10 +326,10 @@ export class WorldView {
   private frame = 0;
   private disposed = false;
 
-  // What stops you: the forest and the platforms (isWalled), and the monsters and the village folk too.
+  // What stops you: the forest, platforms and village folk. Monsters are intentionally not solid:
+  // packs otherwise pin a player between their bodies and leave even direct movement unable to move.
   private readonly isWalled = (x: number, z: number) => this.walls(x, z) || platformBlocks(this.layout.platforms, x, z, this.air.y);
-  private readonly isSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.bodies, this.pose, x, z);
-  private readonly isAutoSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.fixedBodies, this.pose, x, z);
+  private readonly isSolid = (x: number, z: number) => this.isWalled(x, z) || crowdBlocks(this.fixedBodies, this.pose, x, z);
 
   constructor(
     private readonly container: HTMLElement,
@@ -821,16 +820,10 @@ export class WorldView {
     // You face the way you last walked (the camera turns on its own, by dragging).
     let facingYaw = this.pose.yaw;
     if (here) {
-      // Other players are walked through (two standing on one spot could otherwise lock each other in);
-      // monsters and the village folk still stand in the way.
-      this.bodies = [];
+      // Other players and monsters are walked through; only village folk have fixed bodies.
       this.fixedBodies = [];
-      for (const m of Object.values(state.monsters)) {
-        if (m.alive) this.bodies.push({ x: m.x, z: m.z, r: PLAYER_BODY + MONSTERS[m.type].body });
-      }
       for (const npc of this.npcs) {
         const body = { x: npc.at.x, z: npc.at.z, r: PLAYER_BODY * 2 };
-        this.bodies.push(body);
         this.fixedBodies.push(body);
       }
       const speed = WALK_SPEED * (this.riding ? MOUNTS[this.riding].speed : 1);
@@ -876,7 +869,7 @@ export class WorldView {
         // An automatic trip passes through monsters, while still going round terrain and village
         // folk. Otherwise a pack can make it orbit forever on the way to a portal or another target.
         if (chase.walk) this.pose = stepPastCrowd(
-          { ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isAutoSolid, speed, true,
+          { ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isSolid, speed, true,
         );
       } else {
         // The pad walks you round the camera; you turn to face the way you go.
