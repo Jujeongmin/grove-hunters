@@ -188,7 +188,7 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/icons/ui_market.png` | 거래소 버튼, 저울 | 2026-09-30, 34x34 |
 | `public/assets/ui/icons/ui_guild.png` | 길드 버튼, 깃발 | 2026-09-30, 34x34 |
 
-설산 지역의 아이템 그림은 `scripts/tint-icons.py`가 위 팩의 아이템 그림 색만 바꿔 만든다(명암은 그대로, 외곽선은 유지).
+설산·화산 지역의 아이템 그림은 `scripts/tint-icons.py`가 위 팩의 아이템 그림 색만 바꿔 만든다(명암은 그대로, 외곽선은 유지).
 같은 팩(CC0)의 파생물이다.
 
 | 파일 | 원본 | 쓰임 |
@@ -198,6 +198,11 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/items/frost_shard.png` | `core.png` | 서리 결정 |
 | `public/assets/ui/items/snow_fur.png` | `silk.png` | 설원 가죽 |
 | `public/assets/ui/items/ever_ice.png` | `stone.png` | 만년빙 |
+| `public/assets/ui/items/weapon_8.png`, `armor_8.png` | `weapon_5.png`, `armor_5.png` | 8등급 장비(화염석), 2026-10-12 |
+| `public/assets/ui/items/weapon_9.png`, `armor_9.png` | `weapon_5.png`, `armor_5.png` | 9등급 장비(화염군주), 2026-10-12 |
+| `public/assets/ui/items/ember_shard.png` | `core.png` | 화염 결정 |
+| `public/assets/ui/items/magma_scale.png` | `silk.png` | 용암 비늘 |
+| `public/assets/ui/items/flame_core.png` | `stone.png` | 불꽃 핵 |
 
 나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
 물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.
@@ -276,7 +281,7 @@ develop 브랜치의 `public/`에 있으나 위 표에 따로 적히지 않았�
 | `public/assets/ui/icons/guardian_3.png`, `tracker_3.png`, `warder_3.png`, `paladin_3.png`, `scout_3.png`, `iron_monk_3.png` | 전직 4번째 스킬 | 같은 전직의 `_2` 아이콘(위 PixelLab 생성분)을 `scripts/fourth-skill-icons.py`가 금테로 가공 | PixelLab 약관 (파생물) | develop de61be5 (2026-09-30), 커밋 f785aef |
 | `public/assets/ui/icons/berserker_3.png`, `sniper_3.png`, `elementalist_3.png`, `high_priest_3.png`, `assassin_3.png`, `fist_master_3.png` | 전직 4번째 스킬 | 원래 직업의 `_2` 아이콘(496 RPG icons)을 같은 스크립트가 금테로 가공 | CC0 1.0 (파생물) | 위와 같음 |
 | `public/assets/ui/items/weapon_1_{bow,staff,holy,dagger,fist}.png` | 직업별 1등급 무기 그림(활·마법사 지팡이·성직자 지팡이·단검·권갑) | PixelLab 생성 (34x34) | PixelLab 약관 | develop c51752c (2026-09-30), 커밋 8dcac77 |
-| `public/assets/ui/items/weapon_{2..7}_{bow,staff,holy,dagger,fist}.png` | 2~7등급 무기 그림 | 위 1등급 그림을 `scripts/weapon-icons.py`가 등급 색으로 다시 칠함 | PixelLab 약관 (파생물) | 위와 같음 |
+| `public/assets/ui/items/weapon_{2..9}_{bow,staff,holy,dagger,fist}.png` | 2~9등급 무기 그림 | 위 1등급 그림을 `scripts/weapon-icons.py`가 등급 색으로 다시 칠함 | PixelLab 약관 (파생물) | 위와 같음 |
 | `public/assets/ui/shop/monthly-pass.png` | 보석 상점 월정액 그림 (256x256, 두루마리와 왕관 방패) | **확인 필요** (도트 생성 그림으로 보이나 커밋 343b3ab에 출처가 적혀 있지 않음) | **확인 필요** | develop 343b3ab (2026-10-01) |
 | `public/cursor/pointer.png`, `press.png` | PC 마우스 포인터 (금빛 화살촉, 누를 수 있는 곳에서는 빛나는 것) | 직접 그림 (Python/Pillow) | 자체 제작 | 2026-10-06, master에도 있음 |
 | `public/assets/ui/shop/gems-100.png`, `gems-550.png`, `gems-1200.png`, `gems-6500.png`, `gems-14000.png` | 보석 상점 묶음 그림 (256x256: 쿠션, 가마솥, 나무 상자, 금테 상자, 보석 산) | PixelLab Create Image (Pro), 사용자가 준 참고 그림(바탕화면 gem-ref)의 화풍을 스타일 이미지로 사용 | PixelLab 약관, 상업적 이용 가능(사용자 확인) | 2026-10-06, 이전 그림은 폐기 |

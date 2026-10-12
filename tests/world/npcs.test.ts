@@ -21,7 +21,7 @@ describe("town NPCs", () => {
   });
 
   it("each town has a merchant, an elder and a smith", () => {
-    for (const town of [START_ZONE, "outpost"] as const) {
+    for (const town of [START_ZONE, "outpost", "camp"] as const) {
       expect(npcsIn(town).map((n) => n.role).sort()).toEqual(["elder", "merchant", "smith"]);
     }
   });

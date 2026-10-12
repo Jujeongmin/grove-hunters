@@ -29,6 +29,11 @@ export const SNOW_NATURE: NatureStyle = {
   trees: ["sn_pine_1", "sn_pine_3", "sn_pine_1"], edge: ["sn_rock"],
   plants: ["sn_pebbles", "sn_pebbles", "sn_pebbles", "sn_grass_wispy"],
 };
+// The volcano: dark pines on the ash, black rock along the paths, and pebbles of cinder.
+export const VOLCANO_NATURE: NatureStyle = {
+  trees: ["sn_pine_3", "sn_pine_1", "sn_pine_3"], edge: ["sn_rock"],
+  plants: ["sn_pebbles", "sn_pebbles", "sn_pebbles", "sn_pebbles", "sn_grass_wispy"],
+};
 export const NATURE_MODELS = [...new Set([...TREES, ...EDGE_PROPS, ...GROUND_PLANTS, "sn_stepping"])];
 
 // What each model takes up on the ground at scale 1, as a radius in metres: the trunk for trees (the

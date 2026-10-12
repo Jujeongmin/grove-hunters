@@ -8,8 +8,8 @@ import { facingOf, yawToward, type Shape, type Telegraph } from "./telegraphs";
 
 export type GuildBossType = "guild_dragon" | "guild_yeti" | "guild_glub";
 // Every boss that fights with marked patterns: the guild bosses and the snow's Glacier Emperor.
-export type PatternBossType = GuildBossType | "frost_emperor";
-export const PATTERN_BOSSES: readonly PatternBossType[] = ["guild_dragon", "guild_yeti", "guild_glub", "frost_emperor"];
+export type PatternBossType = GuildBossType | "frost_emperor" | "flame_lord";
+export const PATTERN_BOSSES: readonly PatternBossType[] = ["guild_dragon", "guild_yeti", "guild_glub", "frost_emperor", "flame_lord"];
 // Week by week, in turn.
 export const GUILD_BOSSES: readonly GuildBossType[] = ["guild_dragon", "guild_yeti", "guild_glub"];
 
@@ -161,6 +161,21 @@ export function castPattern(
     }
     const spots = scatter(3 + extra, 4, nearest[0] ?? boss);
     return { telegraphs: spots.map((s, i) => mark(i, circle(s.x, s.z, 3), 1800, 0.25, { lasts: 5000, tickShare: 0.07 })) };
+  }
+  if (type === "flame_lord") {
+    if (index === 0) {
+      // Meteors on everyone near and round the nearest (more, raging).
+      const spots = [...prey.map((p) => ({ x: p.x, z: p.z })), ...scatter(2 + extra, 6, nearest[0] ?? boss)];
+      return { telegraphs: spots.map((s, i) => mark(i, circle(s.x, s.z, 3), 1600, 0.35)) };
+    }
+    if (index === 1) {
+      // Fire breath at the nearest.
+      const target = nearest[0] ?? { x: boss.x, z: boss.z - 1 };
+      return { telegraphs: [mark(0, { kind: "cone", x: boss.x, z: boss.z, yaw: yawToward(boss.x, boss.z, target.x, target.z), r: 13, arc: (110 * Math.PI) / 180 }, 2000, 0.5)] };
+    }
+    // Lava pools that stay and burn.
+    const spots = scatter(4 + extra, 5, nearest[0] ?? boss);
+    return { telegraphs: spots.map((s, i) => mark(i, circle(s.x, s.z, 3), 1800, 0.25, { lasts: 6000, tickShare: 0.08 })) };
   }
   // The elder glub.
   if (index === 0) return { telegraphs: [], summon: BROOD_COUNT };

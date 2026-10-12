@@ -12,9 +12,10 @@ export const GOLD = "gold";
 
 export type ItemId =
   | "potion_small" | "potion_big"
-  | "weapon_1" | "weapon_2" | "weapon_3" | "weapon_4" | "weapon_5" | "weapon_6" | "weapon_7"
-  | "armor_1" | "armor_2" | "armor_3" | "armor_4" | "armor_5" | "armor_6" | "armor_7"
-  | "stone" | "jelly" | "silk" | "core" | "spore" | "frost_shard" | "snow_fur" | "ever_ice";
+  | "weapon_1" | "weapon_2" | "weapon_3" | "weapon_4" | "weapon_5" | "weapon_6" | "weapon_7" | "weapon_8" | "weapon_9"
+  | "armor_1" | "armor_2" | "armor_3" | "armor_4" | "armor_5" | "armor_6" | "armor_7" | "armor_8" | "armor_9"
+  | "stone" | "jelly" | "silk" | "core" | "spore" | "frost_shard" | "snow_fur" | "ever_ice"
+  | "ember_shard" | "magma_scale" | "flame_core";
 
 export type Slot = "weapon" | "armor";
 
@@ -25,7 +26,7 @@ export interface ItemSpec {
   // back half, or `sell` for what the shop does not stock.
   price: number | null;
   sell?: number;
-  // Gear: how good it is, 1 to 5; enhancing costs more the better it is.
+  // Gear: how good it is, 1 to 9; enhancing costs more the better it is.
   tier?: number;
   // Potion: health it gives back.
   heal: number;
@@ -60,6 +61,11 @@ export const ITEMS: Record<ItemId, ItemSpec> = {
   armor_6: { ...none, kind: "armor", price: null, sell: 2800, hp: 190, guard: 0.25, tier: 6 },
   weapon_7: { ...none, kind: "weapon", price: null, sell: 6000, power: 0.85, tier: 7 },
   armor_7: { ...none, kind: "armor", price: null, sell: 5500, hp: 250, guard: 0.3, tier: 7 },
+  // The volcano's: the canyon's and the summit's gear, and the Flame Lord's.
+  weapon_8: { ...none, kind: "weapon", price: null, sell: 10000, power: 1.0, tier: 8 },
+  armor_8: { ...none, kind: "armor", price: null, sell: 9500, hp: 320, guard: 0.33, tier: 8 },
+  weapon_9: { ...none, kind: "weapon", price: null, sell: 18000, power: 1.2, tier: 9 },
+  armor_9: { ...none, kind: "armor", price: null, sell: 17000, hp: 400, guard: 0.36, tier: 9 },
   stone: { ...none, kind: "material", price: null, sell: 15 },
   jelly: { ...none, kind: "material", price: null, sell: 5 },
   silk: { ...none, kind: "material", price: null, sell: 12 },
@@ -68,6 +74,9 @@ export const ITEMS: Record<ItemId, ItemSpec> = {
   frost_shard: { ...none, kind: "material", price: null, sell: 40 },
   snow_fur: { ...none, kind: "material", price: null, sell: 35 },
   ever_ice: { ...none, kind: "material", price: null, sell: 250 },
+  ember_shard: { ...none, kind: "material", price: null, sell: 70 },
+  magma_scale: { ...none, kind: "material", price: null, sell: 60 },
+  flame_core: { ...none, kind: "material", price: null, sell: 450 },
 };
 
 export const ITEM_IDS = Object.keys(ITEMS) as ItemId[];

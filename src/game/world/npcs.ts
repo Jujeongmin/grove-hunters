@@ -2,9 +2,9 @@ import type { Point2 } from "../rules/levelLayout";
 import { START_ZONE, ZONES, zoneLayout, type ZoneId } from "./zones";
 
 // The people of the towns: in each, a merchant keeps the shop, an elder (in the snow outpost, its
-// captain) hands out the quests and takes your reports, and a smith keeps the forge. Each stands
+// captain; in the volcano camp, its warden) hands out the quests and takes your reports, and a smith keeps the forge. Each stands
 // outside the door of a building of their town, the same spot for everyone.
-export type NpcId = "merchant" | "elder" | "smith" | "frost_merchant" | "captain" | "frost_smith";
+export type NpcId = "merchant" | "elder" | "smith" | "frost_merchant" | "captain" | "frost_smith" | "ember_merchant" | "warden" | "ember_smith";
 // What an NPC does for you: the same in every town.
 export type NpcRole = "merchant" | "elder" | "smith";
 
@@ -59,6 +59,22 @@ export const NPCS: readonly Npc[] = [
   {
     id: "frost_smith", role: "smith", zone: "outpost", model: "npc_smith", height: 1.85, idle: "Idle", greet: "Victory",
     colors: { Skin: 0xd9a37c, Light: 0x7a8a9a, Main: 0x40505e, Pants: 0x2a2f36, Hair: 0x5a3a28 },
+    house: [21, 14],
+  },
+  // The volcano camp's three, in the colours of ash and ember.
+  {
+    id: "ember_merchant", role: "merchant", zone: "camp", model: "npc_merchant", height: 1.75, idle: "Idle", greet: "Victory",
+    colors: { Skin: 0xe8b98f, Shirt: 0x8a2a1a, Pants: 0x2a1a14, Detail: 0xffa040 },
+    house: [6, 10],
+  },
+  {
+    id: "warden", role: "elder", zone: "camp", model: "npc_smith", height: 1.9, idle: "Idle", greet: "Victory",
+    colors: { Skin: 0xd9a37c, Light: 0xd0a080, Main: 0x5a1e14, Pants: 0x1e1410, Hair: 0x2a1a10 },
+    house: [14, 4],
+  },
+  {
+    id: "ember_smith", role: "smith", zone: "camp", model: "npc_smith", height: 1.85, idle: "Idle", greet: "Victory",
+    colors: { Skin: 0xd9a37c, Light: 0x6a4a3a, Main: 0x3a2018, Pants: 0x1a1210, Hair: 0xb04020 },
     house: [21, 14],
   },
 ];

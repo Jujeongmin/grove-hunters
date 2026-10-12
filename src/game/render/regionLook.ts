@@ -1,5 +1,5 @@
 import type { Region } from "../world/zones";
-import { GROVE_NATURE, SNOW_NATURE, type NatureStyle } from "../rules/nature";
+import { GROVE_NATURE, SNOW_NATURE, VOLCANO_NATURE, type NatureStyle } from "../rules/nature";
 
 // How a region looks: the ground's colours (the photos under them only lend light and shade, see
 // groundTextures.ts), the haze, the light, and what grows. The grove is sunlit grass under broad-
@@ -34,6 +34,12 @@ export const SNOW_LOOK: RegionLook = {
   hemiSky: 0xeaf2ff, hemiGround: 0x9aa8b4, nature: SNOW_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
 };
 
+// The volcano: grey ash and black stone, paths of red cinder, under a smoky ember haze.
+export const VOLCANO_LOOK: RegionLook = {
+  meadow: 0x6e625b, deep: 0x544944, dry: 0x857467, forest: 0x2f2725, dirt: 0xa24c2a, fog: 0x8c5c4a,
+  hemiSky: 0xffdcc0, hemiGround: 0x5c3022, nature: VOLCANO_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
+};
+
 export function lookOf(region: Region): RegionLook {
-  return region === "snow" ? SNOW_LOOK : GROVE_LOOK;
+  return region === "snow" ? SNOW_LOOK : region === "volcano" ? VOLCANO_LOOK : GROVE_LOOK;
 }

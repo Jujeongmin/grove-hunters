@@ -77,6 +77,23 @@ export const RECIPES: readonly Recipe[] = [
     id: "armor_7", makes: "armor_7", n: 1, gold: 28000,
     needs: [{ item: "ever_ice", n: 6 }, { item: "snow_fur", n: 20 }, { item: "stone", n: 15 }],
   },
+  // The volcano's.
+  {
+    id: "weapon_8", makes: "weapon_8", n: 1, gold: 60000,
+    needs: [{ item: "ember_shard", n: 15 }, { item: "magma_scale", n: 12 }, { item: "stone", n: 20 }],
+  },
+  {
+    id: "armor_8", makes: "armor_8", n: 1, gold: 55000,
+    needs: [{ item: "ember_shard", n: 12 }, { item: "magma_scale", n: 15 }, { item: "stone", n: 20 }],
+  },
+  {
+    id: "weapon_9", makes: "weapon_9", n: 1, gold: 120000,
+    needs: [{ item: "flame_core", n: 8 }, { item: "ember_shard", n: 25 }, { item: "stone", n: 25 }],
+  },
+  {
+    id: "armor_9", makes: "armor_9", n: 1, gold: 110000,
+    needs: [{ item: "flame_core", n: 8 }, { item: "magma_scale", n: 25 }, { item: "stone", n: 25 }],
+  },
 ];
 
 export function readRecipe(value: unknown): Recipe | null {

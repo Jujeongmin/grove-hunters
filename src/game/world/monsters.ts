@@ -12,7 +12,10 @@ export type MonsterType =
   | "guild_dragon" | "guild_yeti" | "guild_glub" | "glub_brood"
   | "frost_blob" | "snow_hare" | "snow_wolf" | "frost_spider"
   | "frost_bat" | "penguin_brute" | "frost_snake" | "ice_golem"
-  | "peak_yeti" | "frost_drake" | "glacier_alpaking" | "frost_emperor";
+  | "peak_yeti" | "frost_drake" | "glacier_alpaking" | "frost_emperor"
+  | "magma_blob" | "ash_rat" | "fire_frog" | "ember_spider"
+  | "flame_bat" | "magma_crab" | "flame_snake" | "magma_golem"
+  | "blaze_drake" | "firebird" | "cinder_dragon" | "flame_lord";
 
 export interface MonsterSpec {
   // Its level: a hunter more than XP_GRACE levels above it earns less for it.
@@ -107,6 +110,29 @@ const snow3 = {
   ] as MonsterSpec["drops"],
 };
 
+// The volcano's fields: the ash plain's, the lava canyon's and the summit's loot.
+const lava1 = {
+  ...common, aggro: 11, gold: [180, 280] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.18 }, { item: "weapon_7", chance: 0.008 }, { item: "armor_7", chance: 0.008 },
+    { item: "ember_shard", chance: 0.15 }, { item: "magma_scale", chance: 0.2 }, { item: "stone", chance: 0.2 },
+  ] as MonsterSpec["drops"],
+};
+const lava2 = {
+  ...common, aggro: 12, gold: [240, 360] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.18 }, { item: "weapon_8", chance: 0.015 }, { item: "armor_8", chance: 0.015 },
+    { item: "ember_shard", chance: 0.2 }, { item: "magma_scale", chance: 0.15 }, { item: "stone", chance: 0.22 },
+  ] as MonsterSpec["drops"],
+};
+const lava3 = {
+  ...common, aggro: 12, gold: [300, 450] as [number, number],
+  drops: [
+    { item: "potion_big", chance: 0.2 }, { item: "weapon_8", chance: 0.02 }, { item: "armor_8", chance: 0.02 },
+    { item: "ember_shard", chance: 0.22 }, { item: "flame_core", chance: 0.06 }, { item: "stone", chance: 0.24 },
+  ] as MonsterSpec["drops"],
+};
+
 // The first field is for levels 1 to about 11, the second for 12 to 29, the deep forest for 28 to
 // 40 (its monsters are the second field's, grown and darker); the boss is a level-32 fight for a group. Health, damage and XP climb with each monster's level.
 export const MONSTERS: Record<MonsterType, MonsterSpec> = {
@@ -138,6 +164,18 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
   peak_yeti: { ...snow3, level: 55, hp: 6200, damage: 132, speed: 2.2, body: 0.9, aggro: 9, aggressive: true, xp: 480 },
   frost_drake: { ...snow3, level: 57, hp: 6000, damage: 140, speed: 2.6, aggro: 10, aggressive: true, xp: 520 },
   glacier_alpaking: { ...snow3, level: 58, hp: 7200, damage: 150, speed: 2.0, body: 0.9, xp: 560 },
+  // The volcano, levels 60 to 80: the snow's climb carried on.
+  magma_blob: { ...lava1, level: 60, hp: 7600, damage: 160, speed: 1.7, xp: 600 },
+  ash_rat: { ...lava1, level: 61, hp: 7400, damage: 158, speed: 2.6, xp: 610 },
+  fire_frog: { ...lava1, level: 62, hp: 8000, damage: 165, xp: 640 },
+  ember_spider: { ...lava1, level: 64, hp: 8800, damage: 175, speed: 2.3, xp: 690 },
+  flame_bat: { ...lava2, level: 67, hp: 9200, damage: 185, speed: 3.0, aggro: 8, aggressive: true, xp: 740 },
+  magma_crab: { ...lava2, level: 68, hp: 10500, damage: 190, speed: 1.8, body: 0.8, xp: 770 },
+  flame_snake: { ...lava2, level: 69, hp: 10000, damage: 198, xp: 790 },
+  magma_golem: { ...lava2, level: 70, hp: 13500, damage: 210, speed: 1.6, body: 0.8, xp: 900 },
+  blaze_drake: { ...lava3, level: 75, hp: 14500, damage: 230, speed: 2.6, aggro: 10, aggressive: true, xp: 1000 },
+  firebird: { ...lava3, level: 76, hp: 14000, damage: 235, speed: 2.8, aggro: 9, aggressive: true, xp: 1030 },
+  cinder_dragon: { ...lava3, level: 78, hp: 17000, damage: 250, speed: 2.0, body: 0.9, xp: 1120 },
   // The boss's brood: they come when it calls, and do not come back.
   mushnub_guard: {
     ...common, level: 30, hp: 900, damage: 40, speed: 2.2, aggro: 30, xp: 60,
@@ -176,6 +214,16 @@ export const MONSTERS: Record<MonsterType, MonsterSpec> = {
     drops: [
       { item: "potion_big", chance: 1 }, { item: "weapon_7", chance: 0.25 }, { item: "armor_7", chance: 0.25 },
       { item: "ever_ice", chance: 1 }, { item: "ever_ice", chance: 0.5 }, { item: "frost_shard", chance: 1 }, { item: "frost_shard", chance: 1 },
+    ],
+  },
+  // The volcano's boss, at its altar: marked patterns as the Glacier Emperor's (see guildBoss.ts), back
+  // five minutes after it falls, and the Flame Lord gear.
+  flame_lord: {
+    level: 80, hp: 200000, damage: 300, range: 3.4, attackMs: 1800, speed: 1.8, aggro: 22, aggressive: true, body: 1.3, xp: 45000,
+    respawnMs: 300_000, gold: [6000, 9000],
+    drops: [
+      { item: "potion_big", chance: 1 }, { item: "weapon_9", chance: 0.25 }, { item: "armor_9", chance: 0.25 },
+      { item: "flame_core", chance: 1 }, { item: "flame_core", chance: 0.5 }, { item: "ember_shard", chance: 1 }, { item: "ember_shard", chance: 1 },
     ],
   },
   mushroom_king: {
@@ -218,9 +266,14 @@ export const ZONE_MONSTERS: Record<ZoneId, MonsterType[]> = {
   snow2: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"],
   snow3: ["peak_yeti", "frost_drake", "glacier_alpaking"],
   snowboss: [],
+  camp: [],
+  lava1: ["magma_blob", "ash_rat", "fire_frog", "ember_spider"],
+  lava2: ["flame_bat", "magma_crab", "flame_snake", "magma_golem"],
+  lava3: ["blaze_drake", "firebird", "cinder_dragon"],
+  lavaboss: [],
   dungeon: [],
 };
-export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king", snowboss: "frost_emperor" };
+export const ZONE_BOSS: Partial<Record<ZoneId, MonsterType>> = { boss: "mushroom_king", snowboss: "frost_emperor", lavaboss: "flame_lord" };
 // Where the grove's guardian comes (see grove.ts).
 export const GROVE_GUARDIAN_ZONE: ZoneId = "forest1";
 

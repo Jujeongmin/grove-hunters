@@ -1,4 +1,4 @@
-"""The snow region's item pictures, recoloured from the pack's own (see docs/licenses): the tier 5 gear
+"""The snow region's and the volcano's item pictures, recoloured from the pack's own (see docs/licenses): the tier 5 gear
 frosted for tier 6 and glacier-pale for tier 7, and three materials from existing ones. Each picture's
 light and shade are kept (its luminance) and laid onto a two-colour ramp; the dark outline stays dark.
 Writes public/assets/ui/items/<id>.png (kept on develop only, like every game asset).
@@ -20,6 +20,14 @@ TINTS = {
     "frost_shard": ("core", (20, 70, 120), (200, 245, 255)),
     "snow_fur": ("silk", (90, 100, 115), (250, 252, 255)),
     "ever_ice": ("stone", (40, 90, 150), (235, 250, 255)),
+    # The volcano's: ember for tier 8, the Flame Lord's white-hot gold for tier 9.
+    "weapon_8": ("weapon_5", (110, 24, 8), (255, 170, 70)),
+    "armor_8": ("armor_5", (110, 24, 8), (255, 170, 70)),
+    "weapon_9": ("weapon_5", (90, 10, 10), (255, 238, 140)),
+    "armor_9": ("armor_5", (90, 10, 10), (255, 238, 140)),
+    "ember_shard": ("core", (120, 30, 10), (255, 200, 90)),
+    "magma_scale": ("silk", (70, 22, 16), (255, 130, 60)),
+    "flame_core": ("stone", (100, 20, 0), (255, 240, 150)),
 }
 # Pixels darker than this are the outline, left as they are.
 OUTLINE = 40

@@ -7,14 +7,16 @@ import { BUILDINGS } from "./grove";
 // whole world is free to everyone; each zone only asks for a level (minLevel).
 // The arena is where a guild fights its boss (see guildBoss.ts): no portal leads there, only the guild.
 // Past the deep forest lies the snow region: its outpost, three fields and the Glacier Emperor's altar.
+// Past the peaks lies the volcano: its camp, three fields and the Flame Lord's altar.
 // The dungeon is the Trial Dungeon's room (see dungeon.ts): only a match leads there.
 export type ZoneId =
   | "village" | "forest1" | "forest2" | "forest3" | "boss" | "arena"
-  | "outpost" | "snow1" | "snow2" | "snow3" | "snowboss" | "dungeon";
+  | "outpost" | "snow1" | "snow2" | "snow3" | "snowboss" | "dungeon"
+  | "camp" | "lava1" | "lava2" | "lava3" | "lavaboss";
 
-// The two regions: the grove (the village and the forest) and the snow. Falling in one sends you back
-// to its own town.
-export type Region = "grove" | "snow";
+// The regions: the grove (the village and the forest), the snow and the volcano. Falling in one sends
+// you back to its own town.
+export type Region = "grove" | "snow" | "volcano";
 
 // One way out of a zone: the edge it stands on, how far along that edge, and the zone it leads to.
 export interface ZonePortal {
@@ -68,8 +70,23 @@ const SNOW1_PORTALS: readonly ZonePortal[] = [{ to: "outpost", side: "W", at: 18
 const SNOW2_PORTALS: readonly ZonePortal[] = [
   { to: "snow1", side: "W", at: 18 }, { to: "snow3", side: "E", at: 18 }, { to: "snowboss", side: "N", at: 26 },
 ];
-const SNOW3_PORTALS: readonly ZonePortal[] = [{ to: "snow2", side: "W", at: 20 }];
+const SNOW3_PORTALS: readonly ZonePortal[] = [{ to: "snow2", side: "W", at: 20 }, { to: "camp", side: "E", at: 20 }];
 const SNOWBOSS_PORTALS: readonly ZonePortal[] = [{ to: "snow2", side: "S", at: 15 }];
+const CAMP_PORTALS: readonly ZonePortal[] = [{ to: "snow3", side: "W", at: 12 }, { to: "lava1", side: "E", at: 12 }];
+const LAVA1_PORTALS: readonly ZonePortal[] = [{ to: "camp", side: "W", at: 18 }, { to: "lava2", side: "E", at: 18 }];
+const LAVA2_PORTALS: readonly ZonePortal[] = [
+  { to: "lava1", side: "W", at: 18 }, { to: "lava3", side: "E", at: 18 }, { to: "lavaboss", side: "N", at: 26 },
+];
+const LAVA3_PORTALS: readonly ZonePortal[] = [{ to: "lava2", side: "W", at: 20 }];
+const LAVABOSS_PORTALS: readonly ZonePortal[] = [{ to: "lava2", side: "S", at: 15 }];
+
+// The volcano camp's buildings: the warden's house, the merchant's and the smith's, and a lookout.
+const CAMP_HOUSES: House[] = [
+  { model: "bld_house_tall", at: [14, 4], face: "S" },
+  { model: "bld_house_small", at: [6, 10], face: "E" },
+  { model: "bld_house_long", at: [21, 14], face: "N" },
+  { model: "bld_tower", at: [8, 17], face: "N" },
+];
 
 // The outpost's buildings: the captain's watchtower, the merchant's and the smith's houses.
 const OUTPOST_HOUSES: House[] = [
@@ -167,10 +184,46 @@ export const ZONES: Record<ZoneId, Zone> = {
       monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
     }),
   },
+  // The volcano, past the peaks: ash and black rock, Lv60 to 80.
+  camp: {
+    id: "camp", region: "volcano", minLevel: 58, portals: CAMP_PORTALS, houses: CAMP_HOUSES,
+    map: fieldMap({
+      cols: 30, rows: 24, seed: 151, spawn: [14, 12], portals: CAMP_PORTALS,
+      monsters: 0, groves: 4, edge: 2, props: "cBc", houses: CAMP_HOUSES,
+    }),
+  },
+  lava1: {
+    id: "lava1", region: "volcano", minLevel: 60, portals: LAVA1_PORTALS,
+    map: fieldMap({
+      cols: 50, rows: 36, seed: 163, spawn: [5, 18], portals: LAVA1_PORTALS,
+      monsters: 26, groves: 18, edge: 3, props: "cBcc",
+    }),
+  },
+  lava2: {
+    id: "lava2", region: "volcano", minLevel: 67, portals: LAVA2_PORTALS,
+    map: fieldMap({
+      cols: 52, rows: 38, seed: 173, spawn: [5, 18], portals: LAVA2_PORTALS,
+      monsters: 28, groves: 22, edge: 3, props: "cBH",
+    }),
+  },
+  lava3: {
+    id: "lava3", region: "volcano", minLevel: 74, portals: LAVA3_PORTALS,
+    map: fieldMap({
+      cols: 54, rows: 40, seed: 181, spawn: [5, 20], portals: LAVA3_PORTALS,
+      monsters: 28, groves: 26, edge: 4, props: "cBc",
+    }),
+  },
+  lavaboss: {
+    id: "lavaboss", region: "volcano", minLevel: 75, portals: LAVABOSS_PORTALS,
+    map: fieldMap({
+      cols: 30, rows: 30, seed: 191, spawn: [15, 25], portals: LAVABOSS_PORTALS,
+      monsters: 0, boss: [15, 11], groves: 4, edge: 3, props: "cc",
+    }),
+  },
 };
 
 // The town of each region: where the fallen of that region go back to.
-export const REGION_TOWN: Record<Region, ZoneId> = { grove: START_ZONE_ID, snow: "outpost" };
+export const REGION_TOWN: Record<Region, ZoneId> = { grove: START_ZONE_ID, snow: "outpost", volcano: "camp" };
 
 export function townOf(zone: ZoneId): ZoneId {
   return REGION_TOWN[ZONES[zone].region];

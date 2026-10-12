@@ -3,7 +3,7 @@ looker's class wields it (see itemPicture in src/game/render/icons.ts): the pack
 warrior, and for the others a first-tier picture drawn with PixelLab (weapon_1_<kind>.png: a bow, a
 wizard's staff, a cleric's staff, a dagger, a fist wrap). Each higher tier takes that picture in the
 colours of the matching sword (the forest's green, the Mushroom King's violet, steel, the rockheart's
-gold, frost, glacier): its light and shade laid onto a two-colour ramp and mixed with its own colours,
+gold, frost, glacier, ember, white-hot gold): its light and shade laid onto a two-colour ramp and mixed with its own colours,
 so wood still reads as wood; the dark outline stays. Writes public/assets/ui/items/weapon_<tier>_<kind>.png
 (kept on develop only, like every game asset).
 
@@ -23,6 +23,8 @@ TIERS = {
     5: ((96, 44, 10), (255, 222, 120)),
     6: ((26, 58, 96), (190, 235, 255)),
     7: ((70, 60, 120), (245, 250, 255)),
+    8: ((110, 24, 8), (255, 170, 70)),
+    9: ((90, 10, 10), (255, 238, 140)),
 }
 # How much of the tier's colour goes in (the rest is the picture's own).
 MIX = 0.65

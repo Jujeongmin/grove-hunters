@@ -40,13 +40,18 @@ export function trackFor(zone: ZoneId | null): Track {
     case "arena":
     case "dungeon":
     case "snowboss":
+    case "lavaboss":
       return "boss";
     case "outpost":
+    case "camp":
       return "village";
     case "snow1":
     case "snow2":
+    case "lava1":
+    case "lava2":
       return "field2";
     case "snow3":
+    case "lava3":
       return "deep";
   }
 }
