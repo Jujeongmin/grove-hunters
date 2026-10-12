@@ -6,6 +6,7 @@ import type { BagView } from "../game/account/items";
 import { QUESTS, questDone, questTaken } from "../game/account/quests";
 import { dialogueChoices, type DialogueChoice } from "../game/world/dialogue";
 import { roleOf, type NpcId } from "../game/world/npcs";
+import { problemText } from "./BagPanel";
 
 // How fast the words come out, in characters a second.
 const TYPE_RATE = 40;
@@ -82,7 +83,9 @@ export function DialogueBox({ id, bag, building, onClaim, onAccept, onChoice }: 
     setProblem(null);
     void (choice === "claim" ? onClaim() : onAccept()).then((code) => {
       setBusy(false);
-      if (code) setProblem(t(PROBLEM[code] ?? "problem.cannotClaim"));
+      // The elder's own reasons in the elder's words; anything else (a full bag, above all) as the
+      // bag says it.
+      if (code) setProblem(PROBLEM[code] ? t(PROBLEM[code]) : problemText(code) ?? t("problem.cannotClaim"));
     });
   };
 
