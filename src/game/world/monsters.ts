@@ -110,16 +110,16 @@ const snow3 = {
 // The first field is for levels 1 to about 11, the second for 12 to 29, the deep forest for 28 to
 // 40 (its monsters are the second field's, grown and darker); the boss is a level-32 fight for a group. Health, damage and XP climb with each monster's level.
 export const MONSTERS: Record<MonsterType, MonsterSpec> = {
-  green_blob: { ...field1, level: 1, hp: 50, damage: 5, speed: 1.6, xp: 6 },
-  mushnub: { ...field1, level: 3, hp: 80, damage: 8, xp: 9 },
-  rat: { ...field1, level: 5, hp: 110, damage: 11, speed: 2.4, xp: 12 },
-  frog: { ...field1, level: 7, hp: 150, damage: 14, xp: 15 },
-  spider: { ...field2, level: 12, hp: 420, damage: 26, speed: 2.2, aggro: 11, xp: 40 },
-  snake: { ...field2, level: 15, hp: 480, damage: 30, aggro: 10, xp: 48 },
+  green_blob: { ...field1, level: 1, hp: 50, damage: 9, speed: 1.6, xp: 6 },
+  mushnub: { ...field1, level: 3, hp: 80, damage: 11, xp: 9 },
+  rat: { ...field1, level: 5, hp: 110, damage: 20, speed: 2.4, xp: 12 },
+  frog: { ...field1, level: 7, hp: 150, damage: 23, xp: 15 },
+  spider: { ...field2, level: 12, hp: 420, damage: 36, speed: 2.2, aggro: 11, xp: 40 },
+  snake: { ...field2, level: 15, hp: 480, damage: 40, aggro: 10, xp: 48 },
   // Wasps and bats, and their deep-forest kin, come for you; a short sight, so a walk past pulls one
   // or two, not the field.
-  wasp: { ...field2, level: 18, hp: 520, damage: 34, speed: 2.6, aggro: 8, aggressive: true, xp: 56 },
-  bat: { ...field2, level: 21, hp: 600, damage: 38, speed: 2.8, aggro: 8, aggressive: true, xp: 64 },
+  wasp: { ...field2, level: 18, hp: 520, damage: 44, speed: 2.6, aggro: 8, aggressive: true, xp: 56 },
+  bat: { ...field2, level: 21, hp: 600, damage: 48, speed: 2.8, aggro: 8, aggressive: true, xp: 64 },
   goleling: { ...field2, level: 24, hp: 800, damage: 44, speed: 1.7, aggro: 10, body: 0.5, xp: 80 },
   dire_spider: { ...field3, level: 28, hp: 1400, damage: 58, speed: 2.3, xp: 120 },
   venom_snake: { ...field3, level: 31, hp: 1600, damage: 64, xp: 140 },
@@ -300,12 +300,14 @@ function fresh(type: MonsterType, x: number, z: number): MonsterState {
   return { type, x, z, yaw: 0, hp: MONSTERS[type].hp, alive: true, stunnedUntil: 0, attackReadyAt: 0, respawnAt: 0, homeX: x, homeZ: z };
 }
 
-// Kinds that stand in little groups: more of them round each of their spots, this far off it (inside
-// its four-metre cell, so on open ground). The first field's slimes are what its first quest asks
-// fifteen of.
-const CLUSTER: Partial<Record<MonsterType, readonly (readonly [number, number])[]>> = {
-  green_blob: [[-1.3, 1.1], [1.3, 1.1]],
-};
+// Monsters stand in packs, as in the MMOs: round each of a field's spots, more of its kind this far
+// off it (inside its four-metre cell, so on open ground, and clear of each other even for the
+// biggest). Spots take three and two in turn; the first field's slimes, what its first quest asks
+// fifteen of, are always three.
+const PACK: readonly (readonly [number, number])[] = [[-1.4, 1.2], [1.4, 1.2]];
+function packOf(type: MonsterType, spot: number): readonly (readonly [number, number])[] {
+  return type === "green_blob" || spot % 2 === 0 ? PACK : PACK.slice(0, 1);
+}
 
 // The monsters a zone starts with, keyed by id.
 export function spawnMonsters(zone: ZoneId): Record<string, MonsterState> {
@@ -316,7 +318,7 @@ export function spawnMonsters(zone: ZoneId): Record<string, MonsterState> {
     layout.zombieSpawns.forEach((p, i) => {
       const type = kinds[i % kinds.length];
       out[`m${i}`] = fresh(type, p.x, p.z);
-      (CLUSTER[type] ?? []).forEach(([dx, dz], k) => {
+      packOf(type, i).forEach(([dx, dz], k) => {
         out[`m${i}-${k + 1}`] = fresh(type, p.x + dx, p.z + dz);
       });
     });

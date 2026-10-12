@@ -26,7 +26,7 @@ describe("monsters", () => {
     const monsters = Object.values(spawnMonsters("forest1"));
     const slimes = monsters.filter((m) => m.type === "green_blob");
     expect(slimes.length).toBeGreaterThanOrEqual(18);
-    expect(slimes.length).toBe(monsters.filter((m) => m.type === "rat").length * 3);
+    expect(slimes.length).toBe(layout.zombieSpawns.filter((_, i) => i % 4 === 0).length * 3);
     const { solid, tileSize } = layout;
     for (const m of slimes) expect(solid[Math.floor(m.z / tileSize)]?.[Math.floor(m.x / tileSize)], `${m.x},${m.z}`).toBeFalsy();
   });
