@@ -24,6 +24,52 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-12-volcano",
+    date: "2026-10-12",
+    text: {
+      ko: { title: "화산 지대 (Lv60~80), 몬스터 무리, 퀘스트 경험치 조정", lines: [
+        "만년설 봉우리 동쪽에 화산 지대가 열렸어요: 화산 야영지(Lv58), 잿빛 평원(Lv60), 용암 협곡(Lv67), 불꽃 정상(Lv74), 협곡 북쪽의 화염 제단(Lv75). 새 몬스터 11종과 보스 화염 군주, 8·9등급 장비, 경비대장의 퀘스트 8개와 일일 퀘스트가 있어요.",
+        "사냥터마다 몬스터가 무리 지어 2.5배로 늘었고, 숲 필드 1·2 몬스터가 더 아프게 물어요.",
+        "퀘스트 경험치가 30%로 줄었어요(숲 필드 1 퀘스트는 그대로). 다음 퀘스트 레벨이 모자라면 퀘스트 칸이 'Lv N까지 사냥'으로 바뀌고, 누르면 갈 수 있는 가장 좋은 사냥터로 자동사냥을 가요.",
+        "전직은 메뉴의 전직 버튼(7)에서 해요. 10레벨이 되면 전직 창이 저절로 떠요.",
+        "가방에서 필요 없는 아이템을 버릴 수 있어요. 가방의 팔기는 없어졌어요.",
+        "던전은 매칭되면 바로 들어가고, 켜 둔 자동사냥은 구역을 옮겨도 유지돼요. 말벌이 옆으로 날아오던 문제와 몬스터끼리 끼어 길이 막히던 문제를 고쳤어요.",
+      ] },
+      en: { title: "The volcano (Lv60-80), monster packs, quest XP", lines: [
+        "East of the Everfrost Peaks the volcano opens: the Volcano Camp (Lv58), the Ashen Plain (Lv60), the Lava Canyon (Lv67), the Blazing Summit (Lv74) and the Altar of Flame (Lv75) north of the canyon. Eleven new monsters, the Flame Lord, tier 8 and 9 gear, eight quests from the warden and new dailies.",
+        "Every field now holds two and a half times the monsters, in packs, and the first two fields' monsters bite harder.",
+        "Quests now pay 30% of their XP (the first field's are unchanged). When the next quest wants a higher level, the quest tracker reads 'Hunt to Lv N' and sends auto-battle to the best field you may enter.",
+        "Advance from the menu's Advance button (7); its screen opens by itself at level 10.",
+        "Throw unwanted items away from the bag. Selling from the bag is gone.",
+        "A dungeon match takes you straight in, and auto-battle stays on from zone to zone. Fixed wasps flying at you sideways and monsters wedging each other in.",
+      ] },
+      ja: { title: "火山地帯（Lv60〜80）、モンスターの群れ、クエスト経験値", lines: [
+        "万年雪の峰の東に火山地帯が開きました：火山の野営地（Lv58）、灰の平原（Lv60）、溶岩の峡谷（Lv67）、炎の頂（Lv74）、峡谷の北の炎の祭壇（Lv75）。新モンスター11種とボス炎の君主、8・9等級の装備、警備隊長のクエスト8つと日課があります。",
+        "狩り場のモンスターが群れになり2.5倍に増え、森フィールド1・2のモンスターが強く噛むようになりました。",
+        "クエストの経験値が30%になりました（森フィールド1のクエストはそのまま）。次のクエストのレベルが足りないと、クエスト欄が「Lv Nまで狩り」になり、押すと行ける一番よい狩り場へ自動狩りに向かいます。",
+        "転職はメニューの転職ボタン（7）から。レベル10になると転職画面が自動で開きます。",
+        "カバンからいらないアイテムを捨てられます。カバンでの売却はなくなりました。",
+        "ダンジョンはマッチするとすぐ入り、オンにした自動狩りはエリアを移っても続きます。ハチが横向きに飛んでくる問題と、モンスター同士が挟まって道がふさがる問題を直しました。",
+      ] },
+      "zh-Hans": { title: "火山地带（Lv60~80）、怪物成群、任务经验", lines: [
+        "万年雪峰以东开放了火山地带：火山营地（Lv58）、灰烬平原（Lv60）、熔岩峡谷（Lv67）、烈焰之巅（Lv74），以及峡谷北边的火焰祭坛（Lv75）。新增11种怪物与首领火焰君主、8·9级装备、警备队长的8个任务和每日任务。",
+        "每个猎场的怪物成群出现，增至2.5倍；森林区域1·2的怪物攻击更痛了。",
+        "任务经验降至30%（森林区域1的任务不变）。下一个任务等级不够时，任务栏会显示“狩猎至 Lv N”，点击后自动前往能去的最佳猎场。",
+        "转职请用菜单的转职按钮（7）。到10级时转职界面会自动打开。",
+        "可以在背包里丢弃不需要的物品。背包中的出售已取消。",
+        "地下城匹配成功后立即进入，开启的自动战斗在切换区域后也会保持。修正了黄蜂侧着飞来、怪物互相卡住挡路的问题。",
+      ] },
+      "zh-Hant": { title: "火山地帶（Lv60~80）、怪物成群、任務經驗", lines: [
+        "萬年雪峰以東開放了火山地帶：火山營地（Lv58）、灰燼平原（Lv60）、熔岩峽谷（Lv67）、烈焰之巔（Lv74），以及峽谷北邊的火焰祭壇（Lv75）。新增11種怪物與首領火焰君主、8·9級裝備、警備隊長的8個任務和每日任務。",
+        "每個獵場的怪物成群出現，增至2.5倍；森林區域1·2的怪物攻擊更痛了。",
+        "任務經驗降至30%（森林區域1的任務不變）。下一個任務等級不夠時，任務欄會顯示「狩獵至 Lv N」，點擊後自動前往能去的最佳獵場。",
+        "轉職請用選單的轉職按鈕（7）。到10級時轉職介面會自動打開。",
+        "可以在背包裡丟棄不需要的物品。背包中的出售已取消。",
+        "地下城配對成功後立即進入，開啟的自動戰鬥在切換區域後也會保持。修正了黃蜂側著飛來、怪物互相卡住擋路的問題。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-08-character-wallet",
     date: "2026-10-08",
     text: {

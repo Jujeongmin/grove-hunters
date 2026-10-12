@@ -9,7 +9,7 @@ import { QUESTS } from "./quests";
 // account by id, so an id is never changed or reused, and new ones go on the end.
 
 // The bosses whose falls are counted one by one.
-export const RECORDED_BOSSES = ["mushroom_king", "grove_guardian", "frost_emperor"] as const;
+export const RECORDED_BOSSES = ["mushroom_king", "grove_guardian", "frost_emperor", "flame_lord"] as const;
 export type RecordedBoss = (typeof RECORDED_BOSSES)[number];
 
 export type Metric =
@@ -17,7 +17,7 @@ export type Metric =
 
 // The order the screen shows them in.
 export const METRICS: readonly Metric[] = [
-  "level", "quests", "kills", "mushroom_king", "grove_guardian", "frost_emperor", "dailies", "plus", "advanced", "guild",
+  "level", "quests", "kills", "mushroom_king", "grove_guardian", "frost_emperor", "flame_lord", "dailies", "plus", "advanced", "guild",
   "mounts", "star5", "attend",
 ];
 
@@ -40,6 +40,9 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   ...goals("mounts", [[3, 10], [10, 30], [20, 100]]),
   ...goals("star5", [[1, 50]]),
   ...goals("attend", [[7, 10], [28, 30], [100, 100]]),
+  // The volcano's (2026-10-12).
+  ...goals("level", [[80, 200]]),
+  ...goals("flame_lord", [[1, 80]]),
 ];
 
 export function achievementById(id: unknown): Achievement | null {
@@ -100,7 +103,7 @@ function bestPlus(c: Character): number {
 // Everything an account's achievements are measured by.
 export function factsOf(characters: readonly Character[], account: AccountFacts): Facts {
   const facts: Facts = {
-    level: 0, kills: 0, quests: 0, mushroom_king: 0, grove_guardian: 0, frost_emperor: 0, dailies: 0, plus: 0, advanced: 0, guild: 0,
+    level: 0, kills: 0, quests: 0, mushroom_king: 0, grove_guardian: 0, frost_emperor: 0, flame_lord: 0, dailies: 0, plus: 0, advanced: 0, guild: 0,
     mounts: account.mounts, star5: account.star5, attend: account.attend,
   };
   for (const c of characters) {

@@ -74,12 +74,24 @@ export const QUESTS: readonly Quest[] = [
   { targets: ["peak_yeti"], count: 80, xp: 75000, gold: 22000, items: [{ id: "ever_ice", n: 3 }] },
   { targets: ["frost_drake", "glacier_alpaking"], count: 100, xp: 90000, gold: 26000, items: [{ id: "weapon_6", n: 1 }] },
   { targets: ["frost_emperor"], count: 1, xp: 120000, gold: 30000, items: [{ id: "ever_ice", n: 6 }] },
+  // The volcano's, from the camp's warden (2026-10-12; on the end, so no save moves).
+  { targets: ["magma_blob", "ash_rat"], count: 80, xp: 60000, gold: 30000, items: [{ id: "potion_big", n: 20 }] },
+  { targets: ["fire_frog", "ember_spider"], count: 100, xp: 75000, gold: 34000, items: [{ id: "ember_shard", n: 10 }] },
+  {
+    targets: ["magma_blob", "ash_rat", "fire_frog", "ember_spider"], count: 180, xp: 105000, gold: 40000,
+    items: [{ id: "magma_scale", n: 10 }, { id: "stone", n: 15 }],
+  },
+  { targets: ["flame_bat", "magma_crab"], count: 100, xp: 90000, gold: 42000, items: [{ id: "magma_scale", n: 12 }] },
+  { targets: ["flame_snake", "magma_golem"], count: 110, xp: 105000, gold: 46000, items: [{ id: "armor_8", n: 1 }] },
+  { targets: ["blaze_drake", "firebird"], count: 120, xp: 150000, gold: 58000, items: [{ id: "flame_core", n: 2 }] },
+  { targets: ["cinder_dragon"], count: 120, xp: 165000, gold: 62000, items: [{ id: "weapon_8", n: 1 }] },
+  { targets: ["flame_lord"], count: 1, xp: 210000, gold: 80000, items: [{ id: "flame_core", n: 6 }] },
 ];
 
 // Daily quests, one per hunting field: fell that many of its monsters in a day (Korean time) and
 // claim the reward, from anywhere. They start over at midnight.
 export interface DailyQuest {
-  id: "forest1" | "forest2" | "forest3" | "snow1" | "snow2" | "snow3";
+  id: "forest1" | "forest2" | "forest3" | "snow1" | "snow2" | "snow3" | "lava1" | "lava2" | "lava3";
   targets: MonsterType[];
   count: number;
   gold: number;
@@ -110,6 +122,18 @@ export const DAILY_QUESTS: readonly DailyQuest[] = [
   {
     id: "snow3", targets: ["peak_yeti", "frost_drake", "glacier_alpaking"],
     count: 60, gold: 7000, items: [{ id: "stone", n: 12 }, { id: "ever_ice", n: 1 }],
+  },
+  {
+    id: "lava1", targets: ["magma_blob", "ash_rat", "fire_frog", "ember_spider"],
+    count: 60, gold: 9000, items: [{ id: "stone", n: 14 }, { id: "ember_shard", n: 5 }],
+  },
+  {
+    id: "lava2", targets: ["flame_bat", "magma_crab", "flame_snake", "magma_golem"],
+    count: 70, gold: 12000, items: [{ id: "stone", n: 16 }, { id: "magma_scale", n: 6 }],
+  },
+  {
+    id: "lava3", targets: ["blaze_drake", "firebird", "cinder_dragon"],
+    count: 70, gold: 15000, items: [{ id: "stone", n: 18 }, { id: "flame_core", n: 1 }],
   },
 ];
 

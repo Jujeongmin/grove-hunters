@@ -98,7 +98,7 @@ function AttendanceTab({ client }: { client: WorldClient }) {
 
 // What an achievement asks, in words.
 function goalText(metric: Metric, goal: number): string {
-  if (metric === "mushroom_king" || metric === "grove_guardian" || metric === "frost_emperor") {
+  if (metric === "mushroom_king" || metric === "grove_guardian" || metric === "frost_emperor" || metric === "flame_lord") {
     return t("ach.boss.goal", { boss: t(`monster.${metric}` as Key), n: goal });
   }
   return t(`ach.${metric}.goal` as Key, { n: goal.toLocaleString() });

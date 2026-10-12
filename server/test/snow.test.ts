@@ -73,8 +73,9 @@ describe("the snow region", () => {
     const paid = await server.claimQuest();
     expect(paid.quest.index).toBe(armour + 1);
     expect(paid.pieces.filter((p: any) => p.id === "armor_6").map((p: any) => p.trade)).toEqual([false]);
-    // The last one wants the emperor.
-    expect(QUESTS[QUESTS.length - 1].targets).toEqual(["frost_emperor"]);
+    // The snow's last wants the emperor; the volcano's come after it.
+    const emperor = QUESTS.findIndex((q) => q.targets.includes("frost_emperor"));
+    expect(QUESTS[emperor + 1].targets).toEqual(["magma_blob", "ash_rat"]);
     expect(DAILY_QUESTS.map((q) => q.id).filter((id) => id.startsWith("snow"))).toEqual(["snow1", "snow2", "snow3"]);
   });
 });

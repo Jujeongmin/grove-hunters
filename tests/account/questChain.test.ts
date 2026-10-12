@@ -12,7 +12,7 @@ describe("the quest chain", () => {
   });
 
   it("between quests, always has a hunt to level up in: a field the hunter may go into, near their level", () => {
-    for (let level = 1; level <= 60; level++) {
+    for (let level = 1; level <= 80; level++) {
       const hunt = levelingHunt(level);
       expect(hunt.length, `level ${level}`).toBeGreaterThan(0);
       const zones = (Object.keys(ZONES) as ZoneId[]).filter((z) => hunt.every((t) => ZONE_MONSTERS[z].includes(t)));

@@ -20,7 +20,7 @@ describe("achievements", () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     for (const a of ACHIEVEMENTS) expect(a.goal > 0 && a.gems > 0).toBe(true);
     expect(new Set(ACHIEVEMENTS.map((a) => a.metric))).toEqual(new Set(METRICS));
-    expect(ACHIEVEMENTS.reduce((n, a) => n + a.gems, 0)).toBe(1580);
+    expect(ACHIEVEMENTS.reduce((n, a) => n + a.gems, 0)).toBe(1860);
     expect(achievementById("level-10")?.gems).toBe(20);
     expect(achievementById("level-11")).toBeNull();
   });
@@ -63,7 +63,7 @@ describe("achievements", () => {
     const facts = factsOf([character("a", { xp: xpOf(31) })], NOTHING);
     const view = achievementsView(facts, ["level-10"]);
     const level = view.list.filter((a) => a.metric === "level");
-    expect(level.map((a) => [a.progress, a.claimed])).toEqual([[10, true], [30, false], [31, false], [31, false]]);
+    expect(level.map((a) => [a.progress, a.claimed])).toEqual([[10, true], [30, false], [31, false], [31, false], [31, false]]);
     // Level 30 waits; level 10 is claimed already.
     expect(view.claimable).toBe(1);
   });
