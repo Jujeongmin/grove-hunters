@@ -797,6 +797,8 @@ export const zhHant: Bundle = {
   "quests.accept": "接受任務",
   "npc.elder.offer": "「有件事想拜託你。能幫忙消滅{goal}嗎？」",
   "quest.goTake": "點擊：向村長接受",
+  "quest.levelUp": "狩獵至 Lv{n}",
+  "quest.levelUpWhere": "在{zone}提升等級",
   "quest.goingToTake": "正在前往村長處…",
   "quest.notTaken": "村長那裡有任務",
   "quests.claimedToday": "今天的報酬已領取",

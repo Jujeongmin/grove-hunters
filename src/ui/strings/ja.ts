@@ -797,6 +797,8 @@ export const ja: Bundle = {
   "quests.accept": "クエストを受ける",
   "npc.elder.offer": "「頼みがある。{goal}を倒してくれないか？」",
   "quest.goTake": "タップで村長から受ける",
+  "quest.levelUp": "Lv{n}まで狩り",
+  "quest.levelUpWhere": "{zone}でレベル上げ",
   "quest.goingToTake": "村長のもとへ向かっています…",
   "quest.notTaken": "村長のもとにクエストがあります",
   "quests.claimedToday": "今日の報酬は受け取りました",

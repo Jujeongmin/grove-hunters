@@ -797,6 +797,8 @@ export const en: Bundle = {
   "quests.accept": "Take the quest",
   "npc.elder.offer": "\"I have a favour to ask. Will you take care of {goal}?\"",
   "quest.goTake": "Tap: take it from the elder",
+  "quest.levelUp": "Hunt to Lv {n}",
+  "quest.levelUpWhere": "Level up in {zone}",
   "quest.goingToTake": "On the way to the elder…",
   "quest.notTaken": "A quest waits at the elder",
   "quests.claimedToday": "Claimed today",

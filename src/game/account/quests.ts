@@ -1,4 +1,4 @@
-import { ZONE_BOSS, ZONE_MONSTERS, type MonsterType } from "../world/monsters";
+import { MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterType } from "../world/monsters";
 import { ZONES, type ZoneId } from "../world/zones";
 import type { ItemId } from "./items";
 
@@ -14,6 +14,10 @@ export interface Quest {
   items: { id: ItemId; n: number }[];
 }
 
+// Quest XP was cut to 30% on 2026-10-12: it had been about nine tenths of all XP to level 37, so levels
+// came five times faster than the curve in level.ts meant. A quest now adds to the hunt rather than
+// taking its place, except in the first field, whose five still carry a new hunter to level 10 where
+// the second opens. (Rewards already claimed stand.)
 export const QUESTS: readonly Quest[] = [
   { targets: ["green_blob"], count: 15, xp: 250, gold: 40, items: [{ id: "potion_small", n: 5 }] },
   { targets: ["mushnub"], count: 20, xp: 700, gold: 80, items: [] },
@@ -22,54 +26,54 @@ export const QUESTS: readonly Quest[] = [
   // opens (they used to end around level 6). Saves from before are moved along (see readQuest).
   { targets: ["rat", "frog"], count: 60, xp: 5000, gold: 300, items: [{ id: "weapon_1", n: 1 }] },
   { targets: ["green_blob", "mushnub", "rat", "frog"], count: 80, xp: 7000, gold: 400, items: [{ id: "potion_small", n: 10 }, { id: "stone", n: 3 }] },
-  { targets: ["spider", "snake"], count: 50, xp: 9000, gold: 600, items: [{ id: "potion_big", n: 5 }] },
-  { targets: ["wasp", "bat"], count: 60, xp: 18000, gold: 1000, items: [] },
-  { targets: ["goleling"], count: 60, xp: 30000, gold: 1500, items: [{ id: "weapon_2", n: 1 }] },
+  { targets: ["spider", "snake"], count: 50, xp: 2700, gold: 600, items: [{ id: "potion_big", n: 5 }] },
+  { targets: ["wasp", "bat"], count: 60, xp: 5400, gold: 1000, items: [] },
+  { targets: ["goleling"], count: 60, xp: 9000, gold: 1500, items: [{ id: "weapon_2", n: 1 }] },
   // Added in chain 3 (2026-10-08): the second field's own carry a hunter to 25, where the Mushroom
   // King's clearing and the deep wood open (they used to end around 17).
-  { targets: ["wasp", "bat", "goleling"], count: 120, xp: 60000, gold: 2500, items: [{ id: "stone", n: 5 }] },
+  { targets: ["wasp", "bat", "goleling"], count: 120, xp: 18000, gold: 2500, items: [{ id: "stone", n: 5 }] },
   {
-    targets: ["spider", "snake", "wasp", "bat", "goleling"], count: 200, xp: 120000, gold: 3500,
+    targets: ["spider", "snake", "wasp", "bat", "goleling"], count: 200, xp: 36000, gold: 3500,
     items: [{ id: "potion_big", n: 10 }, { id: "silk", n: 10 }],
   },
-  { targets: ["mushroom_king"], count: 1, xp: 40000, gold: 3000, items: [] },
-  { targets: ["dire_spider", "venom_snake"], count: 60, xp: 60000, gold: 4000, items: [{ id: "potion_big", n: 10 }] },
-  { targets: ["hornet", "vampire_bat"], count: 80, xp: 90000, gold: 6000, items: [] },
-  { targets: ["stone_golem"], count: 60, xp: 130000, gold: 9000, items: [{ id: "armor_2", n: 1 }] },
+  { targets: ["mushroom_king"], count: 1, xp: 12000, gold: 3000, items: [] },
+  { targets: ["dire_spider", "venom_snake"], count: 60, xp: 18000, gold: 4000, items: [{ id: "potion_big", n: 10 }] },
+  { targets: ["hornet", "vampire_bat"], count: 80, xp: 27000, gold: 6000, items: [] },
+  { targets: ["stone_golem"], count: 60, xp: 39000, gold: 9000, items: [{ id: "armor_2", n: 1 }] },
   // Past the chain's first end. New ones go on the end, or, inserted (as the two above), with
   // QUEST_CHAIN raised and readQuest moving older saves along.
   {
-    targets: ["stone_golem"], count: 100, xp: 200000, gold: 12000,
+    targets: ["stone_golem"], count: 100, xp: 60000, gold: 12000,
     items: [{ id: "core", n: 12 }, { id: "stone", n: 10 }],
   },
   {
-    targets: ["mushroom_king"], count: 3, xp: 180000, gold: 15000,
+    targets: ["mushroom_king"], count: 3, xp: 54000, gold: 15000,
     items: [{ id: "spore", n: 4 }],
   },
   {
-    targets: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"], count: 200, xp: 350000, gold: 25000,
+    targets: ["dire_spider", "venom_snake", "hornet", "vampire_bat", "stone_golem"], count: 200, xp: 105000, gold: 25000,
     items: [{ id: "stone", n: 20 }, { id: "potion_big", n: 20 }],
   },
   // The snow region's, from the outpost's captain (any town's elder takes the reports).
-  { targets: ["frost_blob", "snow_hare"], count: 60, xp: 90000, gold: 8000, items: [{ id: "potion_big", n: 10 }] },
-  { targets: ["snow_wolf", "frost_spider"], count: 80, xp: 110000, gold: 10000, items: [{ id: "frost_shard", n: 10 }] },
+  { targets: ["frost_blob", "snow_hare"], count: 60, xp: 27000, gold: 8000, items: [{ id: "potion_big", n: 10 }] },
+  { targets: ["snow_wolf", "frost_spider"], count: 80, xp: 33000, gold: 10000, items: [{ id: "frost_shard", n: 10 }] },
   // Chain 3: the foothills' carry a hunter to 47, where the canyon opens.
   {
-    targets: ["frost_blob", "snow_hare", "snow_wolf", "frost_spider"], count: 150, xp: 200000, gold: 14000,
+    targets: ["frost_blob", "snow_hare", "snow_wolf", "frost_spider"], count: 150, xp: 60000, gold: 14000,
     items: [{ id: "snow_fur", n: 8 }, { id: "stone", n: 10 }],
   },
-  { targets: ["frost_bat", "penguin_brute"], count: 80, xp: 140000, gold: 12000, items: [{ id: "snow_fur", n: 10 }] },
-  { targets: ["frost_snake", "ice_golem"], count: 90, xp: 170000, gold: 15000, items: [{ id: "armor_6", n: 1 }] },
-  { targets: ["ice_golem"], count: 100, xp: 200000, gold: 18000, items: [{ id: "stone", n: 30 }] },
+  { targets: ["frost_bat", "penguin_brute"], count: 80, xp: 42000, gold: 12000, items: [{ id: "snow_fur", n: 10 }] },
+  { targets: ["frost_snake", "ice_golem"], count: 90, xp: 51000, gold: 15000, items: [{ id: "armor_6", n: 1 }] },
+  { targets: ["ice_golem"], count: 100, xp: 60000, gold: 18000, items: [{ id: "stone", n: 30 }] },
   // Chain 3: the canyon's carry a hunter to 54, where the peaks open.
   {
-    targets: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"], count: 150, xp: 250000, gold: 20000,
+    targets: ["frost_bat", "penguin_brute", "frost_snake", "ice_golem"], count: 150, xp: 75000, gold: 20000,
     items: [{ id: "frost_shard", n: 12 }, { id: "potion_big", n: 20 }],
   },
-  { targets: ["penguin_brute", "ice_golem"], count: 150, xp: 250000, gold: 22000, items: [{ id: "snow_fur", n: 12 }, { id: "stone", n: 20 }] },
-  { targets: ["peak_yeti"], count: 80, xp: 250000, gold: 22000, items: [{ id: "ever_ice", n: 3 }] },
-  { targets: ["frost_drake", "glacier_alpaking"], count: 100, xp: 300000, gold: 26000, items: [{ id: "weapon_6", n: 1 }] },
-  { targets: ["frost_emperor"], count: 1, xp: 400000, gold: 30000, items: [{ id: "ever_ice", n: 6 }] },
+  { targets: ["penguin_brute", "ice_golem"], count: 150, xp: 75000, gold: 22000, items: [{ id: "snow_fur", n: 12 }, { id: "stone", n: 20 }] },
+  { targets: ["peak_yeti"], count: 80, xp: 75000, gold: 22000, items: [{ id: "ever_ice", n: 3 }] },
+  { targets: ["frost_drake", "glacier_alpaking"], count: 100, xp: 90000, gold: 26000, items: [{ id: "weapon_6", n: 1 }] },
+  { targets: ["frost_emperor"], count: 1, xp: 120000, gold: 30000, items: [{ id: "ever_ice", n: 6 }] },
 ];
 
 // Daily quests, one per hunting field: fell that many of its monsters in a day (Korean time) and
@@ -192,6 +196,32 @@ export function questLevel(index: number): number {
   if (!quest) return 0;
   const zones = (Object.keys(ZONES) as ZoneId[]).filter((z) => ZONE_MONSTERS[z].includes(quest.targets[0]) || ZONE_BOSS[z] === quest.targets[0]);
   return zones.length === 0 ? 0 : Math.min(...zones.map((z) => ZONES[z].minLevel));
+}
+
+// The level the quest on asks for, when the hunter is still below it (the quests alone do not carry a
+// hunter from one region's ground to the next: the hunt between does); null otherwise.
+export function questGap(progress: QuestProgress, level: number): number | null {
+  if (progress.index >= QUESTS.length) return null;
+  const need = questLevel(progress.index);
+  return need > level ? need : null;
+}
+
+// Where a hunter levels up between quests: the highest field they may go into.
+export function levelingGround(level: number): ZoneId | null {
+  const fields = (Object.keys(ZONES) as ZoneId[]).filter((z) => ZONE_MONSTERS[z].length > 0 && ZONES[z].minLevel <= level);
+  return fields.length === 0 ? null : fields.reduce((a, b) => (ZONES[b].minLevel > ZONES[a].minLevel ? b : a));
+}
+
+// The hunt that levels a hunter up between quests: the kinds of the highest field they may go into,
+// up to three levels above them (the field's lowest kind when none is that low).
+export function levelingHunt(level: number): MonsterType[] {
+  const ground = levelingGround(level);
+  if (!ground) return [];
+  const kinds = ZONE_MONSTERS[ground];
+  const near = kinds.filter((t) => MONSTERS[t].level <= level + 3);
+  if (near.length > 0) return near;
+  const lowest = Math.min(...kinds.map((t) => MONSTERS[t].level));
+  return kinds.filter((t) => MONSTERS[t].level === lowest);
 }
 
 // Where, in the chain as it is now, the quests every change put in stand.

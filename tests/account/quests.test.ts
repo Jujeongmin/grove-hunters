@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { QUESTS, QUEST_CHAIN, QUEST_START, countKills, questDone, questLevel, questTaken, readQuest } from "../../src/game/account/quests";
-import { levelOf } from "../../src/game/account/level";
+import { levelCost, levelOf } from "../../src/game/account/level";
 import { CLASSES } from "../../src/game/combat/classes";
 import { ADVANCE_LEVEL, JOBS, jobsOf } from "../../src/game/combat/jobs";
 import { CLASS_SKILLS, FOURTH_SKILL_LEVEL, JOB_SKILLS, THIRD_SKILL_LEVEL, skillAt } from "../../src/game/combat/skills";
@@ -64,6 +64,19 @@ describe("quests", () => {
     let xp = 0;
     for (const q of QUESTS.slice(0, 5)) xp += q.xp;
     expect(levelOf(xp).level).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe("quest XP", () => {
+  it("pays the hunt a bonus rather than the levels themselves: the quests up to the deep forest's end come to under half of reaching 37", () => {
+    let toLevel37 = 0;
+    for (let level = 1; level < 37; level++) toLevel37 += levelCost(level);
+    const upToDeepForest = QUESTS.filter((q) => q.targets.every((t) => MONSTERS[t].level <= 40)).reduce((sum, q) => sum + q.xp, 0);
+    expect(upToDeepForest).toBeLessThan(toLevel37 / 2);
+  });
+
+  it("past the first field, is in whole hundreds", () => {
+    for (const q of QUESTS.slice(5)) expect(q.xp % 100, `${q.targets.join(",")}`).toBe(0);
   });
 });
 

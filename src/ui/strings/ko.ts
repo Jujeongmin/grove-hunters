@@ -806,6 +806,8 @@ export const ko = {
   "quests.accept": "퀘스트 받기",
   "npc.elder.offer": "\"부탁이 있네. {goal}{p} 처치해 주겠나?\"",
   "quest.goTake": "눌러서 촌장에게 받기",
+  "quest.levelUp": "Lv {n}까지 사냥",
+  "quest.levelUpWhere": "{zone}에서 레벨 올리기",
   "quest.goingToTake": "촌장에게 가는 중…",
   "quest.notTaken": "촌장에게 받을 퀘스트",
   "quests.claimedToday": "오늘 보상을 받았어요",

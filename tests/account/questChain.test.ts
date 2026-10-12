@@ -1,22 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { QUESTS } from "../../src/game/account/quests";
-import { levelOf } from "../../src/game/account/level";
-import { MONSTERS, ZONE_BOSS, ZONE_MONSTERS, type MonsterType } from "../../src/game/world/monsters";
+import { QUESTS, QUEST_START, levelingHunt, questGap, questLevel } from "../../src/game/account/quests";
+import { MONSTERS, ZONE_MONSTERS } from "../../src/game/world/monsters";
 import { ZONES, type ZoneId } from "../../src/game/world/zones";
 
-// Where a monster kind lives (a field's own, or a boss's clearing).
-const zoneOf = (t: MonsterType): ZoneId =>
-  (Object.keys(ZONES) as ZoneId[]).find((z) => ZONE_MONSTERS[z].includes(t) || ZONE_BOSS[z] === t)!;
-
 describe("the quest chain", () => {
-  it("never asks for a zone the quests before it have not levelled a hunter into", () => {
-    // A hunter who does only the quests: their kills (as many as each asks) and their rewards.
-    let xp = 0;
-    QUESTS.forEach((q, i) => {
-      const need = ZONES[zoneOf(q.targets[0])].minLevel;
-      expect(levelOf(xp).level, `quest ${i} (${q.targets.join("/")}) wants level ${need}`).toBeGreaterThanOrEqual(need);
-      const perKill = q.targets.reduce((s, t) => s + MONSTERS[t].xp, 0) / q.targets.length;
-      xp += perKill * q.count + q.xp;
-    });
+  it("asks for a level only when the hunter is below the next quest's ground", () => {
+    const spiders = QUESTS.findIndex((q) => q.targets.includes("spider"));
+    expect(questGap({ ...QUEST_START, index: spiders }, 7)).toBe(questLevel(spiders));
+    expect(questGap({ ...QUEST_START, index: spiders }, questLevel(spiders))).toBeNull();
+    expect(questGap({ ...QUEST_START, index: QUESTS.length }, 1)).toBeNull();
+  });
+
+  it("between quests, always has a hunt to level up in: a field the hunter may go into, near their level", () => {
+    for (let level = 1; level <= 60; level++) {
+      const hunt = levelingHunt(level);
+      expect(hunt.length, `level ${level}`).toBeGreaterThan(0);
+      const zones = (Object.keys(ZONES) as ZoneId[]).filter((z) => hunt.every((t) => ZONE_MONSTERS[z].includes(t)));
+      expect(zones.length, `level ${level}: ${hunt.join(",")}`).toBe(1);
+      expect(ZONES[zones[0]].minLevel).toBeLessThanOrEqual(level);
+      for (const t of hunt) expect(MONSTERS[t].level, `level ${level}: ${t}`).toBeLessThanOrEqual(Math.max(level + 3, Math.min(...ZONE_MONSTERS[zones[0]].map((k) => MONSTERS[k].level))));
+    }
+  });
+
+  it("the hunt before the Mushroom King is the second field's, up to three levels above", () => {
+    expect(levelingHunt(19)).toEqual(["spider", "snake", "wasp", "bat"]);
   });
 });

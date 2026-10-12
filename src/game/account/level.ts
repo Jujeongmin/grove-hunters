@@ -2,8 +2,9 @@
 // hunting (phase 2) and quests add to it.
 
 // What a whole level costs: it grows with the square of the level, so each one asks noticeably more
-// than the last. Hunting at a steady pace, level 10 takes about two hours, 20 about nine and 30
-// (advancement) about thirty.
+// than the last. Hunting the best ground at a steady pace and doing the quests on the way (2026-10-12,
+// a warrior with no purchases, time spent playing): level 10 about an hour, 30 about twelve, 60 about
+// forty-five.
 const LEVEL_XP_SCALE = 50;
 
 export function levelCost(level: number): number {

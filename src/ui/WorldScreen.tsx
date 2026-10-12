@@ -61,7 +61,7 @@ import { MapPanel, MinimapCorner } from "./Minimap";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
 import { QuestCompleteBanner, QuestLog } from "./QuestLog";
-import { DAILY_QUESTS, QUESTS, questDone, questTaken } from "../game/account/quests";
+import { DAILY_QUESTS, QUESTS, levelingHunt, questDone, questGap, questTaken } from "../game/account/quests";
 import { RewardToast, type Reward } from "./RewardToast";
 import { SettingsPanel } from "./SettingsPanel";
 import { ChannelPanel } from "./ChannelPanel";
@@ -607,8 +607,11 @@ function ZoneScreen({
     }
     const quest = bag ? QUESTS[bag.quest.index] : undefined;
     if (!bag || !quest) return;
-    // A quest not yet taken, or done, sends you to the elder; one under way, after its monsters.
-    if (questTaken(bag.quest) && !questDone(bag.quest)) view.current?.seekQuest(quest.targets);
+    // Below its ground, the hunt that levels you up to it; a quest not yet taken, or done, sends you to
+    // the elder; one under way, after its monsters.
+    const level = hud?.level ?? 1;
+    if (questGap(bag.quest, level) !== null) view.current?.seekQuest(levelingHunt(level));
+    else if (questTaken(bag.quest) && !questDone(bag.quest)) view.current?.seekQuest(quest.targets);
     else view.current?.goToElder();
   };
   // A clicked button lets go of the focus at once, or Space (jump) and Enter (chat) would press it again.
@@ -794,7 +797,7 @@ function ZoneScreen({
               />
             ) : (
               <QuestTracker
-                bag={bag} seeking={hud.seeking} toElder={hud.toElder} fighting={hud.fighting} way={hud.way} keyLabel={keyHints ? "J" : null}
+                bag={bag} level={hud?.level ?? 1} seeking={hud.seeking} toElder={hud.toElder} fighting={hud.fighting} way={hud.way} keyLabel={keyHints ? "J" : null}
                 onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
               />
             )
@@ -839,7 +842,8 @@ function ZoneScreen({
           onChoice={(choice) => {
             endTalk();
             const quest = bag ? QUESTS[bag.quest.index] : undefined;
-            if (choice === "seek" && quest) view.current?.seekQuest(quest.targets);
+            const level = hud?.level ?? 1;
+            if (choice === "seek" && quest) view.current?.seekQuest(bag && questGap(bag.quest, level) !== null ? levelingHunt(level) : quest.targets);
             if (choice === "shop") setPanel("shop");
             if (choice === "forge") setPanel("smith");
             if (choice === "donate") setPanel("donate");
@@ -911,7 +915,11 @@ function ZoneScreen({
       {panel === "quests" && (
         <QuestLog
           bag={bag} inVillage={inVillage}
-          onSeek={(types) => view.current?.seekQuest(types)} onReport={() => view.current?.goToElder()}
+          onSeek={(types) => {
+            // Below the quest's ground, the hunt that levels you up to it instead.
+            const level = hud?.level ?? 1;
+            view.current?.seekQuest(bag && questGap(bag.quest, level) !== null ? levelingHunt(level) : types);
+          }} onReport={() => view.current?.goToElder()}
           onClaimDaily={async (id) => {
             const code = await client.claimDaily(id);
             const daily = DAILY_QUESTS.find((q) => q.id === id);
