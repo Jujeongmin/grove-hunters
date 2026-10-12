@@ -1664,6 +1664,24 @@ export class Server {
     return bagView(next);
   }
 
+  // Throws potions or materials away, anywhere (from the stack that may be traded, with `trade`).
+  async discardItem(id: unknown, count?: unknown, trade?: unknown): Promise<BagView> {
+    const item = readItem(id);
+    if (slotOf(item)) throw new RuleViolation("unavailable");
+    const n = readCount(count);
+    const account = $sender.account;
+    await playing(account);
+    return bagView(await updateActive(account, (c) => takeStack(c, item, n, trade === true)));
+  }
+
+  // Throws a piece of gear in the bag away, anywhere (one worn must come off first).
+  async discardPiece(rawUid: unknown): Promise<BagView> {
+    const uid = requireText(rawUid);
+    const account = $sender.account;
+    await playing(account);
+    return bagView(await updateActive(account, (c) => takePiece(c, uid).inv));
+  }
+
   // Sells a piece of gear from the bag back to the shop, its + and all.
   async sellPiece(rawUid: unknown): Promise<BagView> {
     const uid = requireText(rawUid);

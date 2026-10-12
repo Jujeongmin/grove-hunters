@@ -867,6 +867,9 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-detail .bag-blurb { margin: 0; flex: none; }
 .bag-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: auto; }
 .bag-actions .text-button { font-size: 13px; padding: 4px 0; }
+/* Throwing away asks once more, on a line of its own, in red. */
+.bag-discard { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; font-size: 13px; color: var(--ember); }
+.bag-actions .text-button.bad { color: #ff8a7a; }
 .bag-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .bag-foot .note { margin: 0; font-size: 12px; }
 .pain.fallen { align-items: center; padding-top: 0; pointer-events: auto; }

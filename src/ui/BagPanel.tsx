@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { itemBlurb, itemName } from "./names";
 import { ITEMS, ITEM_IDS, SHOP_ITEMS, sellPrice, slotOf, type BagView, type GearPiece, type ItemId, type Slot } from "../game/account/items";
-import { ADVANCE_LEVEL, jobsOf, type JobId } from "../game/combat/jobs";
+import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
-import { jobBlurb, jobName, pathSkillName } from "./names";
+import { jobBlurb, jobName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
 import { iconFor } from "../game/render/icons";
 import { locale, t } from "./lang";
@@ -47,26 +47,35 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
 // squares in the column on the right (what you wear above it), and the one picked stands on the left
 // with what can be done with it. A piece of gear goes on the anvil there, to enhance it, wear it, take
 // it off or sell it; a potion or material can be drunk or sold. With nothing picked the left side
-// shows your class and, when the time comes, the paths to advance on.
-export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }: PanelProps & {
+// shows your class and its path, or the way to the advancement screen once it may advance.
+export function BagPanel({ client, bag, onClose, onAdvance, inVillage, playerClass, level }: PanelProps & {
+  // Opens the advancement screen (전직), where the paths are chosen.
+  onAdvance: () => void;
   inVillage: boolean;
   playerClass: PlayerClass;
   level: number;
 }) {
   const [problem, act] = useAction();
   const [picked, setPicked] = useState<Picked | null>(null);
-  // A path tapped, waiting for a yes: the choice is for good, so one tap never makes it.
-  const [path, setPath] = useState<JobId | null>(null);
   const cells = bag ? bagCells(bag) : [];
   const job = bag?.job ?? null;
   const shown = bag && picked ? showing(bag, picked) : null;
   // The piece of gear on the anvil, if what is picked is one.
   const target: Target | null = picked?.kind === "worn" ? picked.slot : picked?.kind === "piece" ? picked.piece.uid : null;
   const run = useEnhance(client, bag, target);
+  // Throwing away waits for a second tap: what is thrown away is gone.
+  const [discarding, setDiscarding] = useState(false);
   const pick = (next: Picked) => {
     if (run.busy) return;
+    setDiscarding(false);
     // Tapping the one picked again goes back to your class.
     setPicked(picked && samePick(picked, next) ? null : next);
+  };
+  const discard = () => {
+    if (!shown) return;
+    setDiscarding(false);
+    setPicked(null);
+    act(() => (shown.piece ? client.discardPiece(shown.piece.uid) : client.discard(shown.id, shown.n ?? 1, shown.trade === true)));
   };
   const power = bag ? combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd) : null;
 
@@ -108,6 +117,15 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
           {t("bag.sell", { n: sellPrice(shown.id) })}
         </button>
       )}
+      {!shown.worn && (discarding ? (
+        <span className="bag-discard">
+          <span>{t("bag.discardConfirm", { name: itemName(shown.id), n: shown.n ?? 1 })}</span>
+          <button type="button" className="text-button bad" onClick={discard}>{t("bag.discardGo")}</button>
+          <button type="button" className="text-button" onClick={() => setDiscarding(false)}>{t("common.cancel")}</button>
+        </span>
+      ) : (
+        <button type="button" className="text-button" onClick={() => setDiscarding(true)}>{t("bag.discard")}</button>
+      ))}
     </div>
   );
 
@@ -180,33 +198,10 @@ export function BagPanel({ client, bag, onClose, inVillage, playerClass, level }
           ) : level < ADVANCE_LEVEL ? (
             <span>{t("bag.advanceAt", { at: ADVANCE_LEVEL, level })}</span>
           ) : (
-            <>
-              <span>{t("bag.pickPath")}</span>
-              {path && (
-                <div className="bag-job-confirm">
-                  <span>{t("bag.confirmPath", { name: jobName(path) })}</span>
-                  <button
-                    type="button" className="brush-button small"
-                    onClick={() => {
-                      setPath(null);
-                      act(() => client.advance(path));
-                    }}
-                  >
-                    {t("bag.advanceGo")}
-                  </button>
-                  <button type="button" className="text-button" onClick={() => setPath(null)}>{t("common.cancel")}</button>
-                </div>
-              )}
-              <div className="bag-job-paths">
-                {jobsOf(playerClass).map((id) => (
-                  <button key={id} type="button" className={`world-card${path === id ? " picked" : ""}`} onClick={() => setPath(id)}>
-                    <b>{jobName(id)}</b>
-                    <span>{pathSkillName(id, 0)} · {pathSkillName(id, 1)} · {pathSkillName(id, 2)}</span>
-                    <span>{jobBlurb(id)}</span>
-                  </button>
-                ))}
-              </div>
-            </>
+            <div className="bag-job-confirm">
+              <span>{t("bag.advanceReady")}</span>
+              <button type="button" className="brush-button small" onClick={onAdvance}>{t("bag.advanceGo")}</button>
+            </div>
           )}
           <p className="forge-hint">{t("bag.pickHint")}</p>
         </div>

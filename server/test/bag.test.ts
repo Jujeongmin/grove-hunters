@@ -115,6 +115,28 @@ describe("bag and gold", () => {
     expect(await errorOf(server.sellItem("silk", 3))).toContain("no_item");
   });
 
+  test("anything carried can be thrown away, anywhere: a piece by its uid, or so many of a stack; not what is worn", async (server) => {
+    const village = await inVillage(server);
+    await $asset.mint("gold", 1000);
+    const armour = pieceOf(await server.buyItem("armor_1"), "armor_1");
+    await server.equipItem(armour);
+    const bought = await server.buyItem("weapon_1");
+    const uid = pieceOf(bought, "weapon_1");
+    await toForest(server, "test-a", village);
+    expect(await errorOf(server.discardPiece(armour))).toContain("no_item");
+    const gone = await server.discardPiece(uid);
+    expect(gone.pieces).toEqual([]);
+    expect(gone.gold).toBe(bought.gold);
+    expect(await errorOf(server.discardPiece(uid))).toContain("no_item");
+    await editActive("test-a", (c) => ({ ...c, bag: { ...c.bag, silk: 5 }, bagTrade: { silk: 3 } }));
+    const fewer = await server.discardItem("silk", 2);
+    expect([fewer.bag.silk, fewer.bagTrade.silk]).toEqual([3, 3]);
+    const traded = await server.discardItem("silk", 3, true);
+    expect([traded.bag.silk, traded.bagTrade.silk]).toEqual([3, undefined]);
+    expect(await errorOf(server.discardItem("silk", 9))).toContain("no_item");
+    expect(await errorOf(server.discardItem("weapon_1"))).toContain("unavailable");
+  });
+
   test("the shop is the merchant's, in the village, and wants the gold up front", async (server) => {
     const village = await inVillage(server);
     await walkTo(server, zoneLayout("village").playerSpawn.x, zoneLayout("village").playerSpawn.z);

@@ -50,6 +50,8 @@ function prefetchPanels(): void {
 import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
 import { INVITE_MS, PARTY_POLL_HURRY_MS, PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
+import { JobPanel } from "./JobPanel";
+import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
 import { ArenaHud } from "./ArenaHud";
 import { AnnounceBanner } from "./AnnounceBanner";
@@ -185,7 +187,7 @@ function LinkChip() {
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party" | "dungeon";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party" | "dungeon" | "job";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -474,6 +476,20 @@ function ZoneScreen({
     setPanel(null);
     void readyDungeon();
   }, [dungeon, inDungeon, readying]);
+  // Coming to the advancement level without a path opens its screen by itself, once per character.
+  const jobOffered = useRef(false);
+  useEffect(() => {
+    if (!bag || bag.job || (hud?.level ?? 1) < ADVANCE_LEVEL || jobOffered.current || panel !== null || talkingTo !== null) return;
+    jobOffered.current = true;
+    const key = `gh-job-offered-${client.account}-${name}`;
+    try {
+      if (window.localStorage.getItem(key)) return;
+      window.localStorage.setItem(key, "1");
+    } catch {
+      // No storage (a blocked frame): offered once this visit.
+    }
+    setPanel("job");
+  }, [bag, hud?.level, panel, talkingTo, client, name]);
   const readyDungeon = async () => {
     setReadying(true);
     const r = await client.dungeonCall("readyDungeon");
@@ -590,6 +606,10 @@ function ZoneScreen({
     {
       id: "dungeon", label: t("menu.dungeon"), key: "6", code: "Digit6", act: () => toggle("dungeon"), on: panel === "dungeon",
       dot: !!dungeon?.match && !dungeon.match.ready,
+    },
+    {
+      id: "job", label: t("menu.job"), key: "7", code: "Digit7", act: () => toggle("job"), on: panel === "job",
+      dot: !!bag && !bag.job && (hud?.level ?? 1) >= ADVANCE_LEVEL,
     },
     {
       id: "party", label: t("menu.party"), key: "5", code: "Digit5", act: () => toggle("party"), on: panel === "party",
@@ -883,6 +903,9 @@ function ZoneScreen({
       </Suspense>
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
+      {panel === "job" && (
+        <JobPanel client={client} bag={bag} playerClass={playerClass} level={hud?.level ?? 1} onClose={() => setPanel(null)} />
+      )}
       {panel === "dungeon" && (
         <DungeonPanel
           client={client} view={dungeon} partyLeader={party?.party?.leader === client.account} onView={setDungeon} onClose={() => setPanel(null)}
@@ -913,7 +936,7 @@ function ZoneScreen({
       {panel === "bag" && (
         <BagPanel
           client={client} bag={bag} inVillage={inVillage} playerClass={playerClass} level={hud?.level ?? 1}
-          onClose={() => setPanel(null)}
+          onAdvance={() => setPanel("job")} onClose={() => setPanel(null)}
         />
       )}
       {panel === "shop" && <ShopPanel client={client} bag={bag} onClose={() => setPanel(null)} />}

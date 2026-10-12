@@ -516,6 +516,15 @@ export class WorldClient {
     return this.bagCall("sellPiece", [uid]);
   }
 
+  // Throws away so many of a stack (`trade`: the stack that may be traded), or a piece of gear.
+  discard(id: ItemId, count: number, trade = false): Promise<string | null> {
+    return this.bagCall("discardItem", [id, count, trade]);
+  }
+
+  discardPiece(uid: string): Promise<string | null> {
+    return this.bagCall("discardPiece", [uid]);
+  }
+
   private async bagCall(name: string, args: unknown[]): Promise<string | null> {
     if (this.current.phase !== "in") return "unavailable";
     try {
