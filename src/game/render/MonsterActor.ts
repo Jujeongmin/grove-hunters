@@ -27,6 +27,9 @@ export interface MonsterLook {
   height: number;
   tint: number | null;
   clips: { idle: string; walk: string; attack: string; death: string | null };
+  // How far round (radians, about the up axis) the model must be turned to face +z, for one made
+  // facing another way (the wasp faces +x).
+  turn?: number;
 }
 
 // A monster on screen: follows its state, walks, swings when its attack clock moves on, flashes
@@ -35,6 +38,7 @@ export interface MonsterLook {
 export class MonsterActor {
   readonly object: THREE.Object3D;
   private readonly mixer: THREE.AnimationMixer;
+  private readonly turn: number;
   private readonly idle: THREE.AnimationAction;
   private readonly walk: THREE.AnimationAction;
   private readonly attack: THREE.AnimationAction;
@@ -62,6 +66,7 @@ export class MonsterActor {
   // name: shown over the health bar once it is hurt (empty: none).
   constructor(readonly id: string, readonly body: THREE.Object3D, clips: THREE.AnimationClip[], look: MonsterLook, private readonly maxHp = 100, name = "") {
     body.scale.setScalar(look.height / skinnedHeight(body));
+    this.turn = look.turn ?? 0;
     this.materials = ownMaterials(body);
     if (look.tint !== null) {
       const tint = new THREE.Color(look.tint);
@@ -132,7 +137,7 @@ export class MonsterActor {
     p.x += dx * k;
     p.z += dz * k;
     // State yaw uses the camera convention; the model faces +z.
-    this.body.rotation.y = state.yaw + Math.PI;
+    this.body.rotation.y = state.yaw + Math.PI + this.turn;
 
     if (this.lastHp !== null && state.hp < this.lastHp) {
       this.flashLeft = HIT_FLASH_SECONDS;

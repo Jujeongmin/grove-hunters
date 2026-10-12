@@ -24,6 +24,9 @@ const BEAST: MonsterLook["clips"] = { idle: "Idle", walk: "Walk", attack: "Bite_
 // The flying mounts' takes.
 const FLYER: MonsterLook["clips"] = { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" };
 
+// The wasp's model is made facing +x (its head lies along +x); a quarter turn back faces it +z.
+export const WASP_TURN = -Math.PI / 2;
+
 const MUSHROOM_KING: MonsterLook = { height: 2.8, tint: null, clips: { idle: "Idle", walk: "Walk", attack: "Weapon", death: "Death" } };
 
 export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
@@ -34,7 +37,8 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   frog: animal("mon_frog", 1.0, { walk: "Jump" }),
   snake: animal("mon_snake", 0.85, { death: null }),
   spider: animal("mon_spider", 1.2),
-  wasp: animal("mon_wasp", 1.2, { idle: "Flying", walk: "Flying" }),
+  // The wasp's model faces +x: turned a quarter round to face the way it goes.
+  wasp: { model: "mon_wasp", look: { ...animal("mon_wasp", 1.2, { idle: "Flying", walk: "Flying" }).look, turn: WASP_TURN } },
   goleling: {
     model: "mon_goleling",
     look: { height: 1.4, tint: null, clips: { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" } },
@@ -46,7 +50,9 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   // The deep forest's monsters: the second field's models, grown and darkened.
   dire_spider: { model: "mon_spider", look: { height: 1.7, tint: 0x8a5ad0, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
   venom_snake: { model: "mon_snake", look: { height: 1.1, tint: 0x6fe070, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
-  hornet: { model: "mon_wasp", look: { height: 1.6, tint: 0xff9a40, clips: { idle: "Flying", walk: "Flying", attack: "Attack", death: "Death" } } },
+  hornet: {
+    model: "mon_wasp", look: { height: 1.6, tint: 0xff9a40, clips: { idle: "Flying", walk: "Flying", attack: "Attack", death: "Death" }, turn: WASP_TURN },
+  },
   vampire_bat: {
     model: "mon_bat", look: { height: 1.6, tint: 0xe05050, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } },
   },
