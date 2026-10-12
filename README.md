@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://verse8.io/Q7a7L8K">
+    <img src="docs/images/thumbnail.jpg" alt="Grove Hunters 타이틀 화면" width="100%">
+  </a>
+</p>
+
 # Grove Hunters | 초록숲 사냥꾼
 
 > 혼자 모험을 시작해, 다른 플레이어들과 함께 무너진 세계를 되살리는 3D 오픈월드 MMORPG.
@@ -13,6 +19,15 @@
 | 플레이 방식 | 싱글 플레이와 실시간 멀티플레이 |
 | 지원 언어 | 한국어 · 영어 · 일본어 · 중국어 간체 · 중국어 번체 |
 | 과금 방식 | 무료 플레이 · 보석 및 월간 패스 |
+
+## 게임 화면
+
+| | |
+| --- | --- |
+| ![필드 사냥](docs/images/screen-field.jpg) | ![버섯왕 보스전](docs/images/screen-boss.jpg) |
+| **필드 사냥** — 퀘스트 추적, 스킬 바, 미니맵 | **보스전** — 초록숲의 지역 보스 버섯왕 |
+| ![직업 선택](docs/images/screen-class.jpg) | ![탈것 부화](docs/images/screen-mount.jpg) |
+| **직업 선택** — 6개 직업과 Lv10 전직 분기 | **탈것 부화** — 등급별 확률과 천장이 있는 마구간 |
 
 ## 출시 성과
 
