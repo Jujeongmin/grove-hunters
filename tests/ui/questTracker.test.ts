@@ -15,3 +15,17 @@ describe("the quest tracker's line", () => {
     expect(questHint(true, state({ seeking: true, toElder: true }))).toEqual({ key: "quest.reporting", going: true, showWay: true });
   });
 });
+
+describe("Korean particles", () => {
+  it("takes 로 after a vowel or ㄹ, 으로 after other finals", async () => {
+    const { directionParticle } = await import("../../src/ui/korean");
+    expect(directionParticle("버서커")).toBe("로");
+    expect(directionParticle("수호기사")).toBe("로");
+    expect(directionParticle("성기사")).toBe("로");
+    expect(directionParticle("원소술사")).toBe("로");
+    expect(directionParticle("저격수")).toBe("로");
+    expect(directionParticle("권성")).toBe("으로");
+    expect(directionParticle("검")).toBe("으로");
+    expect(directionParticle("길")).toBe("로");
+  });
+});

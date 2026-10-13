@@ -867,6 +867,52 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-detail .bag-blurb { margin: 0; flex: none; }
 .bag-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: auto; }
 .bag-actions .text-button { font-size: 13px; padding: 4px 0; }
+/* Advancement: the two paths side by side in the middle, each a card of its bent, what it gives and
+   its three skills; the yes waits below. */
+.job-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 24px 28px; }
+/* In the middle of the screen when there is room, from the top when there is not. */
+.job-panel > :first-child { margin-top: auto; }
+.job-panel > :last-child { margin-bottom: auto; }
+.job-confirm .brush-button { color: #1d130a; text-shadow: none; }
+.job-confirm .brush-button::before { background: #f0a948; }
+.job-confirm .brush-button:hover:not(:disabled) { color: #1d130a; }
+.job-confirm .brush-button:hover:not(:disabled)::before { background: #ffc06a; }
+.job-lead { margin: 0; font: 600 15px var(--font-head); color: var(--ink); text-align: center; }
+.job-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; width: min(920px, 100%); }
+.job-card {
+  display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; text-align: left; font: inherit; color: var(--ink);
+  border: 1px solid rgba(255, 211, 106, 0.22); border-radius: 12px;
+  background: linear-gradient(180deg, rgba(64, 42, 22, 0.92), rgba(22, 15, 10, 0.94));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+button.job-card { cursor: var(--cursor-press), pointer; }
+button.job-card:hover { transform: translateY(-2px); border-color: rgba(255, 211, 106, 0.55); }
+.job-card.picked, .job-card.current {
+  border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember), 0 0 22px rgba(255, 179, 90, 0.45), 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.job-card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.job-card-head b { font: 800 24px var(--font-head); color: #ffd36a; text-shadow: var(--shadow); }
+.job-bent { padding: 2px 10px; border-radius: 999px; font: 700 12px var(--font-head); color: #1d130a; }
+.job-bent.power { background: #ff9a6a; }
+.job-bent.guard { background: #8fc4ff; }
+.job-bent.balanced { background: #d7c27a; }
+.job-bent.support { background: #9be3a8; }
+.job-current { margin-left: auto; font: 700 12px var(--font-head); color: var(--ember); }
+.job-stat { margin: 0; font: 800 18px var(--font-head); color: var(--ember); }
+.job-skills { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.job-skills li { display: flex; gap: 12px; align-items: flex-start; }
+.job-skills img {
+  flex: none; width: 46px; height: 46px; border-radius: 8px; image-rendering: pixelated;
+  border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(0, 0, 0, 0.35);
+}
+.job-skills li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.job-skill-name { font: 700 15px var(--font-head); color: var(--ink); }
+.job-skill-name em { margin-left: 6px; font: 700 11px var(--font-head); font-style: normal; color: var(--ink-dim); }
+.job-skill-blurb { font-size: 13px; line-height: 1.45; color: var(--ink-dim); }
+.job-confirm { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; min-height: 44px; color: #ffd36a; font-weight: 700; }
+@media (max-width: 640px) {
+  .job-paths { grid-template-columns: 1fr; }
+}
 /* Throwing away asks once more, on a line of its own, in red. */
 .bag-discard { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; font-size: 13px; color: var(--ember); }
 .bag-actions .text-button.bad { color: #ff8a7a; }
