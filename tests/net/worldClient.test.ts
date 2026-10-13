@@ -133,6 +133,32 @@ describe("WorldClient chat", () => {
     expect(a.state.chat).toEqual([expect.objectContaining({ text: "다들 어디야", mine: true })]);
     expect(c.state.chat).toEqual([]);
   });
+
+  it("starts each time in the world afresh: no lines from before, nor the guild's old ones", async () => {
+    const { world, list: [a, b] } = await clients("test-a", "test-b");
+    await a.enter();
+    await b.enter();
+    expect(await a.say("예전 얘기")).toBeNull();
+    await world.idle();
+    expect(b.state.chat.length).toBe(1);
+    await b.leave();
+    await b.enter();
+    await world.idle();
+    expect(b.state.chat).toEqual([]);
+    // The guild's chat is asked only for what is said from the coming in on.
+    const asked: unknown[][] = [];
+    const call = b["transport"].call.bind(b["transport"]);
+    b["transport"].call = (fn: string, args: unknown[] = []) => {
+      if (fn === "guildChat") asked.push(args);
+      return call(fn, args);
+    };
+    const since = Date.now();
+    await b.leave();
+    await b.enter();
+    await b.pollGuildChat();
+    expect(asked.length).toBe(1);
+    expect(asked[0][0] as number).toBeGreaterThanOrEqual(since);
+  });
 });
 
 describe("WorldClient payouts", () => {

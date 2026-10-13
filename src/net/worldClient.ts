@@ -287,7 +287,11 @@ export class WorldClient {
   async enter(): Promise<void> {
     const mine = ++this.generation;
     WorldClient.lastEntered = this;
-    this.set({ phase: "entering", error: null });
+    // Each time in the world starts afresh: no lines from the last time (perhaps another character's),
+    // and the guild's chat only from now on, not the lines it keeps from before.
+    this.guildHeardAt = this.now();
+    this.announcedAt = this.now();
+    this.set({ phase: "entering", error: null, chat: [], guildChat: [], inGuild: false, announced: [] });
     try {
       const version = await this.transport.call<{ protocol: number }>("getServerVersion");
       if (mine !== this.generation) return;
