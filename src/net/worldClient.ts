@@ -288,15 +288,20 @@ export class WorldClient {
     const mine = ++this.generation;
     WorldClient.lastEntered = this;
     // Each time in the world starts afresh: no lines from the last time (perhaps another character's),
-    // and the guild's chat only from now on, not the lines it keeps from before.
+    // and the guild's chat and the notices only from now on (by the server's clock, which the lines
+    // carry: a client's own may run ahead or behind), not what is kept from before.
     this.guildHeardAt = this.now();
     this.announcedAt = this.now();
     this.set({ phase: "entering", error: null, chat: [], guildChat: [], inGuild: false, announced: [] });
     try {
-      const version = await this.transport.call<{ protocol: number }>("getServerVersion");
+      const version = await this.transport.call<{ protocol: number; now?: number }>("getServerVersion");
       if (mine !== this.generation) return;
       if (version?.protocol !== PROTOCOL_VERSION) {
         throw new Error(`server protocol ${version?.protocol}, client protocol ${PROTOCOL_VERSION}`);
+      }
+      if (typeof version.now === "number" && Number.isFinite(version.now)) {
+        this.guildHeardAt = version.now;
+        this.announcedAt = version.now;
       }
       await this.moveTo(await this.transport.call<ZoneEntry>("enterWorld"));
     } catch (error) {

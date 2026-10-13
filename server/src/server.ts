@@ -620,8 +620,9 @@ export class Server {
   // An empty-looking room (nobody calling in) still ticks once a second, so monsters keep moving.
   static $roomTickIdleMs = 1_000;
 
-  async getServerVersion(): Promise<{ protocol: number }> {
-    return { protocol: PROTOCOL_VERSION };
+  // The protocol, and the server's clock: a client takes "from now on" by it, not by its own.
+  async getServerVersion(): Promise<{ protocol: number; now: number }> {
+    return { protocol: PROTOCOL_VERSION, now: Date.now() };
   }
 
   async getAccount(): Promise<AccountView> {

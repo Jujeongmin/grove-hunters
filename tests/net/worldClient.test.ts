@@ -159,6 +159,24 @@ describe("WorldClient chat", () => {
     expect(asked.length).toBe(1);
     expect(asked[0][0] as number).toBeGreaterThanOrEqual(since);
   });
+
+  it("takes 'from now on' by the server's clock, not a client's that runs a minute ahead", async () => {
+    const world = new LocalWorld(new Server());
+    const transport = new LocalTransport(world, "test-a");
+    await transport.call("createCharacter", ["testa", "warrior", "0000"]);
+    const ahead = new WorldClient(transport, () => Date.now() + 60_000);
+    const asked: unknown[][] = [];
+    const call = transport.call.bind(transport);
+    transport.call = (fn: string, args: unknown[] = []) => {
+      if (fn === "guildChat") asked.push(args);
+      return call(fn, args);
+    };
+    const before = Date.now();
+    await ahead.enter();
+    await ahead.pollGuildChat();
+    expect(asked[0][0] as number).toBeGreaterThanOrEqual(before);
+    expect(asked[0][0] as number).toBeLessThan(before + 30_000);
+  });
 });
 
 describe("WorldClient payouts", () => {
