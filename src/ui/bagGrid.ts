@@ -34,3 +34,23 @@ export function cellKey(cell: Cell): string {
 export function squareCount(total: number, part: number): number {
   return Math.max(0, Math.min(MAX_STACK, total - part * MAX_STACK));
 }
+
+// The squares picked for throwing away, as the server takes them: pieces by uid, and each stack's
+// squares added up into one count.
+export function bulkOf(cells: readonly Cell[], keys: ReadonlySet<string>): {
+  pieces: string[]; stacks: { id: ItemId; n: number; trade: boolean }[];
+} {
+  const pieces: string[] = [];
+  const stacks: { id: ItemId; n: number; trade: boolean }[] = [];
+  for (const cell of cells) {
+    if (!keys.has(cellKey(cell))) continue;
+    if (cell.kind === "piece") {
+      pieces.push(cell.piece.uid);
+      continue;
+    }
+    const same = stacks.find((s) => s.id === cell.id && s.trade === cell.trade);
+    if (same) same.n += cell.n;
+    else stacks.push({ id: cell.id, n: cell.n, trade: cell.trade });
+  }
+  return { pieces, stacks };
+}

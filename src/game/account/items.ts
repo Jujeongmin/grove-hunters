@@ -11,7 +11,7 @@ import type { DailyProgress, QuestProgress } from "./quests";
 export const GOLD = "gold";
 
 export type ItemId =
-  | "potion_small" | "potion_big"
+  | "potion_small" | "potion_big" | "potion_huge"
   | "weapon_1" | "weapon_2" | "weapon_3" | "weapon_4" | "weapon_5" | "weapon_6" | "weapon_7" | "weapon_8" | "weapon_9"
   | "armor_1" | "armor_2" | "armor_3" | "armor_4" | "armor_5" | "armor_6" | "armor_7" | "armor_8" | "armor_9"
   | "stone" | "jelly" | "silk" | "core" | "spore" | "frost_shard" | "snow_fur" | "ever_ice"
@@ -42,6 +42,8 @@ const none = { heal: 0, power: 0, hp: 0, guard: 0 };
 export const ITEMS: Record<ItemId, ItemSpec> = {
   potion_small: { ...none, kind: "potion", price: 20, heal: 40 },
   potion_big: { ...none, kind: "potion", price: 70, heal: 120 },
+  // For the volcano, whose blows run past 150: one takes back several.
+  potion_huge: { ...none, kind: "potion", price: 220, heal: 400 },
   weapon_1: { ...none, kind: "weapon", price: 150, power: 0.1, tier: 1 },
   weapon_2: { ...none, kind: "weapon", price: 600, power: 0.25, tier: 2 },
   weapon_4: { ...none, kind: "weapon", price: null, sell: 700, power: 0.35, tier: 3 },
@@ -87,6 +89,18 @@ export const SHOP_ITEMS = ITEM_IDS.filter((id) => ITEMS[id].price !== null);
 export const MAX_STACK = 99;
 // How many of one kind a character may carry in all, across its squares.
 export const MAX_CARRY = 9999;
+// The potions, smallest first.
+export const POTIONS: readonly ItemId[] = ITEM_IDS.filter((id) => ITEMS[id].kind === "potion").sort((a, b) => ITEMS[a].heal - ITEMS[b].heal);
+
+// The potion to drink for `missing` health: the biggest carried that gives no more than is missing,
+// or, when every one would, the smallest carried. Null with none.
+export function pickPotion(bag: Bag, missing: number): ItemId | null {
+  const have = POTIONS.filter((id) => (bag[id] ?? 0) > 0);
+  if (have.length === 0) return null;
+  const fit = have.filter((id) => ITEMS[id].heal <= missing);
+  return fit.length > 0 ? fit[fit.length - 1] : have[0];
+}
+
 // Potions go down no faster than this (the server holds the client to it, with a little grace).
 export const POTION_GAP_MS = 1000;
 

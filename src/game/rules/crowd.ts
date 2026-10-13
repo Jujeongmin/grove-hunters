@@ -26,11 +26,7 @@ export function crowdBlocks(bodies: readonly Body[], from: { x: number; z: numbe
 // stops it, crowd included; `walls` what stops it all the same (the forest, the platforms).
 export function stepPastCrowd(
   pose: PlayerPose, heading: number, dt: number, isSolid: SolidTest, walls: SolidTest, speed: number = WALK_SPEED,
-  throughCrowd = false,
 ): PlayerPose {
-  // A player sent somewhere must not orbit a pack forever: for that walk, crowd is visual rather
-  // than solid. `walls` still includes every fixed body the caller wants it to avoid.
-  if (throughCrowd) return stepAround(pose, heading, dt, walls, speed);
   const want = speed * Math.min(Math.max(dt, 0), MAX_STEP_SECONDS);
   const around = stepAround(pose, heading, dt, isSolid, speed);
   if (Math.hypot(around.x - pose.x, around.z - pose.z) >= want * 0.5) return around;

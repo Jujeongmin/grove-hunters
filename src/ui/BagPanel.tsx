@@ -12,7 +12,7 @@ import type { WorldClient } from "../net/worldClient";
 import { MAX_LISTINGS } from "../game/account/market";
 import { FullScreen } from "./FullScreen";
 import { EnhanceStage, Icon, Purse, SideSheet, useEnhance, type Target } from "./Anvil";
-import { bagCells, cellKey, squareCount, type Cell } from "./bagGrid";
+import { bagCells, bulkOf, cellKey, squareCount, type Cell } from "./bagGrid";
 
 // What the server said went wrong, in the reader's language. Anything it does not know about is
 // still said, in the plainest way there is.
@@ -47,7 +47,7 @@ function useAction(): [string | null, (run: () => Promise<string | null>) => voi
 // Your gold, what you wear and what you carry, laid out like the forge: what you carry is a grid of
 // squares in the column on the right (what you wear above it), and the one picked stands on the left
 // with what can be done with it. A piece of gear goes on the anvil there, to enhance it, wear it, take
-// it off or sell it; a potion or material can be drunk or sold. With nothing picked the left side
+// it off or throw it away; a potion can be drunk, and anything thrown away. With nothing picked the left side
 // shows your class and its path, or the way to the advancement screen once it may advance.
 export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }: PanelProps & {
   // Opens the advancement screen (전직), where the paths are chosen.
@@ -65,8 +65,33 @@ export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }
   const run = useEnhance(client, bag, target);
   // Throwing away waits for a second tap: what is thrown away is gone.
   const [discarding, setDiscarding] = useState(false);
+  // Throwing many away at once: the squares marked (null while not marking), and whether the throw
+  // waits for its second tap.
+  const [marked, setMarked] = useState<Set<string> | null>(null);
+  const [markedSure, setMarkedSure] = useState(false);
+  const mark = (key: string) => {
+    if (!marked) return;
+    const next = new Set(marked);
+    if (!next.delete(key)) next.add(key);
+    setMarked(next);
+    setMarkedSure(false);
+  };
+  const endMarking = () => {
+    setMarked(null);
+    setMarkedSure(false);
+  };
+  const throwMarked = () => {
+    if (!marked) return;
+    const { pieces, stacks } = bulkOf(cells, marked);
+    endMarking();
+    if (pieces.length + stacks.length > 0) act(() => client.discardMany(pieces, stacks));
+  };
   const pick = (next: Picked) => {
     if (run.busy) return;
+    if (marked && next.kind !== "worn") {
+      mark(cellKey(next));
+      return;
+    }
     setDiscarding(false);
     // Tapping the one picked again goes back to your class.
     setPicked(picked && samePick(picked, next) ? null : next);
@@ -122,10 +147,11 @@ export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }
   );
 
   const square = (key: string, next: Picked, id: ItemId, extra: { n?: number; plus?: number; trade?: boolean }) => {
-    const on = !!picked && samePick(picked, next);
+    const on = !marked && !!picked && samePick(picked, next);
+    const chosen = !!marked && next.kind !== "worn" && marked.has(cellKey(next));
     return (
       <button
-        key={key} type="button" className={`forge-cell${on ? " picked" : ""}${extra.trade ? " trade" : ""}`}
+        key={key} type="button" className={`forge-cell${on ? " picked" : ""}${chosen ? " marked" : ""}${extra.trade ? " trade" : ""}`}
         onClick={() => pick(next)} title={itemName(id)}
       >
         <Icon id={id} />
@@ -162,6 +188,34 @@ export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }
                 {cells.map((cell) => square(cellKey(cell), cell, cell.id, cell.kind === "stack"
                   ? { n: cell.n, trade: cell.trade }
                   : { plus: cell.piece.plus, trade: cell.trade }))}
+              </div>
+            )}
+            {cells.length > 0 && (
+              <div className="bag-bulk">
+                {!marked ? (
+                  <button
+                    type="button" className="text-button"
+                    onClick={() => {
+                      setPicked(null);
+                      setMarked(new Set());
+                    }}
+                  >
+                    {t("bag.bulk")}
+                  </button>
+                ) : (
+                  <>
+                    <span>{t("bag.bulkCount", { n: marked.size })}</span>
+                    <button type="button" className="text-button" onClick={() => setMarked(new Set(cells.map(cellKey)))}>{t("bag.bulkAll")}</button>
+                    {markedSure ? (
+                      <button type="button" className="text-button bad" onClick={throwMarked}>{t("bag.bulkGo", { n: marked.size })}</button>
+                    ) : (
+                      <button type="button" className="text-button bad" disabled={marked.size === 0} onClick={() => setMarkedSure(true)}>
+                        {t("bag.discard")}
+                      </button>
+                    )}
+                    <button type="button" className="text-button" onClick={endMarking}>{t("common.cancel")}</button>
+                  </>
+                )}
               </div>
             )}
             <span className="forge-hint">{t("bag.keys")}</span>

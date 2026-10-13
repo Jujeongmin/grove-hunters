@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_CARRY, MAX_STACK, addItem, gearStats, readBag, readPiece, slotOf } from "../../src/game/account/items";
+import { ITEMS, MAX_CARRY, MAX_STACK, SHOP_ITEMS, addItem, pickPotion, gearStats, readBag, readPiece, slotOf } from "../../src/game/account/items";
 import { MONSTERS, rollLoot } from "../../src/game/world/monsters";
 
 describe("items", () => {
@@ -38,5 +38,23 @@ describe("items", () => {
     const [low, high] = MONSTERS.rat.gold;
     expect(rollLoot("rat", () => 0)).toEqual({ gold: low, items: ["potion_small", "weapon_1", "armor_1", "jelly", "stone"] });
     expect(rollLoot("rat", () => 0.999)).toEqual({ gold: high, items: [] });
+  });
+});
+
+describe("potions", () => {
+  it("the right one is drunk: the biggest that does not waste much, else the smallest there is", () => {
+    const all = { potion_small: 3, potion_big: 3, potion_huge: 3 };
+    expect(pickPotion(all, 30)).toBe("potion_small");
+    expect(pickPotion(all, ITEMS.potion_big.heal)).toBe("potion_big");
+    expect(pickPotion(all, ITEMS.potion_huge.heal + 50)).toBe("potion_huge");
+    // Nothing small enough: the smallest carried.
+    expect(pickPotion({ potion_huge: 1 }, 10)).toBe("potion_huge");
+    expect(pickPotion({ potion_big: 1, potion_huge: 1 }, 10)).toBe("potion_big");
+    expect(pickPotion({}, 500)).toBeNull();
+  });
+
+  it("the huge one is for the volcano: heals several of its blows, and the shop sells it", () => {
+    expect(ITEMS.potion_huge.heal).toBeGreaterThanOrEqual(MONSTERS.cinder_dragon.damage * 1.5);
+    expect(SHOP_ITEMS).toContain("potion_huge");
   });
 });

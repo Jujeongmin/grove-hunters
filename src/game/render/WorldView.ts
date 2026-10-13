@@ -4,7 +4,7 @@ import { mountObject } from "./mountLooks";
 import { VIP_MIGHT } from "../account/premium";
 import { skillLearned } from "../account/tutorial";
 import type { OtherPlayer, Payout, WorldClient } from "../../net/worldClient";
-import { ITEMS, POTION_GAP_MS } from "../account/items";
+import { ITEMS, POTIONS, POTION_GAP_MS, pickPotion } from "../account/items";
 import { levelOf } from "../account/level";
 import { questWay, zonesWith, type Entry, type QuestTrip } from "../world/questRoute";
 import { npcMarker, type NpcMarker } from "../world/dialogue";
@@ -16,7 +16,7 @@ import { CLASSES, WEAPONS, type PlayerClass } from "../combat/classes";
 import { AIM_GRACE, facing, inStrikeReach } from "../combat/melee";
 import { SKILL_KEYS, SKILL_SLOTS, skillAt, skillTargets, type Skill } from "../combat/skills";
 import { readJob, type JobId } from "../combat/jobs";
-import { PLAYER_BODY, crowdBlocks, stepPastCrowd, type Body } from "../rules/crowd";
+import { PLAYER_BODY, crowdBlocks, type Body } from "../rules/crowd";
 import { solidAt, solidWith, type LevelLayout } from "../rules/levelLayout";
 import {
   GROUNDED, MAX_STEP_SECONDS, PLAYER_RADIUS, WALK_SPEED, applyLook, stepAround, stepJump, stepPlayer, turnToward, walkYaw, type Airborne,
@@ -868,9 +868,7 @@ export class WorldView {
         if (look.dx === 0) this.yaw = turnToward(this.yaw, chase.yaw, dt, AUTO_CAMERA_RATE);
         // An automatic trip passes through monsters, while still going round terrain and village
         // folk. Otherwise a pack can make it orbit forever on the way to a portal or another target.
-        if (chase.walk) this.pose = stepPastCrowd(
-          { ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, this.isSolid, speed, true,
-        );
+        if (chase.walk) this.pose = stepAround({ ...this.pose, yaw: chase.yaw }, chase.yaw, dt, this.isSolid, speed);
       } else {
         // The pad walks you round the camera; you turn to face the way you go.
         const heading = walkYaw(this.yaw, move);
@@ -1258,16 +1256,13 @@ export class WorldView {
     for (const id of result.items) this.notes.push({ text: t("note.gotItem", { name: id in ITEMS ? itemName(id) : id }), at: now });
   }
 
-  // Drinks the potion that fits: the big one when a lot is missing, otherwise the small one.
+  // Drinks the potion that fits what is missing (see pickPotion).
   private drinkPotion(): void {
     const now = performance.now();
     const me = this.client.state.me;
     const bag = this.client.state.bag?.bag;
     if (!me || !bag || me.hp >= me.maxHp || now - this.lastPotionAt < POTION_GAP_MS) return;
-    const missing = me.maxHp - me.hp;
-    const big = (bag.potion_big ?? 0) > 0;
-    const small = (bag.potion_small ?? 0) > 0;
-    const pick = big && (missing >= ITEMS.potion_big.heal || !small) ? "potion_big" : small ? "potion_small" : null;
+    const pick = pickPotion(bag, me.maxHp - me.hp);
     if (!pick) return;
     this.lastPotionAt = now;
     playCue("potion");
@@ -1515,7 +1510,7 @@ export class WorldView {
       target: fighting?.alive && isBoss(fighting.type)
         ? { name: `Lv${MONSTERS[fighting.type].level} ${monsterName(fighting.type)}`, hp: fighting.hp, maxHp: fighting.maxHp ?? MONSTERS[fighting.type].hp }
         : null,
-      potions: (this.client.state.bag?.bag.potion_small ?? 0) + (this.client.state.bag?.bag.potion_big ?? 0),
+      potions: POTIONS.reduce((n, id) => n + (this.client.state.bag?.bag[id] ?? 0), 0),
       hurt: Math.max(0, 1 - (now - this.hurtAt) / HURT_FLASH_MS),
       notes: this.notes.map((n) => n.text),
     };

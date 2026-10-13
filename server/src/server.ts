@@ -5,7 +5,7 @@ import {
   REVIVE_HP_SHARE, REVIVE_SAFE_MS, deathXpLoss, levelOf, reviveCost,
 } from "../../src/game/account/level";
 import {
-  GOLD, ITEMS, MAX_STACK, POTION_GAP_MS, addItem, readItemId, sellPrice, slotOf, type BagView, type GearPiece, type ItemId, type Slot,
+  GOLD, ITEMS, MAX_CARRY, MAX_STACK, POTION_GAP_MS, addItem, readItemId, slotOf, type BagView, type GearPiece, type ItemId, type Slot,
 } from "../../src/game/account/items";
 import {
   EMPTY_INVENTORY, TRADE_CRAFT_CHANCE, allStacks, countOf, equipPiece, fits, give, loot, putPiece, spend, takePiece, takeStack, unequipSlot,
@@ -445,6 +445,15 @@ function readCount(value: unknown): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > MAX_STACK) throw new RuleViolation("unavailable");
   return value;
 }
+
+// A whole stack's count, up to all of a kind one may carry (throwing a stack away at once).
+function readCarry(value: unknown): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > MAX_CARRY) throw new RuleViolation("unavailable");
+  return value;
+}
+
+// At most this many pieces, and this many stacks, go in one throw.
+const MAX_DISCARD = 200;
 
 function readItem(value: unknown): ItemId {
   const id = readItemId(value);
@@ -1660,19 +1669,6 @@ export class Server {
     return bagView(next);
   }
 
-  // Sells potions or materials back to the shop: from the stack that may be traded when `trade`.
-  async sellItem(id: unknown, count?: unknown, trade?: unknown): Promise<BagView> {
-    const item = readItem(id);
-    if (slotOf(item)) throw new RuleViolation("unavailable");
-    const n = readCount(count);
-    await requireNpc("merchant");
-    const account = $sender.account;
-    await playing(account);
-    const next = await updateActive(account, (c) => takeStack(c, item, n, trade === true));
-    await $asset.mint(GOLD, sellPrice(item) * n);
-    return bagView(next);
-  }
-
   // Throws potions or materials away, anywhere (from the stack that may be traded, with `trade`).
   async discardItem(id: unknown, count?: unknown, trade?: unknown): Promise<BagView> {
     const item = readItem(id);
@@ -1683,28 +1679,33 @@ export class Server {
     return bagView(await updateActive(account, (c) => takeStack(c, item, n, trade === true)));
   }
 
+  // Throws away many things at once, anywhere: pieces by uid and so many of stacks, all or none.
+  async discardMany(raw: unknown): Promise<BagView> {
+    const what = (raw ?? {}) as { pieces?: unknown; stacks?: unknown };
+    const uids = Array.isArray(what.pieces) ? what.pieces.map(requireText) : [];
+    const stacks = (Array.isArray(what.stacks) ? what.stacks : []).map((s) => {
+      const { id, n, trade } = (s ?? {}) as { id?: unknown; n?: unknown; trade?: unknown };
+      const item = readItem(id);
+      if (slotOf(item)) throw new RuleViolation("unavailable");
+      return { item, n: readCarry(n), trade: trade === true };
+    });
+    if (uids.length + stacks.length === 0 || uids.length > MAX_DISCARD || stacks.length > MAX_DISCARD) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    await playing(account);
+    return bagView(await updateActive(account, (c) => {
+      let next = c;
+      for (const uid of uids) next = takePiece(next, uid).inv;
+      for (const s of stacks) next = takeStack(next, s.item, s.n, s.trade);
+      return next;
+    }));
+  }
+
   // Throws a piece of gear in the bag away, anywhere (one worn must come off first).
   async discardPiece(rawUid: unknown): Promise<BagView> {
     const uid = requireText(rawUid);
     const account = $sender.account;
     await playing(account);
     return bagView(await updateActive(account, (c) => takePiece(c, uid).inv));
-  }
-
-  // Sells a piece of gear from the bag back to the shop, its + and all.
-  async sellPiece(rawUid: unknown): Promise<BagView> {
-    const uid = requireText(rawUid);
-    await requireNpc("merchant");
-    const account = $sender.account;
-    await playing(account);
-    let sold: ItemId | null = null;
-    const next = await updateActive(account, (c) => {
-      const taken = takePiece(c, uid);
-      sold = taken.piece.id;
-      return taken.inv;
-    });
-    await $asset.mint(GOLD, sellPrice(sold!));
-    return bagView(next);
   }
 
   // Enhances what you wear in a slot by one + (from the forge in the menu, anywhere): the gold and 강화석 are spent whatever

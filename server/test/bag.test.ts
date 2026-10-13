@@ -1,4 +1,4 @@
-import { ITEMS, MAX_CARRY, sellPrice } from "../../src/game/account/items";
+import { ITEMS, MAX_CARRY } from "../../src/game/account/items";
 import { QUEST_CHAIN } from "../../src/game/account/quests";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
@@ -99,20 +99,23 @@ describe("bag and gold", () => {
     expect(after.pieces.map((p: any) => p.uid).sort()).toEqual([bag.gear.weapon.uid, bag.pieces[1].uid].sort());
   });
 
-  test("the shop buys back a piece by its uid, and a stack from the side asked for", async (server) => {
-    await inVillage(server);
+  test("many things are thrown away at once, all or none", async (server) => {
+    const village = await inVillage(server);
     await $asset.mint("gold", 1000);
-    const bought = await server.buyItem("weapon_1");
-    const uid = pieceOf(bought, "weapon_1");
-    const sold = await server.sellPiece(uid);
-    expect(sold.pieces).toEqual([]);
-    expect(sold.gold).toBe(bought.gold + sellPrice("weapon_1"));
-    expect(await errorOf(server.sellPiece(uid))).toContain("no_item");
-    expect(await errorOf(server.sellItem("weapon_1"))).toContain("unavailable");
-    await editActive("test-a", (c) => ({ ...c, bag: { ...c.bag, silk: 2 }, bagTrade: { silk: 3 } }));
-    const fromTrade = await server.sellItem("silk", 3, true);
-    expect([fromTrade.bag.silk, fromTrade.bagTrade.silk]).toEqual([2, undefined]);
-    expect(await errorOf(server.sellItem("silk", 3))).toContain("no_item");
+    const a = pieceOf(await server.buyItem("weapon_1"), "weapon_1");
+    const b = pieceOf(await server.buyItem("armor_1"), "armor_1");
+    await toForest(server, "test-a", village);
+    await editActive("test-a", (c) => ({ ...c, bag: { potion_small: 150, stone: 4 }, bagTrade: { silk: 3 } }));
+    // One thing that is not there and nothing goes.
+    expect(await errorOf(server.discardMany({ pieces: [a, "nope"], stacks: [] }))).toContain("no_item");
+    expect((await server.getBag()).pieces.length).toBe(2);
+    const left = await server.discardMany({
+      pieces: [a, b], stacks: [{ id: "potion_small", n: 150 }, { id: "silk", n: 3, trade: true }],
+    });
+    expect(left.pieces).toEqual([]);
+    expect(left.bag).toEqual({ stone: 4 });
+    expect(left.bagTrade).toEqual({});
+    expect(await errorOf(server.discardMany({ pieces: [], stacks: [] }))).toContain("unavailable");
   });
 
   test("anything carried can be thrown away, anywhere: a piece by its uid, or so many of a stack; not what is worn", async (server) => {
@@ -148,10 +151,8 @@ describe("bag and gold", () => {
     const bought = await server.buyItem("potion_small", 2);
     expect(bought.gold).toBe(100 - ITEMS.potion_small.price! * 2);
     expect(bought.bag.potion_small).toBe(7);
-    const sold = await server.sellItem("potion_small", 7);
-    expect(sold.bag.potion_small).toBeUndefined();
-    expect(sold.gold).toBe(bought.gold + sellPrice("potion_small") * 7);
-    expect(await errorOf(server.sellItem("potion_small"))).toContain("no_item");
+    // Nothing is sold back: the shop only sells.
+    expect(server.sellItem).toBeUndefined();
 
     await toForest(server, "test-a", village);
     expect(await errorOf(server.buyItem("potion_small"))).toContain("not_in_village");

@@ -203,6 +203,7 @@ PixelLab(`create_image_pixflux`, 34x34, 배경 없음)으로 생성했다. 496 R
 | `public/assets/ui/items/ember_shard.png` | `core.png` | 화염 결정 |
 | `public/assets/ui/items/magma_scale.png` | `silk.png` | 용암 비늘 |
 | `public/assets/ui/items/flame_core.png` | `stone.png` | 불꽃 핵 |
+| `public/assets/ui/items/potion_huge.png` | `potion_big.png` | 특대 물약, 2026-10-13 |
 
 나머지 전직(버서커, 저격수, 원소술사, 암살자, 권성)과 대사제의 스킬 3, 성기사의 스킬 2는 원래 직업의 스킬을
 물려받아 그 스킬의 기존 아이콘(`<직업>_1`, `<직업>_2`)을 그대로 쓴다.

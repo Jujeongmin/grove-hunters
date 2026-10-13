@@ -510,15 +510,6 @@ export class WorldClient {
     return this.bagCall("buyItem", [id, count]);
   }
 
-  // Potions or materials: `trade` sells from the stack that may be traded.
-  sell(id: ItemId, count = 1, trade = false): Promise<string | null> {
-    return this.bagCall("sellItem", [id, count, trade]);
-  }
-
-  sellPiece(uid: string): Promise<string | null> {
-    return this.bagCall("sellPiece", [uid]);
-  }
-
   // Throws away so many of a stack (`trade`: the stack that may be traded), or a piece of gear.
   discard(id: ItemId, count: number, trade = false): Promise<string | null> {
     return this.bagCall("discardItem", [id, count, trade]);
@@ -526,6 +517,11 @@ export class WorldClient {
 
   discardPiece(uid: string): Promise<string | null> {
     return this.bagCall("discardPiece", [uid]);
+  }
+
+  // Throws away many at once: pieces by uid, and whole stacks (all or none).
+  discardMany(pieces: string[], stacks: { id: ItemId; n: number; trade: boolean }[]): Promise<string | null> {
+    return this.bagCall("discardMany", [{ pieces, stacks }]);
   }
 
   private async bagCall(name: string, args: unknown[]): Promise<string | null> {

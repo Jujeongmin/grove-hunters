@@ -28,6 +28,8 @@ TINTS = {
     "ember_shard": ("core", (120, 30, 10), (255, 200, 90)),
     "magma_scale": ("silk", (70, 22, 16), (255, 130, 60)),
     "flame_core": ("stone", (100, 20, 0), (255, 240, 150)),
+    # The volcano merchant's huge potion: the large one in deep crimson and gold.
+    "potion_huge": ("potion_big", (150, 20, 90), (255, 225, 140)),
 }
 # Pixels darker than this are the outline, left as they are.
 OUTLINE = 40
