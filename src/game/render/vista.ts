@@ -109,7 +109,7 @@ export function buildVista(layout: LevelLayout, sprites: TreeSprites, library: M
   const group = new THREE.Group();
   const fillers = forestFillers(layout).map((f) => ({ ...f, y: 0 }));
   const floor = look === GROVE_LOOK ? FOREST_FLOOR : new THREE.Color(look.forest);
-  group.add(buildLand(centre, floor), buildSpriteForest(sprites, [...fillers, ...farTrees(layout)], look.farTrees, look.natureTint));
+  group.add(buildLand(centre, floor), buildSpriteForest(sprites, [...fillers, ...farTrees(layout)], look.farTrees, look.natureTint, look.frost));
   if (!look.landmarks) return group;
   group.add(buildCastle(layout, library, centre));
   group.add(buildWorldTreeSprite(

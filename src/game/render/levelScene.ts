@@ -163,8 +163,8 @@ export function buildLevelScene(
   // Trees, ground cover and the stones in the paths are drawn in full only near the camera; rocks,
   // bushes and the platforms always.
   const near = new Set<string>([...TREES, ...GROUND_PLANTS, "sn_stepping"]);
-  scene.add(buildStaticBatch(library, pieces.filter((p) => !near.has(p.model)), look.natureTint));
-  const lod = new LodBatch(library, pieces.filter((p) => near.has(p.model)), sprites, look.natureTint);
+  scene.add(buildStaticBatch(library, pieces.filter((p) => !near.has(p.model)), look.natureTint, look.frost));
+  const lod = new LodBatch(library, pieces.filter((p) => near.has(p.model)), sprites, look.natureTint, look.frost);
   lod.update(centre.x, centre.z, true);
   scene.add(lod.object);
   return lod;

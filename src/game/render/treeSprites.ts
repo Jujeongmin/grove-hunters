@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { frostPicture, type Frost } from "./frost";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { TREES as EDGE_TREES } from "../rules/nature";
 import type { ModelSource } from "./staticBatch";
@@ -95,7 +96,7 @@ export interface SpriteTree {
 // Every tree in the list as crossed cards, one instanced mesh per kind of tree.
 // `tint`: a colour laid over the whole forest (a region's look), or none.
 export function buildSpriteForest(
-  sprites: TreeSprites, trees: readonly SpriteTree[], kinds: readonly string[] = SPRITE_TREES, tint?: number,
+  sprites: TreeSprites, trees: readonly SpriteTree[], kinds: readonly string[] = SPRITE_TREES, tint?: number, frost?: Frost,
 ): THREE.Group {
   const group = new THREE.Group();
   const geometry = crossedCards();
@@ -113,7 +114,7 @@ export function buildSpriteForest(
   const over = new THREE.Color(tint ?? 0xffffff);
   for (const [kind, list] of byKind) {
     const sprite = sprites.get(kind)!;
-    const mesh = new THREE.InstancedMesh(geometry, spriteMaterial(sprite), list.length);
+    const mesh = new THREE.InstancedMesh(geometry, frostPicture(spriteMaterial(sprite), frost), list.length);
     list.forEach((t, i) => {
       const width = t.height * sprite.aspect;
       // Turned so neighbouring trees do not all show the same face.

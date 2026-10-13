@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { tintAll, type ModelSource, type StaticPiece } from "./staticBatch";
+import { frostPicture, frostedMaterials, type Frost } from "./frost";
 import { crossedCards, spriteMaterial, type TreeSprites } from "./treeSprites";
 
 // Many copies of a few models that only need to be drawn in full near the camera: trees, which turn
@@ -48,8 +49,8 @@ export class LodBatch {
   }
 
   // `sprites`: the pictures of the models that have one; any other model is left out when far.
-  // `tint`: a colour laid over every copy, near and far (a region's look), or none.
-  constructor(library: ModelSource, pieces: StaticPiece[], sprites: TreeSprites, tint?: number) {
+  // `tint`: a colour laid over every copy, near and far, and `frost` over them (a region's look), or none.
+  constructor(library: ModelSource, pieces: StaticPiece[], sprites: TreeSprites, tint?: number, frost?: Frost) {
     const byModel = new Map<string, StaticPiece[]>();
     for (const p of pieces) {
       const list = byModel.get(p.model) ?? [];
@@ -67,7 +68,7 @@ export class LodBatch {
       template.traverse((o) => {
         const mesh = o as THREE.Mesh;
         if (!mesh.isMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh) return;
-        const instanced = new THREE.InstancedMesh(mesh.geometry, mesh.material, list.length);
+        const instanced = new THREE.InstancedMesh(mesh.geometry, frostedMaterials(mesh.material, frost), list.length);
         instanced.name = `${model}:${mesh.name}`;
         if (tint !== undefined) tintAll(instanced, list.length, tint);
         instanced.count = 0;
@@ -89,7 +90,7 @@ export class LodBatch {
           const width = height * sprite.aspect;
           return new THREE.Matrix4().compose(at.clone(), turn, new THREE.Vector3(width, height, width));
         });
-        const mesh = new THREE.InstancedMesh(cards, spriteMaterial(sprite), list.length);
+        const mesh = new THREE.InstancedMesh(cards, frostPicture(spriteMaterial(sprite), frost), list.length);
         mesh.name = `${model}:picture`;
         if (tint !== undefined) tintAll(mesh, list.length, tint);
         mesh.count = 0;

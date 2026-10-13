@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { frostedMaterials, type Frost } from "./frost";
 
 export interface StaticPiece {
   model: string;
@@ -21,8 +22,8 @@ const CHUNK = 72;
 
 // Draws every copy of a model with one instanced mesh per model part and chunk of ground: a few
 // hundred draw calls for the whole forest instead of one per tree, and only the chunks in view drawn.
-// `tint`: a colour laid over every copy (a region's look), or none.
-export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[], tint?: number): THREE.Group {
+// `tint`: a colour laid over every copy, and `frost` over its materials (a region's look), or none.
+export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[], tint?: number, frost?: Frost): THREE.Group {
   const group = new THREE.Group();
   const byModel = new Map<string, StaticPiece[]>();
   const at = new THREE.Vector3();
@@ -43,7 +44,7 @@ export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[], ti
       const mesh = o as THREE.Mesh;
       if (!mesh.isMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh) return;
       const relative = rootInverse.clone().multiply(mesh.matrixWorld);
-      const instanced = new THREE.InstancedMesh(mesh.geometry, mesh.material, list.length);
+      const instanced = new THREE.InstancedMesh(mesh.geometry, frostedMaterials(mesh.material, frost), list.length);
       instanced.name = `${key}:${mesh.name}`;
       list.forEach((piece, slot) => instanced.setMatrixAt(slot, part.multiplyMatrices(piece.matrix, relative)));
       if (tint !== undefined) tintAll(instanced, list.length, tint);

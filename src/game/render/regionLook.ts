@@ -1,5 +1,6 @@
 import type { Region } from "../world/zones";
 import { GROVE_NATURE, SNOW_NATURE, VOLCANO_NATURE, type NatureStyle } from "../rules/nature";
+import type { Frost } from "./frost";
 
 // How a region looks: the ground's colours (the photos under them only lend light and shade, see
 // groundTextures.ts), the haze, the light, and what grows. The grove is sunlit grass under broad-
@@ -26,6 +27,8 @@ export interface RegionLook {
   natureTint?: number;
   // A sky of its own, from overhead to the horizon, in place of the photo.
   sky?: { top: number; horizon: number };
+  // Frost over everything that grows and lies about, thicker on top (see frost.ts), or none.
+  frost?: Frost;
 }
 
 export const GROVE_LOOK: RegionLook = {
@@ -37,6 +40,7 @@ export const GROVE_LOOK: RegionLook = {
 export const SNOW_LOOK: RegionLook = {
   meadow: 0xeef3f8, deep: 0xd3dde8, dry: 0xf7f9fb, forest: 0x7d8b96, dirt: 0x9ba6b0, fog: 0xc8d4df,
   hemiSky: 0xeaf2ff, hemiGround: 0x9aa8b4, nature: SNOW_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
+  frost: { color: 0xf1f6fb, base: 0.3, top: 0.55 },
 };
 
 // The volcano: dark ash and black stone, paths of red cinder, charred pines, under a smoky ember sky.
