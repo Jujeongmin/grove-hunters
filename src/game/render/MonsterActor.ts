@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { MonsterState } from "../world/monsters";
-import { ActionBlender, clipByName, ownMaterials, skinnedHeight } from "./skinned";
+import { ActionBlender, clipByName, glowingFlatMaterials, ownMaterials, skinnedHeight } from "./skinned";
 
 const HIT_FLASH_SECONDS = 0.08;
 // How fast a monster closes on where the server last had it: walks are sent only every
@@ -30,6 +30,9 @@ export interface MonsterLook {
   // How far round (radians, about the up axis) the model must be turned to face +z, for one made
   // facing another way (the wasp faces +x).
   turn?: number;
+  // A glow of its tint (0 to 1): the volcano's fire kinds burn, where tinting alone only darkens a
+  // dark texture.
+  glow?: number;
 }
 
 // A monster on screen: follows its state, walks, swings when its attack clock moves on, flashes
@@ -39,12 +42,16 @@ export class MonsterActor {
   readonly object: THREE.Object3D;
   private readonly mixer: THREE.AnimationMixer;
   private readonly turn: number;
+  // The glow it has when not flashing from a blow.
+  private readonly baseGlow = new THREE.Color(0, 0, 0);
   private readonly idle: THREE.AnimationAction;
   private readonly walk: THREE.AnimationAction;
   private readonly attack: THREE.AnimationAction;
   private readonly death: THREE.AnimationAction | null;
   private readonly blender: ActionBlender;
   private readonly materials: THREE.MeshStandardMaterial[];
+  // The unlit ones, each with the glow its shader adds (see glowingFlatMaterials).
+  private readonly flat: { material: THREE.MeshBasicMaterial; glow: THREE.Color }[];
   private readonly attackSeconds: number;
   private readonly bar: THREE.Group;
   private readonly barFill: THREE.Mesh;
@@ -68,9 +75,12 @@ export class MonsterActor {
     body.scale.setScalar(look.height / skinnedHeight(body));
     this.turn = look.turn ?? 0;
     this.materials = ownMaterials(body);
+    this.flat = glowingFlatMaterials(body);
     if (look.tint !== null) {
       const tint = new THREE.Color(look.tint);
       for (const m of this.materials) m.color.multiply(tint);
+      for (const f of this.flat) f.material.color.multiply(tint);
+      if (look.glow) this.baseGlow.copy(tint).multiplyScalar(look.glow);
     }
     this.mixer = new THREE.AnimationMixer(body);
     this.idle = this.mixer.clipAction(clipByName(clips, look.clips.idle));
@@ -175,8 +185,14 @@ export class MonsterActor {
     }
 
     this.flashLeft = Math.max(0, this.flashLeft - dt);
-    const glow = this.flashLeft > 0 ? 1.5 : 0;
-    for (const m of this.materials) m.emissive.setRGB(glow, glow * 0.2, glow * 0.2);
+    for (const m of this.materials) {
+      if (this.flashLeft > 0) m.emissive.setRGB(1.5, 0.3, 0.3);
+      else m.emissive.copy(this.baseGlow);
+    }
+    for (const f of this.flat) {
+      if (this.flashLeft > 0) f.glow.setRGB(0.9, 0.18, 0.18);
+      else f.glow.copy(this.baseGlow);
+    }
 
     const share = Math.max(0, Math.min(1, state.hp / this.maxHp));
     this.bar.visible = state.alive && share < 1;

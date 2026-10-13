@@ -54,7 +54,7 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
     model: "mon_wasp", look: { height: 1.6, tint: 0xff9a40, clips: { idle: "Flying", walk: "Flying", attack: "Attack", death: "Death" }, turn: WASP_TURN },
   },
   vampire_bat: {
-    model: "mon_bat", look: { height: 1.6, tint: 0xe05050, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } },
+    model: "mon_bat", look: { height: 1.6, tint: 0xe05050, glow: 0.3, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } },
   },
   stone_golem: {
     model: "mon_goleling", look: { height: 2.4, tint: 0x9aa0a8, clips: { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" } },
@@ -76,7 +76,7 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   snow_hare: { model: "mnt_cat", look: { height: 1.2, tint: 0xf2f6ff, clips: BEAST } },
   snow_wolf: { model: "mnt_dog", look: { height: 1.5, tint: 0xd8dde6, clips: BEAST } },
   frost_spider: { model: "mon_spider", look: { height: 1.6, tint: 0x9fd0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
-  frost_bat: { model: "mon_bat", look: { height: 1.6, tint: 0x9fc8ff, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
+  frost_bat: { model: "mon_bat", look: { height: 1.6, tint: 0x9fc8ff, glow: 0.2, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
   penguin_brute: { model: "mnt_penguin", look: { height: 1.8, tint: null, clips: BEAST } },
   frost_snake: { model: "mon_snake", look: { height: 1.1, tint: 0x8fe0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
   ice_golem: {
@@ -87,20 +87,20 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   glacier_alpaking: { model: "mnt_alpaking", look: { height: 2.2, tint: 0xbfe8ff, clips: FLYER } },
   frost_emperor: { model: "mnt_alpaking_evolved", look: { height: 4.2, tint: 0xbfe8ff, clips: FLYER } },
   // The volcano's: the forest's models and some of the mounts' in ember and ash.
-  magma_blob: { model: "mon_green_blob", look: { height: 1.4, tint: 0xff7a30, clips: BLOB } },
+  magma_blob: { model: "mon_green_blob", look: { height: 1.4, tint: 0xff7a30, glow: 0.45, clips: BLOB } },
   ash_rat: { model: "mon_rat", look: { height: 1.3, tint: 0x8a7a72, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
-  fire_frog: { model: "mon_frog", look: { height: 1.3, tint: 0xff5a2a, clips: { idle: "Idle", walk: "Jump", attack: "Attack", death: "Death" } } },
-  ember_spider: { model: "mon_spider", look: { height: 1.8, tint: 0xff6a20, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
-  flame_bat: { model: "mon_bat", look: { height: 1.7, tint: 0xff8040, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
-  magma_crab: { model: "mnt_crab", look: { height: 1.9, tint: 0xff5030, clips: BEAST } },
-  flame_snake: { model: "mon_snake", look: { height: 1.2, tint: 0xffa040, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
+  fire_frog: { model: "mon_frog", look: { height: 1.3, tint: 0xff5a2a, glow: 0.35, clips: { idle: "Idle", walk: "Jump", attack: "Attack", death: "Death" } } },
+  ember_spider: { model: "mon_spider", look: { height: 1.8, tint: 0xff6a20, glow: 0.35, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
+  flame_bat: { model: "mon_bat", look: { height: 1.7, tint: 0xff8040, glow: 0.35, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
+  magma_crab: { model: "mnt_crab", look: { height: 1.9, tint: 0xff5030, glow: 0.35, clips: BEAST } },
+  flame_snake: { model: "mon_snake", look: { height: 1.2, tint: 0xffa040, glow: 0.4, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
   magma_golem: {
-    model: "mon_goleling", look: { height: 2.8, tint: 0xff6a3a, clips: { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" } },
+    model: "mon_goleling", look: { height: 2.8, tint: 0xff6a3a, glow: 0.4, clips: { idle: "Flying_Idle", walk: "Fast_Flying", attack: "Headbutt", death: "Death" } },
   },
-  blaze_drake: { model: "mnt_drake", look: { height: 2.3, tint: 0xff7040, clips: FLYER } },
-  firebird: { model: "mnt_hywirl", look: { height: 2.2, tint: 0xffb050, clips: FLYER } },
+  blaze_drake: { model: "mnt_drake", look: { height: 2.3, tint: 0xff7040, glow: 0.35, clips: FLYER } },
+  firebird: { model: "mnt_hywirl", look: { height: 2.2, tint: 0xffb050, glow: 0.45, clips: FLYER } },
   cinder_dragon: { model: "mnt_dragon", look: { height: 2.6, tint: 0x7a6a66, clips: FLYER } },
-  flame_lord: { model: "mnt_dragon", look: { height: 5.0, tint: 0xff4a2a, clips: FLYER } },
+  flame_lord: { model: "mnt_dragon", look: { height: 5.0, tint: 0xff4a2a, glow: 0.3, clips: FLYER } },
 };
 
 export const GREEN_BLOB = MONSTER_SKINS.green_blob;
