@@ -7,7 +7,8 @@ import {
   type MinimapFit, type MinimapModel, type MinimapPick,
 } from "../game/world/minimap";
 import { roleOf, type NpcRole } from "../game/world/npcs";
-import type { ZoneId } from "../game/world/zones";
+import { ZONES, type ZoneId } from "../game/world/zones";
+import { lookOf } from "../game/render/regionLook";
 import { npcName, zoneName } from "./names";
 import { pointIn } from "./useUiScale";
 
@@ -109,6 +110,16 @@ function tinted(img: HTMLImageElement, color: string, px: number): HTMLCanvasEle
 // pictures change: only the marks and the arrow are redrawn as you walk.
 const grounds = new Map<string, HTMLCanvasElement>();
 
+// The ground and the wood in the zone's own colours: the grove's as they always were, another
+// region's from its look (the snow's white, the volcano's ash).
+function mapColors(zone: ZoneId): { ground: string; forest: string } {
+  const region = ZONES[zone].region;
+  if (region === "grove") return { ground: GROUND, forest: FOREST };
+  const look = lookOf(region);
+  const css = (c: number) => `#${c.toString(16).padStart(6, "0")}`;
+  return { ground: css(look.deep), forest: css(look.forest) };
+}
+
 function groundCanvas(model: MinimapModel, fit: MinimapFit, dpr: number, onReady: () => void): HTMLCanvasElement {
   const grass = picture(GRASS, onReady);
   const floor = picture(FOREST_FLOOR, onReady);
@@ -150,8 +161,9 @@ function groundCanvas(model: MinimapModel, fit: MinimapFit, dpr: number, onReady
       fill(kind, pattern);
       ctx.restore();
     };
-    grain("ground", GROUND, grass);
-    grain("forest", FOREST, floor);
+    const colors = mapColors(model.zone);
+    grain("ground", colors.ground, grass);
+    grain("forest", colors.forest, floor);
     // A house is a roof seen from above, not ground: a flat span with a lip of shade along its eaves.
     fill("house", ROOF);
     const eaves = new Path2D();

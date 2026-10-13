@@ -93,7 +93,10 @@ export interface SpriteTree {
 }
 
 // Every tree in the list as crossed cards, one instanced mesh per kind of tree.
-export function buildSpriteForest(sprites: TreeSprites, trees: readonly SpriteTree[], kinds: readonly string[] = SPRITE_TREES): THREE.Group {
+// `tint`: a colour laid over the whole forest (a region's look), or none.
+export function buildSpriteForest(
+  sprites: TreeSprites, trees: readonly SpriteTree[], kinds: readonly string[] = SPRITE_TREES, tint?: number,
+): THREE.Group {
   const group = new THREE.Group();
   const geometry = crossedCards();
   const byKind = new Map<string, SpriteTree[]>();
@@ -106,7 +109,8 @@ export function buildSpriteForest(sprites: TreeSprites, trees: readonly SpriteTr
   const matrix = new THREE.Matrix4();
   const turn = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
-  const tint = new THREE.Color();
+  const shade = new THREE.Color();
+  const over = new THREE.Color(tint ?? 0xffffff);
   for (const [kind, list] of byKind) {
     const sprite = sprites.get(kind)!;
     const mesh = new THREE.InstancedMesh(geometry, spriteMaterial(sprite), list.length);
@@ -118,7 +122,7 @@ export function buildSpriteForest(sprites: TreeSprites, trees: readonly SpriteTr
       mesh.setMatrixAt(i, matrix);
       // A little lighter or darker, so the forest is not one flat green.
       const v = 0.85 + ((t.shade * 7.31) % 1) * 0.3;
-      mesh.setColorAt(i, tint.setRGB(v, v, v));
+      mesh.setColorAt(i, shade.setRGB(v, v, v).multiply(over));
     });
     mesh.computeBoundingSphere();
     group.add(mesh);

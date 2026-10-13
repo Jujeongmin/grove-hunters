@@ -21,6 +21,11 @@ export interface RegionLook {
   farTrees: readonly string[];
   // Whether the far castle and the world tree stand on the horizon (the grove's own landmarks).
   landmarks: boolean;
+  // A colour laid over everything that grows and lies about (trees, rocks, plants, near and far), or
+  // none to keep the models' own.
+  natureTint?: number;
+  // A sky of its own, from overhead to the horizon, in place of the photo.
+  sky?: { top: number; horizon: number };
 }
 
 export const GROVE_LOOK: RegionLook = {
@@ -34,10 +39,11 @@ export const SNOW_LOOK: RegionLook = {
   hemiSky: 0xeaf2ff, hemiGround: 0x9aa8b4, nature: SNOW_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
 };
 
-// The volcano: grey ash and black stone, paths of red cinder, under a smoky ember haze.
+// The volcano: dark ash and black stone, paths of red cinder, charred pines, under a smoky ember sky.
 export const VOLCANO_LOOK: RegionLook = {
-  meadow: 0x6e625b, deep: 0x544944, dry: 0x857467, forest: 0x2f2725, dirt: 0xa24c2a, fog: 0x8c5c4a,
-  hemiSky: 0xffdcc0, hemiGround: 0x5c3022, nature: VOLCANO_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
+  meadow: 0x4f4642, deep: 0x3d3532, dry: 0x5e5049, forest: 0x1f1918, dirt: 0xb04a22, fog: 0x7a4a3a,
+  hemiSky: 0xffc9a0, hemiGround: 0x4a2418, nature: VOLCANO_NATURE, farTrees: ["sn_pine_1"], landmarks: false,
+  natureTint: 0x4a3c38, sky: { top: 0x2a1c1c, horizon: 0xb8603a },
 };
 
 export function lookOf(region: Region): RegionLook {

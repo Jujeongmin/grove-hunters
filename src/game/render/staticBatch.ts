@@ -9,12 +9,20 @@ export interface ModelSource {
   get(name: string): { scene: THREE.Object3D };
 }
 
+// Lays one colour over every instance of a mesh (it multiplies the material's own).
+export function tintAll(mesh: THREE.InstancedMesh, count: number, tint: number): void {
+  const color = new THREE.Color(tint);
+  for (let i = 0; i < count; i++) mesh.setColorAt(i, color);
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+}
+
 // Pieces are drawn in square chunks this wide, so the camera skips the chunks behind it.
 const CHUNK = 72;
 
 // Draws every copy of a model with one instanced mesh per model part and chunk of ground: a few
 // hundred draw calls for the whole forest instead of one per tree, and only the chunks in view drawn.
-export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[]): THREE.Group {
+// `tint`: a colour laid over every copy (a region's look), or none.
+export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[], tint?: number): THREE.Group {
   const group = new THREE.Group();
   const byModel = new Map<string, StaticPiece[]>();
   const at = new THREE.Vector3();
@@ -38,6 +46,7 @@ export function buildStaticBatch(library: ModelSource, pieces: StaticPiece[]): T
       const instanced = new THREE.InstancedMesh(mesh.geometry, mesh.material, list.length);
       instanced.name = `${key}:${mesh.name}`;
       list.forEach((piece, slot) => instanced.setMatrixAt(slot, part.multiplyMatrices(piece.matrix, relative)));
+      if (tint !== undefined) tintAll(instanced, list.length, tint);
       instanced.instanceMatrix.needsUpdate = true;
       instanced.computeBoundingSphere();
       group.add(instanced);

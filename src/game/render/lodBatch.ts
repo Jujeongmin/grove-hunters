@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { ModelSource, StaticPiece } from "./staticBatch";
+import { tintAll, type ModelSource, type StaticPiece } from "./staticBatch";
 import { crossedCards, spriteMaterial, type TreeSprites } from "./treeSprites";
 
 // Many copies of a few models that only need to be drawn in full near the camera: trees, which turn
@@ -48,7 +48,8 @@ export class LodBatch {
   }
 
   // `sprites`: the pictures of the models that have one; any other model is left out when far.
-  constructor(library: ModelSource, pieces: StaticPiece[], sprites: TreeSprites) {
+  // `tint`: a colour laid over every copy, near and far (a region's look), or none.
+  constructor(library: ModelSource, pieces: StaticPiece[], sprites: TreeSprites, tint?: number) {
     const byModel = new Map<string, StaticPiece[]>();
     for (const p of pieces) {
       const list = byModel.get(p.model) ?? [];
@@ -68,6 +69,7 @@ export class LodBatch {
         if (!mesh.isMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh) return;
         const instanced = new THREE.InstancedMesh(mesh.geometry, mesh.material, list.length);
         instanced.name = `${model}:${mesh.name}`;
+        if (tint !== undefined) tintAll(instanced, list.length, tint);
         instanced.count = 0;
         // Filled only with what lies in view (see update): no bounds to test, and none to work out
         // over every instance at each refill.
@@ -89,6 +91,7 @@ export class LodBatch {
         });
         const mesh = new THREE.InstancedMesh(cards, spriteMaterial(sprite), list.length);
         mesh.name = `${model}:picture`;
+        if (tint !== undefined) tintAll(mesh, list.length, tint);
         mesh.count = 0;
         mesh.frustumCulled = false;
         this.object.add(mesh);

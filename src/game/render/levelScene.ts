@@ -7,7 +7,7 @@ import { GROUND_PLANTS, NATURE_MODELS, TREES, cellNoise, natureLayout } from "..
 import { LodBatch } from "./lodBatch";
 import type { Platform } from "../rules/platforms";
 import { buildStaticBatch, type StaticPiece } from "./staticBatch";
-import { HORIZON, skyTexture } from "./sky";
+import { HORIZON, gradientSky, skyTexture } from "./sky";
 import { CASTLE_MODELS, buildVista, smoothNoise } from "./vista";
 import { SPRITE_MODELS, bakeTreeSprites } from "./treeSprites";
 import { groundMaterial } from "./groundTextures";
@@ -126,7 +126,7 @@ export function buildLevelScene(
   scene: THREE.Scene, library: ModelLibrary, layout: LevelLayout, renderer: THREE.WebGLRenderer, destinations: readonly Point2[] = [],
   look: RegionLook = GROVE_LOOK,
 ): LodBatch {
-  scene.background = skyTexture() ?? new THREE.Color(SKY);
+  scene.background = (look.sky ? gradientSky(look.sky.top, look.sky.horizon) : skyTexture()) ?? new THREE.Color(SKY);
   scene.fog = new THREE.Fog(look.fog, FOG_NEAR, FOG_FAR);
   scene.add(new THREE.HemisphereLight(look.hemiSky, look.hemiGround, 1.4));
   const sun = new THREE.DirectionalLight(0xfff0d6, 2.6);
@@ -163,8 +163,8 @@ export function buildLevelScene(
   // Trees, ground cover and the stones in the paths are drawn in full only near the camera; rocks,
   // bushes and the platforms always.
   const near = new Set<string>([...TREES, ...GROUND_PLANTS, "sn_stepping"]);
-  scene.add(buildStaticBatch(library, pieces.filter((p) => !near.has(p.model))));
-  const lod = new LodBatch(library, pieces.filter((p) => near.has(p.model)), sprites);
+  scene.add(buildStaticBatch(library, pieces.filter((p) => !near.has(p.model)), look.natureTint));
+  const lod = new LodBatch(library, pieces.filter((p) => near.has(p.model)), sprites, look.natureTint);
   lod.update(centre.x, centre.z, true);
   scene.add(lod.object);
   return lod;
