@@ -75,7 +75,7 @@ export const MONSTER_SKINS: Record<MonsterType, MonsterSkin> = {
   frost_blob: { model: "mon_green_blob", look: { height: 1.35, tint: 0xbfe6ff, clips: BLOB } },
   snow_hare: { model: "mnt_cat", look: { height: 1.2, tint: 0xf2f6ff, clips: BEAST } },
   snow_wolf: { model: "mnt_dog", look: { height: 1.5, tint: 0xd8dde6, clips: BEAST } },
-  frost_spider: { model: "mon_spider", look: { height: 1.6, tint: 0x9fd0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
+  frost_spider: { model: "mon_spider", look: { height: 1.6, tint: 0x9fd0ff, glow: 0.3, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: "Death" } } },
   frost_bat: { model: "mon_bat", look: { height: 1.6, tint: 0x9fc8ff, glow: 0.2, clips: { idle: "Flying", walk: "Flying", attack: "Bite_Front", death: "Death" } } },
   penguin_brute: { model: "mnt_penguin", look: { height: 1.8, tint: null, clips: BEAST } },
   frost_snake: { model: "mon_snake", look: { height: 1.1, tint: 0x8fe0ff, clips: { idle: "Idle", walk: "Walk", attack: "Attack", death: null } } },
