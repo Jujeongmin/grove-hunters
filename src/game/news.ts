@@ -29,7 +29,7 @@ export const NEWS: readonly NewsEntry[] = [
     text: {
       ko: { title: "영혼 도감 · 능력치를 숫자로", lines: [
         "[영혼 도감] 몬스터를 잡으면 영혼을 얻어요(일반 1%, 5분 보스 5%, 숲의 수호자 확정). 메뉴 도감(8)에서 수집하면 1·5·10개마다 공격력·방어력·체력이 올라요.",
-        "[능력치] 장비·탈것·도감 효과가 %가 아닌 숫자로 바뀌었어요(예: 공격력 +110, 방어력 +43). 같은 레벨대에서의 강함은 그대로예요.",
+        "[능력치] 장비·탈것·도감·VIP 효과가 %가 아닌 숫자로 바뀌었어요(예: 공격력 +110, 방어력 +43). 같은 레벨대에서의 강함은 그대로예요.",
         "[전직] 전직 창이 새로워졌어요. 두 길의 성격·능력치·스킬을 한눈에 비교할 수 있어요.",
         "[가방] 특대 물약(체력 400 회복)이 상점에 나왔고, 여러 칸을 한 번에 버릴 수 있어요. 99개가 넘는 물건은 다음 칸에 이어서 쌓여요.",
         "[지역] 화산은 붉은 하늘과 그을린 숲으로, 설산은 눈 덮인 숲으로 새로 단장했어요.",
@@ -37,7 +37,7 @@ export const NEWS: readonly NewsEntry[] = [
       ] },
       en: { title: "The Soul Codex · Stats in numbers", lines: [
         "[Soul Codex] Felled monsters leave souls (1% in the fields, 5% from bosses that return every five minutes, always from the grove's guardian). Collect them in the Codex (8): every 1, 5 and 10 souls add attack, defence or health.",
-        "[Stats] Gear, mounts and the Codex now give numbers instead of shares (e.g. Attack +110, Defence +43). How strong you are at a given level is unchanged.",
+        "[Stats] Gear, mounts, the Codex and VIP now give numbers instead of shares (e.g. Attack +110, Defence +43). How strong you are at a given level is unchanged.",
         "[Advancement] A new advancement screen: compare the two paths' bent, stats and skills at a glance.",
         "[Bag] A Huge Potion (heals 400) is in the shops, several squares can be thrown away at once, and stacks past 99 carry on in the next square.",
         "[Regions] The volcano has a burning sky and charred woods; the snow has woods under snow.",
@@ -45,7 +45,7 @@ export const NEWS: readonly NewsEntry[] = [
       ] },
       ja: { title: "魂の図鑑・能力値を数値に", lines: [
         "[魂の図鑑] モンスターを倒すと魂を入手（通常1%、5分ごとのボス5%、森の守護者は確定）。メニューの図鑑（8）で収集すると1・5・10個ごとに攻撃力・防御力・体力が上がります。",
-        "[能力値] 装備・乗り物・図鑑の効果が%ではなく数値になりました（例：攻撃力 +110、防御力 +43）。同じレベル帯での強さは変わりません。",
+        "[能力値] 装備・乗り物・図鑑・VIPの効果が%ではなく数値になりました（例：攻撃力 +110、防御力 +43）。同じレベル帯での強さは変わりません。",
         "[転職] 転職画面を一新。2つの道の性質・能力値・スキルをひと目で比べられます。",
         "[カバン] 特大ポーション（体力400回復）が登場。複数の枠をまとめて捨てられ、99個を超える物は次の枠に続けて入ります。",
         "[地域] 火山は赤い空と焦げた森に、雪山は雪に覆われた森に生まれ変わりました。",
@@ -53,7 +53,7 @@ export const NEWS: readonly NewsEntry[] = [
       ] },
       "zh-Hans": { title: "灵魂图鉴 · 属性改为数值", lines: [
         "[灵魂图鉴] 击杀怪物可获得灵魂（普通1%，每5分钟出现的首领5%，森林守护者必得）。在菜单图鉴（8）中收集，每1、5、10个提升攻击力、防御力或体力。",
-        "[属性] 装备、坐骑、图鉴效果由百分比改为数值（例：攻击力 +110、防御力 +43）。同等级下的强度不变。",
+        "[属性] 装备、坐骑、图鉴、VIP效果由百分比改为数值（例：攻击力 +110、防御力 +43）。同等级下的强度不变。",
         "[转职] 全新转职界面，一眼比较两条道路的性情、属性与技能。",
         "[背包] 商店新增特大药水（回复400体力），可一次丢弃多格，超过99个的物品会接着放入下一格。",
         "[地区] 火山换上燃烧的天空与焦黑的森林，雪山换上积雪的森林。",
@@ -61,7 +61,7 @@ export const NEWS: readonly NewsEntry[] = [
       ] },
       "zh-Hant": { title: "靈魂圖鑑 · 屬性改為數值", lines: [
         "[靈魂圖鑑] 擊殺怪物可獲得靈魂（普通1%，每5分鐘出現的首領5%，森林守護者必得）。在選單圖鑑（8）中收集，每1、5、10個提升攻擊力、防禦力或體力。",
-        "[屬性] 裝備、坐騎、圖鑑效果由百分比改為數值（例：攻擊力 +110、防禦力 +43）。同等級下的強度不變。",
+        "[屬性] 裝備、坐騎、圖鑑、VIP效果由百分比改為數值（例：攻擊力 +110、防禦力 +43）。同等級下的強度不變。",
         "[轉職] 全新轉職介面，一眼比較兩條道路的性情、屬性與技能。",
         "[背包] 商店新增特大藥水（回復400體力），可一次丟棄多格，超過99個的物品會接著放入下一格。",
         "[地區] 火山換上燃燒的天空與焦黑的森林，雪山換上積雪的森林。",

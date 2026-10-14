@@ -26,14 +26,14 @@ export const VIP_ANNOUNCE = 5;
 // What each rank gives beyond hunting's XP and gold. A rank keeps everything the ranks below it give;
 // of the daily gems and the enhancement odds, only the highest counts.
 //   1 the VIP mark by the name · 2 ten more pieces of gear in the bag · 3 gems every day (10, 30 from
-//   6, 50 from 9) · 4 rising where you fell for nothing · 5 a tenth more damage and health, and a
-//   golden name · 7 enhancing likelier by 5 points (10 from 9) · 8 no market fee · 10 its own mythic
+//   6, 50 from 9) · 4 rising where you fell for nothing · 5 flat attack and health (VIP_MIGHT_BONUS),
+//   and a golden name · 7 enhancing likelier by 5 points (10 from 9) · 8 no market fee · 10 its own mythic
 //   mount (see mounts.ts)
 export const VIP_BAG = 2;
 export const VIP_BAG_EXTRA = 10;
 export const VIP_FREE_REVIVE = 4;
 export const VIP_MIGHT = 5;
-export const VIP_MIGHT_SHARE = 0.1;
+export const VIP_MIGHT_BONUS = { atk: 30, hp: 100 } as const;
 export const VIP_NO_FEE = 8;
 // The ranks at which each perk comes, in order, for the table on the screen.
 export const VIP_PERK_AT: Readonly<Record<number, string>> = {
@@ -52,9 +52,9 @@ export function freeRevive(vip: number): boolean {
   return vip >= VIP_FREE_REVIVE;
 }
 
-// The share more damage and health a rank adds.
-export function vipMight(vip: number): number {
-  return vip >= VIP_MIGHT ? VIP_MIGHT_SHARE : 0;
+// The attack and health a rank adds.
+export function vipMight(vip: number): { atk: number; hp: number } {
+  return vip >= VIP_MIGHT ? VIP_MIGHT_BONUS : { atk: 0, hp: 0 };
 }
 
 // Points added to every enhancement's chance of success.

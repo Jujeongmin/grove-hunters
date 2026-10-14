@@ -997,7 +997,7 @@ export const zhHant: Bundle = {
   "mount.vipPerk.bag": "背包裝備格 +10",
   "mount.vipPerk.daily10": "每天寶石10個",
   "mount.vipPerk.revive": "原地復活免費",
-  "mount.vipPerk.might": "攻擊力·最大體力 +10%，金色名字",
+  "mount.vipPerk.might": "攻擊力 +30、體力 +100，金色名字",
   "mount.vipPerk.daily30": "每天寶石30個",
   "mount.vipPerk.enhance5": "強化成功率 +5%p",
   "mount.vipPerk.noFee": "交易所手續費全免",

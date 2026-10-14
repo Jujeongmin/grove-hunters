@@ -997,7 +997,7 @@ export const en: Bundle = {
   "mount.vipPerk.bag": "+10 gear slots in the bag",
   "mount.vipPerk.daily10": "10 gems a day",
   "mount.vipPerk.revive": "Rise where you fell for free",
-  "mount.vipPerk.might": "+10% damage and max health, a golden name",
+  "mount.vipPerk.might": "Attack +30 and health +100, a golden name",
   "mount.vipPerk.daily30": "30 gems a day",
   "mount.vipPerk.enhance5": "Enhancing +5 points likelier",
   "mount.vipPerk.noFee": "No market fee",

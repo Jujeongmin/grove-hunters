@@ -997,7 +997,7 @@ export const ja: Bundle = {
   "mount.vipPerk.bag": "バッグの装備枠 +10",
   "mount.vipPerk.daily10": "毎日宝石10個",
   "mount.vipPerk.revive": "その場で復活が無料",
-  "mount.vipPerk.might": "攻撃力・最大体力 +10%、金色の名前",
+  "mount.vipPerk.might": "攻撃力 +30、体力 +100、金色の名前",
   "mount.vipPerk.daily30": "毎日宝石30個",
   "mount.vipPerk.enhance5": "強化成功率 +5%p",
   "mount.vipPerk.noFee": "取引所の手数料免除",

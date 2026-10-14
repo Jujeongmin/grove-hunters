@@ -1006,7 +1006,7 @@ export const ko = {
   "mount.vipPerk.bag": "가방 장비 칸 +10",
   "mount.vipPerk.daily10": "매일 보석 10개",
   "mount.vipPerk.revive": "제자리 부활 무료",
-  "mount.vipPerk.might": "공격력·최대 체력 +10%, 금색 이름",
+  "mount.vipPerk.might": "공격력 +30, 체력 +100, 금색 이름",
   "mount.vipPerk.daily30": "매일 보석 30개",
   "mount.vipPerk.enhance5": "강화 성공률 +5%p",
   "mount.vipPerk.noFee": "거래소 수수료 면제",
