@@ -54,6 +54,8 @@ export const zhHans: Bundle = {
 
   "list.join": "、",
   "stat.power": "攻击力 +{n}%",
+  "stat.atk": "攻击力 +{n}",
+  "stat.def": "防御力 +{n}",
   "stat.hp": "体力 +{n}",
   "stat.guard": "受到伤害 -{n}%",
   "stat.heal": "治疗量 +{n}%",

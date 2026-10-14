@@ -54,6 +54,8 @@ export const ja: Bundle = {
 
   "list.join": "、",
   "stat.power": "攻撃力 +{n}%",
+  "stat.atk": "攻撃力 +{n}",
+  "stat.def": "防御力 +{n}",
   "stat.hp": "体力 +{n}",
   "stat.guard": "受けるダメージ -{n}%",
   "stat.heal": "回復量 +{n}%",

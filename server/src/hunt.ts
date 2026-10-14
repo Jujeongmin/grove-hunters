@@ -1,3 +1,4 @@
+import { bittenFor } from "../../src/game/combat/power";
 import { WEAPONS, readClass, type PlayerClass } from "../../src/game/combat/classes";
 import { inStrikeReach } from "../../src/game/combat/melee";
 import { dodging } from "../../src/game/combat/roll";
@@ -62,6 +63,7 @@ function readFighter(state: Record<string, any>): Fighter {
   const level = typeof state.look?.level === "number" ? state.look.level : 1;
   const gear = {
     power: num(state.gear?.power), hp: num(state.gear?.hp), guard: Math.min(0.8, num(state.gear?.guard)), heal: num(state.gear?.heal),
+    atk: num(state.gear?.atk), def: num(state.gear?.def),
   };
   const maxHp = typeof state.maxHp === "number" ? state.maxHp : maxHpAt(level) + gear.hp;
   return {
@@ -171,7 +173,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
       const key = `merc:${id}`;
       fighters.set(key, {
         pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, swing: 0, skill: 0, roll: 0, slot: 0 } as Pose, playerClass: m.playerClass, job: null,
-        level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0 }, learned: true,
+        level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0, atk: 0, def: 0 }, learned: true,
         hitAt: m.hitAt, strikeReadyAt: 0, rolledAt: undefined,
       });
       if (!m.dead) prey.push({ account: key, x: m.x, z: m.z });
@@ -195,7 +197,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
     const m = monsters[hit.monsterId];
     // Rolling, the blow goes by.
     if (!f || f.dead || !m || dodging(f.rolledAt, now)) continue;
-    const damage = Math.max(1, Math.round(hit.damage * (1 - f.gear.guard)));
+    const damage = bittenFor(hit.damage, f.gear);
     f.hp = Math.max(0, f.hp - damage);
     f.dead = f.hp <= 0;
     if (f.dead) fell.push(hit.account);
@@ -320,7 +322,7 @@ export async function strike(zone: ZoneId, account: string, monsterId: unknown, 
   if (!inStrikeReach(f.pose, m, weapon, true, bodyOf(m))) throw new RuleViolation("out_of_range");
   // Striking takes a rider off the mount.
   await $room.updateMyState({ strikeReadyAt: now + weapon.intervalMs * COOLDOWN_GRACE, riding: null }, { returnState: false });
-  const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power), 0, now, account, await huntersHere());
+  const result = land(monsters, [monsterId], damageAt(weapon.damage, f.level, f.gear.power, f.gear.atk), 0, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;
 }
@@ -359,7 +361,7 @@ export async function useSkill(zone: ZoneId, account: string, rawSlot: unknown, 
   const monsters = await readMonsters(zone);
   const targets = skillTargets(f.pose, monsters, skill, true, bodyOf);
   if (targets.length === 0) return { ...NOTHING, dealt: {} };
-  const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power), skill.stunMs, now, account, await huntersHere());
+  const result = land(monsters, targets, damageAt(skill.damage, f.level, f.gear.power, f.gear.atk), skill.stunMs, now, account, await huntersHere());
   await writeMonsters(monsters);
   return result;
 }

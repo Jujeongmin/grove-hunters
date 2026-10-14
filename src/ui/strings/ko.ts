@@ -60,6 +60,8 @@ export const ko = {
   // What separates the parts of a short list; CJK has its own comma for this.
   "list.join": ", ",
   "stat.power": "공격력 +{n}%",
+  "stat.atk": "공격력 +{n}",
+  "stat.def": "방어력 +{n}",
   "stat.hp": "체력 +{n}",
   "stat.guard": "받는 피해 -{n}%",
   "stat.heal": "회복량 +{n}%",

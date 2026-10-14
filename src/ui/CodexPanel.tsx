@@ -20,12 +20,12 @@ const OPENED_MS = 1600;
 
 const pct = (n: number) => String(Math.round(n * 1000) / 10);
 
-// What a bonus says, its parts that are there, joined.
+// What a bonus says, its parts that are there, joined: flat numbers.
 function bonusText(b: SoulBonus): string {
   const parts: string[] = [];
-  if (b.power) parts.push(t("stat.power", { n: pct(b.power) }));
+  if (b.atk) parts.push(t("stat.atk", { n: b.atk }));
+  if (b.def) parts.push(t("stat.def", { n: b.def }));
   if (b.hp) parts.push(t("stat.hp", { n: b.hp }));
-  if (b.guard) parts.push(t("stat.guard", { n: pct(b.guard) }));
   return parts.join(" · ");
 }
 

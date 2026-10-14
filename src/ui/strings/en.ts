@@ -54,6 +54,8 @@ export const en: Bundle = {
 
   "list.join": ", ",
   "stat.power": "Attack +{n}%",
+  "stat.atk": "Attack +{n}",
+  "stat.def": "Defence +{n}",
   "stat.hp": "Health +{n}",
   "stat.guard": "Damage taken -{n}%",
   "stat.heal": "Healing +{n}%",

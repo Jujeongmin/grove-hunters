@@ -403,7 +403,8 @@ export function maxHpAt(level: number): number {
   return 100 + (Math.max(1, level) - 1) * 12;
 }
 
-// Player hits land a little harder with every level, and with a better weapon (power: extra share).
-export function damageAt(base: number, level: number, power = 0): number {
-  return Math.round(base * (1 + (Math.max(1, level) - 1) * 0.06) * (1 + power));
+// Player hits land a little harder with every level, and with a better weapon (power: extra share),
+// and the soul codex's attack (atk) adds to every blow before the shares.
+export function damageAt(base: number, level: number, power = 0, atk = 0): number {
+  return Math.round((base * (1 + (Math.max(1, level) - 1) * 0.06) + atk) * (1 + power));
 }

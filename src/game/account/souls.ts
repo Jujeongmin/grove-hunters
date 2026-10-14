@@ -64,40 +64,43 @@ export function soulStage(collected: number): number {
   return SOUL_STAGES.filter((at) => collected >= at).length;
 }
 
-// What a stage adds: attack in the grove, health in the snow, a share of each blow stopped in the
-// volcano; a boss gives all three, twice over.
-export interface SoulBonus { power: number; hp: number; guard: number }
-export const NO_SOUL_BONUS: SoulBonus = { power: 0, hp: 0, guard: 0 };
-const STAGE_BONUS: Record<Region, readonly SoulBonus[]> = {
-  grove: [{ power: 0.003, hp: 0, guard: 0 }, { power: 0.003, hp: 0, guard: 0 }, { power: 0.004, hp: 0, guard: 0 }],
-  snow: [{ power: 0, hp: 5, guard: 0 }, { power: 0, hp: 5, guard: 0 }, { power: 0, hp: 10, guard: 0 }],
-  volcano: [{ power: 0, hp: 0, guard: 0.001 }, { power: 0, hp: 0, guard: 0.001 }, { power: 0, hp: 0, guard: 0.001 }],
-};
+// What a stage adds, as flat numbers that grow with the monster's level: attack (each blow's damage)
+// in the grove, health in the snow, defence (taken off each bite, see bittenFor in power.ts) in the
+// volcano; a boss gives all three, twice over. Each of a monster's three stages adds the same.
+export interface SoulBonus { atk: number; def: number; hp: number }
+export const NO_SOUL_BONUS: SoulBonus = { atk: 0, def: 0, hp: 0 };
+const ATK_PER = 25;
+const HP_PER = 6;
+const DEF_PER = 60;
+
+function regionBonus(region: Region, level: number): SoulBonus {
+  if (region === "grove") return { atk: Math.max(1, Math.round(level / ATK_PER)), def: 0, hp: 0 };
+  if (region === "snow") return { atk: 0, def: 0, hp: Math.round(level / HP_PER) };
+  return { atk: 0, def: Math.max(1, Math.round(level / DEF_PER)), hp: 0 };
+}
 
 // What a monster's stage `stage` (0 to 2) adds.
-export function stageBonus(type: MonsterType, stage: number): SoulBonus {
+export function stageBonus(type: MonsterType, _stage: number): SoulBonus {
+  const level = MONSTERS[type].level;
   const group = soulGroup(type);
-  if (group !== "boss") return STAGE_BONUS[group][stage];
-  const all = (["grove", "snow", "volcano"] as const).map((r) => STAGE_BONUS[r][stage]);
+  if (group !== "boss") return regionBonus(group, level);
   return {
-    power: 2 * all.reduce((n, b) => n + b.power, 0), hp: 2 * all.reduce((n, b) => n + b.hp, 0), guard: 2 * all.reduce((n, b) => n + b.guard, 0),
+    atk: 2 * regionBonus("grove", level).atk, def: 2 * regionBonus("volcano", level).def, hp: 2 * regionBonus("snow", level).hp,
   };
 }
 
-const round = (n: number) => Math.round(n * 10000) / 10000;
-
 // Everything the codex adds up to.
 export function codexBonus(codex: Souls): SoulBonus {
-  const out = { power: 0, hp: 0, guard: 0 };
+  const out = { atk: 0, def: 0, hp: 0 };
   for (const type of SOUL_MONSTERS) {
     for (let s = 0; s < soulStage(codex[type] ?? 0); s++) {
       const b = stageBonus(type, s);
-      out.power += b.power;
+      out.atk += b.atk;
+      out.def += b.def;
       out.hp += b.hp;
-      out.guard += b.guard;
     }
   }
-  return { power: round(out.power), hp: out.hp, guard: round(out.guard) };
+  return out;
 }
 
 // Whether a monster may still leave a soul for this character: not once collected and waiting fill it.

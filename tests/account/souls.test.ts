@@ -48,14 +48,22 @@ describe("the soul codex", () => {
     expect(readSouls({ rat: 99, nope: 3, frog: -1, mushnub_guard: 2 })).toEqual({ rat: SOUL_MAX });
   });
 
-  it("adds attack in the grove, health in the snow, guard in the volcano, all three twice from a boss", () => {
-    expect(codexBonus({ green_blob: 10 })).toEqual({ power: 0.01, hp: 0, guard: 0 });
-    expect(codexBonus({ frost_blob: 5 })).toEqual({ power: 0, hp: 10, guard: 0 });
-    expect(codexBonus({ magma_blob: 1 })).toEqual({ power: 0, hp: 0, guard: 0.001 });
-    expect(stageBonus("flame_lord", 0)).toEqual({ power: 0.006, hp: 10, guard: 0.002 });
+  it("adds flat attack in the grove, health in the snow, defence in the volcano, more from stronger monsters, all three twice from a boss", () => {
+    expect(stageBonus("green_blob", 0)).toEqual({ atk: 1, def: 0, hp: 0 });
+    expect(stageBonus("stone_golem", 0)).toEqual({ atk: 2, def: 0, hp: 0 });
+    expect(stageBonus("frost_blob", 0)).toEqual({ atk: 0, def: 0, hp: 7 });
+    expect(stageBonus("glacier_alpaking", 0)).toEqual({ atk: 0, def: 0, hp: 10 });
+    expect(stageBonus("magma_blob", 0)).toEqual({ atk: 0, def: 1, hp: 0 });
+    expect(stageBonus("flame_lord", 0)).toEqual({ atk: 6, def: 2, hp: 26 });
+    expect(codexBonus({ green_blob: 10 })).toEqual({ atk: 3, def: 0, hp: 0 });
+    expect(codexBonus({ frost_blob: 5 })).toEqual({ atk: 0, def: 0, hp: 14 });
     const full = codexBonus(Object.fromEntries(SOUL_MONSTERS.map((t) => [t, 10])));
-    expect(full.power).toBeGreaterThan(0.15);
-    expect(full.power).toBeLessThan(0.25);
-    expect(full.guard).toBeLessThan(0.06);
+    // The whole codex: a sizeable lift, not a second character.
+    expect(full.atk).toBeGreaterThan(40);
+    expect(full.atk).toBeLessThan(90);
+    expect(full.hp).toBeGreaterThan(200);
+    expect(full.hp).toBeLessThan(450);
+    expect(full.def).toBeGreaterThan(20);
+    expect(full.def).toBeLessThan(60);
   });
 });
