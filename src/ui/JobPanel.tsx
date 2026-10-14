@@ -17,8 +17,8 @@ type Bent = "support" | "balanced" | "guard" | "power";
 function bentOf(id: JobId): Bent {
   const job = JOBS[id];
   if (job.heal) return "support";
-  if (job.power && job.hp) return "balanced";
-  if (job.guard || job.hp) return "guard";
+  if (job.atk && job.hp) return "balanced";
+  if (job.def || job.hp) return "guard";
   return "power";
 }
 

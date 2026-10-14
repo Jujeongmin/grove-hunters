@@ -85,7 +85,7 @@ describe("advancement", () => {
     await ring("frog", 1, 500);
     await $room.updateMyState({ strikeReadyAt: 0 });
     await server.strike("m0");
-    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - damageAt(WEAPONS.warrior.damage, 30, JOBS.berserker.power, STEED.atk));
+    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - damageAt(WEAPONS.warrior.damage, 30, 0, STEED.atk + JOBS.berserker.atk));
   });
 });
 

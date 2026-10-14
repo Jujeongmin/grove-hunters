@@ -64,9 +64,9 @@ export function jobName(id: JobId): string {
 export function jobBlurb(id: JobId): string {
   const job = JOBS[id];
   const parts: string[] = [];
-  if (job.power) parts.push(t("stat.power", { n: Math.round(job.power * 100) }));
+  if (job.atk) parts.push(t("stat.atk", { n: job.atk }));
   if (job.hp) parts.push(t("stat.hp", { n: job.hp }));
-  if (job.guard) parts.push(t("stat.guard", { n: Math.round(job.guard * 100) }));
+  if (job.def) parts.push(t("stat.def", { n: job.def }));
   if (job.heal) parts.push(t("stat.heal", { n: Math.round(job.heal * 100) }));
   return parts.join(t("list.join"));
 }

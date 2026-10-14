@@ -40,12 +40,12 @@ export function fightStatsAt(
   const steed = mountBonus(mount, stars);
   const might = vipMight(vip);
   const bonus = {
-    power: advanced?.power ?? 0,
+    power: 0,
     hp: worn.hp + (advanced?.hp ?? 0) + steed.hp + herd.hp + soul.hp + might.hp,
-    guard: advanced?.guard ?? 0,
+    guard: 0,
     heal: advanced?.heal ?? 0,
-    atk: worn.atk + steed.atk + herd.atk + soul.atk + might.atk,
-    def: worn.def + soul.def,
+    atk: worn.atk + (advanced?.atk ?? 0) + steed.atk + herd.atk + soul.atk + might.atk,
+    def: worn.def + (advanced?.def ?? 0) + soul.def,
   };
   return { maxHp: maxHpAt(level) + bonus.hp, gear: bonus };
 }
