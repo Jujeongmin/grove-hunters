@@ -1,6 +1,8 @@
 // Channel chat: what a line may be, and how often you may say one. The server holds everyone to it;
 // the client uses the same numbers to keep the box from sending what would be turned away.
 
+import { maskSwearing } from "../account/profanity";
+
 // Longest line, in characters.
 export const CHAT_MAX = 80;
 // No two lines from one player closer than this…
@@ -19,14 +21,14 @@ export interface ChatMessage {
   vip?: number;
 }
 
-// A line fit to say: control characters out, runs of spaces made one, trimmed; null when nothing is
-// left or it is too long.
+// A line fit to say: control characters out, runs of spaces made one, trimmed, swearing turned to *
+// (see profanity.ts); null when nothing is left or it is too long.
 export function readChat(value: unknown): string | null {
   if (typeof value !== "string") return null;
   // eslint-disable-next-line no-control-regex
   const text = value.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g, " ").replace(/\s+/g, " ").trim();
   const length = [...text].length;
-  return length === 0 || length > CHAT_MAX ? null : text;
+  return length === 0 || length > CHAT_MAX ? null : maskSwearing(text);
 }
 
 // Whether a line said at `now` keeps to the pace, given the times of the ones said before.

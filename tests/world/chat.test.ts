@@ -10,6 +10,17 @@ describe("readChat", () => {
     expect(readChat("가".repeat(CHAT_MAX))).toHaveLength(CHAT_MAX);
     expect(readChat("가".repeat(CHAT_MAX + 1))).toBeNull();
   });
+
+  it("hides swearing with *, through digits, _ and case, and leaves the rest of the line", () => {
+    expect(readChat("아 시발 뭐야")).toBe("아 ** 뭐야");
+    expect(readChat("시1발")).toBe("***");
+    expect(readChat("ㅅㅂ 진짜")).toBe("** 진짜");
+    expect(readChat("what the FUCK")).toBe("what the ****");
+    expect(readChat("병신아 병신")).toBe("**아 **");
+    // Harmless in a sentence, banned only in names; and the staff may be called.
+    expect(readChat("보지 마 운영자님")).toBe("보지 마 운영자님");
+    expect(readChat("다시 발견했어")).toBe("다시 발견했어");
+  });
 });
 
 describe("chatAllowed", () => {
