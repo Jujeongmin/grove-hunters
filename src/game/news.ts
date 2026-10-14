@@ -24,6 +24,37 @@ export interface NewsEntry {
 
 export const NEWS: readonly NewsEntry[] = [
   {
+    id: "2026-10-14-soul-codex",
+    date: "2026-10-14",
+    text: {
+      ko: { title: "영혼 도감", lines: [
+        "몬스터를 잡으면 1% 확률로 그 몬스터의 영혼을 얻어요(5분마다 나오는 보스는 5%, 숲의 수호자는 잡은 사람 모두 1개).",
+        "메뉴의 도감(8)에서 영혼을 수집하면 몬스터마다 1개·5개·10개에서 단계가 열려요. 숲은 공격력, 설산은 체력, 화산은 받는 피해 감소, 보스는 셋 모두를 올려 줘요.",
+        "도감에는 몬스터의 출현 지역, 성향, 영혼 획득 확률이 나오고, 찾아가기로 바로 사냥하러 갈 수 있어요.",
+      ] },
+      en: { title: "The Soul Codex", lines: [
+        "A felled monster leaves its soul one time in a hundred (bosses that return every five minutes, one in twenty; the grove's guardian, one to everyone who helped).",
+        "Collect souls in the Codex (8): each monster opens a stage at 1, 5 and 10 souls. The grove's add attack, the snow's health, the volcano's cut damage taken, and the bosses' all three.",
+        "The Codex shows where each monster is found, its temper and its soul chance, and Go hunt takes you there.",
+      ] },
+      ja: { title: "魂の図鑑", lines: [
+        "モンスターを倒すと1%の確率で魂を入手（5分ごとに出るボスは5%、森の守護者は参加者全員に1個）。",
+        "メニューの図鑑（8）で魂を収集すると、モンスターごとに1・5・10個で段階が開放。森は攻撃力、雪山は体力、火山は被ダメージ減少、ボスは3つすべてが上がります。",
+        "図鑑には出現地域・性質・魂の入手確率が表示され、「狩りに行く」ですぐ向かえます。",
+      ] },
+      "zh-Hans": { title: "灵魂图鉴", lines: [
+        "击杀怪物有1%几率获得其灵魂（每5分钟出现的首领为5%，森林守护者参与者各得1个）。",
+        "在菜单的图鉴（8）中收集灵魂，每种怪物在1、5、10个时开启阶段。森林提升攻击力，雪山提升体力，火山减少受到的伤害，首领三者皆升。",
+        "图鉴显示怪物的出没地区、性情与灵魂获取几率，点击前往狩猎即可直接出发。",
+      ] },
+      "zh-Hant": { title: "靈魂圖鑑", lines: [
+        "擊殺怪物有1%機率獲得其靈魂（每5分鐘出現的首領為5%，森林守護者參與者各得1個）。",
+        "在選單的圖鑑（8）中收集靈魂，每種怪物在1、5、10個時開啟階段。森林提升攻擊力，雪山提升體力，火山減少受到的傷害，首領三者皆升。",
+        "圖鑑顯示怪物的出沒地區、性情與靈魂獲取機率，點擊前往狩獵即可直接出發。",
+      ] },
+    },
+  },
+  {
     id: "2026-10-12-volcano",
     date: "2026-10-12",
     text: {

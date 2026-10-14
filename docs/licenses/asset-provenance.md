@@ -279,6 +279,7 @@ develop 브랜치의 `public/`에 있으나 위 표에 따로 적히지 않았�
 | `public/assets/ui/icons/ui_rewards.png` | 메뉴 보상, 트로피 | PixelLab 생성 (36x36) | PixelLab 약관 | develop d92278e (2026-10-02, 그리기 스크립트판 84df685를 대체), 커밋 2327660 |
 | `public/assets/ui/icons/ui_ticket.png` | 탈것 소환권 | PixelLab 생성 (36x36) | PixelLab 약관 | 위와 같음 |
 | `public/assets/ui/icons/ui_job.png` | 메뉴 전직, 금색 상승 화살표 | PixelLab 생성 (36x36, pixflux) | PixelLab 약관 | develop (2026-10-12) |
+| `public/assets/ui/icons/ui_codex.png` | 메뉴 영혼 도감, 책 위의 푸른 영혼 불꽃 | PixelLab 생성 (36x36, pixflux) | PixelLab 약관 | develop (2026-10-14) |
 | `public/assets/ui/icons/guardian_3.png`, `tracker_3.png`, `warder_3.png`, `paladin_3.png`, `scout_3.png`, `iron_monk_3.png` | 전직 4번째 스킬 | 같은 전직의 `_2` 아이콘(위 PixelLab 생성분)을 `scripts/fourth-skill-icons.py`가 금테로 가공 | PixelLab 약관 (파생물) | develop de61be5 (2026-09-30), 커밋 f785aef |
 | `public/assets/ui/icons/berserker_3.png`, `sniper_3.png`, `elementalist_3.png`, `high_priest_3.png`, `assassin_3.png`, `fist_master_3.png` | 전직 4번째 스킬 | 원래 직업의 `_2` 아이콘(496 RPG icons)을 같은 스크립트가 금테로 가공 | CC0 1.0 (파생물) | 위와 같음 |
 | `public/assets/ui/items/weapon_1_{bow,staff,holy,dagger,fist}.png` | 직업별 1등급 무기 그림(활·마법사 지팡이·성직자 지팡이·단검·권갑) | PixelLab 생성 (34x34) | PixelLab 약관 | develop c51752c (2026-09-30), 커밋 8dcac77 |

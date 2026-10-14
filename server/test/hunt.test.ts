@@ -43,6 +43,36 @@ async function standAt(server: any, x: number, z: number): Promise<void> {
 }
 
 describe("hunting", () => {
+  test("a kill now and then leaves its soul, which waits until collected into the codex and then adds to the fight", async (server) => {
+    const entry = await toForest(server, "test-a");
+    const spawn = zoneLayout("forest1").playerSpawn;
+    const realRandom = Math.random;
+    const before = (await server.getBag());
+    expect([before.souls, before.codex]).toEqual([{}, {}]);
+    // Every roll comes up lowest: the soul's one in a hundred comes.
+    Math.random = () => 0;
+    try {
+      await only("rat", spawn.x, spawn.z - 1.5, 1);
+      await standAt(server, spawn.x, spawn.z);
+      expect((await server.strike("m0")).killed).toEqual(["m0"]);
+    } finally {
+      Math.random = realRandom;
+    }
+    const got = await server.getBag();
+    expect(got.souls).toEqual({ rat: 1 });
+    expect(got.codex).toEqual({});
+    expect((await $room.getMyState()).payout.souls).toEqual(["rat"]);
+    // Collected by hand: the first stage opens.
+    const power = (await $room.getMyState()).gear.power;
+    const collected = await server.collectSouls("rat");
+    expect(collected.opened).toEqual([1]);
+    expect([collected.bag.souls, collected.bag.codex]).toEqual([{}, { rat: 1 }]);
+    expect((await $room.getMyState()).gear.power).toBeCloseTo(power + 0.003);
+    expect(await errorOf(server.collectSouls("rat"))).toContain("no_item");
+    expect(await errorOf(server.collectSouls("guild_dragon"))).toContain("unavailable");
+    void entry;
+  });
+
   test("a hunting field fills with monsters on its first tick", async (server) => {
     const entry = await toForest(server, "test-a");
     await server.simulateTick(entry.roomId, 200);

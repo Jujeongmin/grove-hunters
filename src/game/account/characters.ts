@@ -1,3 +1,4 @@
+import { readSouls, type Souls } from "./souls";
 import { readClass, type PlayerClass } from "../combat/classes";
 import { JOBS, readJob, type JobId } from "../combat/jobs";
 import { costumeById } from "../render/costumes";
@@ -46,6 +47,9 @@ export interface Character extends Inventory {
   // What it has done toward the account's achievements (see achievements.ts); none for characters
   // from before it was kept.
   record?: CharRecord;
+  // Its souls waiting to be collected, and those collected into the codex (see souls.ts).
+  souls?: Souls;
+  codex?: Souls;
 }
 
 // A character in no guild, never in one.
@@ -91,6 +95,7 @@ export function readCharacters(raw: unknown): Character[] {
       guildLeftAt: typeof c.guildLeftAt === "number" && Number.isFinite(c.guildLeftAt) ? c.guildLeftAt : 0,
       applied: Array.isArray(c.applied) ? c.applied.filter((id): id is string => typeof id === "string") : [],
       record: readRecord(c.record),
+      souls: readSouls(c.souls), codex: readSouls(c.codex),
     });
   }
   return out.sort((a, b) => a.made - b.made);

@@ -51,6 +51,8 @@ import { PartyFrame, PartyInviteBanner, PartyPanel } from "./PartyPanel";
 import { INVITE_MS, PARTY_POLL_HURRY_MS, PARTY_POLL_IDLE_MS, PARTY_POLL_MS, type PartyState } from "../game/account/party";
 import { DungeonHud, DungeonMatchBanner, DungeonPanel } from "./DungeonPanel";
 import { JobPanel } from "./JobPanel";
+import { CodexPanel } from "./CodexPanel";
+import { codexBonus } from "../game/account/souls";
 import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import { DUNGEON_POLL_MS, type DungeonView } from "../game/world/dungeon";
 import { ArenaHud } from "./ArenaHud";
@@ -187,7 +189,7 @@ function LinkChip() {
 }
 
 // The panels over the world, one at a time.
-type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party" | "dungeon" | "job";
+type Panel = "bag" | "shop" | "smith" | "skills" | "ranking" | "quests" | "map" | "channels" | "grove" | "donate" | "mounts" | "news" | "mail" | "market" | "guild" | "rewards" | "party" | "dungeon" | "job" | "codex";
 
 interface ZoneScreenProps extends Omit<WorldScreenProps, "onExit"> {
   entry: ZoneEntry;
@@ -608,6 +610,10 @@ function ZoneScreen({
       dot: !!dungeon?.match && !dungeon.match.ready,
     },
     {
+      id: "codex", label: t("menu.codex"), key: "8", code: "Digit8", act: () => toggle("codex"), on: panel === "codex",
+      dot: !!bag && Object.values(bag.souls).some((n) => (n ?? 0) > 0),
+    },
+    {
       id: "job", label: t("menu.job"), key: "7", code: "Digit7", act: () => toggle("job"), on: panel === "job",
       dot: !!bag && !bag.job && (hud?.level ?? 1) >= ADVANCE_LEVEL,
     },
@@ -720,7 +726,7 @@ function ZoneScreen({
                 <span className="hud-xp">EXP {(Math.min(1, hud.xpInto / hud.xpNeed) * 100).toFixed(2)}%</span>
                 {bag && (
                   <span className="hud-power" title={t("rank.power")}>
-                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd).toLocaleString()}
+                    {t("rank.power")} {combatPowerAt(hud.level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd, codexBonus(bag.codex)).toLocaleString()}
                   </span>
                 )}
               </div>
@@ -903,6 +909,15 @@ function ZoneScreen({
       </Suspense>
       {panel === "news" && <NewsPanel onClose={() => setPanel(null)} />}
       {panel === "mail" && <MailPanel client={client} onCount={setMailWaiting} onClose={() => setPanel(null)} />}
+      {panel === "codex" && (
+        <CodexPanel
+          client={client} bag={bag} library={view.current?.models ?? null} onClose={() => setPanel(null)}
+          onSeek={(type) => {
+            setPanel(null);
+            view.current?.seekQuest([type]);
+          }}
+        />
+      )}
       {panel === "job" && (
         <JobPanel client={client} bag={bag} playerClass={playerClass} level={hud?.level ?? 1} onClose={() => setPanel(null)} />
       )}

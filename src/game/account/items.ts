@@ -1,3 +1,4 @@
+import type { Souls } from "./souls";
 import type { MountBonus, MountId } from "./mounts";
 import type { JobId } from "../combat/jobs";
 import type { TutorialStep } from "./tutorial";
@@ -208,6 +209,9 @@ export interface BagView {
   herd: MountBonus;
   // The account's VIP rank (see premium.ts).
   vip: number;
+  // Souls waiting to be collected, and the codex they go into (see souls.ts).
+  souls: Souls;
+  codex: Souls;
 }
 
 export function sellPrice(id: ItemId): number {

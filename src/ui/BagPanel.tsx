@@ -5,6 +5,7 @@ import { ADVANCE_LEVEL } from "../game/combat/jobs";
 import type { PlayerClass } from "../game/combat/classes";
 import { jobBlurb, jobName } from "./names";
 import { combatPowerAt } from "../game/combat/power";
+import { codexBonus } from "../game/account/souls";
 import { iconFor } from "../game/render/icons";
 import { locale, t } from "./lang";
 import type { Key } from "./strings/ko";
@@ -102,7 +103,7 @@ export function BagPanel({ client, bag, onClose, onAdvance, playerClass, level }
     setPicked(null);
     act(() => (shown.piece ? client.discardPiece(shown.piece.uid) : client.discard(shown.id, shown.n ?? 1, shown.trade === true)));
   };
-  const power = bag ? combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd) : null;
+  const power = bag ? combatPowerAt(level, playerClass, bag.gear, bag.job, bag.mount, bag.mountStars, bag.vip, bag.herd, codexBonus(bag.codex)) : null;
 
   // What can be done with the thing picked, under it.
   const actions = shown && (

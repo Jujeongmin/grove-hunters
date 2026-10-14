@@ -1,3 +1,4 @@
+import { collectSouls, gainSoul, hasSoul, soulChance } from "../../src/game/account/souls";
 import {
   acceptFriend, removeFriend, requestFriend, type FriendSide, type FriendsView,
 } from "../../src/game/account/friends";
@@ -40,7 +41,7 @@ import {
   addListing, buyListing, cancelListing, countListings, sellerListings, shelfListings, sweepExpired, withSellerLock,
 } from "./market";
 import { CHAT_WINDOW_MS, chatAllowed, readChat, type ChatMessage } from "../../src/game/world/chat";
-import { rankHitters, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
+import { rankHitters, readMonsterType, rollLoot, xpFor, type MonsterType } from "../../src/game/world/monsters";
 import {
   QUESTS, QUEST_CHAIN, QUEST_START, countDaily, questTaken, countKills, dailyToday, questDone, readDaily, readDailyId,
 } from "../../src/game/account/quests";
@@ -186,6 +187,8 @@ interface Pay {
   gold: number;
   items: ItemId[];
   felled: MonsterType[];
+  // Souls the kills left this hunter (see souls.ts).
+  souls: MonsterType[];
 }
 
 // Your gems, the mounts you own and the one you ride (the first you own if none was picked, or it
@@ -334,10 +337,21 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
     await $asset.mint(GOLD, pay.gold);
     if (account !== $sender.account) await $asset.transfer(account, GOLD, pay.gold);
   }
-  const next = await updateActive(account, (c) => ({
-    ...loot(c, pay.items, Math.random, newUid, pieceLimit(vip)), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
-    daily: countDaily(c.daily, pay.felled, Date.now()), record: recordFelled(c.record, pay.felled),
-  }));
+  // The souls this character could still take (a full monster leaves none).
+  let gotSouls: MonsterType[] = [];
+  const next = await updateActive(account, (c) => {
+    let souls = c.souls ?? {};
+    gotSouls = [];
+    for (const type of pay.souls) {
+      const more = gainSoul(type, c.codex ?? {}, souls);
+      if (more !== souls) gotSouls.push(type);
+      souls = more;
+    }
+    return {
+      ...loot(c, pay.items, Math.random, newUid, pieceLimit(vip)), xp: c.xp + pay.xp, quest: countKills(c.quest, pay.felled),
+      daily: countDaily(c.daily, pay.felled, Date.now()), record: recordFelled(c.record, pay.felled), souls,
+    };
+  });
   if (pay.xp > 0) await writeRanking(account, next, vip, combatPower(await mounted(account, next)));
   const levelled = levelOf(next.xp).level > levelOf(next.xp - pay.xp).level;
   const stats = fightStats(await mounted(account, next));
@@ -346,7 +360,10 @@ async function payHunter(account: string, roomId: string, paid: Pay): Promise<vo
       account,
       {
         look: zoneLook(next, vip), xp: next.xp, ...(levelled ? { maxHp: stats.maxHp, hp: stats.maxHp } : {}),
-        payout: { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, xp: pay.xp, gold: pay.gold, items: pay.items },
+        payout: {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, xp: pay.xp, gold: pay.gold, items: pay.items,
+          ...(gotSouls.length > 0 ? { souls: gotSouls } : {}),
+        },
       },
       { returnState: false },
     );
@@ -366,7 +383,7 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
   const pays = new Map<string, Pay>();
   const payOf = (account: string) => {
     let pay = pays.get(account);
-    if (!pay) pays.set(account, (pay = { xp: 0, gold: 0, items: [], felled: [] }));
+    if (!pay) pays.set(account, (pay = { xp: 0, gold: 0, items: [], felled: [], souls: [] }));
     return pay;
   };
   // Everyone here, with their level and the party the room has them in (see party.ts).
@@ -393,6 +410,10 @@ async function reward(caller: string, roomId: string, result: HitResult): Promis
       pay.gold += Math.round(loot.gold * share);
     }
     payOf(owner).items.push(...loot.items);
+    // Its soul: to everyone who hit the guardian; otherwise, now and then, to the owner.
+    const chance = soulChance(kill.type);
+    if (chance >= 1) for (const account of hunters) payOf(account).souls.push(kill.type);
+    else if (chance > 0 && Math.random() < chance) payOf(owner).souls.push(kill.type);
     for (const counted of new Set([owner, ...hunters, ...sharers])) payOf(counted).felled.push(kill.type);
   }
   if (here) for (const account of pays.keys()) await markHunter(account, here.world, Date.now());
@@ -407,6 +428,7 @@ async function bagView(character: Character): Promise<BagView> {
     bag: character.bag, bagTrade: character.bagTrade, pieces: character.pieces, gear: character.gear,
     job: character.job, quest: character.quest,
     daily: dailyToday(character.daily, Date.now()), tutorial: character.tutorial,
+    souls: character.souls ?? {}, codex: character.codex ?? {},
     ...(await (async () => {
       const { owned, selected, stars, vip } = await accountMounts($sender.account);
       return { mount: selected, mountStars: selected ? stars[selected] ?? 0 : 0, vip, herd: herdBonus(owned, stars) };
@@ -1678,6 +1700,24 @@ export class Server {
     const account = $sender.account;
     await playing(account);
     return bagView(await updateActive(account, (c) => takeStack(c, item, n, trade === true)));
+  }
+
+  // Collects a monster's waiting souls into the codex, from anywhere: its stages open and add to every
+  // fight. Answers the bag and the stages that opened.
+  async collectSouls(rawType: unknown): Promise<{ bag: BagView; opened: number[] }> {
+    const type = readMonsterType(rawType);
+    if (!type || !hasSoul(type)) throw new RuleViolation("unavailable");
+    const account = $sender.account;
+    await playing(account);
+    let opened: number[] = [];
+    const next = await updateActive(account, (c) => {
+      const done = collectSouls(type, c.codex ?? {}, c.souls ?? {});
+      if (done.codex === (c.codex ?? {})) throw new RuleViolation("no_item");
+      opened = done.opened;
+      return { ...c, codex: done.codex, souls: done.souls };
+    });
+    if (opened.length > 0) await refreshFighter(next);
+    return { bag: await bagView(next), opened };
   }
 
   // Throws away many things at once, anywhere: pieces by uid and so many of stacks, all or none.

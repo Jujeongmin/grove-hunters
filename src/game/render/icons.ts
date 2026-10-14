@@ -42,6 +42,8 @@ export const ICON_IDS = [
   "ui_dungeon",
   // Advancement (PixelLab).
   "ui_job",
+  // The soul codex (PixelLab).
+  "ui_codex",
 ];
 // Older icons with names of their own.
 const ICON_FILES: Record<string, string> = {

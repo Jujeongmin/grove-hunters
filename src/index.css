@@ -867,6 +867,66 @@ button.hud-prompt:hover { color: #ffe0b0; }
 .bag-detail .bag-blurb { margin: 0; flex: none; }
 .bag-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: auto; }
 .bag-actions .text-button { font-size: 13px; padding: 4px 0; }
+/* The soul codex: tabs by region, the monsters as tiles on the left, the one picked on the right with
+   its model turning, where it is met, its stages and the button that collects its souls. */
+.full-screen > .full-body.codex-panel { max-width: 980px; }
+.codex-total { margin-left: auto; margin-right: 12px; font: 700 13px var(--font-head); color: var(--ember); }
+.codex-total em { margin-left: 8px; font-style: normal; color: var(--ink-dim); }
+.codex-tabs { display: flex; gap: 18px; padding: 0 4px; }
+.codex-tabs .text-button { position: relative; font: 700 15px var(--font-head); padding: 4px 2px; }
+.codex-tabs .text-button.on { color: var(--ember); text-decoration: underline; text-underline-offset: 5px; }
+.codex-tabs .hud-dot { position: absolute; top: -2px; right: -10px; left: auto; }
+.codex-body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; min-height: 0; }
+.codex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; align-content: start; }
+.codex-tile {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; text-align: left;
+  font: inherit; color: var(--ink); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px;
+  background: linear-gradient(180deg, rgba(52, 36, 22, 0.9), rgba(20, 14, 10, 0.92)); cursor: var(--cursor-press), pointer;
+}
+.codex-tile b { font: 700 14px var(--font-head); }
+.codex-tile.unseen b { color: var(--ink-dim); }
+.codex-tile.picked { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember), 0 0 14px rgba(255, 179, 90, 0.4); }
+.codex-tile.full { background: linear-gradient(180deg, rgba(92, 66, 26, 0.95), rgba(36, 24, 12, 0.95)); }
+.codex-tile.opened, .codex-detail.opened { animation: codex-open 1.6s ease-out; }
+@keyframes codex-open { 0% { box-shadow: 0 0 0 2px #ffe08a, 0 0 40px rgba(255, 220, 130, 0.9); } 100% { box-shadow: none; } }
+.codex-lv { font: 600 11px var(--font-head); color: var(--ink-dim); }
+.codex-pips { display: flex; gap: 4px; }
+.codex-pips i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(255, 211, 106, 0.6); }
+.codex-pips i.on { background: #ffd36a; box-shadow: 0 0 6px rgba(255, 211, 106, 0.8); }
+.codex-badge {
+  position: absolute; top: 8px; right: 8px; padding: 1px 7px; border-radius: 999px; font: 800 12px var(--font-head);
+  color: #102030; background: #8fe1ff; box-shadow: 0 0 10px rgba(143, 225, 255, 0.8);
+}
+.codex-detail {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 12px;
+  border: 1px solid rgba(255, 211, 106, 0.22); background: linear-gradient(180deg, rgba(40, 28, 18, 0.95), rgba(16, 11, 8, 0.96));
+}
+.codex-stage { position: relative; height: 190px; border-radius: 10px; background: radial-gradient(circle at 50% 75%, rgba(120, 80, 40, 0.35), rgba(0, 0, 0, 0.5)); }
+.codex-stage canvas { width: 100%; height: 100%; display: block; }
+.codex-unknown { position: absolute; inset: 0; display: grid; place-items: center; font: 800 34px var(--font-head); color: rgba(255, 255, 255, 0.35); pointer-events: none; }
+.codex-head { display: flex; align-items: baseline; gap: 8px; }
+.codex-head b { font: 800 22px var(--font-head); color: #ffd36a; text-shadow: var(--shadow); }
+.codex-head span { font: 700 13px var(--font-head); color: var(--ink-dim); }
+.codex-head .codex-full { margin-left: auto; color: #1d130a; background: #ffd36a; padding: 1px 9px; border-radius: 999px; }
+.codex-facts { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; margin: 0; font-size: 13px; }
+.codex-facts dt { color: var(--ink-dim); }
+.codex-facts dd { margin: 0; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.codex-count { font-weight: 700; font-variant-numeric: tabular-nums; }
+.codex-bar { flex: 1; min-width: 60px; }
+.codex-stages { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.codex-stages li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 10px; border-radius: 8px; font-size: 13px; color: var(--ink-dim); background: rgba(0, 0, 0, 0.25); }
+.codex-stages li b { font-weight: 700; }
+.codex-stages li.on { color: var(--ink); background: rgba(255, 211, 106, 0.12); }
+.codex-stages li.on b { color: #ffd36a; }
+.codex-stages li.just { animation: codex-open 1.6s ease-out; }
+.codex-news { margin: 0; font: 800 15px var(--font-head); color: #ffe08a; text-align: center; text-shadow: 0 0 10px rgba(255, 210, 120, 0.7); }
+.codex-actions { display: flex; align-items: center; gap: 14px; }
+.codex-collect:not(:disabled) { color: #102030; text-shadow: none; }
+.codex-collect:not(:disabled)::before { background: #8fe1ff; }
+.codex-collect:hover:not(:disabled)::before { background: #b5ecff; }
+@media (max-width: 720px) {
+  .codex-body { grid-template-columns: 1fr; }
+}
 /* Advancement: the two paths side by side in the middle, each a card of its bent, what it gives and
    its three skills; the yes waits below. */
 .job-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 24px 28px; }

@@ -1254,6 +1254,11 @@ export class WorldView {
     if (result.gold > 0 || result.items.length > 0) playCue("gold");
     if (result.gold > 0) this.notes.push({ text: t("note.gotGold", { n: result.gold }), at: now });
     for (const id of result.items) this.notes.push({ text: t("note.gotItem", { name: id in ITEMS ? itemName(id) : id }), at: now });
+    // A soul found: told on its own line, with the chime of something rare.
+    for (const type of result.souls ?? []) {
+      this.notes.push({ text: t("note.gotSoul", { name: monsterName(type) }), at: now });
+      playCue("notify");
+    }
   }
 
   // Drinks the potion that fits what is missing (see pickPotion).

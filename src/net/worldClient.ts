@@ -7,7 +7,7 @@ import { PROTOCOL_VERSION, isPose, readSwing, type Pose } from "../game/world/ty
 import type { BagView, ItemId, Slot } from "../game/account/items";
 import type { JobId } from "../game/combat/jobs";
 import type { RankDetail, RankingView } from "../game/account/ranking";
-import { readMonsterType, type MonsterState } from "../game/world/monsters";
+import { readMonsterType, type MonsterState, type MonsterType } from "../game/world/monsters";
 import type { ZoneEntry, ZoneId, ZoneLook } from "../game/world/zones";
 import { errorCode } from "./errors";
 import type { EnhanceOutcome } from "../game/account/forge";
@@ -153,13 +153,14 @@ function readChatMessage(raw: unknown): ChatMessage | null {
 export interface HitResult { hit: string[]; killed: string[]; xp: number; gold: number; items: ItemId[] }
 // What the server paid you for a kill, yours or one you helped with: the XP, gold and items (all
 // zero when you only counted it toward your quest).
-export interface Payout { xp: number; gold: number; items: ItemId[] }
+export interface Payout { xp: number; gold: number; items: ItemId[]; souls?: MonsterType[] }
 
 function readPayout(raw: unknown): (Payout & { id: string }) | null {
   const p = raw as Record<string, unknown> | null;
   if (!p || typeof p !== "object" || typeof p.id !== "string") return null;
   const items = Array.isArray(p.items) ? p.items.filter((i): i is ItemId => typeof i === "string") : [];
-  return { id: p.id, xp: num(p.xp), gold: num(p.gold), items };
+  const souls = Array.isArray(p.souls) ? p.souls.map(readMonsterType).filter((m): m is MonsterType => m !== null) : [];
+  return { id: p.id, xp: num(p.xp), gold: num(p.gold), items, ...(souls.length > 0 ? { souls } : {}) };
 }
 
 // Moving, your pose goes out this often; standing still, only this often (nothing changed, so the room
@@ -484,7 +485,7 @@ export class WorldClient {
     const first = this.payoutSeen === undefined;
     this.payoutSeen = id;
     if (first || !payout) return;
-    this.payouts.push({ xp: payout.xp, gold: payout.gold, items: payout.items });
+    this.payouts.push({ xp: payout.xp, gold: payout.gold, items: payout.items, ...(payout.souls ? { souls: payout.souls } : {}) });
     // Gold, drops and quest kills all live with the bag.
     void this.refreshBag();
   }
@@ -531,6 +532,17 @@ export class WorldClient {
   // Throws away many at once: pieces by uid, and whole stacks (all or none).
   discardMany(pieces: string[], stacks: { id: ItemId; n: number; trade: boolean }[]): Promise<string | null> {
     return this.bagCall("discardMany", [{ pieces, stacks }]);
+  }
+
+  // Collects a monster's waiting souls into the codex: the stages that opened, or why not.
+  async collectSouls(type: MonsterType): Promise<{ opened: number[] } | { problem: string }> {
+    try {
+      const r = await this.transport.call<{ bag: BagView; opened: number[] }>("collectSouls", [type]);
+      this.set({ bag: r.bag });
+      return { opened: r.opened };
+    } catch (error) {
+      return { problem: errorCode(error) };
+    }
   }
 
   private async bagCall(name: string, args: unknown[]): Promise<string | null> {
