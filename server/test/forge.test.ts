@@ -38,7 +38,7 @@ describe("the smith", () => {
     expect(bag.gear.weapon).toEqual(weapon(1));
     expect(bag.bag.stone).toBe(20 - cost.stones);
     expect(bag.gold).toBe(5000 - cost.gold);
-    expect((await $room.getMyState()).gear.power).toBeGreaterThan(ITEMS.weapon_2.power);
+    expect((await $room.getMyState()).gear.atk).toBeGreaterThan(ITEMS.weapon_2.atk);
   });
 
   test("a piece in the bag is enhanced where it lies, by its uid", async (server) => {

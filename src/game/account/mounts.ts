@@ -66,52 +66,52 @@ export const MOUNT_IDS = Object.keys(MOUNTS) as MountId[];
 // more health, far more the rarer it is (the deer, everyone's own, counts as below common). Each tier
 // starts about where the one below ends at ★5, so a rarer mount is never beaten by stars on a commoner
 // one: a legendary at ★1 doubles your damage.
-export interface MountBonus { power: number; hp: number }
+export interface MountBonus { atk: number; hp: number }
 const TIER_BONUS: Record<MountTier | "base", MountBonus> = {
-  base: { power: 0.1, hp: 30 },
-  common: { power: 0.15, hp: 45 },
-  rare: { power: 0.25, hp: 75 },
-  epic: { power: 0.42, hp: 125 },
-  legendary: { power: 0.85, hp: 250 },
-  mythic: { power: 1.4, hp: 420 },
+  base: { atk: 11, hp: 30 },
+  common: { atk: 16, hp: 45 },
+  rare: { atk: 27, hp: 75 },
+  epic: { atk: 46, hp: 125 },
+  legendary: { atk: 93, hp: 250 },
+  mythic: { atk: 153, hp: 420 },
 };
 export function mountBonus(id: MountId | null | undefined, stars = 0): MountBonus {
-  if (!id) return { power: 0, hp: 0 };
+  if (!id) return { atk: 0, hp: 0 };
   const base = TIER_BONUS[MOUNTS[id].tier ?? "base"];
   const grown = 1 + STAR_BONUS * Math.max(0, Math.min(MAX_STARS, stars));
-  return { power: Math.round(base.power * grown * 1000) / 1000, hp: Math.round(base.hp * grown) };
+  return { atk: Math.round(base.atk * grown), hp: Math.round(base.hp * grown) };
 }
 
 // Owning a mount (보유 효과) makes you stronger too, whichever one you have picked: each owned mount
 // adds its tier's share, grown by its stars as the picked one's is (★5 doubles it). Health goes with
 // attack as for the picked mount, 3 for each 1%. The deer, everyone's own, adds nothing.
 const OWNED_BONUS: Record<MountTier, MountBonus> = {
-  common: { power: 0.05, hp: 15 },
-  rare: { power: 0.08, hp: 24 },
-  epic: { power: 0.14, hp: 42 },
-  legendary: { power: 0.28, hp: 84 },
-  mythic: { power: 0.47, hp: 141 },
+  common: { atk: 5, hp: 15 },
+  rare: { atk: 9, hp: 24 },
+  epic: { atk: 15, hp: 42 },
+  legendary: { atk: 31, hp: 84 },
+  mythic: { atk: 52, hp: 141 },
 };
-export const NO_HERD: MountBonus = { power: 0, hp: 0 };
+export const NO_HERD: MountBonus = { atk: 0, hp: 0 };
 
 // What one owned mount adds by being owned, at its stars.
 export function ownedBonus(id: MountId, stars = 0): MountBonus {
   const tier = MOUNTS[id].tier;
   if (!tier) return NO_HERD;
   const grown = 1 + STAR_BONUS * Math.max(0, Math.min(MAX_STARS, stars));
-  return { power: Math.round(OWNED_BONUS[tier].power * grown * 1000) / 1000, hp: Math.round(OWNED_BONUS[tier].hp * grown) };
+  return { atk: Math.round(OWNED_BONUS[tier].atk * grown), hp: Math.round(OWNED_BONUS[tier].hp * grown) };
 }
 
 // Everything the account's mounts add by being owned, together.
 export function herdBonus(owned: readonly MountId[], stars: Partial<Record<MountId, number>>): MountBonus {
-  let power = 0;
+  let atk = 0;
   let hp = 0;
   for (const id of new Set(owned)) {
     const one = ownedBonus(id, stars[id] ?? 0);
-    power += one.power;
+    atk += one.atk;
     hp += one.hp;
   }
-  return { power: Math.round(power * 1000) / 1000, hp };
+  return { atk, hp };
 }
 
 // Breaking through (돌파): a mount drawn again when already owned gains a star instead of gems back,

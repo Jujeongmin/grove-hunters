@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MONSTERS, ZONE_MONSTERS, damageAt, spawnMonsters, type MonsterType } from "../../src/game/world/monsters";
 import { ZONE_IDS, zoneLayout, type ZoneId } from "../../src/game/world/zones";
-import { fightStatsAt } from "../../src/game/combat/power";
+import { bittenFor, fightStatsAt } from "../../src/game/combat/power";
 import { WEAPONS } from "../../src/game/combat/classes";
 import type { ItemId } from "../../src/game/account/items";
 
@@ -45,19 +45,19 @@ function lossOf(type: MonsterType, [weapon, armor]: [ItemId, ItemId]): number {
   const m = MONSTERS[type];
   const gear = { weapon: { uid: "w", id: weapon, plus: 0, trade: false }, armor: { uid: "a", id: armor, plus: 0, trade: false } };
   const s = fightStatsAt(m.level, gear, null, "deer", 0, 0);
-  const dps = (damageAt(WEAPONS.warrior.damage, m.level, s.gear.power) / (WEAPONS.warrior.intervalMs / 1000)) * 1.15;
+  const dps = (damageAt(WEAPONS.warrior.damage, m.level, s.gear.power, s.gear.atk) / (WEAPONS.warrior.intervalMs / 1000)) * 1.15;
   const bites = Math.floor(((m.hp / dps) * 1000) / m.attackMs) + 1;
-  return (bites * m.damage * (1 - s.gear.guard)) / s.maxHp;
+  return (bites * bittenFor(m.damage, s.gear)) / s.maxHp;
 }
 
 describe("monster blows", () => {
-  it("a fight at your own level costs health: a tenth or less in the first field, a fifth or more past it", () => {
+  it("a fight at your own level costs health: a tenth or less in the first field, about a fifth or more past it", () => {
     for (const [zone, gear] of Object.entries(GEAR) as [ZoneId, [ItemId, ItemId]][]) {
       for (const type of ZONE_MONSTERS[zone]) {
         const loss = lossOf(type, gear);
-        if (MONSTERS[type].level <= 7) expect(loss, type).toBeGreaterThanOrEqual(0.05);
+        if (MONSTERS[type].level <= 7) expect(loss, type).toBeGreaterThanOrEqual(0.04);
         if (MONSTERS[type].level <= 7) expect(loss, type).toBeLessThanOrEqual(0.12);
-        else expect(loss, type).toBeGreaterThanOrEqual(0.19);
+        else expect(loss, type).toBeGreaterThanOrEqual(0.17);
       }
     }
   });

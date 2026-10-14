@@ -17,10 +17,11 @@ describe("items", () => {
   it("worn pieces add up in a fight, each with its own +", () => {
     const weapon = { uid: "a", id: "weapon_2" as const, plus: 0, trade: false };
     const armor = { uid: "b", id: "armor_2" as const, plus: 0, trade: false };
-    expect(gearStats({ weapon, armor })).toEqual({ power: 0.25, hp: 60, guard: 0.1 });
+    expect(gearStats({ weapon, armor })).toEqual({ atk: 18, hp: 60, def: 7 });
     const sharper = gearStats({ weapon: { ...weapon, plus: 5 }, armor: { ...armor, plus: 2 } });
-    expect(sharper.power).toBeCloseTo(0.25 + 5 * 0.04);
+    expect(sharper.atk).toBe(18 + 5 * 3);
     expect(sharper.hp).toBe(60 + 2 * 12);
+    expect(sharper.def).toBe(7 + 2);
   });
 
   it("reads back only what makes sense from a save", () => {

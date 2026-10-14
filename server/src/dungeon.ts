@@ -361,7 +361,10 @@ export async function tickDungeon(roomId: string, delta: number, now: number): P
       const c = characters.find((x) => x.id === m.characterId);
       if (!c) continue;
       const stats = fightStats(c);
-      mates.push({ playerClass: c.playerClass, level: levelOf(c.xp).level, maxHp: stats.maxHp, power: stats.gear.power, guard: stats.gear.guard });
+      mates.push({
+        playerClass: c.playerClass, level: levelOf(c.xp).level, maxHp: stats.maxHp, power: stats.gear.power, guard: stats.gear.guard,
+        atk: stats.gear.atk, def: stats.gear.def,
+      });
     }
     const seats = Math.max(0, DUNGEON_SIZE - match.members.length);
     const mercs = makeMercs(mates, seats, zoneLayout("dungeon").playerSpawn, Math.random);

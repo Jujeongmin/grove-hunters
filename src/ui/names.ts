@@ -89,9 +89,9 @@ export function itemBlurb(id: ItemId): string {
   if (item.kind === "potion") return t("item.heal", { n: item.heal });
   if (item.kind === "material") return t(key("item", id, "blurb"));
   const parts: string[] = [];
-  if (item.power) parts.push(t("stat.power", { n: Math.round(item.power * 100) }));
+  if (item.atk) parts.push(t("stat.atk", { n: item.atk }));
   if (item.hp) parts.push(t("stat.hp", { n: item.hp }));
-  if (item.guard) parts.push(t("stat.guard", { n: Math.round(item.guard * 100) }));
+  if (item.def) parts.push(t("stat.def", { n: item.def }));
   return parts.join(t("list.join"));
 }
 

@@ -1,7 +1,7 @@
 import { ITEMS, MAX_CARRY } from "../../src/game/account/items";
 import { QUEST_CHAIN } from "../../src/game/account/quests";
 import { WEAPONS } from "../../src/game/combat/classes";
-import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
+import { MONSTERS, damageAt, maxHpAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { STEED, editActive, enterAs, errorOf, join, makeCharacter, pieceOf, toNpc, walkTo } from "./helpers";
 
@@ -25,7 +25,7 @@ describe("bag and gold", () => {
     const { daily, ...rest } = await server.getBag();
     expect(rest).toEqual({
       gold: 0, gems: 0, bag: { potion_small: 5 }, bagTrade: {}, pieces: [], gear: { weapon: null, armor: null }, job: null, quest: { index: 0, count: 0, v: QUEST_CHAIN, taken: true }, tutorial: null,
-      souls: {}, codex: {}, mount: "deer", mountStars: 0, vip: 0, herd: { power: 0, hp: 0 },
+      souls: {}, codex: {}, mount: "deer", mountStars: 0, vip: 0, herd: { atk: 0, hp: 0 },
     });
     expect(daily.counts).toEqual({});
     expect(daily.claimed).toEqual([]);
@@ -184,13 +184,14 @@ describe("bag and gold", () => {
     expect(worn.pieces).toEqual([]);
     const mine = await $room.getMyState();
     expect(mine.maxHp).toBe(maxHpAt(1) + ITEMS.armor_1.hp + STEED.hp);
-    expect(mine.gear.power).toBeCloseTo(ITEMS.weapon_1.power + STEED.power);
+    expect(mine.gear.atk).toBe(ITEMS.weapon_1.atk + STEED.atk);
+    expect(mine.gear.def).toBe(ITEMS.armor_1.def);
     expect(await errorOf(server.equipItem("potion_small"))).toContain("no_item");
 
     const off = await server.unequipItem("weapon");
     expect(off.gear.weapon).toBeNull();
     expect(off.pieces.map((p: any) => p.id)).toEqual(["weapon_1"]);
-    expect((await $room.getMyState()).gear.power).toBeCloseTo(STEED.power);
+    expect((await $room.getMyState()).gear.atk).toBe(STEED.atk);
   });
 
   test("a sharper weapon lands a bigger blow", async (server) => {
@@ -209,7 +210,7 @@ describe("bag and gold", () => {
       },
     });
     await server.strike("m0");
-    const expected = Math.round(WEAPONS.warrior.damage * (1 + ITEMS.weapon_2.power + STEED.power));
+    const expected = damageAt(WEAPONS.warrior.damage, 1, 0, ITEMS.weapon_2.atk + STEED.atk);
     expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - expected);
   });
 

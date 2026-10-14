@@ -403,8 +403,11 @@ export function maxHpAt(level: number): number {
   return 100 + (Math.max(1, level) - 1) * 12;
 }
 
-// Player hits land a little harder with every level, and with a better weapon (power: extra share),
-// and the soul codex's attack (atk) adds to every blow before the shares.
+// Player hits land a little harder with every level; attack (atk: gear, mounts, the soul codex) adds
+// to every blow, in proportion to the blow's own size (ATK_BASE is the warrior's sword, which takes it
+// whole), so a quick weapon gains no more from it than a slow one; then the shares (power: an advanced
+// class, VIP) multiply it.
+export const ATK_BASE = 40;
 export function damageAt(base: number, level: number, power = 0, atk = 0): number {
-  return Math.round((base * (1 + (Math.max(1, level) - 1) * 0.06) + atk) * (1 + power));
+  return Math.round(base * (1 + (Math.max(1, level) - 1) * 0.06 + atk / ATK_BASE) * (1 + power));
 }

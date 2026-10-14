@@ -3,7 +3,7 @@ import { QUESTS, QUEST_CHAIN } from "../../src/game/account/quests";
 import { ADVANCE_LEVEL, JOBS } from "../../src/game/combat/jobs";
 import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
-import { MONSTERS, maxHpAt } from "../../src/game/world/monsters";
+import { MONSTERS, maxHpAt, damageAt } from "../../src/game/world/monsters";
 import { portalsOf, zoneLayout } from "../../src/game/world/zones";
 import { STEED, enterAs, errorOf, giveXp, join, makeCharacter, toNpc, walkTo } from "./helpers";
 
@@ -85,8 +85,7 @@ describe("advancement", () => {
     await ring("frog", 1, 500);
     await $room.updateMyState({ strikeReadyAt: 0 });
     await server.strike("m0");
-    const base = WEAPONS.warrior.damage * (1 + 29 * 0.06);
-    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - Math.round(base * (1 + JOBS.berserker.power + STEED.power)));
+    expect((await $room.getRoomState()).monsters.m0.hp).toBe(500 - damageAt(WEAPONS.warrior.damage, 30, JOBS.berserker.power, STEED.atk));
   });
 });
 

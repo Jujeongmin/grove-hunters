@@ -13,7 +13,7 @@ describe("mounts", () => {
   });
 
   it("the picked mount adds to 전투력, more the rarer it is; none adds nothing", () => {
-    expect(mountBonus(null)).toEqual({ power: 0, hp: 0 });
+    expect(mountBonus(null)).toEqual({ atk: 0, hp: 0 });
     const order = [BASE_MOUNT, "pig", "panda", "yeti", "dragon", "golden_dragon"] as const;
     const power = order.map((id) => combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, id));
     expect(power[0]).toBeGreaterThan(combatPowerAt(10, "warrior", { weapon: null, armor: null }, null, null));
@@ -55,12 +55,12 @@ describe("mounts", () => {
 describe("breaking through", () => {
   it("each star adds a fifth of the tier's bonus; ★5 doubles it", () => {
     expect(mountBonus("dragon", 0)).toEqual(mountBonus("dragon"));
-    expect(mountBonus("dragon", MAX_STARS).power).toBeCloseTo(mountBonus("dragon").power * 2);
+    expect(mountBonus("dragon", MAX_STARS).atk).toBe(mountBonus("dragon").atk * 2);
     expect(mountBonus("dragon", MAX_STARS).hp).toBe(mountBonus("dragon").hp * 2);
     expect(mountBonus("pig", 1).hp).toBe(Math.round(mountBonus("pig").hp * (1 + STAR_BONUS)));
     // No more than MAX_STARS counts.
     expect(mountBonus("dragon", 9)).toEqual(mountBonus("dragon", MAX_STARS));
-    expect(mountBonus(null, 3)).toEqual({ power: 0, hp: 0 });
+    expect(mountBonus(null, 3)).toEqual({ atk: 0, hp: 0 });
   });
 
   it("reads saved stars, only whole ones in range for known mounts", () => {
@@ -72,10 +72,10 @@ describe("breaking through", () => {
 describe("owning mounts (보유 효과)", () => {
   it("adds each owned mount's tier share, the deer nothing, stars growing it as they do the picked bonus", () => {
     expect(ownedBonus(BASE_MOUNT)).toEqual(NO_HERD);
-    expect(ownedBonus("pig")).toEqual({ power: 0.05, hp: 15 });
-    expect(ownedBonus("dragon")).toEqual({ power: 0.28, hp: 84 });
-    expect(ownedBonus("pig", MAX_STARS)).toEqual({ power: 0.1, hp: 30 });
-    expect(herdBonus([BASE_MOUNT, "pig", "chicken", "pig"], { chicken: 1 })).toEqual({ power: 0.11, hp: 33 });
+    expect(ownedBonus("pig")).toEqual({ atk: 5, hp: 15 });
+    expect(ownedBonus("dragon")).toEqual({ atk: 31, hp: 84 });
+    expect(ownedBonus("pig", MAX_STARS)).toEqual({ atk: 10, hp: 30 });
+    expect(herdBonus([BASE_MOUNT, "pig", "chicken", "pig"], { chicken: 1 })).toEqual({ atk: 11, hp: 33 });
   });
 
   it("makes you stronger whichever mount is picked", () => {

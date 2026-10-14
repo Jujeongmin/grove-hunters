@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BREAK_FROM, RECIPES, enhanceCost, rollEnhance } from "../../src/game/account/forge";
-import { ITEMS, MAX_PLUS, PLUS_POWER, gearStats, sellPrice } from "../../src/game/account/items";
+import { ITEMS, MAX_PLUS, gearStats, plusAtk, sellPrice } from "../../src/game/account/items";
 import { gearName, itemName } from "../../src/ui/names";
 import { MONSTERS } from "../../src/game/world/monsters";
 
@@ -21,10 +21,13 @@ describe("enhancing", () => {
   });
 
   it("past +10 each + counts twice", () => {
-    const at = (plus: number) => gearStats({ weapon: { uid: "w", id: "weapon_2", plus, trade: false }, armor: null }).power;
-    expect(at(10) - at(9)).toBeCloseTo(PLUS_POWER);
-    expect(at(11) - at(10)).toBeCloseTo(2 * PLUS_POWER);
-    expect(at(15) - at(0)).toBeCloseTo(20 * PLUS_POWER);
+    const at = (plus: number) => gearStats({ weapon: { uid: "w", id: "weapon_2", plus, trade: false }, armor: null }).atk;
+    const step = plusAtk("weapon_2");
+    expect(at(10) - at(9)).toBe(step);
+    expect(at(11) - at(10)).toBe(2 * step);
+    expect(at(15) - at(0)).toBe(20 * step);
+    // A better weapon's + is worth more.
+    expect(plusAtk("weapon_9")).toBeGreaterThan(plusAtk("weapon_1"));
     expect(enhanceCost("weapon_2", 14)).toMatchObject({ to: 15, success: 0.02 });
   });
 
@@ -40,9 +43,9 @@ describe("enhancing", () => {
     const piece = (id: "weapon_2" | "armor_2", plus: number) => ({ uid: id, id, plus, trade: false });
     const plain = gearStats({ weapon: piece("weapon_2", 0), armor: piece("armor_2", 0) });
     const plus = gearStats({ weapon: piece("weapon_2", 5), armor: piece("armor_2", 3) });
-    expect(plus.power).toBeGreaterThan(plain.power);
+    expect(plus.atk).toBeGreaterThan(plain.atk);
     expect(plus.hp).toBeGreaterThan(plain.hp);
-    expect(plus.guard).toBeGreaterThan(plain.guard);
+    expect(plus.def).toBeGreaterThan(plain.def);
     expect(gearName(piece("weapon_2", 5))).toBe(`+5 ${itemName("weapon_2")}`);
     expect(gearName(piece("weapon_2", 0))).toBe(itemName("weapon_2"));
   });

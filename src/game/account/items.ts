@@ -31,44 +31,44 @@ export interface ItemSpec {
   tier?: number;
   // Potion: health it gives back.
   heal: number;
-  // Weapon: extra share of damage on every hit and skill.
-  power: number;
-  // Armour: extra health, and the share of every blow it stops.
+  // Weapon: attack, added to every hit and skill (see damageAt).
+  atk: number;
+  // Armour: extra health, and defence, taken off every blow (see bittenFor).
   hp: number;
-  guard: number;
+  def: number;
 }
 
-const none = { heal: 0, power: 0, hp: 0, guard: 0 };
+const none = { heal: 0, atk: 0, hp: 0, def: 0 };
 
 export const ITEMS: Record<ItemId, ItemSpec> = {
   potion_small: { ...none, kind: "potion", price: 20, heal: 40 },
   potion_big: { ...none, kind: "potion", price: 70, heal: 120 },
   // For the volcano, whose blows run past 150: one takes back several.
   potion_huge: { ...none, kind: "potion", price: 220, heal: 400 },
-  weapon_1: { ...none, kind: "weapon", price: 150, power: 0.1, tier: 1 },
-  weapon_2: { ...none, kind: "weapon", price: 600, power: 0.25, tier: 2 },
-  weapon_4: { ...none, kind: "weapon", price: null, sell: 700, power: 0.35, tier: 3 },
-  weapon_3: { ...none, kind: "weapon", price: null, power: 0.45, tier: 4 },
-  weapon_5: { ...none, kind: "weapon", price: null, sell: 1800, power: 0.55, tier: 5 },
-  armor_1: { ...none, kind: "armor", price: 120, hp: 25, tier: 1 },
-  armor_2: { ...none, kind: "armor", price: 500, hp: 60, guard: 0.1, tier: 2 },
+  weapon_1: { ...none, kind: "weapon", price: 150, atk: 5, tier: 1 },
+  weapon_2: { ...none, kind: "weapon", price: 600, atk: 18, tier: 2 },
+  weapon_4: { ...none, kind: "weapon", price: null, sell: 700, atk: 32, tier: 3 },
+  weapon_3: { ...none, kind: "weapon", price: null, atk: 51, tier: 4 },
+  weapon_5: { ...none, kind: "weapon", price: null, sell: 1800, atk: 67, tier: 5 },
+  armor_1: { ...none, kind: "armor", price: 120, hp: 25, def: 2, tier: 1 },
+  armor_2: { ...none, kind: "armor", price: 500, hp: 60, def: 7, tier: 2 },
   armor_4: {
-    ...none, kind: "armor", price: null, sell: 650, hp: 85, guard: 0.12, tier: 3,
+    ...none, kind: "armor", price: null, sell: 650, hp: 85, def: 10, tier: 3,
   },
-  armor_3: { ...none, kind: "armor", price: null, hp: 100, guard: 0.2, tier: 4 },
+  armor_3: { ...none, kind: "armor", price: null, hp: 100, def: 23, tier: 4 },
   armor_5: {
-    ...none, kind: "armor", price: null, sell: 1700, hp: 140, guard: 0.2, tier: 5,
+    ...none, kind: "armor", price: null, sell: 1700, hp: 140, def: 25, tier: 5,
   },
   // The snow region's: the canyon's and the peaks' gear, and the Glacier Emperor's.
-  weapon_6: { ...none, kind: "weapon", price: null, sell: 3000, power: 0.7, tier: 6 },
-  armor_6: { ...none, kind: "armor", price: null, sell: 2800, hp: 190, guard: 0.25, tier: 6 },
-  weapon_7: { ...none, kind: "weapon", price: null, sell: 6000, power: 0.85, tier: 7 },
-  armor_7: { ...none, kind: "armor", price: null, sell: 5500, hp: 250, guard: 0.3, tier: 7 },
+  weapon_6: { ...none, kind: "weapon", price: null, sell: 3000, atk: 110, tier: 6 },
+  armor_6: { ...none, kind: "armor", price: null, sell: 2800, hp: 190, def: 43, tier: 6 },
+  weapon_7: { ...none, kind: "weapon", price: null, sell: 6000, atk: 154, tier: 7 },
+  armor_7: { ...none, kind: "armor", price: null, sell: 5500, hp: 250, def: 60, tier: 7 },
   // The volcano's: the canyon's and the summit's gear, and the Flame Lord's.
-  weapon_8: { ...none, kind: "weapon", price: null, sell: 10000, power: 1.0, tier: 8 },
-  armor_8: { ...none, kind: "armor", price: null, sell: 9500, hp: 320, guard: 0.33, tier: 8 },
-  weapon_9: { ...none, kind: "weapon", price: null, sell: 18000, power: 1.2, tier: 9 },
-  armor_9: { ...none, kind: "armor", price: null, sell: 17000, hp: 400, guard: 0.36, tier: 9 },
+  weapon_8: { ...none, kind: "weapon", price: null, sell: 10000, atk: 200, tier: 8 },
+  armor_8: { ...none, kind: "armor", price: null, sell: 9500, hp: 320, def: 74, tier: 8 },
+  weapon_9: { ...none, kind: "weapon", price: null, sell: 18000, atk: 275, tier: 9 },
+  armor_9: { ...none, kind: "armor", price: null, sell: 17000, hp: 400, def: 94, tier: 9 },
   stone: { ...none, kind: "material", price: null, sell: 15 },
   jelly: { ...none, kind: "material", price: null, sell: 5 },
   silk: { ...none, kind: "material", price: null, sell: 12 },
@@ -123,10 +123,15 @@ export interface Gear { weapon: GearPiece | null; armor: GearPiece | null }
 export const MAX_PLUS = 15;
 // Past this + each one counts twice (+11 to +15, the hardest to reach, give the most).
 export const PLUS_DOUBLED_FROM = 10;
-// What each + adds: a weapon's share of damage; armour's health and share of each blow stopped.
-export const PLUS_POWER = 0.04;
+// What each + adds: a weapon attack by its tier (a better weapon's + is worth more), armour health
+// and defence.
+export const PLUS_ATK: readonly number[] = [0, 2, 3, 4, 5, 5, 6, 7, 8, 9];
 export const PLUS_HP = 12;
-export const PLUS_GUARD = 0.005;
+export const PLUS_DEF = 1;
+
+export function plusAtk(id: ItemId): number {
+  return PLUS_ATK[ITEMS[id].tier ?? 1] ?? 2;
+}
 
 export const NO_GEAR: Gear = { weapon: null, armor: null };
 
@@ -167,20 +172,20 @@ export function addItem(bag: Bag, id: ItemId, n: number): Bag {
 }
 
 // What the worn gear adds up to in a fight.
-export interface GearStats { power: number; hp: number; guard: number }
+export interface GearStats { atk: number; hp: number; def: number }
 
-// What a piece's + is worth in steps of PLUS_POWER (and the rest): one a +, two a + past +10.
+// What a piece's + is worth in steps of its + bonus: one a +, two a + past +10.
 export function plusSteps(plus: number): number {
   return Math.min(plus, PLUS_DOUBLED_FROM) + 2 * Math.max(0, plus - PLUS_DOUBLED_FROM);
 }
 
 export function gearStats(gear: Gear): GearStats {
-  const out = { power: 0, hp: 0, guard: 0 };
-  if (gear.weapon) out.power += ITEMS[gear.weapon.id].power + plusSteps(gear.weapon.plus) * PLUS_POWER;
+  const out = { atk: 0, hp: 0, def: 0 };
+  if (gear.weapon) out.atk += ITEMS[gear.weapon.id].atk + plusSteps(gear.weapon.plus) * plusAtk(gear.weapon.id);
   if (gear.armor) {
     const n = plusSteps(gear.armor.plus);
     out.hp += ITEMS[gear.armor.id].hp + n * PLUS_HP;
-    out.guard += ITEMS[gear.armor.id].guard + n * PLUS_GUARD;
+    out.def += ITEMS[gear.armor.id].def + n * PLUS_DEF;
   }
   return out;
 }

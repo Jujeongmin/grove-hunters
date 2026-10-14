@@ -1,4 +1,4 @@
-import { MONSTERS, maxHpAt, spawnMonsters } from "../../src/game/world/monsters";
+import { MONSTERS, damageAt, maxHpAt, spawnMonsters } from "../../src/game/world/monsters";
 import { CLASS_SKILLS } from "../../src/game/combat/skills";
 import { WEAPONS } from "../../src/game/combat/classes";
 import { ROLL } from "../../src/game/combat/roll";
@@ -63,12 +63,12 @@ describe("hunting", () => {
     expect(got.codex).toEqual({});
     expect((await $room.getMyState()).payout.souls).toEqual(["rat"]);
     // Collected by hand: the first stage opens.
-    expect((await $room.getMyState()).gear.atk).toBe(0);
+    expect((await $room.getMyState()).gear.atk).toBe(STEED.atk);
     const collected = await server.collectSouls("rat");
     expect(collected.opened).toEqual([1]);
     expect([collected.bag.souls, collected.bag.codex]).toEqual([{}, { rat: 1 }]);
     // The rat's first stage: attack +1, added to every blow.
-    expect((await $room.getMyState()).gear.atk).toBe(1);
+    expect((await $room.getMyState()).gear.atk).toBe(STEED.atk + 1);
     expect(await errorOf(server.collectSouls("rat"))).toContain("no_item");
     expect(await errorOf(server.collectSouls("guild_dragon"))).toContain("unavailable");
     void entry;
@@ -211,7 +211,7 @@ describe("hunting", () => {
     expect(await errorOf(server.strike("nobody"))).toContain("no_monster");
 
     // Two blows' worth of health.
-    const blow = Math.round(WEAPONS.warrior.damage * (1 + STEED.power));
+    const blow = damageAt(WEAPONS.warrior.damage, 1, 0, STEED.atk);
     const hp = blow * 2 - 5;
     await only("rat", spawn.x, spawn.z - 1.5, hp);
     const first = await server.strike("m0");
@@ -280,7 +280,7 @@ describe("hunting", () => {
     await $room.updateRoomState({ monsters: { a: at(0, -1.5), b: at(0, 1.5), c: at(9, 0) } });
     const used = await server.useSkill();
     expect([...used.hit].sort()).toEqual(["a", "b"]);
-    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - Math.round(CLASS_SKILLS.warrior.damage * (1 + STEED.power)));
+    expect((await $room.getRoomState()).monsters.a.hp).toBe(80 - damageAt(CLASS_SKILLS.warrior.damage, 1, 0, STEED.atk));
     expect(await errorOf(server.useSkill())).toContain("too_fast");
   });
 

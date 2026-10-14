@@ -173,7 +173,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
       const key = `merc:${id}`;
       fighters.set(key, {
         pose: { x: m.x, z: m.z, yaw: m.yaw, y: 0, swing: 0, skill: 0, roll: 0, slot: 0 } as Pose, playerClass: m.playerClass, job: null,
-        level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0, atk: 0, def: 0 }, learned: true,
+        level: m.level, hp: m.hp, maxHp: m.maxHp, dead: m.dead, gear: { power: m.power, hp: 0, guard: m.guard, heal: 0, atk: m.atk ?? 0, def: m.def ?? 0 }, learned: true,
         hitAt: m.hitAt, strikeReadyAt: 0, rolledAt: undefined,
       });
       if (!m.dead) prey.push({ account: key, x: m.x, z: m.z });
@@ -186,7 +186,7 @@ export async function tickRoom(zone: ZoneId, deltaMs: number, now: number, mercs
   for (const hit of struck.hits) {
     const f = fighters.get(hit.account);
     if (!f || f.dead || dodging(f.rolledAt, now)) continue;
-    f.hp = Math.max(0, f.hp - Math.max(1, Math.round(hit.damage * (1 - f.gear.guard))));
+    f.hp = Math.max(0, f.hp - bittenFor(hit.damage, f.gear));
     f.dead = f.hp <= 0;
     if (f.dead) fell.push(hit.account);
     f.hitAt = now;

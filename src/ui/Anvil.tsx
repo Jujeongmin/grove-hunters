@@ -3,7 +3,7 @@ import { gearName, itemBlurb, itemName } from "./names";
 import { BREAK_FROM, RECIPES, enhanceCost, hasMaterials, type EnhanceOutcome, type Recipe } from "../game/account/forge";
 import { protectCost, vipEnhance } from "../game/account/premium";
 import {
-  ITEMS, MAX_PLUS, PLUS_GUARD, PLUS_HP, PLUS_POWER, plusSteps, type BagView, type GearPiece, type ItemId, type Slot,
+  ITEMS, MAX_PLUS, PLUS_DEF, PLUS_HP, plusAtk, plusSteps, type BagView, type GearPiece, type ItemId, type Slot,
 } from "../game/account/items";
 import { TRADE_CRAFT_CHANCE } from "../game/account/inventory";
 import { iconFor } from "../game/render/icons";
@@ -129,15 +129,14 @@ function heatOf(chance: number): string {
   return "fierce";
 }
 
-// What a piece adds at a +, line by line: a weapon its attack, armour its health and the share of each
-// blow it stops.
+// What a piece adds at a +, line by line: a weapon its attack, armour its health and defence.
 function statLines(id: ItemId, plus: number): { key: Key; value: string }[] {
   const item = ITEMS[id];
   const n = plusSteps(plus);
-  if (item.kind === "weapon") return [{ key: "forge.statPower", value: `+${Math.round((item.power + n * PLUS_POWER) * 100)}%` }];
+  if (item.kind === "weapon") return [{ key: "forge.statPower", value: `+${item.atk + n * plusAtk(id)}` }];
   return [
     { key: "forge.statHp", value: `+${item.hp + n * PLUS_HP}` },
-    { key: "forge.statGuard", value: `-${Math.round((item.guard + n * PLUS_GUARD) * 1000) / 10}%` },
+    { key: "forge.statGuard", value: `+${item.def + n * PLUS_DEF}` },
   ];
 }
 

@@ -62,7 +62,8 @@ describe("the mount draw", () => {
     const hp = (await $room.getMyState()).maxHp;
     // The picked bonus and the owned one, both at ★5.
     expect(hp).toBe(maxHpAt(1) + mountBonus("dragon", MAX_STARS).hp + ownedBonus("dragon", MAX_STARS).hp);
-    expect(mountBonus("dragon", MAX_STARS).power).toBeCloseTo(mountBonus("dragon").power * 2);
+    expect(mountBonus("dragon", MAX_STARS).atk).toBe(mountBonus("dragon").atk * 2);
+    expect((await $room.getMyState()).gear.atk).toBe(mountBonus("dragon", MAX_STARS).atk + ownedBonus("dragon", MAX_STARS).atk);
     const all = await server.announcements(0);
     expect(all.map((a: any) => a.kind)).toEqual(["mount_legendary", "mount_star5"]);
     expect(await server.announcements(all[all.length - 1].at)).toEqual([]);

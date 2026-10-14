@@ -39,9 +39,12 @@ export interface Merc {
   hp: number;
   maxHp: number;
   dead: boolean;
-  // What its gear adds to its blows, and the share of a blow it stops.
+  // What its gear adds to its blows (a share and flat attack), and what it stops of a blow (a share
+  // and flat defence).
   power: number;
   guard: number;
+  atk?: number;
+  def?: number;
   attackReadyAt: number;
   healReadyAt: number;
   // Counts up with every blow and every heal, for the screen to swing and cast.
@@ -52,7 +55,7 @@ export interface Merc {
 }
 
 // The players a match brings, as their fight stats say.
-export interface Mate { playerClass: PlayerClass; level: number; maxHp: number; power: number; guard: number }
+export interface Mate { playerClass: PlayerClass; level: number; maxHp: number; power: number; guard: number; atk?: number; def?: number }
 
 // The classes empty seats are filled with: a healer when no player is one, then a front line and
 // a ranged one, as the players lack them.
@@ -74,13 +77,15 @@ export function makeMercs(mates: readonly Mate[], seats: number, at: { x: number
   const maxHp = Math.round(avg((m) => m.maxHp, 300) * MERC_HP_SHARE);
   const power = avg((m) => m.power, 0);
   const guard = avg((m) => m.guard, 0);
+  const atk = Math.round(avg((m) => m.atk ?? 0, 0));
+  const def = Math.round(avg((m) => m.def ?? 0, 0));
   const names = [...MERC_NAMES].sort(() => random() - 0.5);
   const out: Record<string, Merc> = {};
   mercClasses(mates, seats).forEach((playerClass, i) => {
     const a = (i / Math.max(1, seats)) * Math.PI * 2;
     out[`m${i}`] = {
       name: names[i % names.length], playerClass, costume: COSTUMES[i % COSTUMES.length].id, level,
-      x: at.x + Math.cos(a) * 2, z: at.z + Math.sin(a) * 2, yaw: 0, hp: maxHp, maxHp, dead: false, power, guard,
+      x: at.x + Math.cos(a) * 2, z: at.z + Math.sin(a) * 2, yaw: 0, hp: maxHp, maxHp, dead: false, power, guard, atk, def,
       attackReadyAt: 0, healReadyAt: 0, swing: 0, skill: 0, hitAt: 0,
     };
   });
@@ -176,7 +181,7 @@ export function stepMercs(
     m.attackReadyAt = now + weapon.intervalMs;
     m.swing += 1;
     const mon = target.mon;
-    const dealt = Math.min(mon.hp, Math.max(1, Math.round(damageAt(weapon.damage, m.level, m.power) * MERC_EFFICIENCY)));
+    const dealt = Math.min(mon.hp, Math.max(1, Math.round(damageAt(weapon.damage, m.level, m.power, m.atk ?? 0) * MERC_EFFICIENCY)));
     mon.hp -= dealt;
     mon.hitters = { ...mon.hitters, [`merc:${id}`]: (mon.hitters?.[`merc:${id}`] ?? 0) + dealt };
     if (mon.hp <= 0) {
