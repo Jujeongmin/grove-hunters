@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  EVERY_HITTER, SOUL_MAX, SOUL_MONSTERS, SOUL_STAGES, codexBonus, soulChance, soulGroup, soulStage, soulZones, stageBonus,
+  EVERY_HITTER, SOUL_MAX, SOUL_MONSTERS, SOUL_STAGES, codexBonus, nextSoulStage, soulChance, soulGroup, soulStage, soulZones,
+  stageBonus,
   type SoulBonus, type SoulGroup,
 } from "../game/account/souls";
 import { MONSTERS, type MonsterType } from "../game/world/monsters";
@@ -76,6 +77,7 @@ export function CodexPanel({ client, bag, library, onSeek, onClose }: {
   const spec = MONSTERS[picked];
   const chance = soulChance(picked);
   const glowing = opened?.type === picked;
+  const next = nextSoulStage(collected);
 
   const collect = () => {
     setBusy(true);
@@ -116,6 +118,7 @@ export function CodexPanel({ client, bag, library, onSeek, onClose }: {
             const n = codex[m] ?? 0;
             const st = soulStage(n);
             const seen = n > 0 || waiting(m) > 0;
+            const to = nextSoulStage(n);
             return (
               <button
                 key={m} type="button"
@@ -124,7 +127,10 @@ export function CodexPanel({ client, bag, library, onSeek, onClose }: {
               >
                 <b>{monsterName(m)}</b>
                 <span className="codex-lv">Lv{MONSTERS[m].level}</span>
-                <span className="codex-pips">{SOUL_STAGES.map((_, i) => <i key={i} className={i < st ? "on" : ""} />)}</span>
+                <span className="codex-pips">
+                  {SOUL_STAGES.map((_, i) => <i key={i} className={i < st ? "on" : ""} />)}
+                  <em>{to ? `${n}/${to.at}` : t("codex.full")}</em>
+                </span>
                 {waiting(m) > 0 && <span className="codex-badge">+{waiting(m)}</span>}
               </button>
             );
@@ -152,10 +158,15 @@ export function CodexPanel({ client, bag, library, onSeek, onClose }: {
               <span className="codex-count">{collected} / {SOUL_MAX}</span>
               <span className="hud-bar xp codex-bar"><i style={{ width: `${Math.round((collected / SOUL_MAX) * 100)}%` }} /></span>
             </dd>
+            <dt>{t("codex.next")}</dt>
+            <dd className="codex-next">
+              {next ? t("codex.toNext", { stage: next.stage, left: next.at - collected }) : t("codex.full")}
+              {next && waiting(picked) >= next.at - collected && <b>{t("codex.readyNext")}</b>}
+            </dd>
           </dl>
           <ul className="codex-stages">
             {SOUL_STAGES.map((at, i) => (
-              <li key={at} className={`${collected >= at ? "on" : ""}${glowing && opened!.stages.includes(i + 1) ? " just" : ""}`}>
+              <li key={at} className={`${collected >= at ? "on" : ""}${next?.at === at ? " next" : ""}${glowing && opened!.stages.includes(i + 1) ? " just" : ""}`}>
                 <span>{t("codex.stageAt", { n: at })}</span>
                 <b>{bonusText(stageBonus(picked, i))}</b>
               </li>

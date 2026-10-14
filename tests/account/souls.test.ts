@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BOSS_SOUL_CHANCE, SOUL_CHANCE, SOUL_MAX, SOUL_MONSTERS, codexBonus, collectSouls, gainSoul, readSouls, soulChance, soulGroup,
-  soulStage, soulZones, stageBonus, wantsSoul,
+  nextSoulStage, soulStage, soulZones, stageBonus, wantsSoul,
 } from "../../src/game/account/souls";
 import { ZONE_IDS } from "../../src/game/world/zones";
 import { ZONE_MONSTERS } from "../../src/game/world/monsters";
@@ -31,6 +31,9 @@ describe("the soul codex", () => {
 
   it("opens its stages at one, five and ten souls", () => {
     expect([0, 1, 4, 5, 9, 10].map(soulStage)).toEqual([0, 1, 1, 2, 2, 3]);
+    expect([0, 1, 4, 9, 10].map(nextSoulStage)).toEqual([
+      { stage: 1, at: 1 }, { stage: 2, at: 5 }, { stage: 2, at: 5 }, { stage: 3, at: 10 }, null,
+    ]);
   });
 
   it("waits for the hunter to collect, and never holds more than ten of a monster", () => {

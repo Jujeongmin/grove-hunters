@@ -64,6 +64,12 @@ export function soulStage(collected: number): number {
   return SOUL_STAGES.filter((at) => collected >= at).length;
 }
 
+// The next stage to open (1 to 3) and the souls it opens at, or null when all are open.
+export function nextSoulStage(collected: number): { stage: number; at: number } | null {
+  const i = SOUL_STAGES.findIndex((at) => collected < at);
+  return i < 0 ? null : { stage: i + 1, at: SOUL_STAGES[i] };
+}
+
 // What a stage adds, as flat numbers that grow with the monster's level: attack (each blow's damage)
 // in the grove, health in the snow, defence (taken off each bite, see bittenFor in power.ts) in the
 // volcano; a boss gives all three, twice over. Each of a monster's three stages adds the same.
