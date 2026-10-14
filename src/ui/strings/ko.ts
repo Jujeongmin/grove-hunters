@@ -842,6 +842,7 @@ export const ko = {
   "problem.request_limit": "상대가 받은 요청이 너무 많아요",
   "problem.no_request": "이미 처리된 요청이에요",
   "problem.nickname_taken": "이미 쓰고 있는 이름이에요",
+  "problem.name_banned": "쓸 수 없는 단어가 들어 있어요",
   "problem.nickname_invalid": "한글·영문·숫자·_ 로 2~12자까지 쓸 수 있어요",
   "problem.character_limit": "이 서버에는 캐릭터를 더 만들 수 없어요",
   "problem.retryLater": "지금은 할 수 없어요. 잠시 뒤 다시 시도해 주세요",

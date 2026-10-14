@@ -833,6 +833,7 @@ export const en: Bundle = {
   "problem.request_limit": "They have too many requests waiting",
   "problem.no_request": "That request has already been answered",
   "problem.nickname_taken": "That name is taken",
+  "problem.name_banned": "That name has a word that can't be used",
   "problem.nickname_invalid": "Two to twelve letters, digits or _",
   "problem.character_limit": "You cannot make another character on this server",
   "problem.retryLater": "That cannot be done right now. Try again in a moment",

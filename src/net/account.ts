@@ -4,7 +4,7 @@ import type { RankDetail, RankingView } from "../game/account/ranking";
 import { errorCode } from "./errors";
 import type { MatchTransport } from "./transport";
 
-const PROBLEMS = ["nickname_taken", "nickname_invalid", "character_limit"] as const;
+const PROBLEMS = ["nickname_taken", "nickname_invalid", "name_banned", "character_limit"] as const;
 
 export function loadAccount(transport: MatchTransport): Promise<AccountView> {
   return transport.call<AccountView>("getAccount");

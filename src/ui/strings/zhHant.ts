@@ -833,6 +833,7 @@ export const zhHant: Bundle = {
   "problem.request_limit": "對方收到的邀請太多了",
   "problem.no_request": "這個邀請已經處理過了",
   "problem.nickname_taken": "這個名稱已被使用",
+  "problem.name_banned": "名稱中含有不能使用的詞語",
   "problem.nickname_invalid": "可用文字、數字或 _ 共 2～12 字",
   "problem.character_limit": "這台伺服器無法再建立角色",
   "problem.retryLater": "現在無法進行。請稍後再試一次",

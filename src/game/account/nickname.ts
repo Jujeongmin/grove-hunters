@@ -2,6 +2,7 @@ import type { CharacterView } from "./characters";
 import type { LevelView } from "./level";
 
 import { RuleViolation } from "../world/types";
+import { isBannedName } from "./profanity";
 
 export const NICKNAME_MIN = 2;
 export const NICKNAME_MAX = 12;
@@ -22,6 +23,14 @@ export function parseNickname(raw: unknown): Nickname {
     throw new RuleViolation("nickname_invalid");
   }
   return { name, key: name.toLowerCase() };
+}
+
+// A name for a new character: as parseNickname, and with no banned word in it (see profanity.ts).
+// Names already given are only read with parseNickname, so they can still be found and freed.
+export function parseNewNickname(raw: unknown): Nickname {
+  const nickname = parseNickname(raw);
+  if (isBannedName(nickname.name)) throw new RuleViolation("name_banned");
+  return nickname;
 }
 
 export interface AccountView {

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { t } from "./lang";
-import { NICKNAME_MAX, parseNickname } from "../game/account/nickname";
+import { NICKNAME_MAX, parseNewNickname } from "../game/account/nickname";
 import { nicknameProblem } from "../net/account";
 import { RuleViolation } from "../game/world/types";
 
@@ -24,7 +24,7 @@ export function NicknamePanel({ current, isFree, onNext, onClose }: NicknamePane
     setChecking(true);
     setProblem(null);
     try {
-      const { name } = parseNickname(value);
+      const { name } = parseNewNickname(value);
       if (!(await isFree(name))) throw new RuleViolation("nickname_taken");
       onNext(name);
     } catch (error) {

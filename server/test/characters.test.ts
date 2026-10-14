@@ -27,6 +27,8 @@ describe("characters", () => {
     server.connect({ account: "test-a" });
     expect(await errorOf(server.createCharacter("봇 1", "warrior", "0000"))).toContain("nickname_invalid");
     expect(await errorOf(server.checkName({ name: "x" }))).toContain("nickname_invalid");
+    expect(await errorOf(server.checkName("씨1발"))).toContain("name_banned");
+    expect(await errorOf(server.createCharacter("병신", "warrior", "0000"))).toContain("name_banned");
     expect(await errorOf(server.createCharacter("Hunter", "archer", "0000"))).toContain("unavailable");
     expect(await errorOf(server.createCharacter("Hunter", "warrior", "golden"))).toContain("unavailable");
   });

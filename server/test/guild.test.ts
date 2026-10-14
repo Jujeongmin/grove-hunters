@@ -34,6 +34,7 @@ describe("guilds", () => {
     // Taken ignoring case, and the gold comes back.
     expect(await $asset.get(GOLD)).toBe(GUILD_COST);
     expect(await errorOf(server.createGuild("x"))).toContain("guild_name_invalid");
+    expect(await errorOf(server.createGuild("존나센길드"))).toContain("name_banned");
     await makeCharacter(server, "test-c", "셋째");
     expect(await errorOf(server.createGuild("셋째길드"))).toContain("not_enough_gold");
   });

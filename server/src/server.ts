@@ -52,7 +52,8 @@ import { readPurchaseEvent } from "../../src/game/account/purchase";
 import { readClass } from "../../src/game/combat/classes";
 import { rankOf, type RankDetail, type RankingView, type RankRow } from "../../src/game/account/ranking";
 import { enhanceCost, hasMaterials, readRecipe, rollEnhance, type EnhanceOutcome } from "../../src/game/account/forge";
-import { parseNickname, type AccountView } from "../../src/game/account/nickname";
+import { parseNewNickname, parseNickname, type AccountView } from "../../src/game/account/nickname";
+import { isBannedName } from "../../src/game/account/profanity";
 import { readWorld } from "../../src/game/account/worlds";
 import { costumeById } from "../../src/game/render/costumes";
 import { PROTOCOL_VERSION, RuleViolation, isPose, readSwing, type Pose } from "../../src/game/world/types";
@@ -1027,6 +1028,7 @@ export class Server {
       if (await guildOf(account, character)) throw new RuleViolation("in_guild");
       if (!mayJoin(character.guildLeftAt, now)) throw new RuleViolation("guild_wait");
       const { name, key } = parseGuildName(rawName);
+      if (isBannedName(name)) throw new RuleViolation("name_banned");
       if (!(await $asset.has(GOLD, GUILD_COST))) throw new RuleViolation("not_enough_gold");
       await $asset.burn(GOLD, GUILD_COST);
       try {
@@ -1170,7 +1172,7 @@ export class Server {
 
   // Whether a name is free for a new character (asked while typing it, before the rest is picked).
   async checkName(requested: unknown): Promise<{ free: boolean }> {
-    const { key } = parseNickname(requested);
+    const { key } = parseNewNickname(requested);
     return { free: !(await findNickname(key)) };
   }
 
@@ -1178,7 +1180,7 @@ export class Server {
   // the one you play.
   async createCharacter(requested: unknown, playerClass: unknown, costume: unknown): Promise<AccountView> {
     const account = $sender.account;
-    const { name, key } = parseNickname(requested);
+    const { name, key } = parseNewNickname(requested);
     const picked = readClass(playerClass);
     const look = costumeById(costume);
     if (!picked || !look) throw new RuleViolation("unavailable");

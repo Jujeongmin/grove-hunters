@@ -833,6 +833,7 @@ export const ja: Bundle = {
   "problem.request_limit": "相手の受けた申請が多すぎます",
   "problem.no_request": "すでに処理された申請です",
   "problem.nickname_taken": "すでに使われている名前です",
+  "problem.name_banned": "使えない言葉が含まれています",
   "problem.nickname_invalid": "文字・数字・_ で2〜12文字まで使えます",
   "problem.character_limit": "このサーバーではこれ以上キャラクターを作れません",
   "problem.retryLater": "今はできません。少し待ってもう一度お試しください",
