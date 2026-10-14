@@ -28,7 +28,7 @@ export const NEWS: readonly NewsEntry[] = [
     date: "2026-10-14",
     text: {
       ko: { title: "영혼 도감 · 능력치를 숫자로", lines: [
-        "[영혼 도감] 몬스터를 잡으면 영혼을 얻어요(일반 1%, 5분 보스 5%, 숲의 수호자 확정). 메뉴 도감(8)에서 수집하면 1·5·10개마다 공격력·방어력·체력이 올라요.",
+        "[영혼 도감] 몬스터를 잡으면 영혼을 얻어요(일반 1%, 5분 보스 5%, 숲의 수호자 확정). 메뉴 도감(8)에서 수집하면 1·5·10개마다 공격력·방어력·체력이 올라요. 전부 모으면 공격력 +250, 방어력 +150, 체력 +900!",
         "[능력치] 장비·탈것·전직·도감·VIP 효과가 %가 아닌 숫자로 바뀌었어요(예: 공격력 +110, 방어력 +43). 같은 레벨대에서의 강함은 그대로예요.",
         "[전직] 전직 창이 새로워졌어요. 두 길의 성격·능력치·스킬을 한눈에 비교할 수 있어요.",
         "[가방] 특대 물약(체력 400 회복)이 상점에 나왔고, 여러 칸을 한 번에 버릴 수 있어요. 99개가 넘는 물건은 다음 칸에 이어서 쌓여요.",
@@ -36,7 +36,7 @@ export const NEWS: readonly NewsEntry[] = [
         "[수정] 접속할 때 이전 채팅이 보이던 문제, 박쥐·서리 몬스터의 색이 안 보이던 문제를 고쳤어요.",
       ] },
       en: { title: "The Soul Codex · Stats in numbers", lines: [
-        "[Soul Codex] Felled monsters leave souls (1% in the fields, 5% from bosses that return every five minutes, always from the grove's guardian). Collect them in the Codex (8): every 1, 5 and 10 souls add attack, defence or health.",
+        "[Soul Codex] Felled monsters leave souls (1% in the fields, 5% from bosses that return every five minutes, always from the grove's guardian). Collect them in the Codex (8): every 1, 5 and 10 souls add attack, defence or health. All of it: Attack +250, Defence +150, Health +900!",
         "[Stats] Gear, mounts, advancement, the Codex and VIP now give numbers instead of shares (e.g. Attack +110, Defence +43). How strong you are at a given level is unchanged.",
         "[Advancement] A new advancement screen: compare the two paths' bent, stats and skills at a glance.",
         "[Bag] A Huge Potion (heals 400) is in the shops, several squares can be thrown away at once, and stacks past 99 carry on in the next square.",
@@ -44,7 +44,7 @@ export const NEWS: readonly NewsEntry[] = [
         "[Fixes] Old chat no longer shows when you come in, and bats and frost monsters show their colours.",
       ] },
       ja: { title: "魂の図鑑・能力値を数値に", lines: [
-        "[魂の図鑑] モンスターを倒すと魂を入手（通常1%、5分ごとのボス5%、森の守護者は確定）。メニューの図鑑（8）で収集すると1・5・10個ごとに攻撃力・防御力・体力が上がります。",
+        "[魂の図鑑] モンスターを倒すと魂を入手（通常1%、5分ごとのボス5%、森の守護者は確定）。メニューの図鑑（8）で収集すると1・5・10個ごとに攻撃力・防御力・体力が上がります。すべて集めると攻撃力 +250、防御力 +150、体力 +900！",
         "[能力値] 装備・乗り物・転職・図鑑・VIPの効果が%ではなく数値になりました（例：攻撃力 +110、防御力 +43）。同じレベル帯での強さは変わりません。",
         "[転職] 転職画面を一新。2つの道の性質・能力値・スキルをひと目で比べられます。",
         "[カバン] 特大ポーション（体力400回復）が登場。複数の枠をまとめて捨てられ、99個を超える物は次の枠に続けて入ります。",
@@ -52,7 +52,7 @@ export const NEWS: readonly NewsEntry[] = [
         "[修正] ログイン時に以前のチャットが見える問題、コウモリと霜のモンスターの色が出ない問題を修正しました。",
       ] },
       "zh-Hans": { title: "灵魂图鉴 · 属性改为数值", lines: [
-        "[灵魂图鉴] 击杀怪物可获得灵魂（普通1%，每5分钟出现的首领5%，森林守护者必得）。在菜单图鉴（8）中收集，每1、5、10个提升攻击力、防御力或体力。",
+        "[灵魂图鉴] 击杀怪物可获得灵魂（普通1%，每5分钟出现的首领5%，森林守护者必得）。在菜单图鉴（8）中收集，每1、5、10个提升攻击力、防御力或体力。全部收集可得攻击力 +250、防御力 +150、体力 +900！",
         "[属性] 装备、坐骑、转职、图鉴、VIP效果由百分比改为数值（例：攻击力 +110、防御力 +43）。同等级下的强度不变。",
         "[转职] 全新转职界面，一眼比较两条道路的性情、属性与技能。",
         "[背包] 商店新增特大药水（回复400体力），可一次丢弃多格，超过99个的物品会接着放入下一格。",
@@ -60,7 +60,7 @@ export const NEWS: readonly NewsEntry[] = [
         "[修正] 修正登录时显示旧聊天、蝙蝠与冰霜怪物颜色不显示的问题。",
       ] },
       "zh-Hant": { title: "靈魂圖鑑 · 屬性改為數值", lines: [
-        "[靈魂圖鑑] 擊殺怪物可獲得靈魂（普通1%，每5分鐘出現的首領5%，森林守護者必得）。在選單圖鑑（8）中收集，每1、5、10個提升攻擊力、防禦力或體力。",
+        "[靈魂圖鑑] 擊殺怪物可獲得靈魂（普通1%，每5分鐘出現的首領5%，森林守護者必得）。在選單圖鑑（8）中收集，每1、5、10個提升攻擊力、防禦力或體力。全部收集可得攻擊力 +250、防禦力 +150、體力 +900！",
         "[屬性] 裝備、坐騎、轉職、圖鑑、VIP效果由百分比改為數值（例：攻擊力 +110、防禦力 +43）。同等級下的強度不變。",
         "[轉職] 全新轉職介面，一眼比較兩條道路的性情、屬性與技能。",
         "[背包] 商店新增特大藥水（回復400體力），可一次丟棄多格，超過99個的物品會接著放入下一格。",

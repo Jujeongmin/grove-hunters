@@ -72,27 +72,31 @@ export function nextSoulStage(collected: number): { stage: number; at: number } 
 
 // What a stage adds, as flat numbers that grow with the monster's level: attack (each blow's damage)
 // in the grove, health in the snow, defence (taken off each bite, see bittenFor in power.ts) in the
-// volcano; a boss gives all three, twice over. Each of a monster's three stages adds the same.
+// volcano; a boss gives all three. A monster's unit (regionBonus) is weighed by its stage
+// (STAGE_WEIGHT), so the tenth soul's stage is the big one. A full codex is about a top weapon's
+// attack, an armour's defence and a level-80 hunter's health again: the long climb (내실) beside levels.
 export interface SoulBonus { atk: number; def: number; hp: number }
 export const NO_SOUL_BONUS: SoulBonus = { atk: 0, def: 0, hp: 0 };
-const ATK_PER = 25;
-const HP_PER = 6;
-const DEF_PER = 60;
+export const STAGE_WEIGHT = [2, 3, 5] as const;
+// Grove monsters from this level give twice the attack.
+const ATK_STEP = 30;
+const HP_PER = 8;
 
 function regionBonus(region: Region, level: number): SoulBonus {
-  if (region === "grove") return { atk: Math.max(1, Math.round(level / ATK_PER)), def: 0, hp: 0 };
+  if (region === "grove") return { atk: level < ATK_STEP ? 1 : 2, def: 0, hp: 0 };
   if (region === "snow") return { atk: 0, def: 0, hp: Math.round(level / HP_PER) };
-  return { atk: 0, def: Math.max(1, Math.round(level / DEF_PER)), hp: 0 };
+  return { atk: 0, def: 1, hp: 0 };
 }
 
 // What a monster's stage `stage` (0 to 2) adds.
-export function stageBonus(type: MonsterType, _stage: number): SoulBonus {
+export function stageBonus(type: MonsterType, stage: number): SoulBonus {
   const level = MONSTERS[type].level;
   const group = soulGroup(type);
-  if (group !== "boss") return regionBonus(group, level);
-  return {
-    atk: 2 * regionBonus("grove", level).atk, def: 2 * regionBonus("volcano", level).def, hp: 2 * regionBonus("snow", level).hp,
-  };
+  const unit = group === "boss"
+    ? { atk: regionBonus("grove", level).atk, def: regionBonus("volcano", level).def, hp: regionBonus("snow", level).hp }
+    : regionBonus(group, level);
+  const w = STAGE_WEIGHT[stage] ?? 0;
+  return { atk: unit.atk * w, def: unit.def * w, hp: unit.hp * w };
 }
 
 // Everything the codex adds up to.

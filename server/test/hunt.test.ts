@@ -68,7 +68,7 @@ describe("hunting", () => {
     expect(collected.opened).toEqual([1]);
     expect([collected.bag.souls, collected.bag.codex]).toEqual([{}, { rat: 1 }]);
     // The rat's first stage: attack +1, added to every blow.
-    expect((await $room.getMyState()).gear.atk).toBe(STEED.atk + 1);
+    expect((await $room.getMyState()).gear.atk).toBe(STEED.atk + 2);
     expect(await errorOf(server.collectSouls("rat"))).toContain("no_item");
     expect(await errorOf(server.collectSouls("guild_dragon"))).toContain("unavailable");
     void entry;
